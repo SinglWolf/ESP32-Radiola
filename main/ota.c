@@ -39,7 +39,7 @@
 #include "lwip/netdb.h"
 #include "interface.h"
 #include "webclient.h"
-#include "app_main.h"
+#include "main.h"
 #include "websocket.h"
 
 #define BUFFSIZE 1024

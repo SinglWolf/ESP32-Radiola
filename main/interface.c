@@ -21,7 +21,7 @@
 #include "spiram_fifo.h"
 #include "addon.h"
 #include "addonu8g2.h"
-#include "app_main.h"
+#include "main.h"
 #include "xpt2046.h"
 //#include "rda5807Task.c"
 #include "ClickEncoder.h"

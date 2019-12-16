@@ -13,7 +13,7 @@
 #include "gpio.h"
 #include "addon.h"
 #include "ucg_esp32_hal.h"
-#include "app_main.h"
+#include "main.h"
 #include <time.h>
 #include "esp_log.h"
 #include "logo.h"

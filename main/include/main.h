@@ -1,5 +1,5 @@
 /*
- * app_main.h
+ * main.h
  *
  *  Created on: 13.03.2017
  *      Author: michaelboeckling
@@ -34,8 +34,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef MAIN_INCLUDE_APP_MAIN_H_
-#define MAIN_INCLUDE_APP_MAIN_H_
+#ifndef MAIN_INCLUDE_MAIN_H_
+#define MAIN_INCLUDE_MAIN_H_
 #include "audio_renderer.h"
 #include "driver/timer.h"
 

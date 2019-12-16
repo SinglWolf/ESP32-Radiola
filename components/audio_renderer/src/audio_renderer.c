@@ -17,7 +17,7 @@
 #include <driver/dac.h>
 #include "driver/gpio.h"
 #include "gpio.h"
-#include "app_main.h"
+#include "main.h"
 #include "MerusAudio.h"
 
 #include "audio_player.h"

@@ -13,7 +13,7 @@
 #include "ClickEncoder.h"
 #include "ClickButtons.h"
 #include "ClickJoystick.h"
-#include "app_main.h"
+#include "main.h"
 #include "gpio.h"
 #include "webclient.h"
 #include "webserver.h"

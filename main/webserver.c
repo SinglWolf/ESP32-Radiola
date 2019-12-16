@@ -12,7 +12,7 @@
 #include "driver/timer.h"
 #include "driver/uart.h"
 #include "audio_renderer.h"
-#include "app_main.h"
+#include "main.h"
 #include "ota.h"
 #include "esp_wifi.h"
 #include "esp_system.h"

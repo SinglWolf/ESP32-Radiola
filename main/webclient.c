@@ -19,7 +19,7 @@
 #include "gpio.h"
 #include "audio_player.h"
 #include "spiram_fifo.h"
-#include "app_main.h"
+#include "main.h"
 
 extern player_t* player_config;
 #define min(a, b) (((a) < (b)) ? (a) : (b))

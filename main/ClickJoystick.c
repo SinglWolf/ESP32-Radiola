@@ -14,7 +14,7 @@
 #include <stdio.h>
 #include <sys/time.h>
 #include "ClickJoystick.h"
-#include "app_main.h"
+#include "main.h"
 #include "gpio.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"

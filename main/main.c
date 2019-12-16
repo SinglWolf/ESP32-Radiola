@@ -48,7 +48,7 @@ Copyright (C) 2017  KaraWin
 #include "lwip/dns.h"
 #include "mdns.h"
 
-#include "app_main.h"
+#include "main.h"
 
 #include "spiram_fifo.h"
 #include "audio_renderer.h"

@@ -23,7 +23,7 @@
 #include "driver/gpio.h"
 #include <math.h>
 #include "interface.h"
-#include "app_main.h"
+#include "main.h"
 #include "audio_player.h"
 #include "spiram_fifo.h"
 //#include "common_buffer.h"

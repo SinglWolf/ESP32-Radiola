@@ -10,7 +10,7 @@
 #include "gpio.h"
 #include "nvs_flash.h"
 #include "esp_log.h"
-#include "app_main.h"
+#include "main.h"
 #include "eeprom.h"
 
 static xSemaphoreHandle muxnvs= NULL;

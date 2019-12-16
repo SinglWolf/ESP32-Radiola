@@ -10,7 +10,7 @@
 #include <stdio.h>
 #include "u8g2_esp32_hal.h"
 #include "addon.h"
-#include "app_main.h"
+#include "main.h"
 #include "gpio.h"
 #include <time.h>
 #include "esp_log.h"

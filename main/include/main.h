@@ -34,8 +34,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef MAIN_INCLUDE_MAIN_H_
-#define MAIN_INCLUDE_MAIN_H_
+#ifndef _MAIN_H_
+#define _MAIN_H_
 #include "audio_renderer.h"
 #include "driver/timer.h"
 
@@ -144,4 +144,4 @@ void interrupt1Ms();
 char* getIp();
 
 
-#endif /* MAIN_INCLUDE_APP_MAIN_H_ */
+#endif /* _MAIN_H_ */

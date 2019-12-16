@@ -19,6 +19,14 @@
 // https://www.tindie.com/products/microwavemont/esp32-audio-developing-board-esp32-adb/
 // Default value, can be superseeded by the hardware partition.
 
+//-------------------------
+
+#define PIN_NUM_PWM GPIO_NUM_13  //пин управления оборотами вентилятора
+#define PIN_NUM_SDCS GPIO_NUM_15 //пин выбора SD карты
+
+#define SDA_GPIO GPIO_NUM_21
+#define SCL_GPIO GPIO_NUM_22
+//-------------------------
 // Must be HSPI or VSPI
 
 #define KSPI VSPI_HOST
@@ -37,17 +45,17 @@
 
 // gpio of the vs1053
 //-------------------
-#define PIN_NUM_XCS  GPIO_NUM_32
-#define PIN_NUM_RST  GPIO_NUM_12 
-#define PIN_NUM_XDCS GPIO_NUM_33
-#define PIN_NUM_DREQ GPIO_NUM_34
+#define PIN_NUM_XCS  GPIO_NUM_5
+#define PIN_NUM_RST  GPIO_NUM_25 
+#define PIN_NUM_XDCS GPIO_NUM_2
+#define PIN_NUM_DREQ GPIO_NUM_4
 // + KSPI pins
 
 // Encoder knob
 //-------------
-#define PIN_ENC0_A   GPIO_NUM_16	//16	// 255 if encoder not used
-#define PIN_ENC0_B   GPIO_NUM_17	//17	// DT
-#define PIN_ENC0_BTN GPIO_NUM_5		//5// SW
+#define PIN_ENC0_A   GPIO_NONE	//16	// 255 if encoder not used
+#define PIN_ENC0_B   GPIO_NONE	//17	// DT
+#define PIN_ENC0_BTN GPIO_NONE		//5// SW
 #define PIN_ENC1_A   GPIO_NONE		// 255 if encoder not used
 #define PIN_ENC1_B   GPIO_NONE		// DT
 #define PIN_ENC1_BTN GPIO_NONE		// SW
@@ -68,37 +76,37 @@
 
 // I2C lcd (and rda5807 if lcd is i2c or LCD_NONE)
 //------------------------------------------------
-#define PIN_I2C_SCL GPIO_NUM_14
-#define PIN_I2C_SDA GPIO_NUM_13
-#define PIN_I2C_RST	GPIO_NUM_2		// or not used
+#define PIN_I2C_SCL GPIO_NONE
+#define PIN_I2C_SDA GPIO_NONE
+#define PIN_I2C_RST	GPIO_NONE		// or not used
 
 
 // SPI lcd
 //---------
-#define PIN_LCD_CS	GPIO_NUM_13		//CS
-#define PIN_LCD_A0	GPIO_NUM_14		//A0 or D/C
-#define PIN_LCD_RST	GPIO_NUM_2		//Reset RES RST or not used
+#define PIN_LCD_CS	GPIO_NUM_27		//CS
+#define PIN_LCD_A0	GPIO_NUM_26		//A0 or D/C
+#define PIN_LCD_RST	GPIO_NONE		//Reset RES RST or not used
 // KSPI pins +
 
 // IR Signal
 //-----------
-#define PIN_IR_SIGNAL GPIO_NUM_21	// Remote IR source
+#define PIN_IR_SIGNAL GPIO_NUM_35	// Remote IR source
 
 
 // I2S DAC or PDM output
 //-----------------------
-#define PIN_I2S_LRCK GPIO_NUM_25	// or Channel1
-#define PIN_I2S_BCLK GPIO_NUM_26	// or channel2
-#define PIN_I2S_DATA GPIO_NUM_22	//  
+#define PIN_I2S_LRCK GPIO_NONE	// or Channel1
+#define PIN_I2S_BCLK GPIO_NONE	// or channel2
+#define PIN_I2S_DATA GPIO_NONE	//  
 
 // ADC for keyboard buttons
 #define PIN_ADC	GPIO_NONE	//GPIO_NUM_32 TO GPIO_NUM_39 or GPIO_NONE if not used.
 
 // LCD backlight control
-#define PIN_LCD_BACKLIGHT	GPIO_NONE // the gpio to be used in custom.c 
+#define PIN_LCD_BACKLIGHT	GPIO_NUM_32 // the gpio to be used in custom.c 
 
 // touch screen  T_DO is MISO, T_DIN is MOSI, T_CLK is CLk of the spi bus
-#define PIN_TOUCH_CS	GPIO_NONE //Chip select T_CS
+#define PIN_TOUCH_CS	GPIO_NUM_0 //Chip select T_CS
 
 // I2C rda5807 (if lcd is spi)
 // (removed)

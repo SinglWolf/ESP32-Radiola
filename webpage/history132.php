@@ -96,7 +96,6 @@
 		<li>0.9 R1: Correction for stations with the char & in path. </li>
 		<li>0.9 Both SSID now have full definitions of ip gateway etc... </li>
 		<li>0.9 Minor change on the web page. </li>
-		<li>0.9 New commands sys.lcdout: timeout to clear the screen, sys.ledgpio to change the gpio of the status led. Type help command for details </li>
 		<li>0.9 Tried to use the helix lib to read aac stream, but it doesn't support the LATM. Failed, I fed  up. </li>
 		<li>0.8 rev1: Font size on color lcd depend of the width of the screen </li>
 		<li>0.8 rev0: Introducing color lcds.. Encoder actions changed. One click: start/stop, double clicks: toggle main/time, Held: Station change. </li>

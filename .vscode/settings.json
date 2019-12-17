@@ -1,6 +1,7 @@
 {
     "files.associations": {
         "tda7313.h": "c",
-        "cencode_inc.h": "c"
+        "cencode_inc.h": "c",
+        "*.ipp": "cpp"
     }
 }

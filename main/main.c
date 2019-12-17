@@ -506,7 +506,7 @@ static void start_wifi()
 			vTaskDelay(1);
 			ESP_ERROR_CHECK(esp_wifi_start());
 
-			audio_output_mode = I2S;
+			audio_output_mode = VS1053;
 		}
 		else
 		{
@@ -910,6 +910,12 @@ void app_main()
 			g_device->cleared = 0xAABB;			   //marker init done
 			g_device->uartspeed = 115200;		   // default
 			g_device->audio_output_mode = VS1053;  // default
+			g_device->i2sspeed = 0;				   //default
+			g_device->treble = 0;				   //default
+			g_device->bass = 0;					   //default
+			g_device->freqtreble = 1;			   //default
+			g_device->freqbass = 2;				   //default
+			g_device->spacial = 0;				   //default
 			g_device->trace_level = ESP_LOG_ERROR; //default
 			g_device->vol = 100;				   //default
 			g_device->led_gpio = GPIO_NONE;
@@ -926,7 +932,11 @@ void app_main()
 		else
 			ESP_LOGE(TAG, "Device config restored");
 	}
-
+	// output mode
+	//I2S, I2S_MERUS, DAC_BUILT_IN, PDM, VS1053
+	audio_output_mode = g_device->audio_output_mode;
+	ESP_LOGI(TAG, "audio_output_mode %d\nOne of I2S=0, I2S_MERUS, DAC_BUILT_IN, PDM, VS1053", audio_output_mode);
+	
 	copyDeviceSettings(); // copy in the safe partion
 
 	// init softwares
@@ -956,30 +966,6 @@ void app_main()
 	//lcd rotation
 	setRotat(rt);
 	lcd_init(g_device->lcd_type);
-
-	/*	
-	// Init i2c if lcd doesn't not (spi) for rde5807=
-	if (g_device->lcd_type >= LCD_SPI)
-	{
-		i2c_config_t conf;
-	    conf.mode = I2C_MODE_MASTER;
-	    conf.sda_io_num = (g_device->lcd_type == LCD_NONE)?PIN_I2C_SDA:PIN_SI2C_SDA;
-		conf.sda_pullup_en = GPIO_PULLUP_ENABLE;
-	    conf.scl_io_num = (g_device->lcd_type == LCD_NONE)?PIN_I2C_SCL:PIN_SI2C_SCL;
-	    conf.scl_pullup_en = GPIO_PULLUP_ENABLE;
-	    conf.master.clk_speed = I2C_MASTER_RFREQ_HZ;
-		//ESP_ERROR_CHECK
-		(i2c_param_config(I2C_MASTER_NUM, &conf));
-		ESP_LOGD(TAG, "i2c_driver_install %d", I2C_MASTER_NUM);
-		//ESP_ERROR_CHECK
-		(i2c_driver_install(I2C_MASTER_NUM, conf.mode, I2C_MASTER_RX_BUF_DISABLE, I2C_MASTER_TX_BUF_DISABLE, 0));			
-	}
-*/
-
-	// output mode
-	//I2S, I2S_MERUS, DAC_BUILT_IN, PDM, VS1053
-	audio_output_mode = g_device->audio_output_mode;
-	ESP_LOGI(TAG, "audio_output_mode %d\nOne of I2S=0, I2S_MERUS, DAC_BUILT_IN, PDM, VS1053", audio_output_mode);
 
 	//Initialize the SPI RAM chip communications and see if it actually retains some bytes. If it
 	//doesn't, warn user.

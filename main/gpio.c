@@ -116,7 +116,7 @@ void gpio_get_spi_bus(uint8_t *spi_no, gpio_num_t *miso, gpio_num_t *mosi, gpio_
 	if (sclk != NULL)
 		*sclk = PIN_NUM_CLK;
 	if (spi_no != NULL)
-		*spi_no = VSPI_HOST;
+		*spi_no = KSPI;
 
 	if (open_partition(hardware, gpio_space, NVS_READONLY, &hardware_handle) != ESP_OK)
 	{

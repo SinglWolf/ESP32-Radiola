@@ -45,7 +45,7 @@ bool ntp_get_time(struct tm **dt) {
 	char *msg;
 	int rv;
 	char service[] = {"123"}; //ntp port
-	char node[] = {"pool.ntp.org"}; // this one is universel
+	char node[] = {"192.168.0.1"}; // this one is universel
     struct addrinfo hints, *servinfo = NULL, *p = NULL;
 //	struct tm *dt;
 	time_t timestamp;

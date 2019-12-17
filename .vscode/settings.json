@@ -1,5 +1,6 @@
 {
     "files.associations": {
-        "tda7313.h": "c"
+        "tda7313.h": "c",
+        "cencode_inc.h": "c"
     }
 }

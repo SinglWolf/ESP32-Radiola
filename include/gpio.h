@@ -141,8 +141,8 @@ bool gpio_get_ir_key(nvs_handle handle,const char *key, uint32_t *out_value1 , u
 void gpio_get_touch(gpio_num_t *cs);
 void gpio_get_ledgpio(gpio_num_t *enca);
 void gpio_set_ledgpio(gpio_num_t enca);
-void option_get_lcd_info(uint8_t *enca,uint8_t* rt);
-void option_set_lcd_info(uint8_t enca, uint8_t rt);
+void option_get_lcd_info(uint8_t* rt);
+void option_set_lcd_info(uint8_t rt);
 void option_get_ddmm(uint8_t *enca);
 void option_set_ddmm(uint8_t enca);
 void option_get_lcd_out(uint32_t *enca);

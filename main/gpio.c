@@ -161,13 +161,12 @@ void gpio_get_vs1053(gpio_num_t *xcs, gpio_num_t *rst, gpio_num_t *xdcs, gpio_nu
 	close_partition(hardware_handle, hardware);
 }
 
-void option_get_lcd_info(uint8_t *enca, uint8_t *rt)
+void option_get_lcd_info(uint8_t *rt)
 {
 	esp_err_t err;
 	nvs_handle hardware_handle;
-	uint8_t typ, rot;
+	uint8_t rot;
 	// init default
-	*enca = g_device->lcd_type;
 	*rt = ((g_device->options32) & T_ROTAT) ? 1 : 0;
 	if (open_partition(hardware, option_space, NVS_READONLY, &hardware_handle) != ESP_OK)
 	{
@@ -175,10 +174,7 @@ void option_get_lcd_info(uint8_t *enca, uint8_t *rt)
 		return;
 	}
 
-	err = nvs_get_u8(hardware_handle, "O_LCD_TYPE", (uint8_t *)&typ);
-	err |= nvs_get_u8(hardware_handle, "O_LCD_ROTA", (uint8_t *)&rot);
-	if (typ != 255)
-		*enca = typ;
+	err = nvs_get_u8(hardware_handle, "O_LCD_ROTA", (uint8_t *)&rot);
 	if (rot != 255)
 		*rt = rot;
 	if (*rt)
@@ -187,7 +183,7 @@ void option_get_lcd_info(uint8_t *enca, uint8_t *rt)
 		ESP_LOGD(TAG, "oget_lcd_info err 0x%x", err);
 	close_partition(hardware_handle, hardware);
 }
-void option_set_lcd_info(uint8_t enca, uint8_t rt)
+void option_set_lcd_info(uint8_t rt)
 {
 	esp_err_t err;
 	nvs_handle hardware_handle;
@@ -198,8 +194,7 @@ void option_set_lcd_info(uint8_t enca, uint8_t rt)
 		return;
 	}
 
-	err = nvs_set_u8(hardware_handle, "O_LCD_TYPE", enca);
-	err |= nvs_set_u8(hardware_handle, "O_LCD_ROTA", rt ? 1 : 0);
+	err = nvs_set_u8(hardware_handle, "O_LCD_ROTA", rt ? 1 : 0);
 	if (err != ESP_OK)
 		ESP_LOGD(TAG, "oset_lcd_info err 0x%x", err);
 

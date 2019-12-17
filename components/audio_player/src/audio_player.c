@@ -15,13 +15,13 @@
 #include "esp_system.h"
 #include "esp_log.h"
 
-#include "fdk_aac_decoder.h"
+//#include "fdk_aac_decoder.h"
 //#include "helix_aac_decoder.h"
 //#include "libfaad_decoder.h"
-#include "mp3_decoder.h"
+//#include "mp3_decoder.h"
 #include "webclient.h"
 #include "vs1053.h"
-#include "tda7313.h"
+//#include "tda7313.h"
 #include "main.h"
 
 #define TAG "audio_player"
@@ -48,49 +48,45 @@ static int start_decoder_task(player_t *player)
 	else
 		switch (player->media_stream->content_type)
 		{
-		case AUDIO_MPEG:
-			task_func = mp3_decoder_task;
-			task_name = (char *)"mp3_decoder_task";
-			stack_depth = 8448;
-			break;
+		// case AUDIO_MPEG:
+		// 	task_func = mp3_decoder_task;
+		// 	task_name = (char *)"mp3_decoder_task";
+		// 	stack_depth = 8448;
+		// 	break;
 
-			/*       case AUDIO_MP4:
-            task_func = libfaac_decoder_task;
-            task_name = (char*)"libfaac_decoder_task";
-            stack_depth = 55000;
-            break;
-*/
+		// case AUDIO_MP4:
+		// 	task_func = libfaac_decoder_task;
+		// 	task_name = (char *)"libfaac_decoder_task";
+		// 	stack_depth = 55000;
+		// 	break;
 
-		case AUDIO_AAC:
-		case OCTET_STREAM: // probably .aac
-			if (!bigSram())
-			{
-				ESP_LOGW(TAG, "aac mime not supported type: %d", player->media_stream->content_type);
-				spiRamFifoReset();
-				return -1;
-			}
+		// case AUDIO_AAC:
+		// case OCTET_STREAM: // probably .aac
+		// 	if (!bigSram())
+		// 	{
+		// 		ESP_LOGW(TAG, "aac mime not supported type: %d", player->media_stream->content_type);
+		// 		spiRamFifoReset();
+		// 		return -1;
+		// 	}
 
-			task_func = fdkaac_decoder_task;
-			task_name = (char *)"fdkaac_decoder_task";
-			stack_depth = 7000; //6144;
-			break;
+		// 	task_func = fdkaac_decoder_task;
+		// 	task_name = (char *)"fdkaac_decoder_task";
+		// 	stack_depth = 7000; //6144;
+		// 	break;
 
-			/*
-		case AUDIO_AAC:
-        case OCTET_STREAM: // probably .aac
-            task_func = helixaac_decoder_task;
-            task_name = (char*)"helixaac_decoder_task";
-            stack_depth = 6144; //6144; //6144
-            break;
-*/
-			/*				
-        case AUDIO_AAC:
-        case OCTET_STREAM: // probably .aac
-            task_func = libfaac_decoder_task;
-            task_name = "libfaac_decoder_task";
-            stack_depth = 55000;
-            break;
-*/
+		// case AUDIO_AAC:
+		// case OCTET_STREAM: // probably .aac
+		// 	task_func = helixaac_decoder_task;
+		// 	task_name = (char *)"helixaac_decoder_task";
+		// 	stack_depth = 6144; //6144; //6144
+		// 	break;
+
+		// case AUDIO_AAC:
+		// case OCTET_STREAM: // probably .aac
+		// 	task_func = libfaac_decoder_task;
+		// 	task_name = "libfaac_decoder_task";
+		// 	stack_depth = 55000;
+		// 	break;
 		default:
 			ESP_LOGW(TAG, "unknown mime type: %d", player->media_stream->content_type);
 			spiRamFifoReset();

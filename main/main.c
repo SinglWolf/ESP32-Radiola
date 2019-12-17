@@ -54,10 +54,7 @@ Copyright (C) 2017  KaraWin
 #include "bt_config.h"
 //#include "mdns_task.h"
 #include "audio_player.h"
-#include <u8g2.h>
-#include "u8g2_esp32_hal.h"
 #include "addon.h"
-#include "addonu8g2.h"
 
 #include "eeprom.h"
 
@@ -907,20 +904,20 @@ void app_main()
 			free(g_device);
 			eeEraseAll();
 			g_device = getDeviceSettings();
-			g_device->cleared = 0xAABB;			   //marker init done
-			g_device->uartspeed = 115200;		   // default
-			g_device->audio_output_mode = VS1053;  // default
-			g_device->i2sspeed = 0;				   //default
-			g_device->treble = 0;				   //default
-			g_device->bass = 0;					   //default
-			g_device->freqtreble = 1;			   //default
-			g_device->freqbass = 2;				   //default
-			g_device->spacial = 0;				   //default
-			g_device->trace_level = ESP_LOG_ERROR; //default
-			g_device->vol = 100;				   //default
+			g_device->cleared = 0xAABB;				 //marker init done
+			g_device->uartspeed = 115200;			 // default
+			g_device->audio_output_mode = VS1053;	// default
+			g_device->options &= NT_LEDPOL;			 // 0 = load patch
+			g_device->i2sspeed = 0;					 //default
+			g_device->treble = 0;					 //default
+			g_device->bass = 0;						 //default
+			g_device->freqtreble = 1;				 //default
+			g_device->freqbass = 2;					 //default
+			g_device->spacial = 0;					 //default
+			g_device->trace_level = ESP_LOG_VERBOSE; //default
+			g_device->vol = 100;					 //default
 			g_device->led_gpio = GPIO_NONE;
-			g_device->lcd_type = 194;
-			g_device->tzoffset = 5;
+				g_device->tzoffset = 5;
 			g_device->options32 |= T_ROTAT;
 			g_device->options32 |= T_DDMM;
 			g_device->current_ap = STA1;
@@ -936,7 +933,7 @@ void app_main()
 	//I2S, I2S_MERUS, DAC_BUILT_IN, PDM, VS1053
 	audio_output_mode = g_device->audio_output_mode;
 	ESP_LOGI(TAG, "audio_output_mode %d\nOne of I2S=0, I2S_MERUS, DAC_BUILT_IN, PDM, VS1053", audio_output_mode);
-	
+
 	copyDeviceSettings(); // copy in the safe partion
 
 	// init softwares
@@ -961,11 +958,11 @@ void app_main()
 
 	// lcd init
 	uint8_t rt;
-	option_get_lcd_info(&g_device->lcd_type, &rt);
-	ESP_LOGI(TAG, "LCD Type %d", g_device->lcd_type);
+	option_get_lcd_info(&rt);
+	ESP_LOGI(TAG, "LCD Rotat %d", rt);
 	//lcd rotation
 	setRotat(rt);
-	lcd_init(g_device->lcd_type);
+	lcd_init();
 
 	//Initialize the SPI RAM chip communications and see if it actually retains some bytes. If it
 	//doesn't, warn user.

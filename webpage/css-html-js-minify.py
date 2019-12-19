@@ -38,7 +38,7 @@ try:
     import resource  # windows dont have resource
 except ImportError:
     request = getoutput = disk_usage = resource = None
-    from StringIO import StringIO  # lint:ok
+#    from StringIO import StringIO  # lint:ok
 
 
 __version__ = '1.2.2'

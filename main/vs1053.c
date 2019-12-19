@@ -26,11 +26,8 @@
 #include "main.h"
 #include "audio_player.h"
 #include "spiram_fifo.h"
-//#include "common_buffer.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-//#include "freertos/event_groups.h"
-//#include "freertos\queue.h"
 #include "tda7313.h"
 
 extern void LoadUserCodes(void);
@@ -71,12 +68,11 @@ void VS1053_spi_init()
 	gpio_num_t sclk;
 
 	uint8_t spi_no; // the spi bus to use
-		//	if(!vsSPI) vSemaphoreCreateBinary(vsSPI);
+					//	if(!vsSPI) vSemaphoreCreateBinary(vsSPI);
 	if (!vsSPI)
 		vsSPI = xSemaphoreCreateMutex();
 	if (!hsSPI)
 		hsSPI = xSemaphoreCreateMutex();
-	;
 
 	gpio_get_spi_bus(&spi_no, &miso, &mosi, &sclk);
 	if (spi_no > 2)
@@ -200,7 +196,7 @@ void VS1053_spi_write_char(spi_device_handle_t ivsspi, uint8_t *cbyte, uint16_t 
 		ESP_LOGE(TAG, "err: %d, VS1053_spi_write_char(len: %d)", ret, len);
 	spi_give_semaphore(hsSPI);
 	while (VS1053_checkDREQ() == 0)
-		;
+		taskYIELD();
 	//printf("VS1053_spi_write val: %x  rxlen: %x \n",*cbyte,t.rxlength);
 	// return ret;
 }
@@ -229,7 +225,7 @@ void VS1053_WriteRegister(uint8_t addressbyte, uint8_t highbyte, uint8_t lowbyte
 		ESP_LOGE(TAG, "err: %d, VS1053_WriteRegister(%d,%d,%d)", ret, addressbyte, highbyte, lowbyte);
 	spi_give_semaphore(vsSPI);
 	while (VS1053_checkDREQ() == 0)
-		;
+		taskYIELD();
 }
 
 void VS1053_WriteRegister16(uint8_t addressbyte, uint16_t value)
@@ -256,7 +252,7 @@ void VS1053_WriteRegister16(uint8_t addressbyte, uint16_t value)
 		ESP_LOGE(TAG, "err: %d, VS1053_WriteRegister16(%d,%d)", ret, addressbyte, value);
 	spi_give_semaphore(vsSPI);
 	while (VS1053_checkDREQ() == 0)
-		;
+		taskYIELD();
 }
 
 uint16_t VS1053_ReadRegister(uint8_t addressbyte)
@@ -281,7 +277,7 @@ uint16_t VS1053_ReadRegister(uint8_t addressbyte)
 	//	ESP_LOGI(TAG,"VS1053_ReadRegister data: %d %d %d %d",t.rx_data[0],t.rx_data[1],t.rx_data[2],t.rx_data[3]);
 	spi_give_semaphore(vsSPI);
 	while (VS1053_checkDREQ() == 0)
-		;
+		taskYIELD();
 	return result;
 }
 
@@ -353,10 +349,8 @@ void VS1053_HighPower()
 
 void VS1053_Start()
 {
-	ControlReset(SET);
-	vTaskDelay(50);
-	ControlReset(RESET);
-	vTaskDelay(150);
+	VS1053_ResetChip();
+	vTaskDelay(100);
 	//Check DREQ
 	if (VS1053_checkDREQ() == 0)
 	{
@@ -364,14 +358,6 @@ void VS1053_Start()
 		ESP_LOGE(TAG, "NO VS1053 detected");
 		return;
 	}
-
-	VS1053_ResetChip();
-	// these 4 lines makes board to run on mp3 mode, no soldering required anymore
-	VS1053_WriteRegister16(SPI_WRAMADDR, 0xc017); //address of GPIO_DDR is 0xC017
-	VS1053_WriteRegister16(SPI_WRAM, 0x0003);	 //GPIO_DDR=3
-	VS1053_WriteRegister16(SPI_WRAMADDR, 0xc019); //address of GPIO_ODATA is 0xC019
-	VS1053_WriteRegister16(SPI_WRAM, 0x0000);	 //GPIO_ODATA=0
-	vTaskDelay(150);
 
 	int MP3Status = VS1053_ReadRegister(SPI_STATUSVS);
 	vsVersion = (MP3Status >> 4) & 0x000F; //Mask out only the four version bits
@@ -385,6 +371,12 @@ void VS1053_Start()
 	else
 		VS1053_WriteRegister16(SPI_CLOCKF, 0xB000);
 
+	//these 4 lines makes board to run on mp3 mode, no soldering required anymore
+	VS1053_WriteRegister16(SPI_WRAMADDR, 0xc017); //address of GPIO_DDR is 0xC017
+	VS1053_WriteRegister16(SPI_WRAM, 0x0003);	 //GPIO_DDR=3
+	VS1053_WriteRegister16(SPI_WRAMADDR, 0xc019); //address of GPIO_ODATA is 0xC019
+	VS1053_WriteRegister16(SPI_WRAM, 0x0000);	 //GPIO_ODATA=0
+	vTaskDelay(50);
 	VS1053_SoftwareReset();
 	while (VS1053_checkDREQ() == 0)
 		taskYIELD();
@@ -394,6 +386,7 @@ void VS1053_Start()
 	// enable I2C dac output of the vs1053
 	if (vsVersion == 4) // only 1053
 	{
+
 		VS1053_WriteRegister16(SPI_WRAMADDR, 0xc017); //
 		VS1053_WriteRegister16(SPI_WRAM, 0x00F0);	 //
 		VS1053_I2SRate(g_device->i2sspeed);
@@ -406,36 +399,21 @@ void VS1053_Start()
 							 //			VS1053_Admix(false);
 		}
 	}
-	vTaskDelay(5);
-	ESP_LOGI(TAG, "volume: %d", g_device->vol);
-	setIvol(g_device->vol);
-	VS1053_SetVolume(g_device->vol);
-	VS1053_SetTreble(g_device->treble);
-	VS1053_SetBass(g_device->bass);
-	VS1053_SetTrebleFreq(g_device->freqtreble);
-	VS1053_SetBassFreq(g_device->freqbass);
-	VS1053_SetSpatial(g_device->spacial);
 }
 
 int VS1053_SendMusicBytes(uint8_t *music, uint16_t quantity)
 {
 	if (quantity == 0)
-	{
 		return 0;
-	}
 	int oo = 0;
-	//	while(VS1053_checkDREQ() == 0);taskYIELD ();
 	while (quantity)
 	{
-		//		if(VS1053_checkDREQ())
-		{
-			int t = quantity;
-			if (t > CHUNK)
-				t = CHUNK;
-			VS1053_spi_write_char(hvsspi, &music[oo], t);
-			oo += t;
-			quantity -= t;
-		} // else taskYIELD ();
+		int t = quantity;
+		if (t > CHUNK)
+			t = CHUNK;
+		VS1053_spi_write_char(hvsspi, &music[oo], t);
+		oo += t;
+		quantity -= t;
 	}
 	return oo;
 }
@@ -728,12 +706,22 @@ void vsTask(void *pvParams)
 	uint16_t size, s;
 
 	player_t *player = pvParams;
-	tda7313_set_input(2);
+	ESP_LOGI(TAG, "volume: %d", g_device->vol);
+	setIvol(g_device->vol);
+	VS1053_SetVolume(g_device->vol);
+	VS1053_SetTreble(g_device->treble);
+	VS1053_SetBass(g_device->bass);
+	VS1053_SetTrebleFreq(g_device->freqtreble);
+	VS1053_SetBassFreq(g_device->freqbass);
+	VS1053_SetSpatial(g_device->spacial);
+	ESP_ERROR_CHECK(tda7313_set_input(2));
+
 	while (1)
 	{
 		// stop requested, terminate immediately
 		if (player->decoder_command == CMD_STOP)
 		{
+			ESP_ERROR_CHECK(tda7313_set_input(1));
 			break;
 		}
 		//size = bufferRead(b, VSTASKBUF);
@@ -743,7 +731,8 @@ void vsTask(void *pvParams)
 		{
 			ESP_LOGE(TAG, "Decoder vs1053 size: %d, fsize: %d, VSTASKBUF: %d .\n",size,fsize,VSTASKBUF );	
 			size = 	VSTASKBUF;
-		}*/
+		}
+*/
 		if (size > 0)
 		{
 			spiRamFifoRead((char *)b, size);
@@ -757,7 +746,6 @@ void vsTask(void *pvParams)
 	}
 
 	spiRamFifoReset();
-	tda7313_set_input(1);
 	player->decoder_status = STOPPED;
 	player->decoder_command = CMD_NONE;
 	ESP_LOGD(TAG, "Decoder vs1053 stopped.\n");

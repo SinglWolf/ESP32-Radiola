@@ -34,8 +34,6 @@ Copyright (C) 2017  KaraWin
 #include "esp_event_loop.h"
 #include "esp_log.h"
 #include "esp_ota_ops.h"
-//#include "esp_heap_trace.h"
-#include "nvs_flash.h"
 #include "driver/i2s.h"
 #include "driver/uart.h"
 
@@ -50,23 +48,13 @@ Copyright (C) 2017  KaraWin
 
 #include "spiram_fifo.h"
 #include "audio_renderer.h"
-//#include "bt_speaker.h"
 #include "bt_config.h"
-//#include "mdns_task.h"
 #include "audio_player.h"
-#include "addon.h"
 
 #include "eeprom.h"
 
-/////////////////////////////////////////////////////
-///////////////////////////
-#include "bt_config.h"
 #include "driver/gpio.h"
 #include "driver/i2c.h"
-//#include "esp_wifi.h"
-//#include "xi2c.h"
-//#include "fonts.h"
-//#include "ssd1306.h"
 #include "nvs_flash.h"
 #include "gpio.h"
 #include "servers.h"
@@ -77,7 +65,14 @@ Copyright (C) 2017  KaraWin
 #include "ClickEncoder.h"
 #include "addon.h"
 #include "tda7313.h"
+
+#include "owb.h"
+#include "owb_rmt.h"
+#include "ds18b20.h"
 #include "sdkconfig.h"
+
+#define _RESOLUTION (DS18B20_RESOLUTION_12_BIT)
+#define SAMPLE_PERIOD (1000) // milliseconds
 
 /* The event group allows multiple bits for each event*/
 //   are we connected  to the AP with an IP? */
@@ -321,10 +316,14 @@ uint32_t checkUart(uint32_t speed)
 *******************************************************************************/
 static void init_hardware()
 {
-	if (VS1053_HW_init()) // init spi
-		VS1053_Start();
 	// Настройка TDA7313...
 	ESP_ERROR_CHECK(tda7313_init(SDA_GPIO, SCL_GPIO));
+	if (VS1053_HW_init()) // init spi
+	{
+		ESP_ERROR_CHECK(tda7313_set_mute(true));
+		VS1053_Start();
+		ESP_ERROR_CHECK(tda7313_set_mute(false));
+	}
 	ESP_LOGI(TAG, "hardware initialized");
 }
 
@@ -852,16 +851,91 @@ void autoPlay()
 			clientSaveOneHeader("Ready", 5, METANAME);
 	}
 }
+void ds18b20Task(void *pvParameters)
+{
+	int uxHighWaterMark;
+	// Create a 1-Wire bus, using the RMT timeslot driver
+	OneWireBus *owb;
+	owb_rmt_driver_info rmt_driver_info;
+	owb = owb_rmt_initialize(&rmt_driver_info, PIN_NUM_DS18B20_0, RMT_CHANNEL_2, RMT_CHANNEL_1);
+	owb_use_crc(owb, true); // enable CRC check for ROM code
+
+	// For a single device only:
+	OneWireBus_ROMCode rom_code;
+	owb_status status = owb_read_rom(owb, &rom_code);
+	if (status == OWB_STATUS_OK)
+	{
+		char rom_code_s[OWB_ROM_CODE_STRING_LENGTH];
+		owb_string_from_rom_code(rom_code, rom_code_s, sizeof(rom_code_s));
+		ESP_LOGI(TAG, "Single device %s present\n", rom_code_s);
+	}
+	else
+	{
+		ESP_LOGI(TAG, "An error occurred reading ROM code: %d", status);
+	}
+
+	// Create DS18B20 devices on the 1-Wire bus
+	DS18B20_Info *ds18b20_info = ds18b20_malloc(); // heap allocation
+
+	ESP_LOGI(TAG, "Single device optimisations enabled\n");
+	ds18b20_init_solo(ds18b20_info, owb); // only one device on bus
+
+	ds18b20_use_crc(ds18b20_info, true); // enable CRC check for temperature readings
+	ds18b20_set_resolution(ds18b20_info, _RESOLUTION);
+
+	// Read temperatures more efficiently by starting conversions on all devices at the same time
+	int errors_count = 0;
+	while (1)
+	{
+		ds18b20_convert_all(owb);
+
+		// In this application all devices use the same resolution,
+		// so use the first device to determine the delay
+		ds18b20_wait_for_conversion(ds18b20_info);
+
+		// Read the results immediately after conversion otherwise it may fail
+		// (using printf before reading may take too long)
+		float readings = 0;
+		DS18B20_ERROR errors = 0;
+
+		errors = ds18b20_read_temp(ds18b20_info, &readings);
+
+		if (errors != DS18B20_OK)
+		{
+			++errors_count;
+		}
+
+		ESP_LOGD(TAG, "  Temperature: %.1f    %d errors\n", readings, errors_count);
+		uxHighWaterMark = uxTaskGetStackHighWaterMark(NULL);
+		ESP_LOGD("ds18b20Task", striWATERMARK, uxHighWaterMark, xPortGetFreeHeapSize());
+
+		vTaskDelay(10);
+	}
+
+	// clean up dynamically allocated data
+
+	ds18b20_free(&ds18b20_info);
+
+	owb_uninitialize(owb);
+
+	ESP_LOGI(TAG, "Restarting now.\n");
+	fflush(stdout);
+	vTaskDelay(1000 / portTICK_PERIOD_MS);
+	esp_restart();
+}
 
 /**
  * Main entry point
  */
+
 void app_main()
 {
 	//Затычка для вентилятора
 	gpio_pad_select_gpio(PIN_NUM_PWM);
 	gpio_set_direction(PIN_NUM_PWM, GPIO_MODE_OUTPUT);
 	gpio_set_level(PIN_NUM_PWM, LOW);
+	//
+
 	//
 	uint32_t uspeed;
 	xTaskHandle pxCreatedTask;
@@ -908,16 +982,10 @@ void app_main()
 			g_device->uartspeed = 115200;			 // default
 			g_device->audio_output_mode = VS1053;	// default
 			g_device->options &= NT_LEDPOL;			 // 0 = load patch
-			g_device->i2sspeed = 0;					 //default
-			g_device->treble = 0;					 //default
-			g_device->bass = 0;						 //default
-			g_device->freqtreble = 1;				 //default
-			g_device->freqbass = 2;					 //default
-			g_device->spacial = 0;					 //default
 			g_device->trace_level = ESP_LOG_VERBOSE; //default
 			g_device->vol = 100;					 //default
 			g_device->led_gpio = GPIO_NONE;
-				g_device->tzoffset = 5;
+			g_device->tzoffset = 5;
 			g_device->options32 |= T_ROTAT;
 			g_device->options32 |= T_DDMM;
 			g_device->current_ap = STA1;
@@ -925,16 +993,17 @@ void app_main()
 			strcpy(g_device->pass1, "1234567890\0");
 			g_device->dhcpEn1 = 1;
 			saveDeviceSettings(g_device);
+			copyDeviceSettings(); // copy in the safe partion
 		}
 		else
 			ESP_LOGE(TAG, "Device config restored");
 	}
+	//SPI init for the vs1053 and lcd if spi.
+	VS1053_spi_init();
 	// output mode
 	//I2S, I2S_MERUS, DAC_BUILT_IN, PDM, VS1053
 	audio_output_mode = g_device->audio_output_mode;
 	ESP_LOGI(TAG, "audio_output_mode %d\nOne of I2S=0, I2S_MERUS, DAC_BUILT_IN, PDM, VS1053", audio_output_mode);
-
-	copyDeviceSettings(); // copy in the safe partion
 
 	// init softwares
 	telnetinit();
@@ -948,14 +1017,8 @@ void app_main()
 	option_get_ddmm(&ddmm);
 	setDdmm(ddmm ? 1 : 0);
 
-	//SPI init for the vs1053 and lcd if spi.
-	VS1053_spi_init();
-
 	init_hardware();
 	ESP_LOGI(TAG, "Hardware init done...");
-
-	//ESP_LOGE(TAG,"Corrupt1 %d",heap_caps_check_integrity(MALLOC_CAP_DMA,1));
-
 	// lcd init
 	uint8_t rt;
 	option_get_lcd_info(&rt);
@@ -1074,6 +1137,9 @@ void app_main()
 	vTaskDelay(1);
 	xTaskCreatePinnedToCore(task_addon, "task_addon", 2200, NULL, PRIO_ADDON, &pxCreatedTask, CPU_ADDON);
 	ESP_LOGI(TAG, "%s task: %x", "task_addon", (unsigned int)pxCreatedTask);
+	vTaskDelay(1);
+	xTaskCreatePinnedToCore(ds18b20Task, "ds18b20Task", 1800, NULL, PRIO_DS18B20, &pxCreatedTask, CPU_DS18B20);
+	ESP_LOGI(TAG, "%s task: %x", "ds18b20Task", (unsigned int)pxCreatedTask);
 
 	/*	if (RDA5807M_detection())
 	{

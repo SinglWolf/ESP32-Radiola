@@ -1227,7 +1227,6 @@ void clientTask(void *pvParams)
 		if (xSemaphoreTake(sConnect, portMAX_DELAY))
 		{
 
-			//VS1053_HighPower();
 			xSemaphoreTake(sDisconnect, 0);
 			sockfd = socket(AF_INET, SOCK_STREAM, 0);
 			ESP_LOGI(TAG, "Webclient socket: %d, errno: %d", sockfd, errno);
@@ -1371,14 +1370,11 @@ void clientTask(void *pvParams)
 			{
 				setVolumei(0);
 				audio_player_stop();
-				//if (get_audio_output_mode() == VS1053) spiRamFifoReset();
 				player_config->media_stream->eof = true;
 				//				bufferReset();
-				if (get_audio_output_mode() == VS1053)
-					VS1053_flush_cancel(2);
+				VS1053_flush_cancel(2);
 				playing = 0;
 				vTaskDelay(40); // stop without click
-				//VS1053_LowPower();
 				setVolumei(getVolume());
 			}
 

@@ -47,7 +47,6 @@ Copyright (C) 2017  KaraWin
 #include "main.h"
 
 #include "spiram_fifo.h"
-#include "audio_renderer.h"
 #include "bt_config.h"
 #include "audio_player.h"
 
@@ -125,7 +124,6 @@ IRAM_ATTR void setIvol(uint8_t vol)
 	clientIvol = vol;
 	ctimeVol = 0;
 }
-IRAM_ATTR output_mode_t get_audio_output_mode() { return audio_output_mode; }
 
 /*
 IRAM_ATTR void   microsCallback(void *pArg) {
@@ -267,30 +265,6 @@ void initTimers()
 
 //////////////////////////////////////////////////////////////////
 
-// Renderer config creation
-static renderer_config_t *create_renderer_config()
-{
-	renderer_config_t *renderer_config = calloc(1, sizeof(renderer_config_t));
-
-	renderer_config->bit_depth = I2S_BITS_PER_SAMPLE_16BIT;
-	renderer_config->i2s_num = I2S_NUM_0;
-	renderer_config->sample_rate = 44100;
-	renderer_config->sample_rate_modifier = 1.0;
-	renderer_config->output_mode = audio_output_mode;
-
-	if (renderer_config->output_mode == I2S_MERUS)
-	{
-		renderer_config->bit_depth = I2S_BITS_PER_SAMPLE_32BIT;
-	}
-
-	if (renderer_config->output_mode == DAC_BUILT_IN)
-	{
-		renderer_config->bit_depth = I2S_BITS_PER_SAMPLE_16BIT;
-	}
-
-	return renderer_config;
-}
-
 /******************************************************************************
  * FunctionName : checkUart
  * Description  : Check for a valid uart baudrate
@@ -322,6 +296,7 @@ static void init_hardware()
 	if (VS1053_HW_init()) // init spi
 	{
 		ESP_ERROR_CHECK(tda7313_set_mute(true));
+		ESP_ERROR_CHECK(tda7313_set_input(audio_output_mode));
 		VS1053_Start();
 		ESP_ERROR_CHECK(tda7313_set_mute(false));
 	}
@@ -370,6 +345,7 @@ static esp_err_t event_handler(void *ctx, system_event_t *event)
 		if (!getAutoWifi() && (wifiInitDone))
 		{
 			ESP_LOGE(TAG, "reboot");
+			fflush(stdout);
 			vTaskDelay(100);
 			esp_restart();
 		}
@@ -503,7 +479,7 @@ static void start_wifi()
 			vTaskDelay(1);
 			ESP_ERROR_CHECK(esp_wifi_start());
 
-			audio_output_mode = VS1053;
+			audio_output_mode = COMPUTER;
 		}
 		else
 		{
@@ -628,6 +604,8 @@ void start_network()
 			else
 				g_device->dhcpEn2 = 1;
 			saveDeviceSettings(g_device);
+			fflush(stdout);
+			vTaskDelay(100);
 			esp_restart();
 		}
 
@@ -834,7 +812,7 @@ void autoPlay()
 	else
 	{
 		clientSaveOneHeader(apmode, strlen(apmode), METANAME);
-		if ((audio_output_mode == VS1053) && (getVsVersion() < 3))
+		if (getVsVersion() < 3)
 		{
 			clientSaveOneHeader("Invalid audio output. VS1053 not found", 38, METAGENRE);
 			ESP_LOGE(TAG, "Invalid audio output. VS1053 not found");
@@ -858,7 +836,6 @@ float getTemperature()
 }
 void ds18b20Task(void *pvParameters)
 {
-	int uxHighWaterMark;
 	// Create a 1-Wire bus, using the RMT timeslot driver
 	OneWireBus *owb;
 	owb_rmt_driver_info rmt_driver_info;
@@ -876,7 +853,7 @@ void ds18b20Task(void *pvParameters)
 	}
 	else
 	{
-		ESP_LOGI(TAG, "An error occurred reading ROM code: %d", status);
+		ESP_LOGE(TAG, "An error occurred reading ROM code: %d", status);
 	}
 
 	// Create DS18B20 devices on the 1-Wire bus
@@ -889,7 +866,6 @@ void ds18b20Task(void *pvParameters)
 	ds18b20_set_resolution(ds18b20_info, _RESOLUTION);
 
 	// Read temperatures more efficiently by starting conversions on all devices at the same time
-	int errors_count = 0;
 	while (1)
 	{
 		ds18b20_convert_all(owb);
@@ -900,18 +876,16 @@ void ds18b20Task(void *pvParameters)
 
 		// Read the results immediately after conversion otherwise it may fail
 		// (using printf before reading may take too long)
-		DS18B20_ERROR errors = 0;
 
-		errors = ds18b20_read_temp(ds18b20_info, &cur_temp);
+		DS18B20_ERROR error = ds18b20_read_temp(ds18b20_info, &cur_temp);
 
-		if (errors != DS18B20_OK)
+		if (error != DS18B20_OK)
 		{
-			++errors_count;
+			ESP_LOGE(TAG, "DS18B20 ERROR: %d\n", error);
 		}
 
-		ESP_LOGD(TAG, "  Temperature: %.1f    %d errors\n", cur_temp, errors_count);
-		uxHighWaterMark = uxTaskGetStackHighWaterMark(NULL);
-		ESP_LOGD("ds18b20Task", striWATERMARK, uxHighWaterMark, xPortGetFreeHeapSize());
+		//int uxHighWaterMark = uxTaskGetStackHighWaterMark(NULL);
+		//ESP_LOGD("ds18b20Task", striWATERMARK, uxHighWaterMark, xPortGetFreeHeapSize());
 
 		vTaskDelay(10);
 	}
@@ -924,7 +898,7 @@ void ds18b20Task(void *pvParameters)
 
 	ESP_LOGI(TAG, "Restarting now.\n");
 	fflush(stdout);
-	vTaskDelay(1000 / portTICK_PERIOD_MS);
+	vTaskDelay(100);
 	esp_restart();
 }
 
@@ -984,7 +958,7 @@ void app_main()
 			g_device = getDeviceSettings();
 			g_device->cleared = 0xAABB;				 //marker init done
 			g_device->uartspeed = 115200;			 // default
-			g_device->audio_output_mode = VS1053;	// default
+			g_device->audio_output_mode = COMPUTER;  // default
 			g_device->options &= NT_LEDPOL;			 // 0 = load patch
 			g_device->trace_level = ESP_LOG_VERBOSE; //default
 			g_device->vol = 100;					 //default
@@ -996,18 +970,20 @@ void app_main()
 			strcpy(g_device->ssid1, "OpenWrt\0");
 			strcpy(g_device->pass1, "1234567890\0");
 			g_device->dhcpEn1 = 1;
+			g_device->lcd_out = 0;
 			saveDeviceSettings(g_device);
-			copyDeviceSettings(); // copy in the safe partion
 		}
 		else
 			ESP_LOGE(TAG, "Device config restored");
 	}
+	copyDeviceSettings(); // copy in the safe partion
+
 	//SPI init for the vs1053 and lcd if spi.
 	VS1053_spi_init();
 	// output mode
-	//I2S, I2S_MERUS, DAC_BUILT_IN, PDM, VS1053
 	audio_output_mode = g_device->audio_output_mode;
-	ESP_LOGI(TAG, "audio_output_mode %d\nOne of I2S=0, I2S_MERUS, DAC_BUILT_IN, PDM, VS1053", audio_output_mode);
+	//I2S, I2S_MERUS, DAC_BUILT_IN, PDM, VS1053
+	ESP_LOGI(TAG, "audio_output_mode %d\nOne of COMPUTER = 1, VS1053, BLUETOOTH", audio_output_mode);
 
 	// init softwares
 	telnetinit();
@@ -1040,8 +1016,7 @@ void app_main()
 	}
 	else
 	{
-		if (audio_output_mode == VS1053)
-			setSPIRAMSIZE(50 * 1024); // more free heap
+		setSPIRAMSIZE(50 * 1024); // more free heap
 		ESP_LOGI(TAG, "Set Song buffer to 50k");
 	}
 
@@ -1122,7 +1097,6 @@ void app_main()
 	player_config->media_stream = calloc(1, sizeof(media_stream_t));
 
 	audio_player_init(player_config);
-	renderer_init(create_renderer_config());
 
 	// LCD Display infos
 	lcd_welcome(localIp, "STARTED");

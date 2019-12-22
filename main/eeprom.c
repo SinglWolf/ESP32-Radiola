@@ -6,19 +6,18 @@
 #define LOG_LOCAL_LEVEL ESP_LOG_VERBOSE
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "freertos/semphr.h"
 #include "esp_spi_flash.h"
 #include "esp_partition.h"
 #include "esp_task_wdt.h"
-#include "freertos/FreeRTOS.h"
 #include "esp_log.h"
-//#include "driver/uart.h"
+#include "driver/uart.h"
 
 #include "eeprom.h"
 #include "stdio.h"
 #include "stdlib.h"
 #include <assert.h>
-//#include "spi_flash.h"
-//#include <esp_libc.h>
+
 #include "interface.h"
 
 #define NBSTATIONS 255

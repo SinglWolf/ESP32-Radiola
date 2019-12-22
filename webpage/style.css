@@ -369,11 +369,10 @@ ul#ordered li {float:none;text-align:left;}
 }
 .tabs span.coutput label {
 	display:run-in;
-	padding:1px 1px;
+	padding: 4px 4px;
 	background:#39c;
-	top:1px;
-	border-radius:0px;
-	
+	top: 0px;
+	border-radius: 4px;
 }
 .tabs span.coutput label:hover {
 	background:#3cc;
@@ -381,7 +380,7 @@ ul#ordered li {float:none;text-align:left;}
 
 .tabs [id^="output"]:checked+label {
 	top:0;
-	padding:2px 2px;
+	padding: 4px 4px;
 	color:#EEE;
 	background:#37c;
 	border-radius:4px;
@@ -471,4 +470,3 @@ a.page {
 .modal-body {
 	padding: 2px 16px;
 }
-

@@ -15,10 +15,6 @@
 #include "esp_system.h"
 #include "esp_log.h"
 
-//#include "fdk_aac_decoder.h"
-//#include "helix_aac_decoder.h"
-//#include "libfaad_decoder.h"
-//#include "mp3_decoder.h"
 #include "webclient.h"
 #include "vs1053.h"
 //#include "tda7313.h"
@@ -38,60 +34,11 @@ static int start_decoder_task(player_t *player)
 	int priority = PRIO_MAD;
 
 	ESP_LOGD(TAG, "RAM left %d", esp_get_free_heap_size());
-	if (get_audio_output_mode() == VS1053)
-	{
-		task_func = vsTask;
-		task_name = (char *)"vsTask";
-		stack_depth = 3000;
-		priority = PRIO_VS1053;
-	}
-	else
-		switch (player->media_stream->content_type)
-		{
-		// case AUDIO_MPEG:
-		// 	task_func = mp3_decoder_task;
-		// 	task_name = (char *)"mp3_decoder_task";
-		// 	stack_depth = 8448;
-		// 	break;
 
-		// case AUDIO_MP4:
-		// 	task_func = libfaac_decoder_task;
-		// 	task_name = (char *)"libfaac_decoder_task";
-		// 	stack_depth = 55000;
-		// 	break;
-
-		// case AUDIO_AAC:
-		// case OCTET_STREAM: // probably .aac
-		// 	if (!bigSram())
-		// 	{
-		// 		ESP_LOGW(TAG, "aac mime not supported type: %d", player->media_stream->content_type);
-		// 		spiRamFifoReset();
-		// 		return -1;
-		// 	}
-
-		// 	task_func = fdkaac_decoder_task;
-		// 	task_name = (char *)"fdkaac_decoder_task";
-		// 	stack_depth = 7000; //6144;
-		// 	break;
-
-		// case AUDIO_AAC:
-		// case OCTET_STREAM: // probably .aac
-		// 	task_func = helixaac_decoder_task;
-		// 	task_name = (char *)"helixaac_decoder_task";
-		// 	stack_depth = 6144; //6144; //6144
-		// 	break;
-
-		// case AUDIO_AAC:
-		// case OCTET_STREAM: // probably .aac
-		// 	task_func = libfaac_decoder_task;
-		// 	task_name = "libfaac_decoder_task";
-		// 	stack_depth = 55000;
-		// 	break;
-		default:
-			ESP_LOGW(TAG, "unknown mime type: %d", player->media_stream->content_type);
-			spiRamFifoReset();
-			return -1;
-		}
+	task_func = vsTask;
+	task_name = (char *)"vsTask";
+	stack_depth = 3000;
+	priority = PRIO_VS1053;
 
 	if (((task_func != NULL)) && (xTaskCreatePinnedToCore(task_func, task_name, stack_depth, player,
 														  priority, NULL, CPU_MAD) != pdPASS))
@@ -173,15 +120,11 @@ void audio_player_init(player_t *player)
 
 void audio_player_destroy()
 {
-	if (get_audio_output_mode() != VS1053)
-		renderer_destroy();
 	player_status = UNINITIALIZED;
 }
 
 void audio_player_start()
 {
-	if (get_audio_output_mode() != VS1053)
-		renderer_start();
 	player_instance->media_stream->eof = false;
 	player_instance->command = CMD_START;
 	player_instance->decoder_command = CMD_NONE;
@@ -193,8 +136,6 @@ void audio_player_stop()
 	player_instance->decoder_command = CMD_STOP;
 	player_instance->command = CMD_STOP;
 	player_instance->media_stream->eof = true;
-	if (get_audio_output_mode() != VS1053)
-		renderer_stop();
 	player_instance->command = CMD_NONE;
 	player_status = STOPPED;
 }

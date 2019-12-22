@@ -5,13 +5,11 @@
 #define LOG_LOCAL_LEVEL ESP_LOG_VERBOSE
 
 #include <string.h>
-#include "interface.h"
 #include "webserver.h"
 #include "serv-fs.h"
 #include "servers.h"
 #include "driver/timer.h"
 #include "driver/uart.h"
-#include "audio_renderer.h"
 #include "main.h"
 #include "ota.h"
 #include "esp_wifi.h"
@@ -270,11 +268,7 @@ void setVolumei(int16_t vol)
 		vol = 254;
 	if (vol < 0)
 		vol = 1;
-	if (get_audio_output_mode() == VS1053)
-		VS1053_SetVolume(vol);
-	if (vol < 3)
-		vol--;
-	renderer_volume(vol + 2); // max 256
+	VS1053_SetVolume(vol);
 }
 void setVolume(char *vol)
 {
@@ -287,11 +281,7 @@ void setVolume(char *vol)
 		uvol = 1;
 	if (vol != NULL)
 	{
-		if (get_audio_output_mode() == VS1053)
-			VS1053_SetVolume(uvol);
-		if (uvol < 3)
-			uvol--;
-		renderer_volume(uvol + 2); // max 256
+		VS1053_SetVolume(uvol);
 		kprintf("##CLI.VOL#: %d\n", getIvol());
 	}
 }
@@ -575,60 +565,45 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 			{
 				if (g_device->bass != atoi(bass))
 				{
-					if (get_audio_output_mode() == VS1053)
-					{
-						VS1053_SetBass(atoi(bass));
-						changed = true;
-						g_device->bass = atoi(bass);
-					}
+					VS1053_SetBass(atoi(bass));
+					changed = true;
+					g_device->bass = atoi(bass);
 				}
 			}
 			if (getSParameterFromResponse(treble, 6, "treble=", data, data_size))
 			{
 				if (g_device->treble != atoi(treble))
 				{
-					if (get_audio_output_mode() == VS1053)
-					{
-						VS1053_SetTreble(atoi(treble));
-						changed = true;
-						g_device->treble = atoi(treble);
-					}
+					VS1053_SetTreble(atoi(treble));
+					changed = true;
+					g_device->treble = atoi(treble);
 				}
 			}
 			if (getSParameterFromResponse(bassfreq, 6, "bassfreq=", data, data_size))
 			{
 				if (g_device->freqbass != atoi(bassfreq))
 				{
-					if (get_audio_output_mode() == VS1053)
-					{
-						VS1053_SetBassFreq(atoi(bassfreq));
-						changed = true;
-						g_device->freqbass = atoi(bassfreq);
-					}
+					VS1053_SetBassFreq(atoi(bassfreq));
+					changed = true;
+					g_device->freqbass = atoi(bassfreq);
 				}
 			}
 			if (getSParameterFromResponse(treblefreq, 6, "treblefreq=", data, data_size))
 			{
 				if (g_device->freqtreble != atoi(treblefreq))
 				{
-					if (get_audio_output_mode() == VS1053)
-					{
-						VS1053_SetTrebleFreq(atoi(treblefreq));
-						changed = true;
-						g_device->freqtreble = atoi(treblefreq);
-					}
+					VS1053_SetTrebleFreq(atoi(treblefreq));
+					changed = true;
+					g_device->freqtreble = atoi(treblefreq);
 				}
 			}
 			if (getSParameterFromResponse(spacial, 6, "spacial=", data, data_size))
 			{
 				if (g_device->spacial != atoi(spacial))
 				{
-					if (get_audio_output_mode() == VS1053)
-					{
-						VS1053_SetSpatial(atoi(spacial));
-						changed = true;
-						g_device->spacial = atoi(spacial);
-					}
+					VS1053_SetSpatial(atoi(spacial));
+					changed = true;
+					g_device->spacial = atoi(spacial);
 				}
 			}
 			if (changed)
@@ -849,15 +824,15 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 		char vol[5];
 		sprintf(vol, "%d", (getVolume()));
 		char treble[5];
-		sprintf(treble, "%d", (get_audio_output_mode() == VS1053) ? VS1053_GetTreble() : 0);
+		sprintf(treble, "%d", VS1053_GetTreble());
 		char bass[5];
-		sprintf(bass, "%d", (get_audio_output_mode() == VS1053) ? VS1053_GetBass() : 0);
+		sprintf(bass, "%d", VS1053_GetBass());
 		char tfreq[5];
-		sprintf(tfreq, "%d", (get_audio_output_mode() == VS1053) ? VS1053_GetTrebleFreq() : 0);
+		sprintf(tfreq, "%d", VS1053_GetTrebleFreq());
 		char bfreq[5];
-		sprintf(bfreq, "%d", (get_audio_output_mode() == VS1053) ? VS1053_GetBassFreq() : 0);
+		sprintf(bfreq, "%d",VS1053_GetBassFreq());
 		char spac[5];
-		sprintf(spac, "%d", (get_audio_output_mode() == VS1053) ? VS1053_GetSpatial() : 0);
+		sprintf(spac, "%d",VS1053_GetSpatial());
 
 		struct icyHeader *header = clientGetHeader();
 		ESP_LOGV(TAG, "icy start header %x", (int)header);
@@ -944,7 +919,8 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 				// set current_ap to the first filled ssid
 				ESP_LOGD(TAG, "audio_output_mode: %d", g_device->audio_output_mode);
 				//				copyDeviceSettings();
-				vTaskDelay(20);
+				fflush(stdout);
+				vTaskDelay(100);
 				esp_restart();
 			}
 			return;
@@ -1156,7 +1132,8 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 				}
 				ESP_LOGD(TAG, "currentAP: %d", g_device->current_ap);
 				copyDeviceSettings(); // save the current one
-				vTaskDelay(50);
+				fflush(stdout);
+				vTaskDelay(100);
 				esp_restart();
 			}
 			return;

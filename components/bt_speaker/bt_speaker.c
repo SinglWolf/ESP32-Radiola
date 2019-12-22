@@ -31,7 +31,7 @@
 #include "esp_avrc_api.h"
 #include "../bt_speaker/bt_app_av.h"
 #include "../bt_speaker/bt_app_core.h"
-#include "../../main/include/bt_config.h"
+#include "../../include/bt_config.h"
 
 #include "audio_renderer.h"
 

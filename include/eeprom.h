@@ -7,8 +7,7 @@
 #pragma once
 
 #include "esp_system.h"
-#include "audio_renderer.h"
-
+#include "tda7313.h"
 //define for bit array options
 #define T_THEME 1
 #define NT_THEME 0xFE
@@ -71,7 +70,7 @@ struct device_settings
 	uint32_t sleepValue;
 	uint32_t wakeValue;
 	// esp32
-	output_mode_t audio_output_mode; //
+	uint8_t audio_output_mode; //
 	uint8_t trace_level;
 	uint8_t led_gpio;  // the gpio of the led
 	uint32_t lcd_out;  // timeout in seconds to switch off the lcd. 0 = no timeout

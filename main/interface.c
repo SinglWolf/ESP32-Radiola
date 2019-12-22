@@ -1374,7 +1374,11 @@ void checkCommand(int size, char *s)
 		else if (strcmp(tmp + 4, "heap") == 0)
 			heapSize();
 		else if (strcmp(tmp + 4, "boot") == 0)
+		{
+			fflush(stdout);
+			vTaskDelay(100);
 			esp_restart();
+		}
 		else if (strcmp(tmp + 4, "conf") == 0)
 			sys_conf();
 		else if (strcmp(tmp + 4, "update") == 0)

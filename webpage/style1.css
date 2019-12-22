@@ -1,5 +1,5 @@
 html,body {
-	margin:0;
+	margin:0px;
 	height:100%;
 	padding:0;
 	font:12px "Trebuchet MS";
@@ -111,10 +111,10 @@ div.LEFT {
 .CONTENT a,a:visited {
 	font-size:15px;
 	color:#AAAAAA;
-	text-decoration:none
+	text-decoration:none;
 }
 .CONTENT a:hover {
-	color:#666
+	color:#666;
 }
 .CONTENT span.bold {
 	font-weight:900;
@@ -383,15 +383,15 @@ ul#ordered li {float:none;text-align:left;}
 
 .tabs span.coutput label {
 	display:run-in;
-	padding:1px 1px;
-	top:1px;
-	border-radius:0px;
+	padding:4px 4px;
+	top:0px;
+	border-radius:4px;
 	background:#666145;
 }
 
 .tabs [id^="output"]:checked+label {
 	top:0;
-	padding:2px 2px;
+	padding:4px 4px;
 	color:#EEE;
 	background:#918B69;
 	border-radius:4px;
@@ -485,5 +485,3 @@ box-shadow:10px 5px 10px 255 #333,-10px 6px 10px 0 #333*/
 .modal-body {
 	padding: 2px 16px;
 }
-
-

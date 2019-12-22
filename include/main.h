@@ -36,7 +36,6 @@
 
 #ifndef _MAIN_H_
 #define _MAIN_H_
-#include "audio_renderer.h"
 #include "driver/timer.h"
 
 #define TIMER_DIVIDER 16                        //5000000Hz 5MHz
@@ -124,8 +123,6 @@ typedef struct
     int i1;   /*!< TIMER_xxx timer group */
     int i2;   /*!< TIMER_xxx timer number */
 } queue_event_t;
-
-output_mode_t get_audio_output_mode();
 
 uint8_t getIvol();
 void setIvol(uint8_t vol);

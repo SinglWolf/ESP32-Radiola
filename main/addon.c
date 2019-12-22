@@ -884,12 +884,14 @@ void irLoop()
 		{ // no predefined keys
 			switch (evtir)
 			{
+			case 0xFB0400:
 			case 0xDF2047:
 			case 0xDF2002:
 			case 0xFF0046:
 			case 0xF70812: /*(" UP");*/
 				evtStation(+1);
 				break;
+			case 0xFB0403:
 			case 0xDF2049:
 			case 0xDF2041:
 			case 0xFF0044:
@@ -897,12 +899,14 @@ void irLoop()
 			case 0xF70815: /*(" LEFT");*/
 				setRelVolume(-5);
 				break;
+			case 0xFB0444:
 			case 0xDF204A:
 			case 0xFF0040:
 			case 0xF7081E: /*(" OK");*/
 				if (!evt.repeat_flag)
 					stationOk();
 				break;
+			case 0xFB0402:
 			case 0xDF204B:
 			case 0xDF2003:
 			case 0xFF0043:
@@ -910,60 +914,70 @@ void irLoop()
 			case 0xF70814: /*(" RIGHT");*/
 				setRelVolume(+5);
 				break;
+			case 0xFB0401:
 			case 0xDF204D:
 			case 0xDF2009:
 			case 0xFF0015:
 			case 0xF70813: /*(" DOWN");*/
 				evtStation(-1);
 				break;
+			case 0xFB0411:
 			case 0xDF2000:
 			case 0xFF0016:
 			case 0xF70801: /*(" 1");*/
 				if (!evt.repeat_flag)
 					nbStation('1');
 				break;
+			case 0xFB0412:
 			case 0xDF2010:
 			case 0xFF0019:
 			case 0xF70802: /*(" 2");*/
 				if (!evt.repeat_flag)
 					nbStation('2');
 				break;
+			case 0xFB0413:
 			case 0xDF2011:
 			case 0xFF000D:
 			case 0xF70803: /*(" 3");*/
 				if (!evt.repeat_flag)
 					nbStation('3');
 				break;
+			case 0xFB0414:
 			case 0xDF2013:
 			case 0xFF000C:
 			case 0xF70804: /*(" 4");*/
 				if (!evt.repeat_flag)
 					nbStation('4');
 				break;
+			case 0xFB0415:
 			case 0xDF2014:
 			case 0xFF0018:
 			case 0xF70805: /*(" 5");*/
 				if (!evt.repeat_flag)
 					nbStation('5');
 				break;
+			case 0xFB0416:
 			case 0xDF2015:
 			case 0xFF005E:
 			case 0xF70806: /*(" 6");*/
 				if (!evt.repeat_flag)
 					nbStation('6');
 				break;
+			case 0xFB0417:
 			case 0xDF2017:
 			case 0xFF0008:
 			case 0xF70807: /*(" 7");*/
 				if (!evt.repeat_flag)
 					nbStation('7');
 				break;
+			case 0xFB0418:
 			case 0xDF2018:
 			case 0xFF001C:
 			case 0xF70808: /*(" 8");*/
 				if (!evt.repeat_flag)
 					nbStation('8');
 				break;
+			case 0xFB0419:
 			case 0xDF2019:
 			case 0xFF005A:
 			case 0xF70809: /*(" 9");*/
@@ -976,6 +990,7 @@ void irLoop()
 				if (!evt.repeat_flag)
 					playStationInt(futurNum);
 				break;
+			case 0xFB0410:
 			case 0xDF201B:
 			case 0xFF0052:
 			case 0xF70800: /*(" 0");*/
@@ -1048,7 +1063,26 @@ void customKeyInit()
 {
 	customKey_t index;
 	nvs_handle handle;
-	const char *klab[] = {"K_UP", "K_LEFT", "K_OK", "K_RIGHT", "K_DOWN", "K_0", "K_1", "K_2", "K_3", "K_4", "K_5", "K_6", "K_7", "K_8", "K_9", "K_STAR", "K_DIESE", "K_INFO"};
+	const char *klab[] = {
+		"K_UP",
+		"K_LEFT",
+		"K_OK",
+		"K_RIGHT",
+		"K_DOWN",
+		"K_0",
+		"K_1",
+		"K_2",
+		"K_3",
+		"K_4",
+		"K_5",
+		"K_6",
+		"K_7",
+		"K_8",
+		"K_9",
+		"K_STAR",
+		"K_DIESE",
+		"K_INFO",
+	};
 
 	memset(&customKey, 0, sizeof(uint32_t) * 2 * KEY_MAX); // clear custom
 	if (open_partition(hardware, "custom_ir_space", NVS_READONLY, &handle) != ESP_OK)

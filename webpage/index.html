@@ -9,7 +9,7 @@
 	<link rel="apple-touch-icon" type="image/png" href="logo.png">
 	<link rel="icon" type="image/png" href="favicon.png" />
 	<link rel="stylesheet" title="base" href="style.css" type="text/css" />
-	<title>МЕДИАЦЕНТР</title>
+	<title>МедиаЦентр</title>
 	<style type="text/css">
 	</style>
 </head>
@@ -25,24 +25,24 @@
 					<h1>Edit station</h1>
 					<div class="modal-body">
 						<p>
-							<span class="bold">Slot number: </span><input type="text" id="add_slot" disabled="true"
+							<span class="bold">Номер слота: </span><input type="text" id="add_slot" disabled="true"
 								name="slot"><br>
-							<span class="bold">Name: </span><input type="text" style="width:350px;" id="add_name"
+							<span class="bold">Имя: </span><input type="text" style="width:350px;" id="add_name"
 								name="name"><br>
-							<span class=bold>Full URL: </span><input type=text style="width:350px;" id=add_URL name=URL
-								onkeyup="parseEditURL()" onmouseup="parseEditURL()">
+							<span class=bold>Полный URL: </span><input type=text style="width:350px;" id=add_URL
+								name=URL onkeyup="parseEditURL()" onmouseup="parseEditURL()">
 							<br>or<br>
 							<span class="bold">Url: </span><input type="text" id="add_url" name="url"
 								onkeyup="buildAddURL()"><br>
-							<span class="bold">Port: </span><input type="text" id="add_port" name="port" value="80"
+							<span class="bold">Порт: </span><input type="text" id="add_port" name="port" value="80"
 								onkeyup="buildAddURL()"><br>
-							<span class="bold">Path: </span><input type="text" id="add_path" name="path" value="/"
+							<span class="bold">Путь: </span><input type="text" id="add_path" name="path" value="/"
 								onkeyup="buildAddURL()"><br>
-							<span class="bold">Volume offset: </span><input type="range" id="ovol" name="ovol" step=2
-								min=-126 max=126><br><br>
-							<input type="button" onClick="saveStation()" value="save">&nbsp;
-							<input type="button" onClick="eraseStation()" value="erase">&nbsp;
-							<input type="button" onClick="abortStation()" value="abort">
+							<span class="bold">Смещение громкости: </span><input type="range" id="ovol" name="ovol"
+								step=2 min=-126 max=126><br><br>
+							<input type="button" onClick="saveStation()" value="сохранить">&nbsp;
+							<input type="button" onClick="eraseStation()" value="стереть">&nbsp;
+							<input type="button" onClick="abortStation()" value="выйти">
 						</p>
 					</div>
 				</div>
@@ -53,14 +53,16 @@
 
 	<div id="MAIN">
 		<div id="HEADER" onclick="wtop()">
-			<div class="LEFT"><img title="Click on the logo to change the theme" onClick="theme()" src="logo.png"></div>
+			<div class="LEFT"><img title="Нажмите на логотип, чтобы изменить тему" onClick="theme()" src="logo.png">
+			</div>
 			<div class="RIGHT">
-				<a href="https://github.com/karawin/Ka-Radio32" target="_blank">KaraDio32</a><br />
-				<a href="https://github.com/karawin/Ka-Radio32" target="_blank">V1.9 R5</a><br />
-				<div id="rssi">0 dBm</div><br />
+				<a href="https://github.com/SinglWolf/ESP32-Media" target="_blank">МедиаЦентр</a><br />
+				<a href="https://github.com/SinglWolf/ESP32-Media" target="_blank">V1.0 R1</a><br />
+				<div id="rssi">0 дБм</div>
+				<div id="curtemp">0 ℃</div><br />
 			</div>
 			<div id="HEAD">
-				<span class="bold4"><span id="meta">МЕДИАЦЕНТР</span></span>
+				<span class="bold4"><span id="meta">МедиаЦентр</span></span>
 			</div>
 		</div>
 
@@ -70,7 +72,7 @@
 					<input type="radio" name="tabs" id="tab1" checked />
 					<label for="tab1">Радио</label>
 					<div id="tab-content1" class="tab-content">
-						<h1>Stations control &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input
+						<h1>Управление станциями &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input
 								type="checkbox" id="aplay" onClick="autoplay()" />Автовоспроизведение</h1>
 						<p>
 							<select id="stationsSelect" onchange="Select()">
@@ -78,19 +80,19 @@
 						<span id="np">
 							<p>
 								<!-- Rewind icon by Icons8 -->
-								<img class="icon icons8" width="50" height="50" title="Previous station"
+								<img class="icon icons8" width="50" height="50" title="Предыдущая станция"
 									onClick="prevStation()"
 									src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAC7klEQVRoge2YzU8TQRiH98DBA0dOnvgDPHjwwLF32Z3dkhLUBMHgRxRJiIp0ZrdZaq0WhEgwAY2GqFFJ/ULamdkKsZJgICgaBEPUKBpj5EMpoRShulkPWFIqpa1JWSXz3H/J+yTzzvvOcByDwWAwGAwGg2E2NtWbu5G5rMAjUiBAPJ5xDuIKAWFfNmrKCKHmwVYB+p2iTMMCxEbaOYR3AETbBYgNSab92awxJTuhfxtAZFSStejBliEjXRHeTkSASKjY2bNU3thvrghv9x8HkET3uHvDrs4pQ+74mFLEpnpzrQ6tQ4DYONAyFPHgGaOybcQcEbGW5kuKNggg+Vl9eUxvoLNGA51NKVJY67OIsjZR5Hi4gG59MGI5U0R4iMsAIpESVzBcd/fLSjHriVjU4BZJoc0AYn1f00D4jO/rqtyGivCqL09yBAhAWK9se7lUT0KrikkmIkK83aoE3kiKtnjy+rs/MhsqwttxoSiTULGzZ97h/bRmMYkiFjWYI0B8AkCsl9b3zbk6p5Lmsi5iU725VkW7GmvMs/5vSYuJFxFrab7kCLwQEY1WXxlbN5N1ER6RglhjwpvjKYuJFwGILO46/TjsvDeRVi4rIhY1mCPJtAlArJed659PbMx0RI62jfxYq4dMEylvHPgrkapLo+aLxIg/WvF3fiZH69T9SfNFOG5lCl8TIDYOtTxf8OCZzJpdptFj7a/NF4kRu35tdd0R9c7ntK9fEWk1AGK91NMXdndNmy/CccsD0erQNICwXnVx7WZOOhAd2ltJ0RbtN96bL7IiBHEZkElkt7t3LrEH1l1RHNoFALG+v/npfOI8MntpfCai1T2Q1tKo0MkitXshfkMwTSSGgEgNQDS6t+HJnLtrOv01XgncBgjrh1uHv9eTkPkiHLf8sBIRfWVVAtEjrcMZPaxERGdLXI+WKs4Pmi/Ccb8XREQ8AGI9k6cur/ryRES1f+KpG89///kQz6b4DmIwGAwGg8FgbA5+ASg5cXSpDjcMAAAAAElFTkSuQmCC">
 								<!-- Play icon by Icons8 -->
-								<img class="icon icons8" width="50" height="50" title="Play station"
+								<img class="icon icons8" width="50" height="50" title="Воспроизведение станции"
 									onClick="playStation()"
 									src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAACBElEQVRoge3XPWsUQRgH8C0sLFP6AfwAfoAUqcXszG5QCw8sIljkCkGFZGd33RwJFz3FgC9JIWgTTRGMx2VeLkQOtVhOsDgF30AlRUCOaC6bEI/T87EICxGieTFhGHx+8PT/P+zOPGNZCCGEEEII7TcaTXfozrAnCBOKMFEwvpDjy9j2OBBfLNn9pWxXVDmgO9OuOL6M+8ZqkB2vtSiTLRqo+e4Bfkx3rh1zfBlnx19BQTZguFiHM6PPVwnjbScsx9TjR3Tn27aNRdKJphYgM/I0IR5vu4GaOHqRH9Kdc0ubFUnHu/8JTuQerxAmmoSJsCuqHNSd94/+VqQgG3BFLMH5u+/ADcvfqC8XbW8mozvzprYqks7IzBfou11rEiZ+OKF6081Knbqz/2a7RdIZelSH3uvVxPY4uKFSdn/xsO4OlmXtvMjGA+FU/klCmGw5obqp/ULdbZF0BiY+wvHBuVXqy0TrhbonRXIGF4mmFiCTf7ZsM/HdDcq3jPu0hot16B2trhDG2z3hrHk/+2X+FbJj6/uYE6i3Rh6/F+69h55wdo36yswL0Z+ch5NDlYQw0SSBGDRuRck9/Aynr8bLxONt91L5gXFLY760CGdvvFhbX+NV1cA1/iWcu/ManEC1KBMfjH1YEU/8pEw2jH7qEiYUZfKa9gvtXxlfACGEEEII/T9+AR8nzQFJqsL+AAAAAElFTkSuQmCC">
 								<!-- Stop icon by Icons8 -->
-								<img class="icon icons8" width="50" height="50" title="Stop station"
+								<img class="icon icons8" width="50" height="50" title="Остановить воспроизведение"
 									onClick="stopStation()"
 									src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAAiklEQVRoge3YsQmAMBBAUUfISA4gwXFEUqR3kXQWEpwnG7hB7MRAIhZeivgfXHlwv72uAwAAACQN09bnZrSrKu2MdlWlvYqnp/TsY26ejhqmrS/tVTw9pWcfjQtx2Y9r3obcd4wLhHyCEEKEEEKIEEIIEUIIIUIIIUQIIYQIaeb50Mw7CAAAAP9wAgwPdP6eVGKaAAAAAElFTkSuQmCC">
 								<!-- Fast Forward icon by Icons8 -->
-								<img class="icon icons8" width="50" height="50" title="Next station"
+								<img class="icon icons8" width="50" height="50" title="Сдедующая станция"
 									onClick="nextStation()"
 									src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAADAElEQVRoge2Yy0tUURjAZ9GyZato0bJlixYtWvQHNPc1ZoWCRZKIRUZlzrnnjpNOvm6CpGIRlUGCRaE5c+65V0WRwKHMRCyLDMGih++L48jM5Pi1yIHIbO4VxzE7PzjLD74f936PcxwOBoPBYDAYDAZjIznqfbRzM+NSBicTvxORk7bjkDbqlLWDKUhpfYiYBjlEgJfpPU4mB6zGcYiAgGmIQ4FSrujp7lTmaAkR0+CpmiBklnZFeazNOd3kiJU4DhHIqxsAEesxHtPXTrd/X6pz/SsipsGzN4ehisxCXv2rMIcISIrRnKwGOEQAt4yDr20SsiufzfNIizndgcLNynsVCRGVmqBSE3DLOLi8HWEB69+csv/QWnEJkUTchbvvlgWZxiSP0S8VaXs208HhcKwWUakJFf5pOF37PMQjEpcUve6wt2dHMhGVmnD1yVc44esJ8VgLcyiQnXaRxCl+MAaiokckjz4qILI/mYhKTajW5uDcreEYL5O45NF1p9e/K+0iKjWhvH0KctS+eV6mMRHrVxJfZy2RxPE+/gyZpV0LAtanrTaQlIokzqWm9yBgGpU8+oBQTPcmE1GpCVVkFvLrBxd5mcRdHqMppUPUqohKTShrnYCs8t4QL2sRKyK/NZBFUdG/pGyI2hFJnMI7I8t2RFRqQmVgBnJr+xd4ROKuEr3mTw0kDSJv/20RX9skZFXY/7WUhx8hw9u5NX6ty/dHQVRoVCoxLBd7tTYH+Q2DEV4mcZe3I73FXt4+BTnX+0KcrH0XMHXbab/HyrpDokJn0t5+3c1j4PJ0LIqK/sHOQDx/e2SJR9qSq8Qw0joQKwMzcObGwAKPSFwqMRqsrihlrROQVdE7vyVWFM+jT5Dh7QyLij5hZ2lcGZgxl8d4mdalsVqbg4LGocjPHclosbrG/7rCCFi/uFl5r0LENJhb+wKO+7qjgkxNOxergsYhkBQjJsj0zZa4WK1cdQN2CpNDBHhE4rysXdvw4bYets3jw7Z5DmIwGAwGg8Fg/J/8ALvQciqFBZLiAAAAAElFTkSuQmCC">
 								<br />
@@ -98,7 +100,7 @@
 					<input type="button" value="Previous"  onClick="prevStation()"> &nbsp;
 					<input type="button" value="Next"  onClick="nextStation()">
 					<input type="button" value="Play"  onClick="playStation()"> &nbsp;
-					<input type="button" value="Stop"  onClick="stopStation()">
+					<input type="button" value="Стоп"  onClick="stopStation()">
 -->
 							</p>
 						</span>
@@ -111,29 +113,30 @@
 								min=0 max=254 style="height:25px;">
 						</p>
 						<h1>Станция № <span id="curst"></span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="checkbox"
-								checked id="Full" onclick="full()" /> Full</h1>
-						<p><span class="bold1">Name: </span><span id="name"></span>&nbsp;&nbsp;<img id="icon" src=""
+								checked id="Full" onclick="full()" /> Подробно</h1>
+						<p><span class="bold1">Имя: </span><span id="name"></span>&nbsp;&nbsp;<img id="icon" src=""
 								height="16px" width="16px"> </p>
-						<p><span id="ldescr"> <span class="bold1">Description: </span><span id="descr"></span></span>
+						<p><span id="ldescr"> <span class="bold1">Описание: </span><span id="descr"></span></span>
 						</p>
-						<p><span id="lnot1"><span class="bold1">Notice: </span><span id="not1"></span> <span
+						<p><span id="lnot1"><span class="bold1">Заметка: </span><span id="not1"></span> <span
 									id="not2"></span></span></p>
-						<p><span id="lgenre"><span class="bold1">Genre: </span><span id="genre"></span></span></p>
+						<p><span id="lgenre"><span class="bold1">Жанр: </span><span id="genre"></span></span></p>
 						<p><span id="lurl"><span class="bold1">URL: </span><a target="_blank" id="url2"> <span
 										id="url1"></span></a></span></p>
-						<p><span id="lbitr"><span class="bold1">Bitrate: </span><span id="bitr"></span></span></p>
+						<p><span id="lbitr"><span class="bold1">Битрейт: </span><span id="bitr"></span></span></p>
 
-						<h1>Monitoring</h1>
+						<h1>Мониторинг</h1>
 						<p>
 							<!-- Play icon by Icons8 -->
-							<img class="icon icons8" width="40" height="40" title="Play monitoring" onClick="mplay()"
+							<img class="icon icons8" width="40" height="40" title="Запуск мониторинга" onClick="mplay()"
 								src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAACBElEQVRoge3XPWsUQRgH8C0sLFP6AfwAfoAUqcXszG5QCw8sIljkCkGFZGd33RwJFz3FgC9JIWgTTRGMx2VeLkQOtVhOsDgF30AlRUCOaC6bEI/T87EICxGieTFhGHx+8PT/P+zOPGNZCCGEEEII7TcaTXfozrAnCBOKMFEwvpDjy9j2OBBfLNn9pWxXVDmgO9OuOL6M+8ZqkB2vtSiTLRqo+e4Bfkx3rh1zfBlnx19BQTZguFiHM6PPVwnjbScsx9TjR3Tn27aNRdKJphYgM/I0IR5vu4GaOHqRH9Kdc0ubFUnHu/8JTuQerxAmmoSJsCuqHNSd94/+VqQgG3BFLMH5u+/ADcvfqC8XbW8mozvzprYqks7IzBfou11rEiZ+OKF6081Knbqz/2a7RdIZelSH3uvVxPY4uKFSdn/xsO4OlmXtvMjGA+FU/klCmGw5obqp/ULdbZF0BiY+wvHBuVXqy0TrhbonRXIGF4mmFiCTf7ZsM/HdDcq3jPu0hot16B2trhDG2z3hrHk/+2X+FbJj6/uYE6i3Rh6/F+69h55wdo36yswL0Z+ch5NDlYQw0SSBGDRuRck9/Aynr8bLxONt91L5gXFLY760CGdvvFhbX+NV1cA1/iWcu/ManEC1KBMfjH1YEU/8pEw2jH7qEiYUZfKa9gvtXxlfACGEEEII/T9+AR8nzQFJqsL+AAAAAElFTkSuQmCC">&nbsp;
 							<!-- Stop icon by Icons8 -->
-							<img class="icon icons8" width="40" height="40" title="Stop monitoring" onClick="mstop()"
+							<img class="icon icons8" width="40" height="40" title="Остановка мониторинга"
+								onClick="mstop()"
 								src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAAiklEQVRoge3YsQmAMBBAUUfISA4gwXFEUqR3kXQWEpwnG7hB7MRAIhZeivgfXHlwv72uAwAAACQN09bnZrSrKu2MdlWlvYqnp/TsY26ejhqmrS/tVTw9pWcfjQtx2Y9r3obcd4wLhHyCEEKEEEKIEEIIEUIIIUIIIUQIIYQIaeb50Mw7CAAAAP9wAgwPdP6eVGKaAAAAAElFTkSuQmCC">
 							<!--
 					<input type="button" value="Play"  onClick="mplay()"> &nbsp;
-					<input type="button" value="Stop"  onClick="mstop()"></p>
+					<input type="button" value="Стоп"  onClick="mstop()"></p>
 -->
 						</p>
 						<p>
@@ -142,84 +145,84 @@
 								max=100 style="height:25px;">
 						</p></br>
 						<audio volume="1" id="audio" src="" class="audio_sound" onerror="monerror()">
-							I'm sorry; your browser doesn't support HTML5 <code>audio</code>.
+							Мне жаль; ваш браузер не поддерживает HTML5 <code>audio</code>.
 						</audio>
 
-						<h1>Sleep / Wake&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span id="time">time</span></h1>
+						<h1>Режим сна / Пробуждение&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span id="time">time</span></h1>
 						<p id="sw">
-							<span class="bold1" title="Time mode: HH:MM, or Delay mode (minutes): MM"> Sleep(i) :
+							<span class="bold1" title="Режим времени: ЧЧ:ММ или Режим задержки (минуты): ММ"> ВЫКЛ :
 							</span><input type="text" id="sleepdelay" onkeyup="sleepup(event)">
-							&nbsp;<input type="button" value="Start" onClick="startSleep()"><input type="button"
-								value="Stop" onClick="stopSleep()">
-							&nbsp;&nbsp; In: <span id="sminutes">0</span> Sec.
+							&nbsp;<input type="button" value="Старт" onClick="startSleep()"><input type="button"
+								value="Стоп" onClick="stopSleep()">
+							&nbsp;&nbsp; В: <span id="sminutes">0</span> Сек.
 						</p>
 						<p id="sw">
-							<span class="bold1" title="Time mode: HH:MM, or Delay mode (minutes): MM"> Wake(i) :
+							<span class="bold1" title="Режим времени: ЧЧ:ММ или Режим задержки (минуты): ММ"> ВКЛ :
 							</span><input type="text" id="wakedelay" onkeyup="wakeup(event)">
-							&nbsp;<input type="button" value="Start" onClick="startWake()"><input type="button"
-								value="Stop" onClick="stopWake()">
-							&nbsp;&nbsp; In: <span id="wminutes">0</span> Sec.
+							&nbsp;<input type="button" value="Старт" onClick="startWake()"><input type="button"
+								value="Стоп" onClick="stopWake()">
+							&nbsp;&nbsp; В: <span id="wminutes">0</span> Сек.
 						</p>
-						<h1>Instant play &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input
-								type="button" onClick="editInstantStation()" value="Add & Edit"></h1>
+						<h1>Быстрое воспроизведение &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input
+								type="button" onClick="editInstantStation()" value="Добавить и править"></h1>
 						<p>
-							<span class=bold1>Full URL: </span>
+							<span class=bold1>Полный URL: </span>
 							<input type=text style="width:350px;" id=instant_URL name=URL onkeyup="parseURL()"
 								onmouseup="parseEditURL()"><br />
-							or<br />
+							или<br />
 							<span class="bold1">Url: </span><input type="text" id="instant_url" name="url"
 								onkeyup="buildURL()"><br>
-							<span class="bold1">Port: </span><input type="text" id="instant_port" name="port" value="80"
+							<span class="bold1">Порт: </span><input type="text" id="instant_port" name="port" value="80"
 								onkeyup="buildURL()"><br>
-							<span class="bold1">Path: </span><input type="text" id="instant_path" name="path" value="/"
+							<span class="bold1">Путь: </span><input type="text" id="instant_path" name="path" value="/"
 								onkeyup="buildURL()">
 
 							<br><br>
 
 							<!-- Play icon by Icons8 -->
-							<img class="icon icons8" width="40" height="40" title="Play instant station"
+							<img class="icon icons8" width="40" height="40" title="Воспроизведение быстрой странции"
 								onClick="instantPlay()"
 								src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAACBElEQVRoge3XPWsUQRgH8C0sLFP6AfwAfoAUqcXszG5QCw8sIljkCkGFZGd33RwJFz3FgC9JIWgTTRGMx2VeLkQOtVhOsDgF30AlRUCOaC6bEI/T87EICxGieTFhGHx+8PT/P+zOPGNZCCGEEEII7TcaTXfozrAnCBOKMFEwvpDjy9j2OBBfLNn9pWxXVDmgO9OuOL6M+8ZqkB2vtSiTLRqo+e4Bfkx3rh1zfBlnx19BQTZguFiHM6PPVwnjbScsx9TjR3Tn27aNRdKJphYgM/I0IR5vu4GaOHqRH9Kdc0ubFUnHu/8JTuQerxAmmoSJsCuqHNSd94/+VqQgG3BFLMH5u+/ADcvfqC8XbW8mozvzprYqks7IzBfou11rEiZ+OKF6081Knbqz/2a7RdIZelSH3uvVxPY4uKFSdn/xsO4OlmXtvMjGA+FU/klCmGw5obqp/ULdbZF0BiY+wvHBuVXqy0TrhbonRXIGF4mmFiCTf7ZsM/HdDcq3jPu0hot16B2trhDG2z3hrHk/+2X+FbJj6/uYE6i3Rh6/F+69h55wdo36yswL0Z+ch5NDlYQw0SSBGDRuRck9/Aynr8bLxONt91L5gXFLY760CGdvvFhbX+NV1cA1/iWcu/ManEC1KBMfjH1YEU/8pEw2jH7qEiYUZfKa9gvtXxlfACGEEEII/T9+AR8nzQFJqsL+AAAAAElFTkSuQmCC">&nbsp;
 							<!-- Stop icon by Icons8 -->
-							<img class="icon icons8" width="40" height="40" title="Stop instant station"
-								onClick="stopStation()"
+							<img class="icon icons8" width="40" height="40"
+								title="Остановить воспроизведение быстрой странции" onClick="stopStation()"
 								src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAAiklEQVRoge3YsQmAMBBAUUfISA4gwXFEUqR3kXQWEpwnG7hB7MRAIhZeivgfXHlwv72uAwAAACQN09bnZrSrKu2MdlWlvYqnp/TsY26ejhqmrS/tVTw9pWcfjQtx2Y9r3obcd4wLhHyCEEKEEEKIEEIIEUIIIUIIIUQIIYQIaeb50Mw7CAAAAP9wAgwPdP6eVGKaAAAAAElFTkSuQmCC">
 							<!--					
 					<input type="button" value="Play"   onClick="instantPlay()">&nbsp;
-					<input type="button" value="Stop"  onClick="stopStation()">
+					<input type="button" value="Стоп"  onClick="stopStation()">
 -->
 						</p>
 					</div>
 				</li>
 				<li>
 					<input type="radio" name="tabs" id="tab2" />
-					<label for="tab2">EDIT</label>
+					<label for="tab2">СТАНЦИИ</label>
 					<div id="tab-content2" class="tab-content">
 						<!--<h1>Manage stations</h1>-->
 						<h1>
-							<input type="button" id="refresh" title="This will reload the stations from the WebRadio"
-								onClick="refreshList()" value="Refresh locale list(i)">
+							<input type="button" id="refresh" title="Это перезагрузит станции в МедиаЦентре"
+								onClick="refreshList()" value="Обновить локальный список">
 							<input type="button" id="stsave" disabled="true" style="margin:0px auto"
-								title="This will save all stations to the WebRadio" onClick="stChanged()"
-								value="Save the list(i)">
+								title="Это сохранит все станции в МедиаЦентре" onClick="stChanged()"
+								value="Сохранить список">
 							<input type="button" style="margin:0px auto" id="clear"
-								title="Warning: This will erase all stations.\n Be sure to save them before."
-								onClick="clearList()" value="Erase all(i)">
-							<input type="button" style="margin:0px auto" id="clear" title="Print the list"
-								onClick="printList()" value="Print all(i)"><br />
+								title="Предупреждение: Это удалит все станции. Обязательно сохраните их раньше."
+								onClick="clearList()" value="Удалить всё">
+							<input type="button" style="margin:0px auto" id="clear"
+								title="Печать всего списка станций на принтере" onClick="printList()"
+								value="Печатать всё"><br />
 						</h1>
 
-						<span>You can Drag/Drop each line to sort the list</span><br />
+						<span>Вы можете перетаскивать любую строку, чтобы отсортировать список</span><br />
 						<table id="stationsTable" style="table-layout: fixed; width: 100%;">
 							<!--							<thead><tr><td style="width:8%">No.</td><td style="width:30%; ">Name</td><td style="width:20%">URL</td><td style="width:20%">File</td><td style="width:8%">Port</td><td style="width:4%">Vol</td><td style="width:9%"></td></tr></thead> -->
 							<thead>
 								<tr>
-									<td style="width:5%;text-align: center; vertical-align: middle;">No.</td>
-									<td style="width:38%; ">Name
+									<td style="width:5%;text-align: center; vertical-align: middle;">№</td>
+									<td style="width:38%; ">Имя</td>
 									<td style="width:45%; ">URL</td>
-									</td>
-									<td style="width:3%;text-align: center; vertical-align: middle;">Vol</td>
-									<td style="width:9%;text-align: center; vertical-align: middle;">Edit</td>
+									<td style="width:3%;text-align: center; vertical-align: middle;">Громк</td>
+									<td style="width:9%;text-align: center; vertical-align: middle;">Правка</td>
 								</tr>
 							</thead>
 							<tbody>
@@ -230,106 +233,107 @@
 				</li>
 				<li>
 					<input type="radio" name="tabs" id="tab3" />
-					<label for="tab3">Setting</label>
+					<label for="tab3">Настройки</label>
 					<div id="tab-content3" class="tab-content">
-						<h1>Sound Setting </h1>
-						<p><span class="bold">Output: </span>
+						<h1>Настройка звука</h1>
+						<p><span class="bold">Выход на: </span>
 							<span class="coutput">
 								<input type="radio" name="output" id="output0" /><label for="output0">I2S</label>
 								<input type="radio" name="output" id="output1" /><label for="output1">MERUS</label>
 								<input type="radio" name="output" id="output2" /><label for="output2">DAC</label>
 								<input type="radio" name="output" id="output3" /><label for="output3">PDM</label>
 								<input type="radio" name="output" id="output4" /><label for="output4">VS1053</label>
-								<br /><span class="bold"> </span><input type="button" value="Validate"
+								<br /><span class="bold"> </span><input type="button" value="Подтвердить"
 									onclick="validOutput()" />
 							</span><br>
 							<span id="vs1052Only">
-								<span class="bold">Treble control: </span><input type="range" id="treble_range"
-									name="treble" onChange="onRangeChange('treble_range', 'treble_span', 1.5, false)"
-									min=-8 max=7> <span id="treble_span"></span><br>
-								<span class="bold">Treble frequency: </span><input type="range" id="treblefreq_range"
+								<span class="bold">Регулятор высоких частот: </span><input type="range"
+									id="treble_range" name="treble"
+									onChange="onRangeChange('treble_range', 'treble_span', 1.5, false)" min=-8 max=7>
+								<span id="treble_span"></span><br>
+								<span class="bold">Высокие частоты: </span><input type="range" id="treblefreq_range"
 									name="treblefreq"
 									onChange="onRangeChangeFreqTreble('treblefreq_range', 'treblefreq_span', 1, false)"
 									min=1 max=15> <span id="treblefreq_span"></span><br>
-								<span class="bold"> Bass enhance: </span><input type="range" id="bass_range" name="bass"
-									onChange="onRangeChange('bass_range', 'bass_span', 1, false)" min=0 max=15> <span
-									id="bass_span"></span><br>
-								<span class="bold"> Bass frequency: </span><input type="range" id="bassfreq_range"
+								<span class="bold">Усиление басов: </span><input type="range" id="bass_range"
+									name="bass" onChange="onRangeChange('bass_range', 'bass_span', 1, false)" min=0
+									max=15> <span id="bass_span"></span><br>
+								<span class="bold">Низкие частоты: </span><input type="range" id="bassfreq_range"
 									name="bassfreq"
 									onChange="onRangeChangeFreqBass('bassfreq_range', 'bassfreq_span', 10, false)" min=2
 									max=15> <span id="bassfreq_span"></span><br>
-								<span class="bold"> Spacialization: </span><input type="range" id="spacial_range"
+								<span class="bold">Объёмный звук: </span><input type="range" id="spacial_range"
 									name="spacial" onChange="onRangeChangeSpatial('spacial_range', 'spacial_span')"
 									min=0 max=3> <span id="spacial_span"></span><br />
-								<span class="bold"> </span><input type="button" value="Reset"
+								<span class="bold"> </span><input type="button" value="Сброс"
 									onClick="resetEQ()" /><br /> </span><br />
-							<span class="bold">Volume: </span><input type="range" id="vol_range" name="vol"
+							<span class="bold">Громкость: </span><input type="range" id="vol_range" name="vol"
 								onChange="onRangeVolChange(this.value,true)" value=100 min=0 max=254> <span
 								id="vol_span"></span><br>
 						</p>
-						<h1>Stations Save & Restore</h1>
+						<h1>Сохранение и загрузка станций</h1>
 						<p>
-							<input type="button" onClick="saveTextAsFile()" value="Save Stations from WebRadio">
-							<span style="display:inline-block;">To &nbsp;&nbsp;&nbsp;
+							<input type="button" onClick="saveTextAsFile()" value="Сохранить станции из МедиаЦентра">
+							<span style="display:inline-block;">&nbsp;&nbsp;в &nbsp;&nbsp;&nbsp;
 								<input type="text" style="width:300px;color:black;" value="WebStations.txt"
 									id="filesave"></span>
 							<!--						<a HREF="" download="WebStations.txt" id="downloadlink" style="display: none;">Download it</a>
  -->
 							<br /><br />
-							<input type="button" onClick="downloadStations()" value="Restore Stations to WebRadio">
-							<span style="display:inline-block;">From
+							<input type="button" onClick="downloadStations()" value="Загрузить станции в МедиаЦентр">
+							<span style="display:inline-block;">&nbsp;&nbsp;из
 								<input type="file" style="width:300px;color:black;" id="fileload"></span><br />
 							<!--						<input type="button" id="refresh" title="This will reload the stations from the WebRadio" onClick="refreshList()"  value="Refresh locale list">
 						<input type="button" style="float:right;" id="clear" title="Warning: This will clear all stations.\n Be sure to save them before." onClick="clearList()"  value="Clear all stations"><br/>				
 						<br/>-->
 						</p>
-						<h1>Wifi & Network &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input
-								type="button" value="Validate" onclick="valid()" /></h1>
+						<h1>Wifi и Сеть &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="button"
+								value="Подтвердить" onclick="valid()" /></h1>
 						<p>
 							<span class="bold">AP SSID:</span>
 							<input id="ssid" type="text" /> <input id="ssid2" type="text" />
 							<br />
-							<span class="bold"> AP PASSWORD:</span>
+							<span class="bold">ПАРОЛЬ AP:</span>
 							<input id="passwd" type="password" /> <input id="passwd2" type="password" />
 						</p>
 						<p>
-							<span class="bold"> Mac Address:</span><span id="Mac"></span><br />
-							<span class="bold"> Use DHCP:</span>
+							<span class="bold">MAC Адрес:</span><span id="Mac"></span><br />
+							<span class="bold">Вкл. DHCP:</span>
 							1:<input id="dhcp" type=checkbox onclick="clickdhcp()" />
 							&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 							2:<input id="dhcp2" type=checkbox onclick="clickdhcp()" /><br />
-							<span class="bold">Ip:</span>
+							<span class="bold">Адрес:</span>
 							<input id="ip" type="text" oninput="chkip(this)" /><input id="ip2" type="text"
 								oninput="chkip(this)" />
 							<br />
-							<span class="bold">Mask:</span>
+							<span class="bold">Маска:</span>
 							<input id="mask" type="text" oninput="chkip(this)" value="255.255.255.0" /><input id="mask2"
 								type="text" oninput="chkip(this)" value="255.255.255.0" /><br />
-							<span class="bold">Gateway:</span>
+							<span class="bold">Шлюз:</span>
 							<input id="gw" type="text" oninput="chkip(this)" /><input id="gw2" type="text"
 								oninput="chkip(this)" />
 						</p>
-						<h1>Other options &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input
-								type="button" value="Validate" onclick="wifi(0)" /></h1>
+						<h1>Другие опции &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input
+								type="button" value="Подтвердить" onclick="wifi(0)" /></h1>
 						<p>
 							<span class="bold">User Agent:</span>
 							<input id="ua" type="text" value="" /> <br />
-							<span class="bold">mDNS Hostname:</span>
+							<span class="bold">Имя хоста mDNS:</span>
 							<input id="host" type="text" value="" />
 							<span class="bold">.local</span><br />
-							<span class="bold">Time Zone Offset:</span>
+							<span class="bold">Смещение времени:</span>
 							<input id="tzo" type="text" value="" />
 						</p>
-						<h1>Update to: <span id="newrelease"></span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <input type=button
-								value="Update now" onclick="upgrade()" /> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+						<h1>Обновить до: <span id="newrelease"></span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <input type=button
+								value="Обновить сейчсас" onclick="upgrade()" /> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
 								id="updatefb"></span><br /> </h1>
 						<p>
 							<span class="bold4" id="Version"></span><br />
-							<span class="bold4">To update or reload the current release:</span><br /><br />
-							<input type=button value="Update now" onclick="upgrade()" /><br />
+							<span class="bold4">Чтобы обновить или перезагрузить текущий релиз:</span><br /><br />
+							<input type=button value="Обновить сейчсас" onclick="upgrade()" /><br />
 							<span class="bold4" id="Infos"></span><br />
 						</p>
-						<h1>History:</h1><BR />
+						<h1>История:</h1><BR />
 						<input type=button value="Read the history" onclick="checkhistory()" /><br />
 						<span class="bold4" id="History"></span><br />
 					</div>

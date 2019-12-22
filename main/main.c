@@ -110,6 +110,7 @@ static bool bigRam = false;
 static uint32_t ctimeVol = 0;
 static uint32_t ctimeMs = 0;
 static bool divide = false;
+float cur_temp = 0;
 // disable 1MS timer interrupt
 IRAM_ATTR void noInterrupt1Ms() { timer_disable_intr(TIMERGROUP1MS, msTimer); }
 // enable 1MS timer interrupt
@@ -851,6 +852,10 @@ void autoPlay()
 			clientSaveOneHeader("Ready", 5, METANAME);
 	}
 }
+float getTemperature()
+{
+	return cur_temp;
+}
 void ds18b20Task(void *pvParameters)
 {
 	int uxHighWaterMark;
@@ -895,17 +900,16 @@ void ds18b20Task(void *pvParameters)
 
 		// Read the results immediately after conversion otherwise it may fail
 		// (using printf before reading may take too long)
-		float readings = 0;
 		DS18B20_ERROR errors = 0;
 
-		errors = ds18b20_read_temp(ds18b20_info, &readings);
+		errors = ds18b20_read_temp(ds18b20_info, &cur_temp);
 
 		if (errors != DS18B20_OK)
 		{
 			++errors_count;
 		}
 
-		ESP_LOGD(TAG, "  Temperature: %.1f    %d errors\n", readings, errors_count);
+		ESP_LOGD(TAG, "  Temperature: %.1f    %d errors\n", cur_temp, errors_count);
 		uxHighWaterMark = uxTaskGetStackHighWaterMark(NULL);
 		ESP_LOGD("ds18b20Task", striWATERMARK, uxHighWaterMark, xPortGetFreeHeapSize());
 

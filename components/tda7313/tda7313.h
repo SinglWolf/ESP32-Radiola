@@ -33,15 +33,15 @@ extern "C" {
 
 struct tda_settings {
 	uint16_t cleared; 		// 0xAABB if initialized
-	int8_t iVolume;
-	int8_t iBass;
-	int8_t iTreble;
-	int8_t iAttLF;
-	int8_t iAttRF;
-	int8_t iAttLR;
-	int8_t iAttRR;
-	int8_t iInput;
-	int8_t iSla[3];
+	uint8_t iInput;
+	uint8_t iSla[3];		
+	uint8_t iVolume;
+	uint8_t iBass;
+	uint8_t iTreble;
+	uint8_t iAttLF;
+	uint8_t iAttRF;
+	uint8_t iAttLR;
+	uint8_t iAttRR;
 	bool iMute;
 	bool iLoud;
 } Tda_Settings;
@@ -107,48 +107,48 @@ esp_err_t tda7313_set_input(uint8_t arg);
  * @param arg  0.......17    -78.75dB............0dB
  * @return `ESP_OK` on success
  */
-esp_err_t tda7313_set_volume(int8_t arg);
+esp_err_t tda7313_set_volume(uint8_t arg);
 
 /**
  * Set Bass
  * @param arg  0....7...14  -14dB.....0dB....+14dB
  * @return `ESP_OK` on success
  */
-esp_err_t tda7313_set_bass(int8_t arg);
+esp_err_t tda7313_set_bass(uint8_t arg);
 /**
  * Set Treble
  * @param arg  0....7...14  -14dB.....0dB....+14dB
  * @return `ESP_OK` on success
  */
-esp_err_t tda7313_set_treble(int8_t arg);
+esp_err_t tda7313_set_treble(uint8_t arg);
 
 /**
  * Set Attenuator Left Front Audio Channel
  * @param arg  0.......13  0dB.........-36.25dB
  * @return `ESP_OK` on success
  */
-esp_err_t tda7313_set_attlf(int8_t arg);
+esp_err_t tda7313_set_attlf(uint8_t arg);
 
 /**
  * Set Attenuator Right Front Audio Channel
  * @param arg  0.......13  0dB.........-36.25dB
  * @return `ESP_OK` on success
  */
-esp_err_t tda7313_set_attrf(int8_t arg);
+esp_err_t tda7313_set_attrf(uint8_t arg);
 
 /**
  * Set Attenuator Left Rear Audio Channel
  * @param arg  0.......13  0dB.........-36.25dB
  * @return `ESP_OK` on success
  */
-esp_err_t tda7313_set_attlr(int8_t arg);
+esp_err_t tda7313_set_attlr(uint8_t arg);
 
 /**
  * Set Attenuator Right Rear Audio Channel
  * @param arg  0.......13  0dB.........-36.25dB
  * @return `ESP_OK` on success
  */
-esp_err_t tda7313_set_attrr(int8_t arg);
+esp_err_t tda7313_set_attrr(uint8_t arg);
 
 #ifdef __cplusplus
 }

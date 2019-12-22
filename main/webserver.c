@@ -344,6 +344,15 @@ static void rssi(int socket)
 	websocketwrite(socket, answer, strlen(answer));
 }
 
+// send the current temperature
+static void curtemp(int socket)
+{
+	char answer[20];
+	float curtemp = getTemperature();
+	sprintf(answer, "{\"wscurtemp\":\"%.2f\"}", curtemp);
+	websocketwrite(socket, answer, strlen(answer));
+}
+
 // flip flop the theme indicator
 static void theme()
 {
@@ -407,6 +416,10 @@ void websockethandle(int socket, wsopcode_t opcode, uint8_t *payload, size_t len
 	else if (strstr((char *)payload, "wsrssi") != NULL)
 	{
 		rssi(socket);
+	}
+	else if (strstr((char *)payload, "wscurtemp") != NULL)
+	{
+		curtemp(socket);
 	}
 }
 

@@ -140,6 +140,7 @@ void stopWake();
 void ds18b20Task(void *pvParameters);
 void noInterrupt1Ms();
 void interrupt1Ms();
+float getTemperature();
 #define noInterrupts noInterrupt1Ms
 #define interrupts interrupt1Ms
 //void noInterrupts();

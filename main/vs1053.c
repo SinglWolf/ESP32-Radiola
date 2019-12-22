@@ -68,7 +68,7 @@ void VS1053_spi_init()
 	gpio_num_t sclk;
 
 	uint8_t spi_no; // the spi bus to use
-					//	if(!vsSPI) vSemaphoreCreateBinary(vsSPI);
+		//	if(!vsSPI) vSemaphoreCreateBinary(vsSPI);
 	if (!vsSPI)
 		vsSPI = xSemaphoreCreateMutex();
 	if (!hsSPI)
@@ -349,8 +349,10 @@ void VS1053_HighPower()
 
 void VS1053_Start()
 {
-	VS1053_ResetChip();
-	vTaskDelay(100);
+	ControlReset(SET);
+	vTaskDelay(50);
+	ControlReset(RESET);
+	vTaskDelay(150);
 	//Check DREQ
 	if (VS1053_checkDREQ() == 0)
 	{
@@ -358,6 +360,8 @@ void VS1053_Start()
 		ESP_LOGE(TAG, "NO VS1053 detected");
 		return;
 	}
+
+	VS1053_ResetChip();
 
 	int MP3Status = VS1053_ReadRegister(SPI_STATUSVS);
 	vsVersion = (MP3Status >> 4) & 0x000F; //Mask out only the four version bits

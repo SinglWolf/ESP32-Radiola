@@ -1,7 +1,7 @@
 REM  Need python3
 ECHO style
 COPY style.css style.ori
-python ./css-html-js-minify.py style.css
+REM python ./css-html-js-minify.py style.css
 gzip.exe  style.min.css 
 MOVE style.min.css.gz style.css
 xxd.exe -i style.css > style

@@ -22,6 +22,7 @@
 //-------------------------
 
 #define PIN_NUM_PWM GPIO_NUM_13       //пин управления оборотами вентилятора
+#define PIN_NUM_TAH GPIO_NUM_12 //Пин контроля оборотов вентилятора
 #define PIN_NUM_DS18B20_0 GPIO_NUM_14 //пин датчика температуры
 #define PIN_NUM_SDCS GPIO_NUM_15      //пин выбора SD карты
 

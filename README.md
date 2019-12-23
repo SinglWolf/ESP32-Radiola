@@ -28,3 +28,6 @@
   + etc...
 
 ![Image alt](https://github.com/SinglWolf/ESP32-Media/raw/master/pictures/ESP32-Media.png)
+![Image alt](https://github.com/SinglWolf/ESP32-Media/raw/master/pictures/amplifier.jpg)
+![Image alt](https://github.com/SinglWolf/ESP32-Media/raw/master/pictures/ESP32WROVER.jpg)
+![Image alt](https://github.com/SinglWolf/ESP32-Media/raw/master/pictures/display.jpg)

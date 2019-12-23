@@ -1,6 +1,9 @@
 /*
  * main.h
- *
+ * ESP32-Media
+ * A WiFi webradio player and Media Centre
+ * Based on source code of  Ka-Radio32 Copyright (C) 2017  KaraWin
+ * Modified for EDP32-Media 2019 SinglWolf (https://serverdoma.ru)
  *  Created on: 13.03.2017
  *      Author: michaelboeckling
  *  Modified on 15.09.2017 for KaraDio32
@@ -134,10 +137,8 @@ void startSleep(uint32_t delay);
 void stopSleep();
 void startWake(uint32_t delay);
 void stopWake();
-void ds18b20Task(void *pvParameters);
 void noInterrupt1Ms();
 void interrupt1Ms();
-float getTemperature();
 #define noInterrupts noInterrupt1Ms
 #define interrupts interrupt1Ms
 //void noInterrupts();

@@ -1,5 +1,6 @@
 /*
  * Copyright 2016 karawin (http://www.karawin.fr)
+ * Modified for EDP32-Media 2019 SinglWolf (https://serverdoma.ru)
 */
 #pragma once
 

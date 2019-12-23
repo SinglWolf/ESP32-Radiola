@@ -2,6 +2,7 @@
 // Simple NTP client for ESP8266.
 // Copyright 2016 jp cocatrix (KaraWin)
 // jp@karawin.fr
+// Modified for EDP32-Media 2019 SinglWolf (https://serverdoma.ru)
 // See license.txt for license terms.
 //////////////////////////////////////////////////
 

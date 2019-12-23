@@ -1,4 +1,4 @@
-
+/* Modified for EDP32-Media 2019 SinglWolf (https://serverdoma.ru) */
 #ifndef ADDONCOMMON_H
 #define ADDONCOMMON_H
 #include "stdint.h"

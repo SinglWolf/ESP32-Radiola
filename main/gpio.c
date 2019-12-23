@@ -328,78 +328,6 @@ void gpio_set_ledgpio(gpio_num_t enca)
 
 	close_partition(hardware_handle, hardware);
 }
-void gpio_get_joysticks(gpio_num_t *enca, gpio_num_t *enca1)
-{
-	esp_err_t err;
-	nvs_handle hardware_handle;
-	// init default
-	*enca = PIN_JOY_0;
-	*enca1 = PIN_JOY_1;
-
-	if (open_partition(hardware, gpio_space, NVS_READONLY, &hardware_handle) != ESP_OK)
-	{
-		ESP_LOGD(TAG, "in joys");
-		return;
-	}
-
-	err = nvs_get_u8(hardware_handle, "P_JOY_0", (uint8_t *)enca);
-	err = nvs_get_u8(hardware_handle, "P_JOY_1", (uint8_t *)enca1);
-	if (err != ESP_OK)
-		ESP_LOGD(TAG, "g_get_joysticks err 0x%x", err);
-
-	close_partition(hardware_handle, hardware);
-}
-
-// get the active level of buttons
-void gpio_get_active_buttons(bool *abtn0, bool *abtn1)
-{
-	esp_err_t err;
-	nvs_handle hardware_handle;
-
-	*abtn0 = 0;
-	*abtn1 = 0;
-	if (open_partition(hardware, option_space, NVS_READONLY, &hardware_handle) != ESP_OK)
-	{
-		ESP_LOGD(TAG, "in buttons");
-		return;
-	}
-	err = nvs_get_u8(hardware_handle, "O_BTN0", (uint8_t *)abtn0);
-	err |= nvs_get_u8(hardware_handle, "O_BTN1", (uint8_t *)abtn0);
-	if (err != ESP_OK)
-		ESP_LOGD(TAG, "g_get_active_buttons err 0x%x", err);
-
-	close_partition(hardware_handle, hardware);
-}
-
-void gpio_get_buttons(gpio_num_t *enca, gpio_num_t *encb, gpio_num_t *encc, gpio_num_t *enca1, gpio_num_t *encb1, gpio_num_t *encc1)
-{
-	esp_err_t err;
-	nvs_handle hardware_handle;
-	// init default
-	*enca = PIN_BTN0_A;
-	*encb = PIN_BTN0_B;
-	*encc = PIN_BTN0_C;
-	*enca1 = PIN_BTN1_A;
-	*encb1 = PIN_BTN1_B;
-	*encc1 = PIN_BTN1_C;
-
-	if (open_partition(hardware, gpio_space, NVS_READONLY, &hardware_handle) != ESP_OK)
-	{
-		ESP_LOGD(TAG, "in buttons");
-		return;
-	}
-
-	err = nvs_get_u8(hardware_handle, "P_BTN0_A", (uint8_t *)enca);
-	err |= nvs_get_u8(hardware_handle, "P_BTN0_B", (uint8_t *)encb);
-	err |= nvs_get_u8(hardware_handle, "P_BTN0_C", (uint8_t *)encc);
-	err |= nvs_get_u8(hardware_handle, "P_BTN1_A", (uint8_t *)enca1);
-	err |= nvs_get_u8(hardware_handle, "P_BTN1_B", (uint8_t *)encb1);
-	err |= nvs_get_u8(hardware_handle, "P_BTN1_C", (uint8_t *)encc1);
-	if (err != ESP_OK)
-		ESP_LOGD(TAG, "g_get_buttons err 0x%x", err);
-
-	close_partition(hardware_handle, hardware);
-}
 
 void gpio_get_encoders(gpio_num_t *enca, gpio_num_t *encb, gpio_num_t *encbtn, gpio_num_t *enca1, gpio_num_t *encb1, gpio_num_t *encbtn1)
 {
@@ -443,14 +371,13 @@ void gpio_get_encoders(gpio_num_t *enca, gpio_num_t *encb, gpio_num_t *encbtn, g
 	close_partition(hardware_handle, hardware);
 }
 
-void gpio_get_i2c(gpio_num_t *scl, gpio_num_t *sda, gpio_num_t *rsti2c)
+void gpio_get_i2c(gpio_num_t *sda, gpio_num_t *scl)
 {
 	esp_err_t err;
 	nvs_handle hardware_handle;
 	// init default
 	*scl = PIN_I2C_SCL;
 	*sda = PIN_I2C_SDA;
-	*rsti2c = PIN_I2C_RST;
 
 	if (open_partition(hardware, gpio_space, NVS_READONLY, &hardware_handle) != ESP_OK)
 	{
@@ -460,7 +387,6 @@ void gpio_get_i2c(gpio_num_t *scl, gpio_num_t *sda, gpio_num_t *rsti2c)
 
 	err = nvs_get_u8(hardware_handle, "P_I2C_SCL", (uint8_t *)scl);
 	err |= nvs_get_u8(hardware_handle, "P_I2C_SDA", (uint8_t *)sda);
-	err |= nvs_get_u8(hardware_handle, "P_I2C_RST", (uint8_t *)rsti2c);
 	if (err != ESP_OK)
 		ESP_LOGD(TAG, "g_get_i2c err 0x%x", err);
 
@@ -507,52 +433,6 @@ void gpio_get_ir_signal(gpio_num_t *ir)
 	err = nvs_get_u8(hardware_handle, "P_IR_SIGNAL", (uint8_t *)ir);
 	if (err != ESP_OK)
 		ESP_LOGD(TAG, "g_get_ir_signal err 0x%x", err);
-
-	close_partition(hardware_handle, hardware);
-}
-
-void gpio_get_adc(adc1_channel_t *channel)
-{
-	esp_err_t err;
-	nvs_handle hardware_handle;
-	// init default
-	*channel = PIN_ADC;
-	*channel = gpioToChannel(*channel);
-	if (open_partition(hardware, gpio_space, NVS_READONLY, &hardware_handle) != ESP_OK)
-	{
-		ESP_LOGD(TAG, "in adc");
-		return;
-	}
-
-	err = nvs_get_u8(hardware_handle, "P_ADC_KBD", (uint8_t *)channel);
-	if (err != ESP_OK)
-		ESP_LOGW(TAG, "g_get_adc err 0x%x", err);
-	else
-		*channel = gpioToChannel(*channel);
-
-	close_partition(hardware_handle, hardware);
-}
-
-void gpio_get_i2s(gpio_num_t *lrck, gpio_num_t *bclk, gpio_num_t *i2sdata)
-{
-	esp_err_t err;
-	nvs_handle hardware_handle;
-	// init default
-	*lrck = PIN_I2S_LRCK;
-	*bclk = PIN_I2S_BCLK;
-	*i2sdata = PIN_I2S_DATA;
-
-	if (open_partition(hardware, gpio_space, NVS_READONLY, &hardware_handle) != ESP_OK)
-	{
-		ESP_LOGD(TAG, "in i2s");
-		return;
-	}
-
-	err = nvs_get_u8(hardware_handle, "P_I2S_LRCK", (uint8_t *)lrck);
-	err |= nvs_get_u8(hardware_handle, "P_I2S_BCLK", (uint8_t *)bclk);
-	err |= nvs_get_u8(hardware_handle, "P_I2S_DATA", (uint8_t *)i2sdata);
-	if (err != ESP_OK)
-		ESP_LOGD(TAG, "g_get_i2s err 0x%x", err);
 
 	close_partition(hardware_handle, hardware);
 }

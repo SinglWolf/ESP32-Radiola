@@ -2,7 +2,7 @@ var content = "Content-type",
 	ctype = "application/x-www-form-urlencoded",
 	cjson = "application/json";
 var auto, intervalid, intervalrssi, timeid, websocket, urlmonitor, e, moniPlaying = false, editPlaying = false, editIndex = 0, curtab = "tab-content1", stchanged = false, maxStation = 255, themeIn = "0";
-const karadio = "МедиаЦентр";
+const mediacentre = "МедиаЦентр";
 const working = "Работаю... Пожалуйста, подождите.";
 
 function openwebsocket() {
@@ -15,7 +15,7 @@ function openwebsocket() {
 		try {
 			var arr = JSON.parse(event.data);
 			console.log("onmessage:" + event.data);
-			if (arr["meta"] == "") { document.getElementById('meta').innerHTML = karadio; setMainHeight(curtab); }
+			if (arr["meta"] == "") { document.getElementById('meta').innerHTML = mediacentre; setMainHeight(curtab); }
 			if (arr["meta"]) {
 				document.getElementById('meta').innerHTML = arr["meta"].replace(/\\/g, "");
 				setMainHeight(curtab);
@@ -28,6 +28,7 @@ function openwebsocket() {
 			if (arr["wsstation"]) wsplayStation(arr["wsstation"]);
 			if (arr["wsrssi"]) { document.getElementById('rssi').innerHTML = arr["wsrssi"] + ' дБм'; setTimeout(wsaskrssi, 5000); }
 			if (arr["wscurtemp"]) { document.getElementById('curtemp').innerHTML = arr["wscurtemp"] + ' ℃'; setTimeout(wsaskcurtemp, 5000); }
+			if (arr["wsrpmfan"]) { document.getElementById('rpmfan').innerHTML = arr["wsrpmfan"] + ' Об/мин'; setTimeout(wsaskrpmfan, 1000); }
 			if (arr["upgrade"]) { document.getElementById('updatefb').innerHTML = arr["upgrade"]; }
 			if (arr["iurl"]) { document.getElementById('instant_url').value = arr["iurl"]; buildURL(); }
 			if (arr["ipath"]) { document.getElementById('instant_path').value = arr["ipath"]; buildURL(); }
@@ -43,6 +44,7 @@ function openwebsocket() {
 		}
 		setTimeout(wsaskrssi, 5000); // start the rssi display
 		setTimeout(wsaskcurtemp, 5000); // start the curent tempemperature to display
+		setTimeout(wsaskrpmfan, 1000); // start the rpm of fan to display
 		websocket.send("opencheck");
 	}
 	websocket.onclose = function (event) {
@@ -74,6 +76,12 @@ function wsaskrssi() {
 function wsaskcurtemp() {
 	try {
 		websocket.send("wscurtemp &");
+	} catch (e) { console.log("error" + e); }
+}
+// ask for the rpm and restart the timer
+function wsaskrpmfan() {
+	try {
+		websocket.send("wsrpmfan &");
 	} catch (e) { console.log("error" + e); }
 }
 
@@ -287,7 +295,7 @@ function stopWake() {
 function promptworking(label) {
 	document.getElementById('meta').innerHTML = label;
 	if (label == "") {
-		document.getElementById('meta').innerHTML = karadio;
+		document.getElementById('meta').innerHTML = mediacentre;
 		//		refresh();
 	}
 }
@@ -391,7 +399,7 @@ function icyResp(arr) {
 	$url = arr["url1"].replace(/\\/g, "");
 	document.getElementById('url1').innerHTML = $url;
 	document.getElementById('url2').href = $url;
-	if (arr["meta"] == "") { document.getElementById('meta').innerHTML = karadio; setMainHeight(curtab); }
+	if (arr["meta"] == "") { document.getElementById('meta').innerHTML = mediacentre; setMainHeight(curtab); }
 	if (arr["meta"]) document.getElementById('meta').innerHTML = arr["meta"].replace(/\\/g, "");
 	changeTitle(document.getElementById('meta').innerHTML);
 	if (typeof arr["auto"] != 'undefined')  // undefined for websocket

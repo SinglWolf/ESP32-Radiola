@@ -6,6 +6,7 @@
  *
  * Mofified for KaRadio32
  *		Author: KaraWin
+ * Modified for EDP32-Media 2019 SinglWolf (https://serverdoma.ru)
  */
 #pragma once
 #ifndef VS1053_H_

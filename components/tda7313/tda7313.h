@@ -76,7 +76,7 @@ extern "C"
  * @param scl_gpio GPIO pin number for SCL
  * @return `ESP_OK` on success
  */
-	esp_err_t tda7313_init(gpio_num_t sda_gpio, gpio_num_t scl_gpio);
+	esp_err_t tda7313_init();
 
 	/**
  * Initialize device setting

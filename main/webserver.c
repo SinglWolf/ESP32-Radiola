@@ -1,5 +1,6 @@
 /*
  * Copyright 2016 karawin (http://www.karawin.fr)
+ * Modified for EDP32-Media 2019 SinglWolf (https://serverdoma.ru)
 */
 
 #define LOG_LOCAL_LEVEL ESP_LOG_VERBOSE
@@ -19,6 +20,7 @@
 #include "eeprom.h"
 #include "interface.h"
 #include "addon.h"
+#include "custom.h"
 
 #include "lwip/opt.h"
 #include "lwip/arch.h"
@@ -338,8 +340,14 @@ static void rssi(int socket)
 static void curtemp(int socket)
 {
 	char answer[20];
-	float curtemp = getTemperature();
-	sprintf(answer, "{\"wscurtemp\":\"%.2f\"}", curtemp);
+	sprintf(answer, "{\"wscurtemp\":\"%.2f\"}", getTemperature());
+	websocketwrite(socket, answer, strlen(answer));
+}
+// send the rpm of fan
+static void rpmfan(int socket)
+{
+	char answer[20];
+	sprintf(answer, "{\"wsrpmfan\":\"%d\"}", getRpmFan()*60);
 	websocketwrite(socket, answer, strlen(answer));
 }
 
@@ -410,6 +418,10 @@ void websockethandle(int socket, wsopcode_t opcode, uint8_t *payload, size_t len
 	else if (strstr((char *)payload, "wscurtemp") != NULL)
 	{
 		curtemp(socket);
+	}
+	else if (strstr((char *)payload, "wsrpmfan") != NULL)
+	{
+		rpmfan(socket);
 	}
 }
 

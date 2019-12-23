@@ -5,6 +5,7 @@
 // See license.txt for license terms.
 //////////////////////////////////////////////////
 // Modified for KaraDio
+// Modified for EDP32-Media 2019 SinglWolf (https://serverdoma.ru)
 
 // custom function to apply a timezone to the supplied tm struct
 // hard coded rules

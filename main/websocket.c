@@ -1,7 +1,7 @@
 /* (c)jp cocatrix May 2016 
  *
  * Copyright 2016 karawin (http://www.karawin.fr)
-
+ * Modified for EDP32-Media 2019 SinglWolf (https://serverdoma.ru)
 	quick and dirty websocket inplementation for wifi webradio
 	minimal implementaion for short data messages
 */

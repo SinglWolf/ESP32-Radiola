@@ -1,3 +1,4 @@
+/* Modified for EDP32-Media 2019 SinglWolf (https://serverdoma.ru) */
 #include "esp_system.h"
 
 //#define CACHE_FLASH __attribute__((section(".irom0.rodata")))

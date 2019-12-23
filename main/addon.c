@@ -11,8 +11,6 @@
 #include <sys/time.h>
 
 #include "ClickEncoder.h"
-#include "ClickButtons.h"
-#include "ClickJoystick.h"
 #include "main.h"
 #include "gpio.h"
 #include "webclient.h"
@@ -28,8 +26,6 @@
 #include "eeprom.h"
 #include "addonucg.h"
 #include "xpt2046.h"
-
-#include "esp_adc_cal.h"
 
 #define TAG "addon"
 
@@ -110,10 +106,6 @@ static bool isCustomKey = false;
 
 static bool isEncoder0 = true;
 static bool isEncoder1 = true;
-static bool isButton0 = true;
-static bool isButton1 = true;
-static bool isJoystick0 = true;
-static bool isJoystick1 = true;
 
 void Screen(typeScreen st);
 void drawScreen();
@@ -121,10 +113,6 @@ static void evtScreen(typelcmd value);
 
 Encoder_t *encoder0 = NULL;
 Encoder_t *encoder1 = NULL;
-Button_t *button0 = NULL;
-Button_t *button1 = NULL;
-Joystick_t *joystick1 = NULL;
-Joystick_t *joystick0 = NULL;
 
 struct tm *getDt() { return dt; }
 
@@ -514,201 +502,6 @@ static void toggletime()
 	xQueueSend(event_lcd, &evt, 0);
 }
 
-//----------------------------
-// Adc read: keyboard buttons
-//----------------------------
-
-static adc1_channel_t channel = GPIO_NONE;
-static bool inside = false;
-
-void adcInit()
-{
-	gpio_get_adc(&channel);
-	ESP_LOGD(TAG, "ADC Channel: %i", channel);
-	if (channel != GPIO_NONE)
-	{
-		adc1_config_width(ADC_WIDTH_BIT_12);
-		adc1_config_channel_atten(channel, ADC_ATTEN_DB_0);
-	}
-}
-
-void adcLoop()
-{
-	uint32_t voltage, voltage0, voltage1;
-	bool wasVol = false;
-	if (channel == GPIO_NONE)
-		return; // no gpio specified
-
-	voltage0 = (adc1_get_raw(channel) + adc1_get_raw(channel) + adc1_get_raw(channel) + adc1_get_raw(channel)) / 4;
-	vTaskDelay(1);
-	voltage1 = (adc1_get_raw(channel) + adc1_get_raw(channel) + adc1_get_raw(channel) + adc1_get_raw(channel)) / 4;
-	//	printf ("Volt0: %d, Volt1: %d\n",voltage0,voltage1);
-	voltage = (voltage0 + voltage1) * 105 / (819);
-	if (voltage < 40)
-		return; // no panel
-				//	printf("Voltage: %d\n",voltage);
-
-	if (inside && (voltage0 > 3700))
-	{
-		inside = false;
-		wasVol = false;
-		return;
-	}
-	if (voltage0 > 3700)
-	{
-		wasVol = false;
-	}
-	if ((voltage0 > 3700) || (voltage1 > 3700))
-		return; // must be two valid voltage
-
-	if (voltage < 985)
-		ESP_LOGD(TAG, "Voltage: %i", voltage);
-	//		printf("VOLTAGE: %d\n",voltage);
-	if ((voltage > 400) && (voltage < 590)) // volume +
-	{
-		setRelVolume(+5);
-		wasVol = true;
-		ESP_LOGD(TAG, "Volume+ : %i", voltage);
-	}
-	else if ((voltage > 730) && (voltage < 830)) // volume -
-	{
-		setRelVolume(-5);
-		wasVol = true;
-		ESP_LOGD(TAG, "Volume- : %i", voltage);
-	}
-	else if ((voltage > 900) && (voltage < 985)) // station+
-	{
-		if (!wasVol)
-		{
-			evtStation(1);
-			ESP_LOGD(TAG, "station+: %i", voltage);
-		}
-	}
-	else if ((voltage > 620) && (voltage < 710)) // station-
-	{
-		if (!wasVol)
-		{
-			evtStation(-1);
-			ESP_LOGD(TAG, "station-: %i", voltage);
-		}
-	}
-	if (!inside)
-	{
-		if ((voltage > 100) && (voltage < 220)) // toggle time/info  old stop
-		{
-			inside = true;
-			toggletime();
-			ESP_LOGD(TAG, "toggle time: %i", voltage);
-		}
-		else if ((voltage > 278) && (voltage < 380)) //start stop toggle   old start
-		{
-			inside = true;
-			startStop();
-			ESP_LOGD(TAG, "start stop: %i", voltage);
-		}
-	}
-}
-
-//-----------------------
-// Compute the Buttons
-//----------------------
-void joystickCompute(Joystick_t *enc, bool role)
-{
-	int16_t newValue = 0;
-	{
-		Button state1 = getJoystick(enc, 0);
-		Button state2 = getJoystick(enc, 1);
-		//		ESP_LOGD(TAG,"Button1: %i, Button2: %i",state1,state2);
-		newValue = ((state1 != Open) ? 5 : 0) + ((state2 != Open) ? -5 : 0); // sstation take + or - in any value
-		typeScreen estate;
-		if (role)
-			estate = sstation;
-		else
-			estate = svolume;
-		if ((stateScreen != estate) && (newValue != 0))
-		{
-			if (role)
-				setRelVolume(newValue);
-			else
-				evtStation(-newValue);
-			ESP_LOGD(TAG, "Button1: %i, Button2: %i, value: %i", state1, state2, newValue);
-		}
-		if ((stateScreen == estate) && (newValue != 0))
-		{
-			if (role)
-				evtStation(-newValue);
-			else
-				setRelVolume(newValue);
-			ESP_LOGD(TAG, "Button1: %i, Button2: %i, value: %i", state1, state2, newValue);
-		}
-	}
-}
-
-//-----------------------
-// Compute the Buttons
-//----------------------
-void buttonCompute(Button_t *enc, bool role)
-{
-	int16_t newValue = 0;
-	Button state0 = getButtons(enc, 0);
-	if (state0 != Open)
-	{
-		ESP_LOGD(TAG, "Button0: %i", state0);
-		if (state0 == Clicked)
-			startStop();
-		// double click = toggle time
-		if (state0 == DoubleClicked)
-			toggletime();
-		if (state0 == Held)
-		{
-			if (stateScreen != (role ? sstation : svolume))
-			{
-				role ? evtStation(newValue) : setRelVolume(newValue);
-			}
-		}
-	}
-	else
-	{
-		Button state1 = getButtons(enc, 1);
-		Button state2 = getButtons(enc, 2);
-		//		ESP_LOGD(TAG,"Button1: %i, Button2: %i",state1,state2);
-		newValue = ((state1 != Open) ? 5 : 0) + ((state2 != Open) ? -5 : 0); // sstation take + or - in any value
-		typeScreen estate;
-		if (role)
-			estate = sstation;
-		else
-			estate = svolume;
-		if ((stateScreen != estate) && (newValue != 0))
-		{
-			if (role)
-				setRelVolume(newValue);
-			else
-				evtStation(newValue);
-		}
-		if ((stateScreen == estate) && (newValue != 0))
-		{
-			if (role)
-				evtStation(newValue);
-			else
-				setRelVolume(newValue);
-		}
-	}
-}
-
-void buttonsLoop()
-{
-	// button0 = volume control or station when pushed
-	// button1 = station control or volume when pushed
-	if (isButton0)
-		buttonCompute(button0, VCTRL);
-	if (isButton1)
-		buttonCompute(button1, SCTRL);
-	if (isJoystick0)
-		joystickCompute(joystick0, VCTRL);
-	if (isJoystick1)
-		joystickCompute(joystick1, SCTRL);
-}
-
 //-----------------------
 // Compute the encoder
 //----------------------
@@ -1023,7 +816,6 @@ void initButtonDevices()
 	gpio_num_t enca1;
 	gpio_num_t encb1;
 	gpio_num_t encbtn1;
-	bool abtn0, abtn1;
 	gpio_get_encoders(&enca0, &encb0, &encbtn0, &enca1, &encb1, &encbtn1);
 	if (enca1 == GPIO_NONE)
 		isEncoder1 = false; //no encoder
@@ -1034,27 +826,6 @@ void initButtonDevices()
 	if (isEncoder1)
 		encoder1 = ClickEncoderInit(enca1, encb1, encbtn1, ((g_device->options32 & T_ENC1) == 0) ? false : true);
 
-	gpio_get_buttons(&enca0, &encb0, &encbtn0, &enca1, &encb1, &encbtn1);
-	if (enca1 == GPIO_NONE)
-		isButton1 = false; //no encoder
-	if (enca0 == GPIO_NONE)
-		isButton0 = false; //no encoder
-
-	gpio_get_active_buttons(&abtn0, &abtn1);
-	if (isButton0)
-		button0 = ClickButtonsInit(enca0, encb0, encbtn0, abtn0);
-	if (isButton1)
-		button1 = ClickButtonsInit(enca1, encb1, encbtn1, abtn1);
-
-	gpio_get_joysticks(&enca0, &enca1);
-	if (enca0 == GPIO_NONE)
-		isJoystick0 = false; //no encoder
-	if (enca1 == GPIO_NONE)
-		isJoystick1 = false; //no encoder
-	if (isJoystick0)
-		joystick0 = ClickJoystickInit(enca0);
-	if (isJoystick1)
-		joystick1 = ClickJoystickInit(enca1);
 }
 
 // custom ir code init from hardware nvs partition
@@ -1149,14 +920,6 @@ IRAM_ATTR void multiService() // every 1ms
 	ServiceAddon();
 	if (divide++ == 10) // only every 10ms
 	{
-		if (isButton0)
-			serviceBtn(button0);
-		if (isButton1)
-			serviceBtn(button1);
-		if (isJoystick0)
-			serviceJoystick(joystick0);
-		if (isJoystick1)
-			serviceJoystick(joystick1);
 		divide = 0;
 	}
 }
@@ -1294,7 +1057,6 @@ void task_addon(void *pvParams)
 	xTaskHandle pxCreatedTask;
 	customKeyInit();
 	initButtonDevices();
-	adcInit();
 
 	serviceAddon = &multiService;
 	; // connect the 1ms interruption
@@ -1319,9 +1081,7 @@ void task_addon(void *pvParams)
 
 	while (1)
 	{
-		adcLoop();	 // compute the adc keyboard
 		encoderLoop(); // compute the encoder
-		buttonsLoop(); // compute the buttons and joysticks
 		irLoop();	  // compute the ir
 		touchLoop();   // compute the touch screen
 		if (itAskTime) // time to ntp. Don't do that in interrupt.

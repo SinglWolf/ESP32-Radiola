@@ -5,6 +5,7 @@
   * @date    07.08.2015
   * @brief   This file provides VS1053 usage and control functions. Based on VS1003 library by Przemyslaw Stasiak.
   * Copyright 2017 karawin (http://www.karawin.fr) for KaRadio32
+  * Modified for EDP32-Media 2019 SinglWolf (https://serverdoma.ru)
   * added control treble, bass and spacialisation
   ***********************************************************************************************************************
 */
@@ -68,7 +69,7 @@ void VS1053_spi_init()
 	gpio_num_t sclk;
 
 	uint8_t spi_no; // the spi bus to use
-		//	if(!vsSPI) vSemaphoreCreateBinary(vsSPI);
+					//	if(!vsSPI) vSemaphoreCreateBinary(vsSPI);
 	if (!vsSPI)
 		vsSPI = xSemaphoreCreateMutex();
 	if (!hsSPI)
@@ -294,7 +295,8 @@ void VS1053_ResetChip()
 	vTaskDelay(20);
 	if (VS1053_checkDREQ() == 1)
 		return;
-	vTaskDelay(20);
+	while (VS1053_checkDREQ() == 0)
+		taskYIELD();
 }
 
 uint16_t MaskAndShiftRight(uint16_t Source, uint16_t Mask, uint16_t Shift)
@@ -718,14 +720,14 @@ void vsTask(void *pvParams)
 	VS1053_SetTrebleFreq(g_device->freqtreble);
 	VS1053_SetBassFreq(g_device->freqbass);
 	VS1053_SetSpatial(g_device->spacial);
-	ESP_ERROR_CHECK(tda7313_set_input(2));
+	ESP_ERROR_CHECK(tda7313_set_input(VS1053));
 
 	while (1)
 	{
 		// stop requested, terminate immediately
 		if (player->decoder_command == CMD_STOP)
 		{
-			ESP_ERROR_CHECK(tda7313_set_input(1));
+			ESP_ERROR_CHECK(tda7313_set_input(COMPUTER));
 			break;
 		}
 		//size = bufferRead(b, VSTASKBUF);

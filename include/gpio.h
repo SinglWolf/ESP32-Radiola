@@ -1,6 +1,7 @@
 /******************************************************************************
  * 
  * Copyright 2017 karawin (http://www.karawin.fr)
+ * Modified for EDP32-Media 2019 SinglWolf (https://serverdoma.ru)
  *
 *******************************************************************************/
 #pragma once
@@ -26,8 +27,10 @@
 #define PIN_NUM_DS18B20_0 GPIO_NUM_14 //пин датчика температуры
 #define PIN_NUM_SDCS GPIO_NUM_15      //пин выбора SD карты
 
-#define SDA_GPIO GPIO_NUM_21
-#define SCL_GPIO GPIO_NUM_22
+// I2C
+//------------------------------------------------
+#define PIN_I2C_SDA GPIO_NUM_21
+#define PIN_I2C_SCL GPIO_NUM_22
 //-------------------------
 // Must be HSPI or VSPI
 
@@ -62,26 +65,6 @@
 #define PIN_ENC1_B GPIO_NONE   // DT
 #define PIN_ENC1_BTN GPIO_NONE // SW
 
-// 3 Buttons
-//-------------
-#define PIN_BTN0_A GPIO_NONE
-#define PIN_BTN0_B GPIO_NONE
-#define PIN_BTN0_C GPIO_NONE
-#define PIN_BTN1_A GPIO_NONE
-#define PIN_BTN1_B GPIO_NONE
-#define PIN_BTN1_C GPIO_NONE
-
-// Joystick (2 buttons emulation on ADC)
-//--------------------------------------
-#define PIN_JOY_0 GPIO_NONE
-#define PIN_JOY_1 GPIO_NONE
-
-// I2C lcd (and rda5807 if lcd is i2c or LCD_NONE)
-//------------------------------------------------
-#define PIN_I2C_SCL GPIO_NONE
-#define PIN_I2C_SDA GPIO_NONE
-#define PIN_I2C_RST GPIO_NONE // or not used
-
 // SPI lcd
 //---------
 #define PIN_LCD_CS GPIO_NUM_27 //CS
@@ -99,23 +82,11 @@
 #define PIN_I2S_BCLK GPIO_NONE // or channel2
 #define PIN_I2S_DATA GPIO_NONE //
 
-// ADC for keyboard buttons
-#define PIN_ADC GPIO_NONE //GPIO_NUM_32 TO GPIO_NUM_39 or GPIO_NONE if not used.
-
 // LCD backlight control
 #define PIN_LCD_BACKLIGHT GPIO_NUM_32 // the gpio to be used in custom.c
 
 // touch screen  T_DO is MISO, T_DIN is MOSI, T_CLK is CLk of the spi bus
 #define PIN_TOUCH_CS GPIO_NUM_0 //Chip select T_CS
-
-// I2C rda5807 (if lcd is spi)
-// (removed)
-//----------------------------
-//#define PIN_SI2C_SCL GPIO_NUM_15
-//#define PIN_SI2C_SDA GPIO_NUM_27
-
-// to set a value: 		gpio_set_level(gpio_num_t gpio_num,value);
-// to read a value: 	int gpio_get_level(gpio_num_t gpio_num)
 
 // init a gpio as output
 void gpio_output_conf(gpio_num_t gpio);
@@ -128,15 +99,10 @@ void gpio_get_comment(char **label);
 void gpio_get_spi_bus(uint8_t *spi_no, gpio_num_t *miso, gpio_num_t *mosi, gpio_num_t *sclk);
 void gpio_get_vs1053(gpio_num_t *xcs, gpio_num_t *rst, gpio_num_t *xdcs, gpio_num_t *dreq);
 void gpio_get_encoders(gpio_num_t *enca, gpio_num_t *encb, gpio_num_t *encbtn, gpio_num_t *enca1, gpio_num_t *encb1, gpio_num_t *encbtn1);
-void gpio_get_active_buttons(bool *abtn0, bool *abtn1);
-void gpio_get_buttons(gpio_num_t *enca, gpio_num_t *encb, gpio_num_t *encc, gpio_num_t *enca1, gpio_num_t *encb1, gpio_num_t *encc1);
-void gpio_get_joysticks(gpio_num_t *enca, gpio_num_t *enca1);
-void gpio_get_i2c(gpio_num_t *scl, gpio_num_t *sda, gpio_num_t *rsti2c);
+void gpio_get_i2c(gpio_num_t *sda, gpio_num_t *scl);
 void gpio_get_spi_lcd(gpio_num_t *cs, gpio_num_t *a0, gpio_num_t *rstlcd);
 void gpio_get_ir_signal(gpio_num_t *ir);
-void gpio_get_adc(adc1_channel_t *channel);
 void gpio_get_lcd_backlightl(gpio_num_t *lcdb);
-void gpio_get_i2s(gpio_num_t *lrck, gpio_num_t *bclk, gpio_num_t *i2sdata);
 bool gpio_get_ir_key(nvs_handle handle, const char *key, uint32_t *out_value1, uint32_t *out_value2);
 void gpio_get_touch(gpio_num_t *cs);
 void gpio_get_ledgpio(gpio_num_t *enca);

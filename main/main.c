@@ -1,8 +1,8 @@
 /*
-  KaRadio 32
-  A WiFi webradio player
-
-Copyright (C) 2017  KaraWin
+  ESP32-Media
+  A WiFi webradio player and Media Centre
+  Based on source code of  Ka-Radio32 Copyright (C) 2017  KaraWin
+  Modified for EDP32-Media 2019 SinglWolf (https://serverdoma.ru)
 
   This program is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -36,6 +36,7 @@ Copyright (C) 2017  KaraWin
 #include "esp_ota_ops.h"
 #include "driver/i2s.h"
 #include "driver/uart.h"
+#include "driver/pcnt.h"
 
 #include "lwip/sys.h"
 #include "lwip/netdb.h"
@@ -64,14 +65,9 @@ Copyright (C) 2017  KaraWin
 #include "ClickEncoder.h"
 #include "addon.h"
 #include "tda7313.h"
+#include "custom.h"
 
-#include "owb.h"
-#include "owb_rmt.h"
-#include "ds18b20.h"
 #include "sdkconfig.h"
-
-#define _RESOLUTION (DS18B20_RESOLUTION_12_BIT)
-#define SAMPLE_PERIOD (1000) // milliseconds
 
 /* The event group allows multiple bits for each event*/
 //   are we connected  to the AP with an IP? */
@@ -109,7 +105,6 @@ static bool bigRam = false;
 static uint32_t ctimeVol = 0;
 static uint32_t ctimeMs = 0;
 static bool divide = false;
-float cur_temp = 0;
 // disable 1MS timer interrupt
 IRAM_ATTR void noInterrupt1Ms() { timer_disable_intr(TIMERGROUP1MS, msTimer); }
 // enable 1MS timer interrupt
@@ -292,7 +287,7 @@ uint32_t checkUart(uint32_t speed)
 static void init_hardware()
 {
 	// Настройка TDA7313...
-	ESP_ERROR_CHECK(tda7313_init(SDA_GPIO, SCL_GPIO));
+	ESP_ERROR_CHECK(tda7313_init());
 	if (VS1053_HW_init()) // init spi
 	{
 		ESP_ERROR_CHECK(tda7313_set_mute(true));
@@ -830,77 +825,6 @@ void autoPlay()
 			clientSaveOneHeader("Ready", 5, METANAME);
 	}
 }
-float getTemperature()
-{
-	return cur_temp;
-}
-void ds18b20Task(void *pvParameters)
-{
-	// Create a 1-Wire bus, using the RMT timeslot driver
-	OneWireBus *owb;
-	owb_rmt_driver_info rmt_driver_info;
-	owb = owb_rmt_initialize(&rmt_driver_info, PIN_NUM_DS18B20_0, RMT_CHANNEL_2, RMT_CHANNEL_1);
-	owb_use_crc(owb, true); // enable CRC check for ROM code
-
-	// For a single device only:
-	OneWireBus_ROMCode rom_code;
-	owb_status status = owb_read_rom(owb, &rom_code);
-	if (status == OWB_STATUS_OK)
-	{
-		char rom_code_s[OWB_ROM_CODE_STRING_LENGTH];
-		owb_string_from_rom_code(rom_code, rom_code_s, sizeof(rom_code_s));
-		ESP_LOGI(TAG, "Single device %s present\n", rom_code_s);
-	}
-	else
-	{
-		ESP_LOGE(TAG, "An error occurred reading ROM code: %d", status);
-	}
-
-	// Create DS18B20 devices on the 1-Wire bus
-	DS18B20_Info *ds18b20_info = ds18b20_malloc(); // heap allocation
-
-	ESP_LOGI(TAG, "Single device optimisations enabled\n");
-	ds18b20_init_solo(ds18b20_info, owb); // only one device on bus
-
-	ds18b20_use_crc(ds18b20_info, true); // enable CRC check for temperature readings
-	ds18b20_set_resolution(ds18b20_info, _RESOLUTION);
-
-	// Read temperatures more efficiently by starting conversions on all devices at the same time
-	while (1)
-	{
-		ds18b20_convert_all(owb);
-
-		// In this application all devices use the same resolution,
-		// so use the first device to determine the delay
-		ds18b20_wait_for_conversion(ds18b20_info);
-
-		// Read the results immediately after conversion otherwise it may fail
-		// (using printf before reading may take too long)
-
-		DS18B20_ERROR error = ds18b20_read_temp(ds18b20_info, &cur_temp);
-
-		if (error != DS18B20_OK)
-		{
-			ESP_LOGE(TAG, "DS18B20 ERROR: %d\n", error);
-		}
-
-		//int uxHighWaterMark = uxTaskGetStackHighWaterMark(NULL);
-		//ESP_LOGD("ds18b20Task", striWATERMARK, uxHighWaterMark, xPortGetFreeHeapSize());
-
-		vTaskDelay(10);
-	}
-
-	// clean up dynamically allocated data
-
-	ds18b20_free(&ds18b20_info);
-
-	owb_uninitialize(owb);
-
-	ESP_LOGI(TAG, "Restarting now.\n");
-	fflush(stdout);
-	vTaskDelay(100);
-	esp_restart();
-}
 
 /**
  * Main entry point
@@ -913,7 +837,7 @@ void app_main()
 	gpio_set_direction(PIN_NUM_PWM, GPIO_MODE_OUTPUT);
 	gpio_set_level(PIN_NUM_PWM, LOW);
 	//
-
+	pcnt_init();
 	//
 	uint32_t uspeed;
 	xTaskHandle pxCreatedTask;

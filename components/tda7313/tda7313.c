@@ -8,9 +8,12 @@
  * MIT Licensed as described in the file LICENSE
  */
 #define LOG_LOCAL_LEVEL ESP_LOG_VERBOSE
+#include "tda7313.h"
 #include <string.h>
 #include <esp_log.h>
-#include "tda7313.h"
+#include "gpio.h"
+#include "eeprom.h"
+#include "main.h"
 
 static const char *TAG = "TDA7313";
 
@@ -318,9 +321,12 @@ esp_err_t tda7313_set_attrr(uint8_t arg)
 	return tda7313_command(ATT_RR_MASK[TDA.iAttRR]);
 }
 
-esp_err_t tda7313_init(gpio_num_t sda_gpio, gpio_num_t scl_gpio)
+esp_err_t tda7313_init()
 {
+	gpio_num_t sda_gpio;
+	gpio_num_t scl_gpio;
 	esp_err_t err;
+	gpio_get_i2c(&sda_gpio, &scl_gpio);
 	addressTDA = TDAaddress;
 	if ((sda_gpio >= 0) || // TDA configured?
 		(scl_gpio >= 0))

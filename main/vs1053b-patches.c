@@ -1,4 +1,5 @@
-/* User application code loading tables for VS10xx */
+/* User application code loading tables for VS10xx 
+* Modified for EDP32-Media 2019 SinglWolf (https://serverdoma.ru) */
 
 #define LOG_LOCAL_LEVEL ESP_LOG_VERBOSE
 #define TAG  "VS1053 Patches"

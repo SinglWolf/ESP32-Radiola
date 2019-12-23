@@ -4,7 +4,7 @@
 //
 // (c) 2010 karl@pitrich.com
 // (c) 2014 karl@pitrich.com
-// 
+// Modified for EDP32-Media 2019 SinglWolf (https://serverdoma.ru)
 // Timer-based rotary encoder logic by Peter Dannegger
 // http://www.mikrocontroller.net/articles/Drehgeber
 // ----------------------------------------------------------------------------

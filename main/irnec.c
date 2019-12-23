@@ -2,6 +2,7 @@
 /******************************************************************************
  * 
  * Copyright 2017 karawin (http://www.karawin.fr)
+ * Modified for EDP32-Media 2019 SinglWolf (https://serverdoma.ru)
  *
  * Receive and decode nec IR. Send result in a queue
  *

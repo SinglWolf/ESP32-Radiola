@@ -1,3 +1,4 @@
+/* Modified for EDP32-Media 2019 SinglWolf (https://serverdoma.ru) */
 #define logo_width 60
 #define logo_height 51
 

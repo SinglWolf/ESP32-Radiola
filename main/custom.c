@@ -23,8 +23,8 @@
 
 #define PCNT_TEST_UNIT PCNT_UNIT_0
 
-#define _RESOLUTION (DS18B20_RESOLUTION_12_BIT)
-#define SAMPLE_PERIOD (1000) // milliseconds
+#define _RESOLUTION DS18B20_RESOLUTION_12_BIT
+#define SAMPLE_PERIOD 1000 // milliseconds
 
 TimerHandle_t tachTmr;
 int id = 1;

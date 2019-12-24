@@ -6,6 +6,7 @@
  * This file contain empty functions definition on the standard delivery
 *******************************************************************************/
 #include "custom.h"
+#include "main.h"
 #include "driver/gpio.h"
 #include "driver/pcnt.h"
 #include "freertos/FreeRTOS.h"
@@ -21,10 +22,9 @@
 
 #define TAG "custom"
 
-#define PCNT_TEST_UNIT PCNT_UNIT_0
+#define PCNT_TACHOME PCNT_UNIT_0
 
 #define _RESOLUTION DS18B20_RESOLUTION_12_BIT
-#define SAMPLE_PERIOD 1000 // milliseconds
 
 TimerHandle_t tachTmr;
 int id = 1;
@@ -32,7 +32,8 @@ int interval = 1000;
 int16_t rpm_fan = 0;
 float cur_temp = 0;
 
-//#define gpioLedBacklight 5
+gpio_num_t tach;
+gpio_num_t ds18b20;
 gpio_num_t lcdb;
 // LedBacklight control a gpio to switch on or off the lcd backlight
 // in addition of the sys.lcdout("x")  configuration for system with battries.
@@ -64,7 +65,7 @@ void ds18b20Task(void *pvParameters)
 	// Create a 1-Wire bus, using the RMT timeslot driver
 	OneWireBus *owb;
 	owb_rmt_driver_info rmt_driver_info;
-	owb = owb_rmt_initialize(&rmt_driver_info, PIN_NUM_DS18B20_0, RMT_CHANNEL_2, RMT_CHANNEL_1);
+	owb = owb_rmt_initialize(&rmt_driver_info, ds18b20, RMT_CHANNEL_2, RMT_CHANNEL_1);
 	owb_use_crc(owb, true); // enable CRC check for ROM code
 
 	// For a single device only:
@@ -126,51 +127,59 @@ void ds18b20Task(void *pvParameters)
 	vTaskDelay(100);
 	esp_restart();
 }
-/* Initialize PCNT functions: */
-void pcnt_init()
+/* Initialize tachometer */
+void tach_init()
 {
-	tachTmr = xTimerCreate("TachTimer", pdMS_TO_TICKS(interval), pdTRUE, (void *)id, &TachTimer);
-	if (xTimerStart(tachTmr, 10) != pdPASS)
+	gpio_get_tachometer(&tach);
+	if (tach != GPIO_NONE)
 	{
-		printf("TachTimer start error");
+		tachTmr = xTimerCreate("TachTimer", pdMS_TO_TICKS(interval), pdTRUE, (void *)id, &TachTimer);
+		if (xTimerStart(tachTmr, 10) != pdPASS)
+		{
+			printf("TachTimer start error");
+		}
+		/* Prepare configuration for the PCNT unit */
+		pcnt_config_t pcnt_config = {
+			// Set PCNT input signal and control GPIOs
+			.pulse_gpio_num = tach,
+			.ctrl_gpio_num = PCNT_PIN_NOT_USED,
+			.channel = PCNT_CHANNEL_0,
+			.unit = PCNT_TACHOME,
+			// What to do on the positive / negative edge of pulse input?
+			.pos_mode = PCNT_COUNT_INC, // Count up on the positive edge
+			.neg_mode = PCNT_COUNT_DIS, // Keep the counter value on the negative edge
+			// What to do when control input is low or high?
+			.lctrl_mode = PCNT_MODE_KEEP,	// Reverse counting direction if low
+			.hctrl_mode = PCNT_MODE_REVERSE, // Keep the primary counter mode if high
+			// Set the maximum and minimum limit values to watch
+			.counter_h_lim = 6000,
+			.counter_l_lim = 0,
+		};
+		/* Initialize PCNT unit */
+		pcnt_unit_config(&pcnt_config);
+		/* Configure and enable the input filter */
+		pcnt_set_filter_value(PCNT_TACHOME, 50);
+		pcnt_filter_enable(PCNT_TACHOME);
+
+		/* Initialize PCNT's counter */
+		pcnt_counter_pause(PCNT_TACHOME);
+		pcnt_counter_clear(PCNT_TACHOME);
+
+		/* Everything is set up, now go to counting */
+		pcnt_counter_resume(PCNT_TACHOME);
 	}
-	/* Prepare configuration for the PCNT unit */
-	pcnt_config_t pcnt_config = {
-		// Set PCNT input signal and control GPIOs
-		.pulse_gpio_num = PIN_NUM_TAH,
-		.ctrl_gpio_num = PCNT_PIN_NOT_USED,
-		.channel = PCNT_CHANNEL_0,
-		.unit = PCNT_TEST_UNIT,
-		// What to do on the positive / negative edge of pulse input?
-		.pos_mode = PCNT_COUNT_INC, // Count up on the positive edge
-		.neg_mode = PCNT_COUNT_DIS, // Keep the counter value on the negative edge
-		// What to do when control input is low or high?
-		.lctrl_mode = PCNT_MODE_KEEP,	// Reverse counting direction if low
-		.hctrl_mode = PCNT_MODE_REVERSE, // Keep the primary counter mode if high
-		// Set the maximum and minimum limit values to watch
-		.counter_h_lim = 6000,
-		.counter_l_lim = 0,
-	};
-	/* Initialize PCNT unit */
-	pcnt_unit_config(&pcnt_config);
-	/* Configure and enable the input filter */
-	pcnt_set_filter_value(PCNT_TEST_UNIT, 50);
-	pcnt_filter_enable(PCNT_TEST_UNIT);
-
-	/* Initialize PCNT's counter */
-	pcnt_counter_pause(PCNT_TEST_UNIT);
-	pcnt_counter_clear(PCNT_TEST_UNIT);
-
-	/* Everything is set up, now go to counting */
-	pcnt_counter_resume(PCNT_TEST_UNIT);
+	else
+	{
+		ESP_LOGI(TAG, "Tachometer not present.");
+	}
 }
 void TachTimer(TimerHandle_t xTimer)
 {
-	pcnt_get_counter_value(PCNT_TEST_UNIT, &rpm_fan);
+	pcnt_get_counter_value(PCNT_TACHOME, &rpm_fan);
 	//ESP_LOGI(TAG, "Current counter value :%d\n", rpm_fan * 60);
-	pcnt_counter_pause(PCNT_TEST_UNIT);
-	pcnt_counter_clear(PCNT_TEST_UNIT);
-	pcnt_counter_resume(PCNT_TEST_UNIT);
+	pcnt_counter_pause(PCNT_TACHOME);
+	pcnt_counter_clear(PCNT_TACHOME);
+	pcnt_counter_resume(PCNT_TACHOME);
 }
 float getTemperature()
 {
@@ -179,4 +188,15 @@ float getTemperature()
 int16_t getRpmFan()
 {
 	return rpm_fan;
+}
+void init_ds18b20()
+{
+	gpio_get_ds18b20(&ds18b20);
+	if (ds18b20 != GPIO_NONE)
+	{
+		xTaskHandle pxCreatedTask;
+		xTaskCreatePinnedToCore(ds18b20Task, "ds18b20Task", 1800, NULL, PRIO_DS18B20, &pxCreatedTask, CPU_DS18B20);
+		vTaskDelay(1);
+		ESP_LOGI(TAG, "%s task: %x", "ds18b20Task", (unsigned int)pxCreatedTask);
+	}
 }

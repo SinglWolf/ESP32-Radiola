@@ -281,20 +281,22 @@ uint32_t checkUart(uint32_t speed)
 /******************************************************************************
  * FunctionName : init_hardware
  * Description  : Init all hardware, partitions etc
- * Parameters   : 
- * Returns      : 
-*******************************************************************************/
+ *******************************************************************************/
 static void init_hardware()
 {
+	// Настройка тахометра
+	tach_init();
+	// Настройка термометра
+	init_ds18b20();
 	// Настройка TDA7313...
 	ESP_ERROR_CHECK(tda7313_init());
+	ESP_ERROR_CHECK(tda7313_set_mute(true));
+	ESP_ERROR_CHECK(tda7313_set_input(audio_output_mode));
 	if (VS1053_HW_init()) // init spi
 	{
-		ESP_ERROR_CHECK(tda7313_set_mute(true));
-		ESP_ERROR_CHECK(tda7313_set_input(audio_output_mode));
 		VS1053_Start();
-		ESP_ERROR_CHECK(tda7313_set_mute(false));
 	}
+	ESP_ERROR_CHECK(tda7313_set_mute(false));
 	ESP_LOGI(TAG, "hardware initialized");
 }
 
@@ -837,8 +839,6 @@ void app_main()
 	gpio_set_direction(PIN_NUM_PWM, GPIO_MODE_OUTPUT);
 	gpio_set_level(PIN_NUM_PWM, LOW);
 	//
-	pcnt_init();
-	//
 	uint32_t uspeed;
 	xTaskHandle pxCreatedTask;
 	esp_err_t err;
@@ -912,10 +912,8 @@ void app_main()
 	// init softwares
 	telnetinit();
 	websocketinit();
-
 	// log level
 	setLogLevel(g_device->trace_level);
-
 	//time display
 	uint8_t ddmm;
 	option_get_ddmm(&ddmm);
@@ -1039,9 +1037,6 @@ void app_main()
 	vTaskDelay(1);
 	xTaskCreatePinnedToCore(task_addon, "task_addon", 2200, NULL, PRIO_ADDON, &pxCreatedTask, CPU_ADDON);
 	ESP_LOGI(TAG, "%s task: %x", "task_addon", (unsigned int)pxCreatedTask);
-	vTaskDelay(1);
-	xTaskCreatePinnedToCore(ds18b20Task, "ds18b20Task", 1800, NULL, PRIO_DS18B20, &pxCreatedTask, CPU_DS18B20);
-	ESP_LOGI(TAG, "%s task: %x", "ds18b20Task", (unsigned int)pxCreatedTask);
 
 	/*	if (RDA5807M_detection())
 	{

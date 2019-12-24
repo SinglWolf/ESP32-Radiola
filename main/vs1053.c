@@ -38,7 +38,6 @@ extern void LoadUserCodes(void);
 int vsVersion = -1; // the version of the chip
 //	SS_VER is 0 for VS1001, 1 for VS1011, 2 for VS1002, 3 for VS1003, 4 for VS1053 and VS8053, 5 for VS1033, 7 for VS1103, and 6 for VS1063.
 
-gpio_num_t rst;
 gpio_num_t dreq;
 
 static spi_device_handle_t vsspi;  // the evice handle of the vs1053 spi
@@ -69,7 +68,7 @@ void VS1053_spi_init()
 	gpio_num_t sclk;
 
 	uint8_t spi_no; // the spi bus to use
-					//	if(!vsSPI) vSemaphoreCreateBinary(vsSPI);
+		//	if(!vsSPI) vSemaphoreCreateBinary(vsSPI);
 	if (!vsSPI)
 		vsSPI = xSemaphoreCreateMutex();
 	if (!hsSPI)
@@ -106,7 +105,7 @@ bool VS1053_HW_init()
 	uint8_t spi_no; // the spi bus to use
 
 	gpio_get_spi_bus(&spi_no, &miso, &mosi, &sclk);
-	gpio_get_vs1053(&xcs, &rst, &xdcs, &dreq);
+	gpio_get_vs1053(&xcs, &xdcs, &dreq);
 
 	// if xcs = 0 the vs1053 is not used
 	if (xcs == GPIO_NONE)
@@ -147,16 +146,6 @@ bool VS1053_HW_init()
 
 	//Initialize non-SPI GPIOs
 	gpio_config_t gpio_conf;
-	gpio_conf.mode = GPIO_MODE_OUTPUT;
-	gpio_conf.pull_up_en = GPIO_PULLUP_DISABLE;
-	gpio_conf.pull_down_en = GPIO_PULLDOWN_DISABLE;
-	gpio_conf.intr_type = GPIO_INTR_DISABLE;
-	gpio_conf.pin_bit_mask = ((uint64_t)(((uint64_t)1) << rst));
-	ESP_ERROR_CHECK(gpio_config(&gpio_conf));
-
-	ControlReset(RESET);
-	//gpio_set_direction(rst, GPIO_MODE_OUTPUT);
-
 	gpio_conf.mode = GPIO_MODE_INPUT;
 	gpio_conf.pull_up_en = GPIO_PULLUP_DISABLE;
 	gpio_conf.pull_down_en = GPIO_PULLDOWN_ENABLE;
@@ -167,11 +156,6 @@ bool VS1053_HW_init()
 	//gpio_set_direction(dreq, GPIO_MODE_INPUT);
 	//gpio_set_pull_mode(dreq, GPIO_PULLDOWN_ENABLE); //usefull for no vs1053 test
 	return true;
-}
-
-void ControlReset(uint8_t State)
-{
-	gpio_set_level(rst, State);
 }
 
 uint8_t VS1053_checkDREQ()
@@ -287,18 +271,6 @@ void WriteVS10xxRegister(unsigned short addr, unsigned short val)
 	VS1053_WriteRegister((uint8_t)addr & 0xff, (uint8_t)((val & 0xFF00) >> 8), (uint8_t)(val & 0xFF));
 }
 
-void VS1053_ResetChip()
-{
-	ControlReset(SET);
-	vTaskDelay(20);
-	ControlReset(RESET);
-	vTaskDelay(20);
-	if (VS1053_checkDREQ() == 1)
-		return;
-	while (VS1053_checkDREQ() == 0)
-		taskYIELD();
-}
-
 uint16_t MaskAndShiftRight(uint16_t Source, uint16_t Mask, uint16_t Shift)
 {
 	return ((Source & Mask) >> Shift);
@@ -351,10 +323,6 @@ void VS1053_HighPower()
 
 void VS1053_Start()
 {
-	ControlReset(SET);
-	vTaskDelay(50);
-	ControlReset(RESET);
-	vTaskDelay(150);
 	//Check DREQ
 	if (VS1053_checkDREQ() == 0)
 	{
@@ -363,12 +331,20 @@ void VS1053_Start()
 		return;
 	}
 
-	VS1053_ResetChip();
-
-	int MP3Status = VS1053_ReadRegister(SPI_STATUSVS);
-	vsVersion = (MP3Status >> 4) & 0x000F; //Mask out only the four version bits
-										   //0 for VS1001, 1 for VS1011, 2 for VS1002, 3 for VS1003, 4 for VS1053 and VS8053,
-										   //5 for VS1033, 7 for VS1103, and 6 for VS1063
+	int MP3Status = 0;
+	while (vsVersion == -1)
+	{
+		MP3Status = VS1053_ReadRegister(SPI_STATUSVS);
+		vsVersion = (MP3Status >> 4) & 0x000F; //Mask out only the four version bits
+											   //0 for VS1001, 1 for VS1011, 2 for VS1002, 3 for VS1003, 4 for VS1053 and VS8053,
+											   //5 for VS1033, 7 for VS1103, and 6 for VS1063
+		if (vsVersion == 0)
+		{
+			ESP_LOGE(TAG, "VS1053 vsVersion %d", vsVersion);
+			vsVersion = -1;
+			VS1053_SoftwareReset();
+		}
+	}
 	ESP_LOGI(TAG, "VS1053/VS1003 detected. MP3Status: %x, Version: %x", MP3Status, vsVersion);
 	if (vsVersion == 4)								// only 1053b
 													//		VS1053_WriteRegister(SPI_CLOCKF,0x78,0x00); // SC_MULT = x3, SC_ADD= x2

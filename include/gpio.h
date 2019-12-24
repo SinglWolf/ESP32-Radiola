@@ -22,10 +22,10 @@
 
 //-------------------------
 
-#define PIN_NUM_PWM GPIO_NUM_13       //пин управления оборотами вентилятора
-#define PIN_NUM_TAH GPIO_NUM_12 //Пин контроля оборотов вентилятора
-#define PIN_NUM_DS18B20_0 GPIO_NUM_14 //пин датчика температуры
-#define PIN_NUM_SDCS GPIO_NUM_15      //пин выбора SD карты
+#define PIN_NUM_PWM GPIO_NUM_13     //пин управления оборотами вентилятора
+#define PIN_NUM_TACH GPIO_NUM_12    //Пин контроля оборотов вентилятора
+#define PIN_NUM_DS18B20 GPIO_NUM_14 //пин датчика температуры
+#define PIN_NUM_SDCS GPIO_NUM_15    //пин выбора SD карты
 
 // I2C
 //------------------------------------------------
@@ -46,12 +46,11 @@
 //-------------------
 // Set the right one with command sys.led
 // GPIO can be changed with command sys.ledgpio("x")
-#define GPIO_LED GPIO_NONE // Flashing led or Playing led
+#define GPIO_LED GPIO_NUM_25 // Flashing led or Playing led
 
 // gpio of the vs1053
 //-------------------
 #define PIN_NUM_XCS GPIO_NUM_5
-#define PIN_NUM_RST GPIO_NUM_25
 #define PIN_NUM_XDCS GPIO_NUM_2
 #define PIN_NUM_DREQ GPIO_NUM_4
 // + KSPI pins
@@ -76,12 +75,6 @@
 //-----------
 #define PIN_IR_SIGNAL GPIO_NUM_35 // Remote IR source
 
-// I2S DAC or PDM output
-//-----------------------
-#define PIN_I2S_LRCK GPIO_NONE // or Channel1
-#define PIN_I2S_BCLK GPIO_NONE // or channel2
-#define PIN_I2S_DATA GPIO_NONE //
-
 // LCD backlight control
 #define PIN_LCD_BACKLIGHT GPIO_NUM_32 // the gpio to be used in custom.c
 
@@ -97,12 +90,13 @@ void close_partition(nvs_handle handle, const char *partition_label);
 void gpio_get_label(char **label);
 void gpio_get_comment(char **label);
 void gpio_get_spi_bus(uint8_t *spi_no, gpio_num_t *miso, gpio_num_t *mosi, gpio_num_t *sclk);
-void gpio_get_vs1053(gpio_num_t *xcs, gpio_num_t *rst, gpio_num_t *xdcs, gpio_num_t *dreq);
+void gpio_get_vs1053(gpio_num_t *xcs, gpio_num_t *xdcs, gpio_num_t *dreq);
 void gpio_get_encoders(gpio_num_t *enca, gpio_num_t *encb, gpio_num_t *encbtn, gpio_num_t *enca1, gpio_num_t *encb1, gpio_num_t *encbtn1);
 void gpio_get_i2c(gpio_num_t *sda, gpio_num_t *scl);
 void gpio_get_spi_lcd(gpio_num_t *cs, gpio_num_t *a0, gpio_num_t *rstlcd);
 void gpio_get_ir_signal(gpio_num_t *ir);
 void gpio_get_lcd_backlightl(gpio_num_t *lcdb);
+void gpio_get_tachometer(gpio_num_t *tach);
 bool gpio_get_ir_key(nvs_handle handle, const char *key, uint32_t *out_value1, uint32_t *out_value2);
 void gpio_get_touch(gpio_num_t *cs);
 void gpio_get_ledgpio(gpio_num_t *enca);
@@ -113,6 +107,6 @@ void option_get_ddmm(uint8_t *enca);
 void option_set_ddmm(uint8_t enca);
 void option_get_lcd_out(uint32_t *enca);
 void option_set_lcd_out(uint32_t enca);
-uint8_t gpioToChannel(uint8_t gpio);
+void gpio_get_ds18b20(gpio_num_t *ds18b20);
 
 #endif

@@ -138,13 +138,12 @@ void gpio_get_spi_bus(uint8_t *spi_no, gpio_num_t *miso, gpio_num_t *mosi, gpio_
 	close_partition(hardware_handle, hardware);
 }
 
-void gpio_get_vs1053(gpio_num_t *xcs, gpio_num_t *rst, gpio_num_t *xdcs, gpio_num_t *dreq)
+void gpio_get_vs1053(gpio_num_t *xcs, gpio_num_t *xdcs, gpio_num_t *dreq)
 {
 	esp_err_t err;
 	nvs_handle hardware_handle;
 	// init default
 	*xcs = PIN_NUM_XCS;
-	*rst = PIN_NUM_RST;
 	*xdcs = PIN_NUM_XDCS;
 	*dreq = PIN_NUM_DREQ;
 
@@ -154,7 +153,6 @@ void gpio_get_vs1053(gpio_num_t *xcs, gpio_num_t *rst, gpio_num_t *xdcs, gpio_nu
 		return;
 	}
 	err = nvs_get_u8(hardware_handle, "P_XCS", (uint8_t *)xcs);
-	err |= nvs_get_u8(hardware_handle, "P_RST", (uint8_t *)rst);
 	err |= nvs_get_u8(hardware_handle, "P_XDCS", (uint8_t *)xdcs);
 	err |= nvs_get_u8(hardware_handle, "P_DREQ", (uint8_t *)dreq);
 	if (err != ESP_OK)
@@ -457,6 +455,44 @@ void gpio_get_lcd_backlightl(gpio_num_t *lcdb)
 
 	close_partition(hardware_handle, hardware);
 }
+void gpio_get_tachometer(gpio_num_t *tach)
+{
+	esp_err_t err;
+	nvs_handle hardware_handle;
+	// init default
+	*tach = PIN_NUM_TACH;
+
+	if (open_partition(hardware, gpio_space, NVS_READONLY, &hardware_handle) != ESP_OK)
+	{
+		ESP_LOGD(TAG, "in tachometer");
+		return;
+	}
+
+	err = nvs_get_u8(hardware_handle, "P_TACHOMETER", (uint8_t *)tach);
+	if (err != ESP_OK)
+		ESP_LOGD(TAG, "g_get_tachometer err 0x%x", err);
+
+	close_partition(hardware_handle, hardware);
+}
+void gpio_get_ds18b20(gpio_num_t *ds18b20)
+{
+	esp_err_t err;
+	nvs_handle hardware_handle;
+	// init default
+	*ds18b20 = PIN_NUM_DS18B20;
+
+	if (open_partition(hardware, gpio_space, NVS_READONLY, &hardware_handle) != ESP_OK)
+	{
+		ESP_LOGD(TAG, "in ds18b20");
+		return;
+	}
+
+	err = nvs_get_u8(hardware_handle, "P_DS18B20", (uint8_t *)ds18b20);
+	if (err != ESP_OK)
+		ESP_LOGD(TAG, "g_get_ds18b20 err 0x%x", err);
+
+	close_partition(hardware_handle, hardware);
+}
 
 void gpio_get_touch(gpio_num_t *cs)
 {
@@ -476,16 +512,6 @@ void gpio_get_touch(gpio_num_t *cs)
 		ESP_LOGD(TAG, "g_get_touch err 0x%x", err);
 
 	close_partition(hardware_handle, hardware);
-}
-
-uint8_t gpioToChannel(uint8_t gpio)
-{
-	if (gpio == GPIO_NONE)
-		return GPIO_NONE;
-	if (gpio >= 38)
-		return (gpio - 36);
-	else
-		return (gpio - 28);
 }
 
 bool gpio_get_ir_key(nvs_handle handle, const char *key, uint32_t *out_value1, uint32_t *out_value2)

@@ -92,8 +92,7 @@ xQueueHandle event_queue;
 
 //xSemaphoreHandle print_mux;
 static uint16_t FlashOn = 5, FlashOff = 5;
-bool ledStatus = true;	// true: normal blink, false: led on when playing
-bool ledPolarity = false; // true: normal false: reverse
+bool ledStatus = true; // true: normal blink, false: led on when playing
 player_t *player_config;
 static output_mode_t audio_output_mode;
 static uint8_t clientIvol = 0;
@@ -465,13 +464,13 @@ static void start_wifi()
 			printf("WIFI GO TO AP MODE\n");
 			wifi_config_t ap_config = {
 				.ap = {
-					.ssid = "WifiKaradio",
+					.ssid = "WifiESP32Media",
 					.authmode = WIFI_AUTH_OPEN,
 					.max_connection = 2,
 					.beacon_interval = 200},
 			};
 			ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_AP, &ap_config));
-			ESP_LOGE(TAG, "The default AP is  WifiKaRadio. Connect your wifi to it.\nThen connect a webbrowser to 192.168.4.1 and go to Setting\nMay be long to load the first time.Be patient.");
+			ESP_LOGE(TAG, "The default AP is  WifiESP32Media. Connect your wifi to it.\nThen connect a webbrowser to 192.168.4.1 and go to Setting\nMay be long to load the first time.Be patient.");
 
 			vTaskDelay(1);
 			ESP_ERROR_CHECK(esp_wifi_start());
@@ -641,7 +640,7 @@ void start_network()
 			}
 		}
 		saveDeviceSettings(g_device);
-		tcpip_adapter_set_hostname(TCPIP_ADAPTER_IF_STA, "karadio32");
+		tcpip_adapter_set_hostname(TCPIP_ADAPTER_IF_STA, "ESP32Media");
 	}
 
 	lcd_welcome(localIp, "IP found");
@@ -707,14 +706,14 @@ void timerTask(void *p)
 				if (stateLed)
 				{
 					if (gpioLed != GPIO_NONE)
-						gpio_set_level(gpioLed, ledPolarity ? 1 : 0);
+						gpio_set_level(gpioLed, 0);
 					stateLed = false;
 					cCur = FlashOff * 10;
 				}
 				else
 				{
 					if (gpioLed != GPIO_NONE)
-						gpio_set_level(gpioLed, ledPolarity ? 0 : 1);
+						gpio_set_level(gpioLed, 1);
 					stateLed = true;
 					cCur = FlashOn * 10;
 				}
@@ -883,10 +882,10 @@ void app_main()
 			g_device->cleared = 0xAABB;				 //marker init done
 			g_device->uartspeed = 115200;			 // default
 			g_device->audio_output_mode = COMPUTER;  // default
-			g_device->options &= NT_LEDPOL;			 // 0 = load patch
+			g_device->options |= T_PATCH;			 // 0 = load patch
 			g_device->trace_level = ESP_LOG_VERBOSE; //default
 			g_device->vol = 100;					 //default
-			g_device->led_gpio = GPIO_NONE;
+			g_device->led_gpio = GPIO_NUM_25;
 			g_device->tzoffset = 5;
 			g_device->options32 |= T_ROTAT;
 			g_device->options32 |= T_DDMM;
@@ -999,7 +998,7 @@ void app_main()
 	//set hostname and instance name
 	if ((strlen(g_device->hostname) == 0) || (strlen(g_device->hostname) > HOSTLEN))
 	{
-		strcpy(g_device->hostname, "karadio32");
+		strcpy(g_device->hostname, "ESP32Media");
 	}
 	ESP_LOGE(TAG, "mDNS Hostname: %s", g_device->hostname);
 	err = mdns_hostname_set(g_device->hostname);
@@ -1025,7 +1024,7 @@ void app_main()
 	vTaskDelay(10);
 	ESP_LOGI(TAG, "RAM left %d", esp_get_free_heap_size());
 
-	//start tasks of KaRadio32
+	//start tasks of ESP32Media
 	xTaskCreatePinnedToCore(uartInterfaceTask, "uartInterfaceTask", 2400, NULL, PRIO_UART, &pxCreatedTask, CPU_UART);
 	ESP_LOGI(TAG, "%s task: %x", "uartInterfaceTask", (unsigned int)pxCreatedTask);
 	vTaskDelay(1);
@@ -1050,8 +1049,6 @@ void app_main()
 	// led mode
 	if (g_device->options & T_LED)
 		ledStatus = false;
-	if (g_device->options & T_LEDPOL)
-		ledPolarity = true;
 
 	setIvol(g_device->vol);
 	kprintf("READY. Type help for a list of commands\n");

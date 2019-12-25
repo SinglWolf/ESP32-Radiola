@@ -13,11 +13,10 @@
 
 #define GPIO_NONE 255
 
-//-------------------------------//
-// Define GPIO used in KaRadio32 //
-//-------------------------------//
-// Compatible ESP32 ADB
-// https://www.tindie.com/products/microwavemont/esp32-audio-developing-board-esp32-adb/
+//---------------------------------//
+// Define GPIO used in ESP32-Media //
+//---------------------------------//
+
 // Default value, can be superseeded by the hardware partition.
 
 //-------------------------

@@ -22,7 +22,7 @@
 #include "eeprom.h"
 #include "addoncommon.h"
 #include "xpt2046.h"
-#include "ucg_karadio32_fonts.h"
+#include "ucg_esp32media_fonts.h"
 
 #define TAG "addonucg"
 

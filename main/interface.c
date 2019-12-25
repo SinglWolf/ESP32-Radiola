@@ -119,7 +119,6 @@ sys.rotat and sys.rotat(\"x\"): Change and display the lcd rotation option (rese
 sys.henc0 or sys.henc1: Display the current step setting for the encoder. Normal= 4 steps/notch, Half: 2 steps/notch\n\
 sys.hencx(\"y\") with y=0 Normal, y=1 Half\n\
 sys.cali[brate]: start a touch screen calibration\n\
-sys.ledpola and sys.ledpola(\"x\"): display or set the polarity of the system led\n\
 sys.conf: Display the label of the csv file\n\
 ///////////\n\
   Other\n\
@@ -1084,40 +1083,6 @@ void sysled(char *s)
 	sysled((char *)"");
 }
 
-// mode of the led indicator. polarity 0 or 1
-void sysledpol(char *s)
-{
-	char *t = strstr(s, parslashquote);
-	extern bool ledPolarity;
-	if (t == NULL)
-	{
-		kprintf("##Led polarity is %d#\n", ((g_device->options & T_LEDPOL) == 0) ? 0 : 1);
-		return;
-	}
-	char *t_end = strstr(t, parquoteslash);
-	if (t_end == NULL)
-	{
-		kprintf(stritCMDERROR);
-		return;
-	}
-	uint8_t value = atoi(t + 2);
-	if (value != 0)
-	{
-		g_device->options |= T_LEDPOL;
-		ledPolarity = true;
-		if (getState())
-			gpio_set_level(getLedGpio(), 0);
-	}
-	else
-	{
-		g_device->options &= NT_LEDPOL;
-		ledPolarity = false;
-	} // options:0 = ledPolarity
-
-	saveDeviceSettings(g_device);
-	sysledpol((char *)"");
-}
-
 // display or change the tzo for ntp
 void tzoffset(char *s)
 {
@@ -1179,7 +1144,7 @@ void hostname(char *s)
 	}
 
 	if (t_end - t == 0)
-		strcpy(g_device->hostname, "karadio32");
+		strcpy(g_device->hostname, "ESP32Media");
 	else
 	{
 		if (t_end - t >= HOSTLEN)
@@ -1383,21 +1348,19 @@ void checkCommand(int size, char *s)
 		else if (strcmp(tmp + 4, "conf") == 0)
 			sys_conf();
 		else if (strcmp(tmp + 4, "update") == 0)
-			update_firmware((char *)"KaRadio32");
+			update_firmware((char *)"ESP32Media");
 		else if (strcmp(tmp + 4, "prerelease") == 0)
-			update_firmware((char *)"KaRadio32prv");
+			update_firmware((char *)"ESP32Mediaprv");
 		else if (startsWith("patch", tmp + 4))
 			syspatch(tmp);
 		else if (startsWith("ledg", tmp + 4))
 			sysledgpio(tmp); //ledgpio
-		else if (startsWith("ledpol", tmp + 4))
-			sysledpol(tmp);
 		else if (startsWith("led", tmp + 4))
 			sysled(tmp);
 		else if (strcmp(tmp + 4, "date") == 0)
 			ntp_print_time();
 		else if (strncmp(tmp + 4, "vers", 4) == 0)
-			kprintf("Release: %s, Revision: %s, KaRadio32\n", RELEASE, REVISION);
+			kprintf("Release: %s, Revision: %s, ESP32Media\n", RELEASE, REVISION);
 		else if (startsWith("tzo", tmp + 4))
 			tzoffset(tmp);
 		else if (strcmp(tmp + 4, "logn") == 0)

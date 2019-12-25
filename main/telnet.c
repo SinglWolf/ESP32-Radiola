@@ -23,7 +23,7 @@
 
 //const char strtMALLOC1[] = {"Telnet %s malloc fails\n"};
 #define strtSOCKET	"Telnet Socket fails %s errno: %d"
-const char strtWELCOME[]  ={"Karadio telnet\n> "};
+const char strtWELCOME[]  ={"ESP32Media telnet\n> "};
 
 
 int telnetclients[NBCLIENTT];

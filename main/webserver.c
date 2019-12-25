@@ -826,7 +826,7 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 	}
 	else if (strcmp(name, "/upgrade") == 0)
 	{
-		update_firmware((char *)"KaRadio32"); // start the OTA
+		update_firmware((char *)"ESP32Media"); // start the OTA
 	}
 	else if (strcmp(name, "/icy") == 0)
 	{
@@ -1035,7 +1035,7 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 				if (aua == NULL)
 				{
 					aua = inmalloc(12);
-					strcpy(aua, "Karadio/1.6");
+					strcpy(aua, "ESP32Media/1.6");
 				}
 			}
 			if (aua != NULL)

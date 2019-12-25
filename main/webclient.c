@@ -1214,7 +1214,7 @@ void clientTask(void *pvParams)
 	strcpy(useragent, g_device->ua);
 	if (strlen(useragent) == 0)
 	{
-		strcpy(useragent, "Karadio/1.5");
+		strcpy(useragent, "ESP32Media/1.5");
 		strcpy(g_device->ua, useragent);
 	}
 

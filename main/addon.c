@@ -204,7 +204,7 @@ void lcd_welcome(const char *ip, const char *state)
 		ClearBuffer();
 	setfont(2);
 	int y = -ucg_GetFontDescent(&ucg) + ucg_GetFontAscent(&ucg) + 3; //interline
-	DrawString(GetWidth() / 4, 2, "KaRadio32");
+	DrawString(GetWidth() / 4, 2, "ESP32-Media");
 	setfont(1);
 	in_welcome(ip, state, y, Version);
 }
@@ -1142,7 +1142,7 @@ void task_addon(void *pvParams)
 void addonDt() { itAskTime = true; }
 
 ////////////////////////////////////////
-// parse the karadio received line and do the job
+// parse the esp32media received line and do the job
 void addonParse(const char *fmt, ...)
 {
 	event_lcd_t evt;

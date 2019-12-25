@@ -16,7 +16,7 @@
 #include "ucg_esp32_hal.h"
 #include "xpt2046.h"
 
-#ifdef KaRadio32
+#ifdef ESP32Media
 #include "gpio.h"
 #include "vs1053.h"
 
@@ -142,7 +142,7 @@ int16_t ucg_com_hal(ucg_t *ucg, int16_t msg, uint16_t arg, uint8_t *data)
 //		gpio_set_level(ucg_esp32_hal.cs, 1);		
 		gpio_set_level(ucg_esp32_hal.dc, 0);		
 		
-#ifndef KaRadio32
+#ifndef ESP32Media
 // init the spi master if not done elsewhere
  		  spi_bus_config_t bus_config;
 		  bus_config.sclk_io_num   = ucg_esp32_hal.clk; // CLK

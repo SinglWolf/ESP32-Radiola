@@ -614,7 +614,7 @@ void draw(int i)
 		ucg_SetColori(&ucg, 0, 0, 0);
 		//         ucg_DrawBox(&ucg,0,y*i+z,x,y-ucg_GetFontDescent(&ucg));
 		//          ucg_DrawBox(&ucg,0,y*i+z,x,y-1);
-		ucg_DrawBox(&ucg, 0, y * i + z, x, y);
+		ucg_DrawBox(&ucg, 0, (y * i + z) - 2, x, y);
 		setColor(i);
 		if (lline[i] != NULL)
 			ucg_DrawString(&ucg, 0, y * i + z, 0, lline[i] + iline[i]);

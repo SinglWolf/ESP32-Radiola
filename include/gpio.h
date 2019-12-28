@@ -50,7 +50,7 @@
 // gpio of the vs1053
 //-------------------
 #define PIN_NUM_XCS GPIO_NUM_5
-#define PIN_NUM_XDCS GPIO_NUM_2
+#define PIN_NUM_XDCS GPIO_NUM_32
 #define PIN_NUM_DREQ GPIO_NUM_4
 // + KSPI pins
 
@@ -66,7 +66,7 @@
 // SPI lcd
 //---------
 #define PIN_LCD_CS GPIO_NUM_27 //CS
-#define PIN_LCD_A0 GPIO_NUM_26 //A0 or D/C
+#define PIN_LCD_A0 GPIO_NUM_2 //A0 or D/C
 #define PIN_LCD_RST GPIO_NONE  //Reset RES RST or not used
 // KSPI pins +
 
@@ -75,7 +75,7 @@
 #define PIN_IR_SIGNAL GPIO_NUM_35 // Remote IR source
 
 // LCD backlight control
-#define PIN_LCD_BACKLIGHT GPIO_NUM_32 // the gpio to be used in custom.c
+#define PIN_LCD_BACKLIGHT GPIO_NUM_26 // the gpio to be used in custom.c
 
 // touch screen  T_DO is MISO, T_DIN is MOSI, T_CLK is CLk of the spi bus
 #define PIN_TOUCH_CS GPIO_NUM_0 //Chip select T_CS

@@ -367,18 +367,18 @@ ul#ordered li {float:none;text-align:left;}
 .tabs label:hover {
 	background:#3cc;
 }
-.tabs span.coutput label {
+.tabs span.c_input label {
 	display:run-in;
 	padding: 4px 4px;
 	background:#39c;
 	top: 0px;
 	border-radius: 4px;
 }
-.tabs span.coutput label:hover {
+.tabs span.c_input label:hover {
 	background:#3cc;
 }
 
-.tabs [id^="output"]:checked+label {
+.tabs [id^="audioinput"]:checked+label {
 	top:0;
 	padding: 4px 4px;
 	color:#EEE;

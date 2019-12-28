@@ -173,11 +173,6 @@ function valid() {
 	alert("Перезагрузка системы. Пожалуйста, измените адрес вашего браузера на новый.");
 }
 
-function validOutput() {
-	hardware(1);
-	alert("Перезагрузка системы.");
-}
-
 function scrollTo(to, duration) {
 	if (duration < 0) return;
 	var scrollTop = document.body.scrollTop + document.documentElement.scrollTop;
@@ -566,26 +561,26 @@ function wifi(valid) {
 		+ "&dhcp2=" + document.getElementById('dhcp2').checked + "&");
 }
 function hardware(valid) {
-	var i, coutput;
+	var i, c_input;
 	xhr = new XMLHttpRequest();
 	xhr.onreadystatechange = function () {
 		if (xhr.readyState == 4 && xhr.status == 200) {
 			var arr = JSON.parse(xhr.responseText);
-			document.getElementById("output" + arr['coutput']).checked = true;
-			if (arr['coutput'] != "4") {
-				document.getElementById("vs1052Only").style.display = "none";
+			document.getElementById("audioinput" + arr['c_input']).checked = true;
+			if (arr['c_input'] != "2") {
+				document.getElementById("VS1053Only").style.display = "none";
 			}
 			else {
-				document.getElementById("vs1052Only").style.display = "run-in";
+				document.getElementById("VS1053Only").style.display = "block";
 			}
 		}
 	}
 	xhr.open("POST", "hardware", false);
 	xhr.setRequestHeader(content, ctype);
-	for (i = 0; i < 5; i++) if (document.getElementById('output' + i).checked) break;
-	if (i == 5) coutput = 0;
+	for (i = 1; i < 4; i++) if (document.getElementById('audioinput' + i).checked) break;
+	if (i == 4) c_input = 1;
 	xhr.send("valid=" + valid
-		+ "&coutput=" + i
+		+ "&c_input=" + i
 		+ "&");
 }
 function instantPlay() {

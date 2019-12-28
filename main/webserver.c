@@ -53,13 +53,13 @@ void *inmalloc(size_t n)
 	void *ret;
 	//	ESP_LOGV(TAG, "server Malloc of %d %d,  Heap size: %d",n,((n / 32) + 1) * 32,xPortGetFreeHeapSize( ));
 	ret = malloc(n);
-	ESP_LOGV(TAG, "server Malloc of %x : %d bytes Heap size: %d", (int)ret, n, xPortGetFreeHeapSize());
+	ESP_LOGV(TAG, "server Malloc of %x : %u bytes Heap size: %u", (int)ret, n, xPortGetFreeHeapSize());
 	//	if (n <4) printf("Server: incmalloc size:%d\n",n);
 	return ret;
 }
 void infree(void *p)
 {
-	ESP_LOGV(TAG, "server free of   %x,            Heap size: %d", (int)p, xPortGetFreeHeapSize());
+	ESP_LOGV(TAG, "server free of   %x,            Heap size: %u", (int)p, xPortGetFreeHeapSize());
 	if (p != NULL)
 		free(p);
 }
@@ -109,7 +109,7 @@ static void serveFile(char *name, int conn)
 	}
 	struct servFile *f = findFile(name);
 	ESP_LOGV(TAG, "find %s at %x", name, (int)f);
-	ESP_LOGV(TAG, "Heap size: %d", xPortGetFreeHeapSize());
+	ESP_LOGV(TAG, "Heap size: %u", xPortGetFreeHeapSize());
 	gpart = PART;
 	if (f != NULL)
 	{
@@ -126,7 +126,7 @@ static void serveFile(char *name, int conn)
 
 			ESP_LOGV(TAG, "serveFile socket:%d,  %s. Length: %d  sliced in %d", conn, name, length, gpart);
 			sprintf(buf, "HTTP/1.1 200 OK\r\nContent-Type: %s\r\nContent-Encoding: gzip\r\nContent-Length: %d\r\nConnection: keep-alive\r\n\r\n", (f != NULL ? f->type : "text/plain"), length);
-			ESP_LOGV(TAG, "serveFile send %d bytes\n%s", strlen(buf), buf);
+			ESP_LOGV(TAG, "serveFile send %u bytes\n%s", strlen(buf), buf);
 			vTaskDelay(1); // why i need it? Don't know.
 			if (write(conn, buf, strlen(buf)) == -1)
 			{
@@ -284,7 +284,7 @@ void setVolume(char *vol)
 	if (vol != NULL)
 	{
 		VS1053_SetVolume(uvol);
-		kprintf("##CLI.VOL#: %d\n", getIvol());
+		kprintf("##CLI.VOL#: %u\n", getIvol());
 	}
 }
 // set the current volume with its offset
@@ -297,7 +297,7 @@ static void setOffsetVolume(void)
 	if (uvol <= 0)
 		uvol = 1;
 	ESP_LOGV(TAG, "setOffsetVol: %d", clientOvol);
-	kprintf("##CLI.VOL#: %d\n", getIvol());
+	kprintf("##CLI.VOL#: %u\n", getIvol());
 	setVolumei(uvol);
 }
 
@@ -347,7 +347,7 @@ static void curtemp(int socket)
 static void rpmfan(int socket)
 {
 	char answer[20];
-	sprintf(answer, "{\"wsrpmfan\":\"%d\"}", getRpmFan()*60);
+	sprintf(answer, "{\"wsrpmfan\":\"%d\"}", getRpmFan() * 60);
 	websocketwrite(socket, answer, strlen(answer));
 }
 
@@ -359,7 +359,7 @@ static void theme()
 	else
 		g_device->options |= T_THEME;
 	saveDeviceSettings(g_device);
-	ESP_LOGV(TAG, "theme:%d", g_device->options & T_THEME);
+	ESP_LOGV(TAG, "theme:%u", g_device->options & T_THEME);
 }
 
 // treat the received message of the websocket
@@ -457,7 +457,7 @@ void playStationInt(int sid)
 	infree(si);
 	sprintf(answer, "{\"wsstation\":\"%d\"}", sid);
 	websocketbroadcast(answer, strlen(answer));
-	ESP_LOGI(TAG, "playstationInt: %d, g_device: %d", sid, g_device->currentstation);
+	ESP_LOGI(TAG, "playstationInt: %d, g_device: %u", sid, g_device->currentstation);
 	if (g_device->currentstation != sid)
 	{
 		g_device->currentstation = sid;
@@ -643,7 +643,7 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 						si->file[sizeof(si->file) - 1] = 0; //truncate if any (rom crash)
 					if (strlen(si->name) > sizeof(si->name))
 						si->name[sizeof(si->name) - 1] = 0; //truncate if any (rom crash)
-					sprintf(ibuf, "%d%d", si->ovol, si->port);
+					sprintf(ibuf, "%d%u", si->ovol, si->port);
 					int json_length = strlen(si->domain) + strlen(si->file) + strlen(si->name) + strlen(ibuf) + 50;
 					buf = inmalloc(json_length + 75);
 
@@ -660,7 +660,7 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 							buf[i] = 0;
 						sprintf(buf, strsGSTAT,
 								json_length, si->name, si->domain, si->file, si->port, si->ovol);
-						ESP_LOGV(TAG, "getStation Buf len:%d : %s", strlen(buf), buf);
+						ESP_LOGV(TAG, "getStation Buf len:%u : %s", strlen(buf), buf);
 						write(conn, buf, strlen(buf));
 						infree(buf);
 					}
@@ -697,7 +697,7 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 				respKo(conn);
 				return;
 			}
-			ESP_LOGV(TAG, "unb init:%d", unb);
+			ESP_LOGV(TAG, "unb init:%u", unb);
 			char *url;
 			char *file;
 			char *name;
@@ -756,9 +756,9 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 				data = strstr(data, "&&") + 2;
 				ESP_LOGV(TAG, "si:%x, nsi:%x, addr:%x", (int)si, (int)nsi, (int)data);
 			}
-			ESP_LOGV(TAG, "save station: %d, unb:%d, addr:%x", uid, unb, (int)si);
+			ESP_LOGV(TAG, "save station: %u, unb:%u, addr:%x", uid, unb, (int)si);
 			saveMultiStation(si, uid, unb);
-			ESP_LOGV(TAG, "save station return: %d, unb:%d, addr:%x", uid, unb, (int)si);
+			ESP_LOGV(TAG, "save station return: %u, unb:%u, addr:%x", uid, unb, (int)si);
 			infree(si);
 			if (pState != getState())
 				if (pState)
@@ -786,13 +786,13 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 			if ((strcmp(id, "true")) && (g_device->autostart == 1))
 			{
 				g_device->autostart = 0;
-				ESP_LOGV(TAG, "autostart: %s, num:%d", id, g_device->autostart);
+				ESP_LOGV(TAG, "autostart: %s, num:%u", id, g_device->autostart);
 				saveDeviceSettings(g_device);
 			}
 			else if ((strcmp(id, "false")) && (g_device->autostart == 0))
 			{
 				g_device->autostart = 1;
-				ESP_LOGV(TAG, "autostart: %s, num:%d", id, g_device->autostart);
+				ESP_LOGV(TAG, "autostart: %s, num:%u", id, g_device->autostart);
 				saveDeviceSettings(g_device);
 			}
 		}
@@ -832,19 +832,19 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 	{
 		ESP_LOGV(TAG, "icy vol");
 		char currentSt[5];
-		sprintf(currentSt, "%d", getCurrentStation());
+		sprintf(currentSt, "%u", getCurrentStation());
 		char vol[5];
-		sprintf(vol, "%d", (getVolume()));
+		sprintf(vol, "%u", (getVolume()));
 		char treble[5];
 		sprintf(treble, "%d", VS1053_GetTreble());
 		char bass[5];
-		sprintf(bass, "%d", VS1053_GetBass());
+		sprintf(bass, "%u", VS1053_GetBass());
 		char tfreq[5];
 		sprintf(tfreq, "%d", VS1053_GetTrebleFreq());
 		char bfreq[5];
-		sprintf(bfreq, "%d",VS1053_GetBassFreq());
+		sprintf(bfreq, "%u", VS1053_GetBassFreq());
 		char spac[5];
-		sprintf(spac, "%d",VS1053_GetSpatial());
+		sprintf(spac, "%u", VS1053_GetSpatial());
 
 		struct icyHeader *header = clientGetHeader();
 		ESP_LOGV(TAG, "icy start header %x", (int)header);
@@ -863,7 +863,7 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 					  ((not2 == NULL) ? 0 : strlen(not2)) +
 					  ((header->members.single.genre == NULL) ? 0 : strlen(header->members.single.genre)) +
 					  ((header->members.single.metadata == NULL) ? 0 : strlen(header->members.single.metadata)) + strlen(currentSt) + strlen(vol) + strlen(treble) + strlen(bass) + strlen(tfreq) + strlen(bfreq) + strlen(spac);
-		ESP_LOGD(TAG, "icy start header %x  len:%d vollen:%d vol:%s", (int)header, json_length, strlen(vol), vol);
+		ESP_LOGD(TAG, "icy start header %x  len:%d vollen:%u vol:%s", (int)header, json_length, strlen(vol), vol);
 
 		char *buf = inmalloc(json_length + 75);
 		if (buf == NULL)
@@ -890,7 +890,7 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 					(header->members.single.metadata == NULL) ? "" : header->members.single.metadata,
 					vol, treble, bass, tfreq, bfreq, spac,
 					vauto);
-			ESP_LOGV(TAG, "test: len fmt:%d %d\n%s\n", strlen(strsICY), strlen(strsICY), buf);
+			ESP_LOGV(TAG, "test: len fmt:%u %u\n%s\n", strlen(strsICY), strlen(strsICY), buf);
 			write(conn, buf, strlen(buf));
 			infree(buf);
 			wsMonitor();
@@ -908,12 +908,12 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 			if (getSParameterFromResponse(valid, 6, "valid=", data, data_size))
 				if (strcmp(valid, "1") == 0)
 					val = true;
-			char coutput[6];
-			getSParameterFromResponse(coutput, 6, "coutput=", data, data_size);
-			cout = atoi(coutput);
+			char c_input[6];
+			getSParameterFromResponse(c_input, 6, "c_input=", data, data_size);
+			cout = atoi(c_input);
 			if (val)
 			{
-				g_device->audio_output_mode = cout;
+				g_device->audio_input_mode = cout;
 				changed = true;
 				saveDeviceSettings(g_device);
 			}
@@ -921,19 +921,17 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 			json_length = 15;
 
 			char buf[110];
-			sprintf(buf, "HTTP/1.1 200 OK\r\nContent-Type:application/json\r\nContent-Length:%d\r\n\r\n{\"coutput\":\"%d\"}",
+			sprintf(buf, "HTTP/1.1 200 OK\r\nContent-Type:application/json\r\nContent-Length:%d\r\n\r\n{\"c_input\":\"%u\"}",
 					json_length,
-					g_device->audio_output_mode);
-			ESP_LOGV(TAG, "hardware Buf len:%d\n%s", strlen(buf), buf);
+					g_device->audio_input_mode);
+			ESP_LOGV(TAG, "hardware Buf len:%u\n%s", strlen(buf), buf);
 			write(conn, buf, strlen(buf));
 			if (val)
 			{
 				// set current_ap to the first filled ssid
-				ESP_LOGD(TAG, "audio_output_mode: %d", g_device->audio_output_mode);
+				ESP_ERROR_CHECK(tda7313_set_input(g_device->audio_input_mode));
+				ESP_LOGD(TAG, "audio input mode: %u", g_device->audio_input_mode);
 				//				copyDeviceSettings();
-				fflush(stdout);
-				vTaskDelay(100);
-				esp_restart();
 			}
 			return;
 		}
@@ -1103,14 +1101,14 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 						  strlen(g_device->ua) +
 						  strlen(g_device->hostname) +
 						  sprintf(tmptzo, "%d", g_device->tzoffset) +
-						  sprintf(tmpip, "%d.%d.%d.%d", g_device->ipAddr1[0], g_device->ipAddr1[1], g_device->ipAddr1[2], g_device->ipAddr1[3]) +
-						  sprintf(tmpmsk, "%d.%d.%d.%d", g_device->mask1[0], g_device->mask1[1], g_device->mask1[2], g_device->mask1[3]) +
-						  sprintf(tmpgw, "%d.%d.%d.%d", g_device->gate1[0], g_device->gate1[1], g_device->gate1[2], g_device->gate1[3]) +
-						  sprintf(adhcp, "%d", g_device->dhcpEn1) +
-						  sprintf(tmpip2, "%d.%d.%d.%d", g_device->ipAddr2[0], g_device->ipAddr2[1], g_device->ipAddr2[2], g_device->ipAddr2[3]) +
-						  sprintf(tmpmsk2, "%d.%d.%d.%d", g_device->mask2[0], g_device->mask2[1], g_device->mask2[2], g_device->mask2[3]) +
-						  sprintf(tmpgw2, "%d.%d.%d.%d", g_device->gate2[0], g_device->gate2[1], g_device->gate2[2], g_device->gate2[3]) +
-						  sprintf(adhcp2, "%d", g_device->dhcpEn2) +
+						  sprintf(tmpip, "%u.%u.%u.%u", g_device->ipAddr1[0], g_device->ipAddr1[1], g_device->ipAddr1[2], g_device->ipAddr1[3]) +
+						  sprintf(tmpmsk, "%u.%u.%u.%u", g_device->mask1[0], g_device->mask1[1], g_device->mask1[2], g_device->mask1[3]) +
+						  sprintf(tmpgw, "%u.%u.%u.%u", g_device->gate1[0], g_device->gate1[1], g_device->gate1[2], g_device->gate1[3]) +
+						  sprintf(adhcp, "%u", g_device->dhcpEn1) +
+						  sprintf(tmpip2, "%u.%u.%u.%u", g_device->ipAddr2[0], g_device->ipAddr2[1], g_device->ipAddr2[2], g_device->ipAddr2[3]) +
+						  sprintf(tmpmsk2, "%u.%u.%u.%u", g_device->mask2[0], g_device->mask2[1], g_device->mask2[2], g_device->mask2[3]) +
+						  sprintf(tmpgw2, "%u.%u.%u.%u", g_device->gate2[0], g_device->gate2[1], g_device->gate2[2], g_device->gate2[3]) +
+						  sprintf(adhcp2, "%u", g_device->dhcpEn2) +
 						  sprintf(macstr, MACSTR, MAC2STR(macaddr));
 
 			char *buf = inmalloc(json_length + 95 + 39 + 10);
@@ -1125,7 +1123,7 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 				sprintf(buf, strsWIFI,
 						json_length,
 						g_device->ssid1, g_device->pass1, g_device->ssid2, g_device->pass2, tmpip, tmpmsk, tmpgw, tmpip2, tmpmsk2, tmpgw2, g_device->ua, adhcp, adhcp2, macstr, g_device->hostname, tmptzo);
-				ESP_LOGV(TAG, "wifi Buf len:%d\n%s", strlen(buf), buf);
+				ESP_LOGV(TAG, "wifi Buf len:%u\n%s", strlen(buf), buf);
 				write(conn, buf, strlen(buf));
 				infree(buf);
 			}
@@ -1133,7 +1131,7 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 			if (val)
 			{
 				// set current_ap to the first filled ssid
-				ESP_LOGD(TAG, "currentAP: %d", g_device->current_ap);
+				ESP_LOGD(TAG, "currentAP: %u", g_device->current_ap);
 				if (g_device->current_ap == APMODE)
 				{
 					if (strlen(g_device->ssid1) != 0)
@@ -1142,7 +1140,7 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 						g_device->current_ap = STA2;
 					saveDeviceSettings(g_device);
 				}
-				ESP_LOGD(TAG, "currentAP: %d", g_device->current_ap);
+				ESP_LOGD(TAG, "currentAP: %u", g_device->current_ap);
 				copyDeviceSettings(); // save the current one
 				fflush(stdout);
 				vTaskDelay(100);
@@ -1162,11 +1160,11 @@ static bool httpServerHandleConnection(int conn, char *buf, uint16_t buflen)
 {
 	char *c;
 	char *d;
-	ESP_LOGD(TAG, "Heap size: %d", xPortGetFreeHeapSize());
+	ESP_LOGD(TAG, "Heap size: %u", xPortGetFreeHeapSize());
 	//printf("httpServerHandleConnection  %20c \n",&buf);
 	if ((c = strstr(buf, "GET ")) != NULL)
 	{
-		ESP_LOGV(TAG, "GET socket:%d len: %d, str:\n%s", conn, buflen, buf);
+		ESP_LOGV(TAG, "GET socket:%d len: %u, str:\n%s", conn, buflen, buf);
 		if (((d = strstr(buf, "Connection:")) != NULL) && ((d = strstr(d, " Upgrade")) != NULL))
 		{ // a websocket request
 			websocketAccept(conn, buf, buflen);
@@ -1292,7 +1290,7 @@ static bool httpServerHandleConnection(int conn, char *buf, uint16_t buflen)
 	else if ((c = strstr(buf, "POST ")) != NULL)
 	{
 		// a post request
-		ESP_LOGV(TAG, "POST socket: %d  buflen: %d", conn, buflen);
+		ESP_LOGV(TAG, "POST socket: %d  buflen: %u", conn, buflen);
 		char fname[32];
 		uint8_t i;
 		for (i = 0; i < 32; i++)

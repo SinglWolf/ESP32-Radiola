@@ -696,7 +696,7 @@ void vsTask(void *pvParams)
 	VS1053_SetTrebleFreq(g_device->freqtreble);
 	VS1053_SetBassFreq(g_device->freqbass);
 	VS1053_SetSpatial(g_device->spacial);
-	ESP_ERROR_CHECK(tda7313_set_input(VS1053));
+	ESP_ERROR_CHECK(tda7313_set_input(RADIO));
 
 	while (1)
 	{

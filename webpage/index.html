@@ -237,40 +237,45 @@
 					<label for="tab3">Настройки</label>
 					<div id="tab-content3" class="tab-content">
 						<h1>Настройка звука</h1>
-						<p><span class="bold">Выход на: </span>
-							<span class="coutput">
-								<input type="radio" name="output" id="output0" /><label for="output0">I2S</label>
-								<input type="radio" name="output" id="output1" /><label for="output1">MERUS</label>
-								<input type="radio" name="output" id="output2" /><label for="output2">DAC</label>
-								<input type="radio" name="output" id="output3" /><label for="output3">PDM</label>
-								<input type="radio" name="output" id="output4" /><label for="output4">VS1053</label>
-								<br /><span class="bold"> </span><input type="button" value="Подтвердить"
-									onclick="validOutput()" />
-							</span><br>
-							<span id="vs1052Only">
-								<span class="bold">Регулятор высоких частот: </span><input type="range"
-									id="treble_range" name="treble"
-									onChange="onRangeChange('treble_range', 'treble_span', 1.5, false)" min=-8 max=7>
-								<span id="treble_span"></span><br>
-								<span class="bold">Высокие частоты: </span><input type="range" id="treblefreq_range"
-									name="treblefreq"
-									onChange="onRangeChangeFreqTreble('treblefreq_range', 'treblefreq_span', 1, false)"
-									min=1 max=15> <span id="treblefreq_span"></span><br>
-								<span class="bold">Усиление басов: </span><input type="range" id="bass_range"
-									name="bass" onChange="onRangeChange('bass_range', 'bass_span', 1, false)" min=0
-									max=15> <span id="bass_span"></span><br>
-								<span class="bold">Низкие частоты: </span><input type="range" id="bassfreq_range"
-									name="bassfreq"
-									onChange="onRangeChangeFreqBass('bassfreq_range', 'bassfreq_span', 10, false)" min=2
-									max=15> <span id="bassfreq_span"></span><br>
-								<span class="bold">Объёмный звук: </span><input type="range" id="spacial_range"
-									name="spacial" onChange="onRangeChangeSpatial('spacial_range', 'spacial_span')"
-									min=0 max=3> <span id="spacial_span"></span><br />
-								<span class="bold"> </span><input type="button" value="Сброс"
-									onClick="resetEQ()" /><br /> </span><br />
-							<span class="bold">Громкость: </span><input type="range" id="vol_range" name="vol"
-								onChange="onRangeVolChange(this.value,true)" value=100 min=0 max=254> <span
-								id="vol_span"></span><br>
+						<p><span class="bold">Источник: </span>
+							<span class="c_input">
+								<input type="radio" name="audioinput" id="audioinput1" onclick="hardware(1)" /><label
+									for="audioinput1">КОМПЬЮТЕР</label>
+								<input type="radio" name="audioinput" id="audioinput2" onclick="hardware(1)" /><label
+									for="audioinput2">РАДИО</label>
+								<input type="radio" name="audioinput" id="audioinput3" onclick="hardware(1)" /><label
+									for="audioinput3">БЛЮТУЗ</label>
+								<br />
+								<span class="bold">Громкость: </span><input type="range" id="vol_range_tda"
+									name="voltda" onChange="onRangeVolTdaChange(this.value,true)" value=9 min=0 max=17>
+								<span id="vol_span_tda"></span><br>
+								<br />
+								<span id="VS1053Only">
+									<span class="bold">Регулятор высоких частот: </span><input type="range"
+										id="treble_range" name="treble"
+										onChange="onRangeChange('treble_range', 'treble_span', 1.5, false)" min=-8
+										max=7>
+									<span id="treble_span"></span><br>
+									<span class="bold">Высокие частоты: </span><input type="range" id="treblefreq_range"
+										name="treblefreq"
+										onChange="onRangeChangeFreqTreble('treblefreq_range', 'treblefreq_span', 1, false)"
+										min=1 max=15> <span id="treblefreq_span"></span><br>
+									<span class="bold">Усиление басов: </span><input type="range" id="bass_range"
+										name="bass" onChange="onRangeChange('bass_range', 'bass_span', 1, false)" min=0
+										max=15> <span id="bass_span"></span><br>
+									<span class="bold">Низкие частоты: </span><input type="range" id="bassfreq_range"
+										name="bassfreq"
+										onChange="onRangeChangeFreqBass('bassfreq_range', 'bassfreq_span', 10, false)"
+										min=2 max=15> <span id="bassfreq_span"></span><br>
+									<span class="bold">Объёмный звук: </span><input type="range" id="spacial_range"
+										name="spacial" onChange="onRangeChangeSpatial('spacial_range', 'spacial_span')"
+										min=0 max=3> <span id="spacial_span"></span><br />
+									<span class="bold"> </span><input type="button" value="Сброс"
+										onClick="resetEQ()" /><br />
+									<span class="bold">Громкость: </span><input type="range" id="vol_range" name="vol"
+										onChange="onRangeVolChange(this.value,true)" value=100 min=0 max=254> <span
+										id="vol_span"></span><br>
+								</span><br />
 						</p>
 						<h1>Сохранение и загрузка станций</h1>
 						<p>

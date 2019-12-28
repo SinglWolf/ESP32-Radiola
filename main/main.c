@@ -94,7 +94,7 @@ xQueueHandle event_queue;
 static uint16_t FlashOn = 5, FlashOff = 5;
 bool ledStatus = true; // true: normal blink, false: led on when playing
 player_t *player_config;
-static output_mode_t audio_output_mode;
+static input_mode_t audio_input_mode;
 static uint8_t clientIvol = 0;
 //ip
 static char localIp[20];
@@ -290,7 +290,7 @@ static void init_hardware()
 	// Настройка TDA7313...
 	ESP_ERROR_CHECK(tda7313_init());
 	ESP_ERROR_CHECK(tda7313_set_mute(true));
-	ESP_ERROR_CHECK(tda7313_set_input(audio_output_mode));
+	ESP_ERROR_CHECK(tda7313_set_input(audio_input_mode));
 	if (VS1053_HW_init()) // init spi
 	{
 		VS1053_Start();
@@ -475,7 +475,7 @@ static void start_wifi()
 			vTaskDelay(1);
 			ESP_ERROR_CHECK(esp_wifi_start());
 
-			audio_output_mode = COMPUTER;
+			audio_input_mode = COMPUTER;
 		}
 		else
 		{
@@ -881,7 +881,7 @@ void app_main()
 			g_device = getDeviceSettings();
 			g_device->cleared = 0xAABB;				 //marker init done
 			g_device->uartspeed = 115200;			 // default
-			g_device->audio_output_mode = COMPUTER;  // default
+			g_device->audio_input_mode = COMPUTER;  // default
 			g_device->options |= T_PATCH;			 // 0 = load patch
 			g_device->trace_level = ESP_LOG_VERBOSE; //default
 			g_device->vol = 100;					 //default
@@ -904,9 +904,9 @@ void app_main()
 	//SPI init for the vs1053 and lcd if spi.
 	VS1053_spi_init();
 	// output mode
-	audio_output_mode = g_device->audio_output_mode;
-	//I2S, I2S_MERUS, DAC_BUILT_IN, PDM, VS1053
-	ESP_LOGI(TAG, "audio_output_mode %d\nOne of COMPUTER = 1, VS1053, BLUETOOTH", audio_output_mode);
+	audio_input_mode = g_device->audio_input_mode;
+	//audio input mode COMPUTER, RADIO, BLUETOOTH
+	ESP_LOGI(TAG, "audio input mode %d\nOne of COMPUTER = 1, RADIO, BLUETOOTH", audio_input_mode);
 
 	// init softwares
 	telnetinit();

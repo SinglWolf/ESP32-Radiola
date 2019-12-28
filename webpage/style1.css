@@ -381,7 +381,7 @@ ul#ordered li {float:none;text-align:left;}
 	background:#96906B;
 }
 
-.tabs span.coutput label {
+.tabs span.c_input label {
 	display:run-in;
 	padding:4px 4px;
 	top:0px;
@@ -389,7 +389,7 @@ ul#ordered li {float:none;text-align:left;}
 	background:#666145;
 }
 
-.tabs [id^="output"]:checked+label {
+.tabs [id^="audioinput"]:checked+label {
 	top:0;
 	padding:4px 4px;
 	color:#EEE;

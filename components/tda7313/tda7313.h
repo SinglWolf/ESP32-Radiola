@@ -32,12 +32,12 @@ extern "C"
 
 #define STORAGE_NAMESPACE "TDA7313"
 
-	typedef enum
+	typedef enum uint8_t
 	{
 		COMPUTER = 1,
-		VS1053,
+		RADIO,
 		BLUETOOTH
-	} output_mode_t;
+	} input_mode_t;
 
 	struct tda_settings
 	{

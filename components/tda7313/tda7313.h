@@ -42,17 +42,17 @@ extern "C"
 	struct tda_settings
 	{
 		uint16_t cleared; // 0xAABB if initialized
-		uint8_t iInput;
-		uint8_t iSla[3];
-		uint8_t iVolume;
-		uint8_t iBass;
-		uint8_t iTreble;
-		uint8_t iAttLF;
-		uint8_t iAttRF;
-		uint8_t iAttLR;
-		uint8_t iAttRR;
-		bool iMute;
-		bool iLoud;
+		uint8_t Input;
+		uint8_t Sla[3];
+		uint8_t Volume;
+		uint8_t Bass;
+		uint8_t Treble;
+		uint8_t AttLF;
+		uint8_t AttRF;
+		uint8_t AttLR;
+		uint8_t AttRR;
+		bool Mute;
+		bool Loud[3];
 	} Tda_Settings;
 	extern struct tda_settings TDA;
 

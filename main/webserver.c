@@ -908,9 +908,9 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 			if (getSParameterFromResponse(valid, 6, "valid=", data, data_size))
 				if (strcmp(valid, "1") == 0)
 					val = true;
-			char c_input[6];
-			getSParameterFromResponse(c_input, 6, "c_input=", data, data_size);
-			cout = atoi(c_input);
+			char countin[6];
+			getSParameterFromResponse(countin, 6, "countin=", data, data_size);
+			cout = atoi(countin);
 			if (val)
 			{
 				g_device->audio_input_mode = cout;
@@ -921,7 +921,7 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 			json_length = 15;
 
 			char buf[110];
-			sprintf(buf, "HTTP/1.1 200 OK\r\nContent-Type:application/json\r\nContent-Length:%d\r\n\r\n{\"c_input\":\"%u\"}",
+			sprintf(buf, "HTTP/1.1 200 OK\r\nContent-Type:application/json\r\nContent-Length:%d\r\n\r\n{\"countin\":\"%u\"}",
 					json_length,
 					g_device->audio_input_mode);
 			ESP_LOGV(TAG, "hardware Buf len:%u\n%s", strlen(buf), buf);

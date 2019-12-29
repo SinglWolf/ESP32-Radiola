@@ -238,7 +238,7 @@
 					<div id="tab-content3" class="tab-content">
 						<h1>Настройка звука</h1>
 						<p><span class="bold">Источник: </span>
-							<span class="c_input">
+							<span class="countin">
 								<input type="radio" name="audioinput" id="audioinput1" onclick="hardware(1)" /><label
 									for="audioinput1">КОМПЬЮТЕР</label>
 								<input type="radio" name="audioinput" id="audioinput2" onclick="hardware(1)" /><label
@@ -246,11 +246,32 @@
 								<input type="radio" name="audioinput" id="audioinput3" onclick="hardware(1)" /><label
 									for="audioinput3">БЛЮТУЗ</label>
 								<br />
-								<span class="bold">Громкость: </span><input type="range" id="vol_range_tda"
-									name="voltda" onChange="onRangeVolTdaChange(this.value,true)" value=9 min=0 max=17>
-								<span id="vol_span_tda"></span><br>
-								<br />
-								<span id="VS1053Only">
+								<span id="Computer">
+									<br />
+									<span class="bold">Тонкомпенсация: </span><input id="loud1" type=checkbox
+										onclick="clickloud()">
+									<br />
+									<span class="bold">Предусиление: </span><input type="range" id="sla1" name="sla"
+										min=0 max=3>
+									<br />
+								</span>
+								<span id="Bluetooth">
+									<br />
+									<span class="bold">Тонкомпенсация: </span><input id="loud3" type=checkbox
+										onclick="clickloud()">
+									<br />
+									<span class="bold">Предусиление: </span><input type="range" id="sla3" name="sla"
+										min=0 max=3>
+								</span>
+								<span id="Radio">
+									<br />
+									<span class="bold">Тонкомпенсация: </span><input id="loud3" type=checkbox
+										onclick="clickloud()">
+									<br />
+									<span class="bold">Предусиление: </span><input type="range" id="sla2" name="sla"
+										min=0 max=3>
+									<br />
+									<br />
 									<span class="bold">Регулятор высоких частот: </span><input type="range"
 										id="treble_range" name="treble"
 										onChange="onRangeChange('treble_range', 'treble_span', 1.5, false)" min=-8
@@ -331,12 +352,12 @@
 							<input id="tzo" type="text" value="" />
 						</p>
 						<h1>Обновить до: <span id="newrelease"></span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; <input type=button
-								value="Обновить сейчсас" onclick="upgrade()" /> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
+								value="Обновить сейчас" onclick="upgrade()" /> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span
 								id="updatefb"></span><br /> </h1>
 						<p>
 							<span class="bold4" id="Version"></span><br />
 							<span class="bold4">Чтобы обновить или перезагрузить текущий релиз:</span><br /><br />
-							<input type=button value="Обновить сейчсас" onclick="upgrade()" /><br />
+							<input type=button value="Обновить сейчас" onclick="upgrade()" /><br />
 							<span class="bold4" id="Infos"></span><br />
 						</p>
 						<h1>История:</h1><BR />

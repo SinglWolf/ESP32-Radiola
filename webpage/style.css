@@ -59,7 +59,7 @@ div.LEFT {
 }
 #HEAD span.bold4 {
 	font-size:22px;
-	width:98%;
+	/* width:98%; */
 	display:inline;
 	-webkit-animation:mymove4 1s infinite alternate;
 	animation:mymove4 1s infinite alternate
@@ -147,7 +147,7 @@ div.LEFT {
 }
 .tabs span.bold3 {
 	font-size:22px;
-	width:98%;
+	/* width:98%; */
 	display:inline;
 	-webkit-animation:mymove 1s infinite alternate;
 	animation:mymove 1s infinite alternate;
@@ -367,14 +367,14 @@ ul#ordered li {float:none;text-align:left;}
 .tabs label:hover {
 	background:#3cc;
 }
-.tabs span.c_input label {
+.tabs span.countin label {
 	display:run-in;
 	padding: 4px 4px;
 	background:#39c;
 	top: 0px;
 	border-radius: 4px;
 }
-.tabs span.c_input label:hover {
+.tabs span.countin label:hover {
 	background:#3cc;
 }
 

@@ -39,7 +39,7 @@ struct tda_settings TDA;
 
 uint8_t tda7313_get_sla()
 {
-	return TDA.iSla[TDA.iInput - 1];
+	return TDA.Sla[TDA.Input - 1];
 }
 
 esp_err_t tda7313_set_sla(uint8_t arg)
@@ -50,52 +50,54 @@ esp_err_t tda7313_set_sla(uint8_t arg)
 	case 0:
 		iSelector |= (1 << 3);
 		iSelector |= (1 << 4);
-		TDA.iSla[TDA.iInput - 1] = arg;
 		break;
 	case 1:
 		iSelector &= ~(1 << 3);
 		iSelector |= (1 << 4);
-		TDA.iSla[TDA.iInput - 1] = arg;
 		break;
 	case 2:
 		iSelector |= (1 << 3);
 		iSelector &= ~(1 << 4);
-		TDA.iSla[TDA.iInput - 1] = arg;
 		break;
 	case 3:
 		iSelector &= ~(1 << 3);
 		iSelector &= ~(1 << 4);
-		TDA.iSla[TDA.iInput - 1] = arg;
 		break;
 	default:
 		return ESP_ERR_INVALID_ARG;
 	}
-
-	ESP_LOGD(TAG, "SLA: %.2f dB", SLA_PRINT[arg]);
+	TDA.Sla[TDA.Input - 1] = arg;
+	ESP_LOGD(TAG, "SLA: %.2f dB for Input: %u", SLA_PRINT[arg], TDA.Input - 1);
 
 	return tda7313_command(iSelector);
 }
 
 bool tda7313_get_loud()
 {
-	return TDA.iLoud;
+	return TDA.Loud[TDA.Input - 1];
 }
 
 esp_err_t tda7313_set_loud(bool loudEnabled)
 {
 
 	if (loudEnabled)
+	{
 		iSelector &= ~(1 << 2);
+		ESP_LOGD(TAG, "Loud ON for Input: %u", TDA.Input - 1);
+	}
 	else
+	{
 		iSelector |= (1 << 2);
-	TDA.iLoud = loudEnabled;
+		ESP_LOGD(TAG, "Loud OFF for Input: %u", TDA.Input - 1);
+	}
+	TDA.Loud[TDA.Input - 1] = loudEnabled;
 
 	return tda7313_command(iSelector);
 }
 
 uint8_t tda7313_get_input()
 {
-	return TDA.iInput;
+	return TDA.Input;
 }
 
 esp_err_t tda7313_set_input(uint8_t arg)
@@ -106,17 +108,17 @@ esp_err_t tda7313_set_input(uint8_t arg)
 	case 1:
 		iSelector &= ~(1 << 0);
 		iSelector &= ~(1 << 1);
-		TDA.iInput = arg;
+		TDA.Input = arg;
 		break;
 	case 2:
 		iSelector |= (1 << 0);
 		iSelector &= ~(1 << 1);
-		TDA.iInput = arg;
+		TDA.Input = arg;
 		break;
 	case 3:
 		iSelector &= ~(1 << 0);
 		iSelector |= (1 << 1);
-		TDA.iInput = arg;
+		TDA.Input = arg;
 		break;
 	default:
 		return ESP_ERR_INVALID_ARG;
@@ -124,13 +126,14 @@ esp_err_t tda7313_set_input(uint8_t arg)
 
 	ESP_ERROR_CHECK(tda7313_command(iSelector));
 
-	ESP_LOGD(TAG, "Input: %d", arg);
-	return tda7313_set_sla(TDA.iSla[arg - 1]);
+	ESP_LOGD(TAG, "Input: %u", arg);
+	ESP_ERROR_CHECK(tda7313_set_loud(TDA.Loud[arg - 1]));
+	return tda7313_set_sla(TDA.Sla[arg - 1]);
 }
 
 bool tda7313_get_mute()
 {
-	return TDA.iMute;
+	return TDA.Mute;
 }
 
 esp_err_t tda7313_set_mute(bool muteEnabled)
@@ -138,7 +141,7 @@ esp_err_t tda7313_set_mute(bool muteEnabled)
 	esp_err_t err;
 	if (muteEnabled)
 	{
-		TDA.iMute = true;
+		TDA.Mute = true;
 		err = tda7313_command(0x9F);
 		err |= tda7313_command(0xBF);
 		err |= tda7313_command(0xDF);
@@ -147,11 +150,11 @@ esp_err_t tda7313_set_mute(bool muteEnabled)
 	}
 	else
 	{
-		TDA.iMute = false;
-		err = tda7313_set_attlf(TDA.iAttLF);
-		err |= tda7313_set_attrf(TDA.iAttRF);
-		err |= tda7313_set_attlr(TDA.iAttLR);
-		err |= tda7313_set_attrr(TDA.iAttRR);
+		TDA.Mute = false;
+		err = tda7313_set_attlf(TDA.AttLF);
+		err |= tda7313_set_attrf(TDA.AttRF);
+		err |= tda7313_set_attlr(TDA.AttLR);
+		err |= tda7313_set_attrr(TDA.AttRR);
 		ESP_LOGD(TAG, "Mute Disabled");
 	}
 
@@ -162,163 +165,163 @@ esp_err_t tda7313_set_volume(uint8_t arg)
 {
 	if ((arg > 17))
 	{
-		ESP_LOGE(TAG, "Volume value: %d wrong!", arg);
+		ESP_LOGE(TAG, "Volume value: %u wrong!", arg);
 		return ESP_ERR_INVALID_ARG;
 	}
 
-	if (TDA.iMute)
+	if (TDA.Mute)
 		ESP_ERROR_CHECK(tda7313_set_mute(false));
 
-	TDA.iVolume = arg;
+	TDA.Volume = arg;
 
 	ESP_LOGD(TAG, "Volume: %.2f dB", VOLUME_PRINT[arg]);
 
-	return tda7313_command(VOLUME_MASK[TDA.iVolume]);
+	return tda7313_command(VOLUME_MASK[TDA.Volume]);
 }
 
 uint8_t tda7313_get_treble()
 {
-	return TDA.iTreble;
+	return TDA.Treble;
 }
 
 uint8_t tda7313_get_volume()
 {
-	return TDA.iVolume;
+	return TDA.Volume;
 }
 
 uint8_t tda7313_get_bass()
 {
-	return TDA.iBass;
+	return TDA.Bass;
 }
 
 esp_err_t tda7313_set_bass(uint8_t arg)
 {
 	if ((arg > 14))
 	{
-		ESP_LOGE(TAG, "Bass value: %d wrong!", arg);
+		ESP_LOGE(TAG, "Bass value: %u wrong!", arg);
 		return ESP_ERR_INVALID_ARG;
 	}
 
-	TDA.iBass = arg;
+	TDA.Bass = arg;
 
 	ESP_LOGD(TAG, "Bass: %d dB", BASS_TREBLE_PRINT[arg]);
 
-	return tda7313_command(BASS_MASK[TDA.iBass]);
+	return tda7313_command(BASS_MASK[TDA.Bass]);
 }
 
 esp_err_t tda7313_set_treble(uint8_t arg)
 {
 	if ((arg > 14))
 	{
-		ESP_LOGE(TAG, "Treble value: %d wrong!", arg);
+		ESP_LOGE(TAG, "Treble value: %u wrong!", arg);
 		return ESP_ERR_INVALID_ARG;
 	}
 
-	TDA.iTreble = arg;
+	TDA.Treble = arg;
 
 	ESP_LOGD(TAG, "Treble: %d dB", BASS_TREBLE_PRINT[arg]);
 
-	return tda7313_command(TREBLE_MASK[TDA.iTreble]);
+	return tda7313_command(TREBLE_MASK[TDA.Treble]);
 }
 
 uint8_t tda7313_get_attlf()
 {
-	return TDA.iAttLF;
+	return TDA.AttLF;
 }
 
 esp_err_t tda7313_set_attlf(uint8_t arg)
 {
 	if ((arg > 13))
 	{
-		ESP_LOGE(TAG, "ATT_LF value: %d wrong!", arg);
+		ESP_LOGE(TAG, "ATT_LF value: %u wrong!", arg);
 		return ESP_ERR_INVALID_ARG;
 	}
 
-	if (TDA.iMute)
+	if (TDA.Mute)
 	{
 		ESP_LOGD(TAG, "Mute Enabled");
 		return ESP_OK;
 	}
-	TDA.iAttLF = arg;
+	TDA.AttLF = arg;
 
 	ESP_LOGD(TAG, "ATT_LF: %.2f dB", ATT_PRINT[arg]);
 
-	return tda7313_command(ATT_LF_MASK[TDA.iAttLF]);
+	return tda7313_command(ATT_LF_MASK[TDA.AttLF]);
 }
 
 uint8_t tda7313_get_attrf()
 {
-	return TDA.iAttRF;
+	return TDA.AttRF;
 }
 
 esp_err_t tda7313_set_attrf(uint8_t arg)
 {
 	if ((arg > 13))
 	{
-		ESP_LOGE(TAG, "ATT_RF value: %d wrong!", arg);
+		ESP_LOGE(TAG, "ATT_RF value: %u wrong!", arg);
 		return ESP_ERR_INVALID_ARG;
 	}
 
-	if (TDA.iMute)
+	if (TDA.Mute)
 	{
 		ESP_LOGD(TAG, "Mute Enabled");
 		return ESP_OK;
 	}
-	TDA.iAttRF = arg;
+	TDA.AttRF = arg;
 
 	ESP_LOGD(TAG, "ATT_RF: %.2f dB", ATT_PRINT[arg]);
 
-	return tda7313_command(ATT_RF_MASK[TDA.iAttRF]);
+	return tda7313_command(ATT_RF_MASK[TDA.AttRF]);
 }
 
 uint8_t tda7313_get_attlr()
 {
-	return TDA.iAttLR;
+	return TDA.AttLR;
 }
 
 esp_err_t tda7313_set_attlr(uint8_t arg)
 {
 	if ((arg > 13))
 	{
-		ESP_LOGE(TAG, "ATT_LR value: %d wrong!", arg);
+		ESP_LOGE(TAG, "ATT_LR value: %u wrong!", arg);
 		return ESP_ERR_INVALID_ARG;
 	}
 
-	if (TDA.iMute)
+	if (TDA.Mute)
 	{
 		ESP_LOGD(TAG, "Mute Enabled");
 		return ESP_OK;
 	}
-	TDA.iAttLR = arg;
+	TDA.AttLR = arg;
 
 	ESP_LOGD(TAG, "ATT_LR: %.2f dB", ATT_PRINT[arg]);
 
-	return tda7313_command(ATT_LR_MASK[TDA.iAttLR]);
+	return tda7313_command(ATT_LR_MASK[TDA.AttLR]);
 }
 
 uint8_t tda7313_get_attrr()
 {
-	return TDA.iAttRR;
+	return TDA.AttRR;
 }
 
 esp_err_t tda7313_set_attrr(uint8_t arg)
 {
 	if ((arg > 13))
 	{
-		ESP_LOGE(TAG, "ATT_RR value: %d wrong!", arg);
+		ESP_LOGE(TAG, "ATT_RR value: %u wrong!", arg);
 		return ESP_ERR_INVALID_ARG;
 	}
 
-	if (TDA.iMute)
+	if (TDA.Mute)
 	{
 		ESP_LOGD(TAG, "Mute Enabled");
 		return ESP_OK;
 	}
-	TDA.iAttRR = arg;
+	TDA.AttRR = arg;
 
 	ESP_LOGD(TAG, "ATT_RR: %.2f dB", ATT_PRINT[arg]);
 
-	return tda7313_command(ATT_RR_MASK[TDA.iAttRR]);
+	return tda7313_command(ATT_RR_MASK[TDA.AttRR]);
 }
 
 esp_err_t tda7313_init()
@@ -392,32 +395,36 @@ esp_err_t tda7313_init_nvs()
 		ESP_LOGI(TAG, "Creating default values and saving in new keys.");
 		TDA.cleared = 0xAABB; // 0xAABB if initialized
 		ESP_ERROR_CHECK(nvs_set_u16(tda_nvs, "tda_cleared", TDA.cleared));
-		TDA.iVolume = 9;
-		ESP_ERROR_CHECK(nvs_set_u8(tda_nvs, "tda_volume", TDA.iVolume));
-		TDA.iBass = 7;
-		ESP_ERROR_CHECK(nvs_set_u8(tda_nvs, "tda_bass", TDA.iBass));
-		TDA.iTreble = 7;
-		ESP_ERROR_CHECK(nvs_set_u8(tda_nvs, "tda_treble", TDA.iTreble));
-		TDA.iAttLF = 0;
-		ESP_ERROR_CHECK(nvs_set_u8(tda_nvs, "tda_attlf", TDA.iAttLF));
-		TDA.iAttRF = 0;
-		ESP_ERROR_CHECK(nvs_set_u8(tda_nvs, "tda_attrf", TDA.iAttRF));
-		TDA.iAttLR = 13;
-		ESP_ERROR_CHECK(nvs_set_u8(tda_nvs, "tda_attlr", TDA.iAttLR));
-		TDA.iAttRR = 13;
-		ESP_ERROR_CHECK(nvs_set_u8(tda_nvs, "tda_attrr", TDA.iAttRR));
-		TDA.iInput = 2;
-		ESP_ERROR_CHECK(nvs_set_u8(tda_nvs, "tda_input", TDA.iInput));
-		TDA.iSla[0] = 0;
-		ESP_ERROR_CHECK(nvs_set_u8(tda_nvs, "tda_sla1", TDA.iSla[0]));
-		TDA.iSla[1] = 0;
-		ESP_ERROR_CHECK(nvs_set_u8(tda_nvs, "tda_sla2", TDA.iSla[1]));
-		TDA.iSla[2] = 0;
-		ESP_ERROR_CHECK(nvs_set_u8(tda_nvs, "tda_sla3", TDA.iSla[2]));
-		TDA.iMute = false;
+		TDA.Volume = 9;
+		ESP_ERROR_CHECK(nvs_set_u8(tda_nvs, "tda_volume", TDA.Volume));
+		TDA.Bass = 7;
+		ESP_ERROR_CHECK(nvs_set_u8(tda_nvs, "tda_bass", TDA.Bass));
+		TDA.Treble = 7;
+		ESP_ERROR_CHECK(nvs_set_u8(tda_nvs, "tda_treble", TDA.Treble));
+		TDA.AttLF = 0;
+		ESP_ERROR_CHECK(nvs_set_u8(tda_nvs, "tda_attlf", TDA.AttLF));
+		TDA.AttRF = 0;
+		ESP_ERROR_CHECK(nvs_set_u8(tda_nvs, "tda_attrf", TDA.AttRF));
+		TDA.AttLR = 13;
+		ESP_ERROR_CHECK(nvs_set_u8(tda_nvs, "tda_attlr", TDA.AttLR));
+		TDA.AttRR = 13;
+		ESP_ERROR_CHECK(nvs_set_u8(tda_nvs, "tda_attrr", TDA.AttRR));
+		TDA.Input = 2;
+		ESP_ERROR_CHECK(nvs_set_u8(tda_nvs, "tda_input", TDA.Input));
+		TDA.Sla[0] = 0;
+		ESP_ERROR_CHECK(nvs_set_u8(tda_nvs, "tda_sla1", TDA.Sla[0]));
+		TDA.Sla[1] = 0;
+		ESP_ERROR_CHECK(nvs_set_u8(tda_nvs, "tda_sla2", TDA.Sla[1]));
+		TDA.Sla[2] = 0;
+		ESP_ERROR_CHECK(nvs_set_u8(tda_nvs, "tda_sla3", TDA.Sla[2]));
+		TDA.Mute = false;
 		ESP_ERROR_CHECK(nvs_set_u8(tda_nvs, "tda_mute", 0));
-		TDA.iLoud = false;
-		ESP_ERROR_CHECK(nvs_set_u8(tda_nvs, "tda_loud", 0));
+		TDA.Loud[0] = false;
+		TDA.Loud[1] = false;
+		TDA.Loud[2] = false;
+		ESP_ERROR_CHECK(nvs_set_u8(tda_nvs, "tda_loud1", 0));
+		ESP_ERROR_CHECK(nvs_set_u8(tda_nvs, "tda_loud2", 0));
+		ESP_ERROR_CHECK(nvs_set_u8(tda_nvs, "tda_loud3", 0));
 		ESP_ERROR_CHECK(nvs_commit(tda_nvs));
 	}
 	else
@@ -426,42 +433,36 @@ esp_err_t tda7313_init_nvs()
 		ESP_LOGI(TAG, "Keys for the TDA7313 in NVS founds.");
 		ESP_LOGI(TAG, "Loading values from keys to chip.");
 		//		ESP_ERROR_CHECK(nvs_get_u16(tda_nvs, "tda_cleared", &TDA.cleared));
-		ESP_ERROR_CHECK(nvs_get_u8(tda_nvs, "tda_volume", &TDA.iVolume));
-		ESP_ERROR_CHECK(nvs_get_u8(tda_nvs, "tda_bass", &TDA.iBass));
-		ESP_ERROR_CHECK(nvs_get_u8(tda_nvs, "tda_treble", &TDA.iTreble));
-		ESP_ERROR_CHECK(nvs_get_u8(tda_nvs, "tda_attlf", &TDA.iAttLF));
-		ESP_ERROR_CHECK(nvs_get_u8(tda_nvs, "tda_attrf", &TDA.iAttRF));
-		ESP_ERROR_CHECK(nvs_get_u8(tda_nvs, "tda_attlr", &TDA.iAttLR));
-		ESP_ERROR_CHECK(nvs_get_u8(tda_nvs, "tda_attrr", &TDA.iAttRR));
-		ESP_ERROR_CHECK(nvs_get_u8(tda_nvs, "tda_input", &TDA.iInput));
-		ESP_ERROR_CHECK(nvs_get_u8(tda_nvs, "tda_sla1", &TDA.iSla[0]));
-		ESP_ERROR_CHECK(nvs_get_u8(tda_nvs, "tda_sla2", &TDA.iSla[1]));
-		ESP_ERROR_CHECK(nvs_get_u8(tda_nvs, "tda_sla3", &TDA.iSla[2]));
+		ESP_ERROR_CHECK(nvs_get_u8(tda_nvs, "tda_volume", &TDA.Volume));
+		ESP_ERROR_CHECK(nvs_get_u8(tda_nvs, "tda_bass", &TDA.Bass));
+		ESP_ERROR_CHECK(nvs_get_u8(tda_nvs, "tda_treble", &TDA.Treble));
+		ESP_ERROR_CHECK(nvs_get_u8(tda_nvs, "tda_attlf", &TDA.AttLF));
+		ESP_ERROR_CHECK(nvs_get_u8(tda_nvs, "tda_attrf", &TDA.AttRF));
+		ESP_ERROR_CHECK(nvs_get_u8(tda_nvs, "tda_attlr", &TDA.AttLR));
+		ESP_ERROR_CHECK(nvs_get_u8(tda_nvs, "tda_attrr", &TDA.AttRR));
+		ESP_ERROR_CHECK(nvs_get_u8(tda_nvs, "tda_input", &TDA.Input));
+		ESP_ERROR_CHECK(nvs_get_u8(tda_nvs, "tda_sla1", &TDA.Sla[0]));
+		ESP_ERROR_CHECK(nvs_get_u8(tda_nvs, "tda_sla2", &TDA.Sla[1]));
+		ESP_ERROR_CHECK(nvs_get_u8(tda_nvs, "tda_sla3", &TDA.Sla[2]));
 		ESP_ERROR_CHECK(nvs_get_u8(tda_nvs, "tda_mute", &temp));
-		TDA.iMute = (temp == 0 ? false : true);
-		ESP_ERROR_CHECK(nvs_get_u8(tda_nvs, "tda_loud", &temp));
-		TDA.iLoud = (temp == 0 ? false : true);
+		TDA.Mute = (temp == 0 ? false : true);
+		ESP_ERROR_CHECK(nvs_get_u8(tda_nvs, "tda_loud1", &temp));
+		TDA.Loud[0] = (temp == 0 ? false : true);
+		ESP_ERROR_CHECK(nvs_get_u8(tda_nvs, "tda_loud2", &temp));
+		TDA.Loud[1] = (temp == 0 ? false : true);
+		ESP_ERROR_CHECK(nvs_get_u8(tda_nvs, "tda_loud3", &temp));
+		TDA.Loud[2] = (temp == 0 ? false : true);
 	}
 	nvs_close(tda_nvs);
-	ESP_ERROR_CHECK(tda7313_set_volume(TDA.iVolume));
-	ESP_ERROR_CHECK(tda7313_set_treble(TDA.iTreble));
-	ESP_ERROR_CHECK(tda7313_set_bass(TDA.iBass));
-	ESP_ERROR_CHECK(tda7313_set_attlf(TDA.iAttLF));
-	ESP_ERROR_CHECK(tda7313_set_attrf(TDA.iAttRF));
-	ESP_ERROR_CHECK(tda7313_set_attlr(TDA.iAttLR));
-	ESP_ERROR_CHECK(tda7313_set_attrr(TDA.iAttRR));
-	ESP_ERROR_CHECK(tda7313_set_input(TDA.iInput));
-	ESP_ERROR_CHECK(tda7313_set_mute(TDA.iMute));
-	ESP_ERROR_CHECK(tda7313_set_loud(TDA.iLoud));
-
-	if ((TDA.iSla[0] > 4))
-		TDA.iSla[0] = 0;
-	if ((TDA.iSla[1] > 4))
-		TDA.iSla[1] = 0;
-	if ((TDA.iSla[2] > 4))
-		TDA.iSla[2] = 0;
-
-	return tda7313_set_sla(TDA.iSla[TDA.iInput - 1]);
+	ESP_ERROR_CHECK(tda7313_set_input(TDA.Input));
+	ESP_ERROR_CHECK(tda7313_set_volume(TDA.Volume));
+	ESP_ERROR_CHECK(tda7313_set_treble(TDA.Treble));
+	ESP_ERROR_CHECK(tda7313_set_bass(TDA.Bass));
+	ESP_ERROR_CHECK(tda7313_set_attlf(TDA.AttLF));
+	ESP_ERROR_CHECK(tda7313_set_attrf(TDA.AttRF));
+	ESP_ERROR_CHECK(tda7313_set_attlr(TDA.AttLR));
+	ESP_ERROR_CHECK(tda7313_set_attrr(TDA.AttRR));
+	return tda7313_set_mute(TDA.Mute);
 }
 esp_err_t tda7313_save_nvs()
 {
@@ -471,49 +472,61 @@ esp_err_t tda7313_save_nvs()
 	//
 	ESP_LOGI(TAG, "Keys for the TDA7313 keep to NVS.");
 	ESP_ERROR_CHECK(nvs_get_u8(tda_nvs, "tda_volume", &temp));
-	if (TDA.iVolume != temp)
-		ESP_ERROR_CHECK(nvs_set_u8(tda_nvs, "tda_volume", TDA.iVolume));
+	if (TDA.Volume != temp)
+		ESP_ERROR_CHECK(nvs_set_u8(tda_nvs, "tda_volume", TDA.Volume));
 	ESP_ERROR_CHECK(nvs_get_u8(tda_nvs, "tda_bass", &temp));
-	if (TDA.iBass != temp)
-		ESP_ERROR_CHECK(nvs_set_u8(tda_nvs, "tda_bass", TDA.iBass));
+	if (TDA.Bass != temp)
+		ESP_ERROR_CHECK(nvs_set_u8(tda_nvs, "tda_bass", TDA.Bass));
 	ESP_ERROR_CHECK(nvs_get_u8(tda_nvs, "tda_treble", &temp));
-	if (TDA.iTreble != temp)
-		ESP_ERROR_CHECK(nvs_set_u8(tda_nvs, "tda_treble", TDA.iTreble));
+	if (TDA.Treble != temp)
+		ESP_ERROR_CHECK(nvs_set_u8(tda_nvs, "tda_treble", TDA.Treble));
 	ESP_ERROR_CHECK(nvs_get_u8(tda_nvs, "tda_attlf", &temp));
-	if (TDA.iAttLF != temp)
-		ESP_ERROR_CHECK(nvs_set_u8(tda_nvs, "tda_attlf", TDA.iAttLF));
+	if (TDA.AttLF != temp)
+		ESP_ERROR_CHECK(nvs_set_u8(tda_nvs, "tda_attlf", TDA.AttLF));
 	ESP_ERROR_CHECK(nvs_get_u8(tda_nvs, "tda_attrf", &temp));
-	if (TDA.iAttRF != temp)
-		ESP_ERROR_CHECK(nvs_set_u8(tda_nvs, "tda_attrf", TDA.iAttRF));
+	if (TDA.AttRF != temp)
+		ESP_ERROR_CHECK(nvs_set_u8(tda_nvs, "tda_attrf", TDA.AttRF));
 	ESP_ERROR_CHECK(nvs_get_u8(tda_nvs, "tda_attlr", &temp));
-	if (TDA.iAttLR != temp)
-		ESP_ERROR_CHECK(nvs_set_u8(tda_nvs, "tda_attlr", TDA.iAttLR));
+	if (TDA.AttLR != temp)
+		ESP_ERROR_CHECK(nvs_set_u8(tda_nvs, "tda_attlr", TDA.AttLR));
 	ESP_ERROR_CHECK(nvs_get_u8(tda_nvs, "tda_attrr", &temp));
-	if (TDA.iAttRR != temp)
-		ESP_ERROR_CHECK(nvs_set_u8(tda_nvs, "tda_attrr", TDA.iAttRR));
+	if (TDA.AttRR != temp)
+		ESP_ERROR_CHECK(nvs_set_u8(tda_nvs, "tda_attrr", TDA.AttRR));
 	ESP_ERROR_CHECK(nvs_get_u8(tda_nvs, "tda_input", &temp));
-	if (TDA.iInput != temp)
-		ESP_ERROR_CHECK(nvs_set_u8(tda_nvs, "tda_input", TDA.iInput));
+	if (TDA.Input != temp)
+		ESP_ERROR_CHECK(nvs_set_u8(tda_nvs, "tda_input", TDA.Input));
 	ESP_ERROR_CHECK(nvs_get_u8(tda_nvs, "tda_sla1", &temp));
-	if (TDA.iSla[0] != temp)
-		ESP_ERROR_CHECK(nvs_set_u8(tda_nvs, "tda_sla1", TDA.iSla[0]));
+	if (TDA.Sla[0] != temp)
+		ESP_ERROR_CHECK(nvs_set_u8(tda_nvs, "tda_sla1", TDA.Sla[0]));
 	ESP_ERROR_CHECK(nvs_get_u8(tda_nvs, "tda_sla2", &temp));
-	if (TDA.iSla[1] != temp)
-		ESP_ERROR_CHECK(nvs_set_u8(tda_nvs, "tda_sla2", TDA.iSla[1]));
+	if (TDA.Sla[1] != temp)
+		ESP_ERROR_CHECK(nvs_set_u8(tda_nvs, "tda_sla2", TDA.Sla[1]));
 	ESP_ERROR_CHECK(nvs_get_u8(tda_nvs, "tda_sla3", &temp));
-	if (TDA.iSla[2] != temp)
-		ESP_ERROR_CHECK(nvs_set_u8(tda_nvs, "tda_sla3", TDA.iSla[2]));
+	if (TDA.Sla[2] != temp)
+		ESP_ERROR_CHECK(nvs_set_u8(tda_nvs, "tda_sla3", TDA.Sla[2]));
 	ESP_ERROR_CHECK(nvs_get_u8(tda_nvs, "tda_mute", &temp));
-	if (TDA.iMute != temp)
+	if (TDA.Mute != temp)
 	{
-		temp = (TDA.iMute == false ? 0 : 1);
+		temp = (TDA.Mute == false ? 0 : 1);
 		ESP_ERROR_CHECK(nvs_set_u8(tda_nvs, "tda_mute", temp));
 	}
-	ESP_ERROR_CHECK(nvs_get_u8(tda_nvs, "tda_loud", &temp));
-	if (TDA.iLoud != temp)
+	ESP_ERROR_CHECK(nvs_get_u8(tda_nvs, "tda_loud1", &temp));
+	if (TDA.Loud[0] != temp)
 	{
-		temp = (TDA.iLoud == false ? 0 : 1);
-		ESP_ERROR_CHECK(nvs_set_u8(tda_nvs, "tda_loud", temp));
+		temp = (TDA.Loud[0] == false ? 0 : 1);
+		ESP_ERROR_CHECK(nvs_set_u8(tda_nvs, "tda_loud1", temp));
+	}
+	ESP_ERROR_CHECK(nvs_get_u8(tda_nvs, "tda_loud2", &temp));
+	if (TDA.Loud[1] != temp)
+	{
+		temp = (TDA.Loud[1] == false ? 0 : 1);
+		ESP_ERROR_CHECK(nvs_set_u8(tda_nvs, "tda_loud2", temp));
+	}
+	ESP_ERROR_CHECK(nvs_get_u8(tda_nvs, "tda_loud3", &temp));
+	if (TDA.Loud[2] != temp)
+	{
+		temp = (TDA.Loud[2] == false ? 0 : 1);
+		ESP_ERROR_CHECK(nvs_set_u8(tda_nvs, "tda_loud3", temp));
 	}
 	ESP_ERROR_CHECK(nvs_commit(tda_nvs));
 	nvs_close(tda_nvs);

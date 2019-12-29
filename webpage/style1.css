@@ -59,7 +59,7 @@ div.LEFT {
 }
 #HEAD span.bold4 {
 	font-size:22px;
-	width:98%;
+	/* width:98%; */
 	display:inline;
 	-webkit-animation:mymove4 1s infinite alternate;
 	animation:mymove4 1s infinite alternate
@@ -146,7 +146,7 @@ div.LEFT {
 }
 .tabs span.bold3 {
 	font-size:22px;
-	width:98%;
+	/* width:98%; */
 	display:inline;
 	-webkit-animation:mymove 1s infinite alternate;
 	animation:mymove 1s infinite alternate;
@@ -381,7 +381,7 @@ ul#ordered li {float:none;text-align:left;}
 	background:#96906B;
 }
 
-.tabs span.c_input label {
+.tabs span.countin label {
 	display:run-in;
 	padding:4px 4px;
 	top:0px;

@@ -561,26 +561,38 @@ function wifi(valid) {
 		+ "&dhcp2=" + document.getElementById('dhcp2').checked + "&");
 }
 function hardware(valid) {
-	var i, c_input;
+	var i, countin;
 	xhr = new XMLHttpRequest();
 	xhr.onreadystatechange = function () {
 		if (xhr.readyState == 4 && xhr.status == 200) {
 			var arr = JSON.parse(xhr.responseText);
-			document.getElementById("audioinput" + arr['c_input']).checked = true;
-			if (arr['c_input'] != "2") {
-				document.getElementById("VS1053Only").style.display = "none";
+			document.getElementById("audioinput" + arr['countin']).checked = true;
+			if (arr['countin'] == "1") {
+				document.getElementById("Computer").style.display = "block";
 			}
 			else {
-				document.getElementById("VS1053Only").style.display = "block";
+				document.getElementById("Computer").style.display = "none";
+			}
+			if (arr['countin'] == "2") {
+				document.getElementById("Radio").style.display = "block";
+			}
+			else {
+				document.getElementById("Radio").style.display = "none";
+			}
+			if (arr['countin'] == "3") {
+				document.getElementById("Bluetooth").style.display = "block";
+			}
+			else {
+				document.getElementById("Bluetooth").style.display = "none";
 			}
 		}
 	}
 	xhr.open("POST", "hardware", false);
 	xhr.setRequestHeader(content, ctype);
 	for (i = 1; i < 4; i++) if (document.getElementById('audioinput' + i).checked) break;
-	if (i == 4) c_input = 1;
+	if (i == 4) countin = 1;
 	xhr.send("valid=" + valid
-		+ "&c_input=" + i
+		+ "&countin=" + i
 		+ "&");
 }
 function instantPlay() {

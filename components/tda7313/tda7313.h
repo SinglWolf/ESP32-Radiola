@@ -69,6 +69,13 @@ extern "C"
 	esp_err_t tda7313_set_sla(uint8_t arg);
 
 	/**
+ * Get SLA
+ *  @param input 1,2,3
+ * @return SLA for audio input
+ */
+	uint8_t tda7313_get_sla(uint8_t input);
+
+	/**
  * Initialize device descriptor
  * @param dev Device descriptor
  * @param port I2C port number
@@ -98,11 +105,24 @@ extern "C"
 	esp_err_t tda7313_set_mute(bool muteEnabled);
 
 	/**
+ * Get Mute
+  * @return state Mute
+ */
+	bool tda7313_get_mute();
+
+	/**
  * Set Loud
  * @param bool loudEnabled false or true
  * @return `ESP_OK` on success
  */
 	esp_err_t tda7313_set_loud(bool loudEnabled);
+
+	/**
+ * Get Loud
+ * @param input 1,2,3
+ * @return OFF\ON Loudness for audio input
+ */
+	bool tda7313_get_loud(uint8_t input);
 
 	/**
  * Switch input
@@ -112,6 +132,12 @@ extern "C"
 	esp_err_t tda7313_set_input(uint8_t arg);
 
 	/**
+ * Get audio input
+  * @return current audio input
+ */
+	uint8_t tda7313_get_input();
+
+	/**
  * Set master volume
  * @param arg  0.......17    -78.75dB............0dB
  * @return `ESP_OK` on success
@@ -119,17 +145,36 @@ extern "C"
 	esp_err_t tda7313_set_volume(uint8_t arg);
 
 	/**
+ * Get volume
+  * @return current volume value
+ */
+	uint8_t tda7313_get_volume();
+
+	/**
  * Set Bass
  * @param arg  0....7...14  -14dB.....0dB....+14dB
  * @return `ESP_OK` on success
  */
 	esp_err_t tda7313_set_bass(uint8_t arg);
+
+	/**
+ * Get Bass
+ * @return current Bass value
+ */
+	uint8_t tda7313_get_bass();
+
 	/**
  * Set Treble
  * @param arg  0....7...14  -14dB.....0dB....+14dB
  * @return `ESP_OK` on success
  */
 	esp_err_t tda7313_set_treble(uint8_t arg);
+
+	/**
+ * Get Treble
+ * @return Treble
+ */
+	uint8_t tda7313_get_treble();
 
 	/**
  * Set Attenuator Left Front Audio Channel
@@ -139,11 +184,23 @@ extern "C"
 	esp_err_t tda7313_set_attlf(uint8_t arg);
 
 	/**
+ * Get Attenuator Left Front Audio Channel
+  * @return value
+ */
+	uint8_t tda7313_get_attlf();
+
+	/**
  * Set Attenuator Right Front Audio Channel
  * @param arg  0.......13  0dB.........-36.25dB
  * @return `ESP_OK` on success
  */
 	esp_err_t tda7313_set_attrf(uint8_t arg);
+
+	/**
+ * Get Attenuator Right Front Audio Channel
+ * @return value
+ */
+	uint8_t tda7313_get_attrf();
 
 	/**
  * Set Attenuator Left Rear Audio Channel
@@ -153,11 +210,23 @@ extern "C"
 	esp_err_t tda7313_set_attlr(uint8_t arg);
 
 	/**
+ * Get Attenuator Left Rear Audio Channel
+ * @return value
+ */
+	uint8_t tda7313_get_attlr();
+
+	/**
  * Set Attenuator Right Rear Audio Channel
  * @param arg  0.......13  0dB.........-36.25dB
  * @return `ESP_OK` on success
  */
 	esp_err_t tda7313_set_attrr(uint8_t arg);
+
+	/**
+ * Get Attenuator Right Rear Audio Channel
+  * @return value
+ */
+	uint8_t tda7313_get_attrr();
 
 #ifdef __cplusplus
 }

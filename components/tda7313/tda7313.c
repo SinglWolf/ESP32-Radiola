@@ -37,9 +37,12 @@ static const float SLA_PRINT[4] = {0, 3.75, 7.5, 11.25};
 
 struct tda_settings TDA;
 
-uint8_t tda7313_get_sla()
+uint8_t tda7313_get_sla(uint8_t input)
 {
-	return TDA.Sla[TDA.Input - 1];
+	if ((input > 0) && (input < 4))
+		return TDA.Sla[input - 1];
+	ESP_LOGE(TAG, "Value input: %u wrong!", input);
+	return 255;
 }
 
 esp_err_t tda7313_set_sla(uint8_t arg)
@@ -67,14 +70,17 @@ esp_err_t tda7313_set_sla(uint8_t arg)
 		return ESP_ERR_INVALID_ARG;
 	}
 	TDA.Sla[TDA.Input - 1] = arg;
-	ESP_LOGD(TAG, "SLA: %.2f dB for Input: %u", SLA_PRINT[arg], TDA.Input - 1);
+	ESP_LOGD(TAG, "SLA: %.2f dB for Input: %u", SLA_PRINT[arg], TDA.Input);
 
 	return tda7313_command(iSelector);
 }
 
-bool tda7313_get_loud()
+bool tda7313_get_loud(uint8_t input)
 {
-	return TDA.Loud[TDA.Input - 1];
+	if ((input > 0) && (input < 4))
+		return TDA.Loud[input - 1];
+	ESP_LOGE(TAG, "Value input: %u wrong!", input);
+	return false;
 }
 
 esp_err_t tda7313_set_loud(bool loudEnabled)
@@ -83,12 +89,12 @@ esp_err_t tda7313_set_loud(bool loudEnabled)
 	if (loudEnabled)
 	{
 		iSelector &= ~(1 << 2);
-		ESP_LOGD(TAG, "Loud ON for Input: %u", TDA.Input - 1);
+		ESP_LOGD(TAG, "Loud ON for Input: %u", TDA.Input);
 	}
 	else
 	{
 		iSelector |= (1 << 2);
-		ESP_LOGD(TAG, "Loud OFF for Input: %u", TDA.Input - 1);
+		ESP_LOGD(TAG, "Loud OFF for Input: %u", TDA.Input);
 	}
 	TDA.Loud[TDA.Input - 1] = loudEnabled;
 
@@ -108,22 +114,19 @@ esp_err_t tda7313_set_input(uint8_t arg)
 	case 1:
 		iSelector &= ~(1 << 0);
 		iSelector &= ~(1 << 1);
-		TDA.Input = arg;
 		break;
 	case 2:
 		iSelector |= (1 << 0);
 		iSelector &= ~(1 << 1);
-		TDA.Input = arg;
 		break;
 	case 3:
 		iSelector &= ~(1 << 0);
 		iSelector |= (1 << 1);
-		TDA.Input = arg;
 		break;
 	default:
 		return ESP_ERR_INVALID_ARG;
 	}
-
+	TDA.Input = arg;
 	ESP_ERROR_CHECK(tda7313_command(iSelector));
 
 	ESP_LOGD(TAG, "Input: %u", arg);
@@ -163,7 +166,7 @@ esp_err_t tda7313_set_mute(bool muteEnabled)
 
 esp_err_t tda7313_set_volume(uint8_t arg)
 {
-	if ((arg > 17))
+	if (arg > 17)
 	{
 		ESP_LOGE(TAG, "Volume value: %u wrong!", arg);
 		return ESP_ERR_INVALID_ARG;
@@ -196,7 +199,7 @@ uint8_t tda7313_get_bass()
 
 esp_err_t tda7313_set_bass(uint8_t arg)
 {
-	if ((arg > 14))
+	if (arg > 14)
 	{
 		ESP_LOGE(TAG, "Bass value: %u wrong!", arg);
 		return ESP_ERR_INVALID_ARG;
@@ -211,7 +214,7 @@ esp_err_t tda7313_set_bass(uint8_t arg)
 
 esp_err_t tda7313_set_treble(uint8_t arg)
 {
-	if ((arg > 14))
+	if (arg > 14)
 	{
 		ESP_LOGE(TAG, "Treble value: %u wrong!", arg);
 		return ESP_ERR_INVALID_ARG;
@@ -231,7 +234,7 @@ uint8_t tda7313_get_attlf()
 
 esp_err_t tda7313_set_attlf(uint8_t arg)
 {
-	if ((arg > 13))
+	if (arg > 13)
 	{
 		ESP_LOGE(TAG, "ATT_LF value: %u wrong!", arg);
 		return ESP_ERR_INVALID_ARG;
@@ -256,7 +259,7 @@ uint8_t tda7313_get_attrf()
 
 esp_err_t tda7313_set_attrf(uint8_t arg)
 {
-	if ((arg > 13))
+	if (arg > 13)
 	{
 		ESP_LOGE(TAG, "ATT_RF value: %u wrong!", arg);
 		return ESP_ERR_INVALID_ARG;
@@ -281,7 +284,7 @@ uint8_t tda7313_get_attlr()
 
 esp_err_t tda7313_set_attlr(uint8_t arg)
 {
-	if ((arg > 13))
+	if (arg > 13)
 	{
 		ESP_LOGE(TAG, "ATT_LR value: %u wrong!", arg);
 		return ESP_ERR_INVALID_ARG;
@@ -306,7 +309,7 @@ uint8_t tda7313_get_attrr()
 
 esp_err_t tda7313_set_attrr(uint8_t arg)
 {
-	if ((arg > 13))
+	if (arg > 13)
 	{
 		ESP_LOGE(TAG, "ATT_RR value: %u wrong!", arg);
 		return ESP_ERR_INVALID_ARG;
@@ -473,60 +476,97 @@ esp_err_t tda7313_save_nvs()
 	ESP_LOGI(TAG, "Keys for the TDA7313 keep to NVS.");
 	ESP_ERROR_CHECK(nvs_get_u8(tda_nvs, "tda_volume", &temp));
 	if (TDA.Volume != temp)
+	{
 		ESP_ERROR_CHECK(nvs_set_u8(tda_nvs, "tda_volume", TDA.Volume));
+		ESP_LOGD(TAG, "Key tda_volume for the TDA7313 keep to NVS.");
+	}
 	ESP_ERROR_CHECK(nvs_get_u8(tda_nvs, "tda_bass", &temp));
 	if (TDA.Bass != temp)
+	{
 		ESP_ERROR_CHECK(nvs_set_u8(tda_nvs, "tda_bass", TDA.Bass));
+		ESP_LOGD(TAG, "Key tda_bass for the TDA7313 keep to NVS.");
+	}
 	ESP_ERROR_CHECK(nvs_get_u8(tda_nvs, "tda_treble", &temp));
 	if (TDA.Treble != temp)
+	{
 		ESP_ERROR_CHECK(nvs_set_u8(tda_nvs, "tda_treble", TDA.Treble));
+		ESP_LOGD(TAG, "Key tda_treble for the TDA7313 keep to NVS.");
+	}
 	ESP_ERROR_CHECK(nvs_get_u8(tda_nvs, "tda_attlf", &temp));
 	if (TDA.AttLF != temp)
+	{
 		ESP_ERROR_CHECK(nvs_set_u8(tda_nvs, "tda_attlf", TDA.AttLF));
+		ESP_LOGD(TAG, "Key tda_attlf for the TDA7313 keep to NVS.");
+	}
 	ESP_ERROR_CHECK(nvs_get_u8(tda_nvs, "tda_attrf", &temp));
 	if (TDA.AttRF != temp)
+	{
 		ESP_ERROR_CHECK(nvs_set_u8(tda_nvs, "tda_attrf", TDA.AttRF));
+		ESP_LOGD(TAG, "Key tda_attrf for the TDA7313 keep to NVS.");
+	}
 	ESP_ERROR_CHECK(nvs_get_u8(tda_nvs, "tda_attlr", &temp));
 	if (TDA.AttLR != temp)
+	{
 		ESP_ERROR_CHECK(nvs_set_u8(tda_nvs, "tda_attlr", TDA.AttLR));
+		ESP_LOGD(TAG, "Key tda_attlr for the TDA7313 keep to NVS.");
+	}
 	ESP_ERROR_CHECK(nvs_get_u8(tda_nvs, "tda_attrr", &temp));
 	if (TDA.AttRR != temp)
+	{
 		ESP_ERROR_CHECK(nvs_set_u8(tda_nvs, "tda_attrr", TDA.AttRR));
+		ESP_LOGD(TAG, "Key tda_attrr for the TDA7313 keep to NVS.");
+	}
 	ESP_ERROR_CHECK(nvs_get_u8(tda_nvs, "tda_input", &temp));
 	if (TDA.Input != temp)
+	{
 		ESP_ERROR_CHECK(nvs_set_u8(tda_nvs, "tda_input", TDA.Input));
+		ESP_LOGD(TAG, "Key tda_input for the TDA7313 keep to NVS.");
+	}
 	ESP_ERROR_CHECK(nvs_get_u8(tda_nvs, "tda_sla1", &temp));
 	if (TDA.Sla[0] != temp)
+	{
 		ESP_ERROR_CHECK(nvs_set_u8(tda_nvs, "tda_sla1", TDA.Sla[0]));
+		ESP_LOGD(TAG, "Key tda_sla1 for the TDA7313 keep to NVS.");
+	}
 	ESP_ERROR_CHECK(nvs_get_u8(tda_nvs, "tda_sla2", &temp));
 	if (TDA.Sla[1] != temp)
+	{
 		ESP_ERROR_CHECK(nvs_set_u8(tda_nvs, "tda_sla2", TDA.Sla[1]));
+		ESP_LOGD(TAG, "Key tda_sla2 for the TDA7313 keep to NVS.");
+	}
 	ESP_ERROR_CHECK(nvs_get_u8(tda_nvs, "tda_sla3", &temp));
 	if (TDA.Sla[2] != temp)
+	{
 		ESP_ERROR_CHECK(nvs_set_u8(tda_nvs, "tda_sla3", TDA.Sla[2]));
+		ESP_LOGD(TAG, "Key tda_sla3 for the TDA7313 keep to NVS.");
+	}
 	ESP_ERROR_CHECK(nvs_get_u8(tda_nvs, "tda_mute", &temp));
 	if (TDA.Mute != temp)
 	{
 		temp = (TDA.Mute == false ? 0 : 1);
 		ESP_ERROR_CHECK(nvs_set_u8(tda_nvs, "tda_mute", temp));
+		ESP_LOGD(TAG, "Key tda_mute for the TDA7313 keep to NVS.");
 	}
 	ESP_ERROR_CHECK(nvs_get_u8(tda_nvs, "tda_loud1", &temp));
 	if (TDA.Loud[0] != temp)
 	{
 		temp = (TDA.Loud[0] == false ? 0 : 1);
 		ESP_ERROR_CHECK(nvs_set_u8(tda_nvs, "tda_loud1", temp));
+		ESP_LOGD(TAG, "Key tda_loud1 for the TDA7313 keep to NVS.");
 	}
 	ESP_ERROR_CHECK(nvs_get_u8(tda_nvs, "tda_loud2", &temp));
 	if (TDA.Loud[1] != temp)
 	{
 		temp = (TDA.Loud[1] == false ? 0 : 1);
 		ESP_ERROR_CHECK(nvs_set_u8(tda_nvs, "tda_loud2", temp));
+		ESP_LOGD(TAG, "Key tda_loud2 for the TDA7313 keep to NVS.");
 	}
 	ESP_ERROR_CHECK(nvs_get_u8(tda_nvs, "tda_loud3", &temp));
 	if (TDA.Loud[2] != temp)
 	{
 		temp = (TDA.Loud[2] == false ? 0 : 1);
 		ESP_ERROR_CHECK(nvs_set_u8(tda_nvs, "tda_loud3", temp));
+		ESP_LOGD(TAG, "Key tda_loud3 for the TDA7313 keep to NVS.");
 	}
 	ESP_ERROR_CHECK(nvs_commit(tda_nvs));
 	nvs_close(tda_nvs);

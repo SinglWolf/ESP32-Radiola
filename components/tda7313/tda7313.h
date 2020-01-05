@@ -41,7 +41,7 @@ extern "C"
 
 	struct tda_settings
 	{
-		uint16_t cleared; // 0xAABB if initialized
+		uint8_t cleared; // 0xAABB if initialized
 		uint8_t Input;
 		uint8_t Sla[3];
 		uint8_t Volume;
@@ -53,6 +53,7 @@ extern "C"
 		uint8_t AttRR;
 		bool Mute;
 		bool Loud[3];
+		bool rear_on;
 	} Tda_Settings;
 	extern struct tda_settings TDA;
 
@@ -87,9 +88,10 @@ extern "C"
 
 	/**
  * Initialize device setting
+ * @param bool erase - forced erasing of NVS if true
  * @return `ESP_OK` on success
  */
-	esp_err_t tda7313_init_nvs();
+	esp_err_t tda7313_init_nvs(bool erase);
 
 	/**
  * Save device setting to NVS
@@ -227,6 +229,19 @@ extern "C"
   * @return value
  */
 	uint8_t tda7313_get_attrr();
+
+	/**
+ * Enabling or disabling The Rear speakers.
+ * @param rear_on  true = Enabled, false = Disabled the Rear Speakers.
+ * @return `ESP_OK` on success
+ */
+	esp_err_t tda7313_set_rear(bool rear_on);
+
+	/**
+ * Checking Rear speakers are on or off.
+  * @return true or false
+ */
+	bool tda7313_get_rear();
 
 #ifdef __cplusplus
 }

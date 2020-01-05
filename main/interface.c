@@ -1336,7 +1336,13 @@ void checkCommand(int size, char *s)
 		else if (startsWith("uart", tmp + 4))
 			sysUart(tmp);
 		else if (strcmp(tmp + 4, "erase") == 0)
+		{
 			eeEraseAll();
+			tda7313_init_nvs(1);
+			fflush(stdout);
+			vTaskDelay(100);
+			esp_restart();
+		}
 		else if (strcmp(tmp + 4, "heap") == 0)
 			heapSize();
 		else if (strcmp(tmp + 4, "boot") == 0)

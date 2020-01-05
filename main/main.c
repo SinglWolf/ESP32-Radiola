@@ -859,7 +859,6 @@ void app_main()
 		err = nvs_flash_init();
 	}
 	ESP_ERROR_CHECK(err);
-
 	// Check if we are in large Sram config
 	if (xPortGetFreeHeapSize() > 0x80000)
 		bigRam = true;
@@ -881,7 +880,7 @@ void app_main()
 			g_device = getDeviceSettings();
 			g_device->cleared = 0xAABB;				 //marker init done
 			g_device->uartspeed = 115200;			 // default
-			g_device->audio_input_mode = COMPUTER;  // default
+			g_device->audio_input_mode = COMPUTER;   // default
 			g_device->options |= T_PATCH;			 // 0 = load patch
 			g_device->trace_level = ESP_LOG_VERBOSE; //default
 			g_device->vol = 100;					 //default

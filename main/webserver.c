@@ -45,7 +45,7 @@ const char strsWIFI[] = {"HTTP/1.1 200 OK\r\nContent-Type:application/json\r\nCo
 \"ip\":\"%s\",\"msk\":\"%s\",\"gw\":\"%s\",\"ip2\":\"%s\",\"msk2\":\"%s\",\"gw2\":\"%s\",\"ua\":\"%s\",\"dhcp\":\"%s\",\"dhcp2\":\"%s\",\"mac\":\"%s\"\
 ,\"host\":\"%s\",\"tzo\":\"%s\"}"};
 const char strsGSTAT[] = {"HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: %d\r\n\r\n{\"Name\":\"%s\",\"URL\":\"%s\",\"File\":\"%s\",\"Port\":\"%d\",\"ovol\":\"%d\"}"};
-
+const char HARDWARE[] = {"HTTP/1.1 200 OK\r\nContent-Type:application/json\r\nContent-Length:%d\r\n\r\n{\"inputnum\":\"%u\",\"Volume\":\"%02u\",\"Treble\":\"%02u\",\"Bass\":\"%02u\",\"rear_on\":\"%u\",\"attlf\":\"%02u\",\"attrf\":\"%02u\",\"attlr\":\"%02u\",\"attrr\":\"%02u\",\"loud1\":\"%u\",\"loud2\":\"%u\",\"loud3\":\"%u\",\"sla1\":\"%u\",\"sla2\":\"%u\",\"sla3\":\"%u\",\"mute\":\"%u\"}"};
 static int8_t clientOvol = 0;
 
 void *inmalloc(size_t n)
@@ -899,40 +899,82 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 	}
 	else if (strcmp(name, "/hardware") == 0)
 	{
-		bool val = false;
-		uint8_t cout;
 		changed = false;
 		if (data_size > 0)
 		{
-			char valid[6];
-			if (getSParameterFromResponse(valid, 6, "valid=", data, data_size))
-				if (strcmp(valid, "1") == 0)
-					val = true;
-			char countin[6];
-			getSParameterFromResponse(countin, 6, "countin=", data, data_size);
-			cout = atoi(countin);
-			if (val)
+			char save[1];
+			if (getSParameterFromResponse(save, 1, "save=", data, data_size))
+				if (strcmp(save, "0") != 0)
+					changed = true;
+			if (changed)
 			{
-				g_device->audio_input_mode = cout;
-				changed = true;
+				char arg[2];
+				getSParameterFromResponse(arg, 2, "inputnum=", data, data_size);
+				if (tda7313_get_input() != atoi(arg))
+				{
+					ESP_ERROR_CHECK(tda7313_set_input(atoi(arg)));
+					g_device->audio_input_num = atoi(arg);
+					ESP_LOGD(TAG, "audio input number: %u", g_device->audio_input_num);
+				}
+				getSParameterFromResponse(arg, 2, "Volume=", data, data_size);
+				if (tda7313_get_volume() != atoi(arg))
+					ESP_ERROR_CHECK(tda7313_set_volume(atoi(arg)));
+				getSParameterFromResponse(arg, 2, "Treble=", data, data_size);
+				if (tda7313_get_treble() != atoi(arg))
+					ESP_ERROR_CHECK(tda7313_set_treble(atoi(arg)));
+				getSParameterFromResponse(arg, 2, "Bass=", data, data_size);
+				if (tda7313_get_bass() != atoi(arg))
+					ESP_ERROR_CHECK(tda7313_set_bass(atoi(arg)));
+				getSParameterFromResponse(arg, 2, "rear_on=", data, data_size);
+				if (tda7313_get_rear() != atoi(arg))
+					ESP_ERROR_CHECK(tda7313_set_rear(atoi(arg)));
+				getSParameterFromResponse(arg, 2, "attlf=", data, data_size);
+				if (tda7313_get_attlf() != atoi(arg))
+					ESP_ERROR_CHECK(tda7313_set_attlf(atoi(arg)));
+				getSParameterFromResponse(arg, 2, "attrf=", data, data_size);
+				if (tda7313_get_attrf() != atoi(arg))
+					ESP_ERROR_CHECK(tda7313_set_attrf(atoi(arg)));
+				getSParameterFromResponse(arg, 2, "attlr=", data, data_size);
+				if (tda7313_get_attlr() != atoi(arg))
+					ESP_ERROR_CHECK(tda7313_set_attlr(atoi(arg)));
+				getSParameterFromResponse(arg, 2, "attrr=", data, data_size);
+				if (tda7313_get_attrr() != atoi(arg))
+					ESP_ERROR_CHECK(tda7313_set_attrr(atoi(arg)));
+				getSParameterFromResponse(arg, 2, "loud=", data, data_size);
+				if (tda7313_get_loud(g_device->audio_input_num) != atoi(arg))
+					ESP_ERROR_CHECK(tda7313_set_loud(atoi(arg)));
+				getSParameterFromResponse(arg, 2, "sla=", data, data_size);
+				if (tda7313_get_sla(g_device->audio_input_num) != atoi(arg))
+					ESP_ERROR_CHECK(tda7313_set_sla(atoi(arg)));
+				getSParameterFromResponse(arg, 2, "mute=", data, data_size);
+				if (tda7313_get_mute() != atoi(arg))
+					ESP_ERROR_CHECK(tda7313_set_mute(atoi(arg)));
 				saveDeviceSettings(g_device);
 			}
 			int json_length;
-			json_length = 15;
+			json_length = 202;
 
-			char buf[110];
-			sprintf(buf, "HTTP/1.1 200 OK\r\nContent-Type:application/json\r\nContent-Length:%d\r\n\r\n{\"countin\":\"%u\"}",
+			char buf[272];
+			sprintf(buf, HARDWARE,
 					json_length,
-					g_device->audio_input_mode);
-			ESP_LOGV(TAG, "hardware Buf len:%u\n%s", strlen(buf), buf);
+					g_device->audio_input_num,
+					tda7313_get_volume(),
+					tda7313_get_treble(),
+					tda7313_get_bass(),
+					tda7313_get_rear(),
+					tda7313_get_attlf(),
+					tda7313_get_attrf(),
+					tda7313_get_attlr(),
+					tda7313_get_attrr(),
+					tda7313_get_loud(1),
+					tda7313_get_loud(2),
+					tda7313_get_loud(3),
+					tda7313_get_sla(1),
+					tda7313_get_sla(2),
+					tda7313_get_sla(3),
+					tda7313_get_mute());
+			ESP_LOGD(TAG, "Test hardware\nSave: %s\nBuf len:%u\n%s", save, strlen(buf), buf);
 			write(conn, buf, strlen(buf));
-			if (val)
-			{
-				// set current_ap to the first filled ssid
-				ESP_ERROR_CHECK(tda7313_set_input(g_device->audio_input_mode));
-				ESP_LOGD(TAG, "audio input mode: %u", g_device->audio_input_mode);
-				//				copyDeviceSettings();
-			}
 			return;
 		}
 	}

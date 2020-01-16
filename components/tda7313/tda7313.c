@@ -385,10 +385,12 @@ esp_err_t tda7313_init()
 
 				if (tda7313_detect(TDAaddress) == ESP_OK)
 				{
-					return tda7313_init_nvs(false);
+					ESP_LOGI(TAG, "TDA7313 it's OK.");
+					return err;
 				}
 				else
 				{
+					ESP_LOGE(TAG, "TDA7313 not detected.");
 					return err;
 				}
 			}
@@ -401,8 +403,8 @@ esp_err_t tda7313_init()
 	}
 	else
 	{
-		ESP_LOGI(TAG, "TDA7313 not configured.");
-		err = ESP_OK;
+		ESP_LOGE(TAG, "TDA7313 not configured.");
+		err = ESP_FAIL;
 	}
 	return err;
 }
@@ -510,6 +512,7 @@ esp_err_t tda7313_init_nvs(bool erase)
 	ESP_ERROR_CHECK(tda7313_set_volume(TDA.Volume));
 	ESP_ERROR_CHECK(tda7313_set_treble(TDA.Treble));
 	ESP_ERROR_CHECK(tda7313_set_bass(TDA.Bass));
+	ESP_ERROR_CHECK(tda7313_set_rear(TDA.rear_on));
 	ESP_ERROR_CHECK(tda7313_set_attlf(TDA.AttLF));
 	ESP_ERROR_CHECK(tda7313_set_attrf(TDA.AttRF));
 	ESP_ERROR_CHECK(tda7313_set_attlr(TDA.AttLR));

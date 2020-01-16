@@ -188,7 +188,7 @@ ul#ordered li {float:none;text-align:left;}
 	float:left;
 }
 .tabs hr {
-	size: 1;
+	size: 1px;
 	color: #000;
 }
 .tabs input[type="radio"] {
@@ -350,7 +350,7 @@ ul#ordered li {float:none;text-align:left;}
   border-radius: 5px;
 }
 .tabs label {
-	display:run-in;
+	display:inline-block;
 	padding:14px 14px;
 	font-weight:normal;
 	text-transform:uppercase;
@@ -368,7 +368,7 @@ ul#ordered li {float:none;text-align:left;}
 	background:#3cc;
 }
 .tabs span.countin label {
-	display:run-in;
+	display:inline-block;
 	padding: 4px 4px;
 	background:#39c;
 	top: 0px;
@@ -469,4 +469,88 @@ a.page {
 }
 .modal-body {
 	padding: 2px 16px;
+}
+
+.checkbox label {
+	display:inline-block;
+	padding:14px 14px;
+	font-weight:normal;
+	text-transform:uppercase;
+	background:#39c;
+	cursor:pointer;
+	position:relative;
+	top:4px;
+	-moz-transition:all .2s ease-in-out;
+	-o-transition:all .2s ease-in-out;
+	-webkit-transition:all .2s ease-in-out;
+	transition:all .2s ease-in-out;
+	border-radius:5px;
+}
+/* Cначала обозначаем стили для IE8 и более старых версий
+т.е. здесь мы немного облагораживаем стандартный чекбокс. */
+.checkbox {
+	vertical-align: top;
+	width: 17px;
+	height: 17px;
+	margin: 0 3px 0 0;
+}
+/* Это для всех браузеров, кроме совсем старых, которые не поддерживают
+селекторы с плюсом. Показываем, что label кликабелен. */
+.checkbox + label {
+	cursor: pointer;
+	background: #f4f4f4;
+	font-weight: 900;
+	top: -10px;
+}
+
+/* Далее идет оформление чекбокса в современных браузерах, а также IE9 и выше.
+Благодаря тому, что старые браузеры не поддерживают селекторы :not и :checked,
+в них все нижеследующие стили не сработают. В данном случае checked указывается
+без двоеточия впереди, почему-то это срабатывает именно так. */
+
+.checkbox:not(checked) {
+	position: absolute;
+	z-index: -1;
+	opacity: 0;
+	margin: 10px 0 0 20px;
+}
+.checkbox:not(checked) + label {
+	position: relative;
+	padding: 0px 0px 0px 0px;
+}
+.checkbox:not(checked) + label:before {
+	content: '';
+	position: absolute;
+	top: -4px;
+	left: 195px;
+	width: 35px;
+	height: 21px;
+	border-radius: 5px;
+	background: #CDD1DA;
+	box-shadow: inset 0 2px 3px rgba(0,0,0,.2);
+	transition: .2s;
+}
+.checkbox:not(checked) + label:after {
+	content: '';
+	position: absolute;
+	top: -2px;
+	left: 197px;
+	width: 11px;
+	height: 17px;
+	border-radius: 5px;
+	background: #FFF;
+	box-shadow: 0 2px 5px rgba(0,0,0,.3);
+	transition: .2s;
+}
+.checkbox:checked + label:before {
+	background: #3399cc;
+}
+.checkbox:checked + label:after {
+	left: 217px;
+}
+.checkbox:focus + label:before {
+	box-shadow: inset 0 2px 3px rgba(0,0,0,0.24),3px 3px 3px 0 rgba(0,0,0,0.24);
+}
+.checkbox + label:hover {
+	background:#f4f4f4;
 }

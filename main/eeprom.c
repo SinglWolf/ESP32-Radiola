@@ -120,7 +120,7 @@ void eeEraseAll()
 	}
 	else
 		ESP_LOGE(TAG, "erase All fails");
-	ESP_ERROR_CHECK(tda7313_init_nvs(1));
+	ESP_ERROR_CHECK(tda7313_init_nvs(true));
 }
 
 void eeErasesettings(void)

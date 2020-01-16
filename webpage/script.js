@@ -4,6 +4,7 @@ var content = "Content-type",
 var auto, intervalid, intervalrssi, timeid, websocket, urlmonitor, e, moniPlaying = false, editPlaying = false, editIndex = 0, curtab = "tab-content1", stchanged = false, maxStation = 255, themeIn = "0";
 const mediacentre = "МедиаЦентр";
 const working = "Работаю... Пожалуйста, подождите.";
+const backupConsole = console;
 
 function openwebsocket() {
 	//	autoplay(); //to force the server socket to accept and open the web server client.
@@ -168,9 +169,21 @@ function clickdhcp() {
 	}
 }
 
+function consoleON() {
+	if (document.getElementById("consON").checked) {
+		console = backupConsole;
+	} else {
+		console = {
+			log: () => { },
+			error: () => { },
+			warn: () => { }
+		};
+	}
+}
+
 function valid() {
 	wifi(1);
-	alert("Перезагрузка системы. Пожалуйста, измените адрес вашего браузера на новый.");
+	alert("Перезагрузка системы. Пожалуйста, измените адрес страницы вашего браузера на новый.");
 }
 
 function scrollTo(to, duration) {
@@ -485,6 +498,79 @@ function onRangeChangeSpatial($range, $spanid, $nosave) {
 	document.getElementById($spanid).innerHTML = label;
 	if (typeof ($nosave) == 'undefined') saveSoundSettings();
 }
+function onTDAchange($name, $range, $spanid, $nosave) {
+	var val = document.getElementById($range).value,
+		label;
+	switch ($name) {
+		case 'Volume': switch (val) {
+			case '0': label = "-78.75"; break;
+			case '1': label = "-56.25"; break;
+			case '2': label = "-47.50"; break;
+			case '3': label = "-41.25"; break;
+			case '4': label = "-36.25"; break;
+			case '5': label = "-30.00"; break;
+			case '6': label = "-25.00"; break;
+			case '7': label = "-22.50"; break;
+			case '8': label = "-18.75"; break;
+			case '9': label = "-16.25"; break;
+			case '10': label = "-12.50"; break;
+			case '11': label = "-10.00"; break;
+			case '12': label = "-7.50"; break;
+			case '13': label = "-6.25"; break;
+			case '14': label = "-5.00"; break;
+			case '15': label = "-3.75"; break;
+			case '16': label = "-1.25"; break;
+			case '17': label = " 0"; break;
+		}; break;
+		case 'Treble':
+		case 'Bass': switch (val) {
+			case '0': label = "-14"; break;
+			case '1': label = "-12"; break;
+			case '2': label = "-10"; break;
+			case '3': label = "-8"; break;
+			case '4': label = "-6"; break;
+			case '5': label = "-4"; break;
+			case '6': label = "-2"; break;
+			case '7': label = " 0"; break;
+			case '8': label = "+2"; break;
+			case '9': label = "+4"; break;
+			case '10': label = "+6"; break;
+			case '11': label = "+8"; break;
+			case '12': label = "+10"; break;
+			case '13': label = "+12"; break;
+			case '14': label = "+14"; break;
+		}; break;
+		case 'AttLF':
+		case 'AttRF':
+		case 'AttLR':
+		case 'AttRR': switch (val) {
+			case '0': label = "-36.25"; break;
+			case '1': label = "-30"; break;
+			case '2': label = "-25"; break;
+			case '3': label = "-22.5"; break;
+			case '4': label = "-18.75"; break;
+			case '5': label = "-16.25"; break;
+			case '6': label = "-12.5"; break;
+			case '7': label = "-10"; break;
+			case '8': label = "-7.5"; break;
+			case '9': label = "-6.25"; break;
+			case '10': label = "-5"; break;
+			case '11': label = "-3.75"; break;
+			case '12': label = "-1.25"; break;
+			case '13': label = " 0"; break;
+		}; break;
+		case 'SLA': switch (val) {
+			case '0': label = " 0"; break;
+			case '1': label = "+3.75"; break;
+			case '2': label = "+7.5"; break;
+			case '3': label = "+11.25"; break;
+		}; break;
+	}
+
+	document.getElementById($spanid).innerHTML = label;
+	if (typeof ($nosave) == 'undefined') hardware(1);
+}
+
 function logValue(value) {
 	//Log(128/(Midi Volume + 1)) * (-10) * (Max dB below 0/(-24.04))
 	var log = Number(value) + 1;
@@ -560,41 +646,100 @@ function wifi(valid) {
 		+ "&dhcp=" + document.getElementById('dhcp').checked
 		+ "&dhcp2=" + document.getElementById('dhcp2').checked + "&");
 }
-function hardware(valid) {
-	var i, countin;
+function clickrear($nosave) {
+	if (document.getElementById("rearON").checked)
+		document.getElementById("Rear").style.display = "block";
+	else
+		document.getElementById("Rear").style.display = "none";
+	if (typeof ($nosave) == 'undefined') hardware(1);
+}
+function clickloud() {
+	hardware(1);
+}
+function mute() {
+	hardware(1);
+}
+
+function hardware(save) {
+	var i, inputnum, loud = 0, mute = 0, rear = 0;
 	xhr = new XMLHttpRequest();
 	xhr.onreadystatechange = function () {
 		if (xhr.readyState == 4 && xhr.status == 200) {
 			var arr = JSON.parse(xhr.responseText);
-			document.getElementById("audioinput" + arr['countin']).checked = true;
-			if (arr['countin'] == "1") {
+			document.getElementById("audioinput" + arr['inputnum']).checked = true;
+			if (arr['inputnum'] == "1") {
 				document.getElementById("Computer").style.display = "block";
 			}
 			else {
 				document.getElementById("Computer").style.display = "none";
 			}
-			if (arr['countin'] == "2") {
+			if (arr['inputnum'] == "2") {
 				document.getElementById("Radio").style.display = "block";
 			}
 			else {
 				document.getElementById("Radio").style.display = "none";
 			}
-			if (arr['countin'] == "3") {
+			if (arr['inputnum'] == "3") {
 				document.getElementById("Bluetooth").style.display = "block";
 			}
 			else {
 				document.getElementById("Bluetooth").style.display = "none";
 			}
+			document.getElementById('Volume_range').value = arr["Volume"].replace(/\\/g, "");
+			document.getElementById('Treble_range').value = arr["Treble"].replace(/\\/g, "");
+			document.getElementById('Bass_range').value = arr["Bass"].replace(/\\/g, "");
+			if (arr["rear_on"] == "1")
+				document.getElementById('rearON').setAttribute("checked", "");
+			else
+				document.getElementById('rearON').removeAttribute("checked");
+			clickrear(false);
+			document.getElementById('AttLF_range').value = arr["attlf"].replace(/\\/g, "");
+			document.getElementById('AttRF_range').value = arr["attrf"].replace(/\\/g, "");
+			document.getElementById('AttLR_range').value = arr["attlr"].replace(/\\/g, "");
+			document.getElementById('AttRR_range').value = arr["attrr"].replace(/\\/g, "");
+			for (i = 1; i < 4; i++) {
+				if (arr["loud" + i] == "1")
+					document.getElementById('loud' + i).setAttribute("checked", "");
+				else
+					document.getElementById('loud' + i).removeAttribute("checked");
+				document.getElementById('range_sla' + i).value = arr["sla" + i].replace(/\\/g, "");
+			}
+			if (arr["mute"] == "1")
+				document.getElementById('mute').setAttribute("checked", "");
+			else
+				document.getElementById('mute').removeAttribute("checked");
 		}
 	}
+	for (inputnum = 1; inputnum < 4; inputnum++) if (document.getElementById('audioinput' + inputnum).checked) break;
+	if (inputnum == 4) inputnum = 1;
+
+
+	if (document.getElementById('rearON').checked) rear = 1;
+	if (document.getElementById('loud' + inputnum).checked) loud = 1;
+	if (document.getElementById('mute').checked) mute = 1;
+
 	xhr.open("POST", "hardware", false);
 	xhr.setRequestHeader(content, ctype);
-	for (i = 1; i < 4; i++) if (document.getElementById('audioinput' + i).checked) break;
-	if (i == 4) countin = 1;
-	xhr.send("valid=" + valid
-		+ "&countin=" + i
+	xhr.send("save=" + save
+		+ "&inputnum=" + inputnum
+		+ "&Volume=" + document.getElementById('Volume_range').value
+		+ "&Treble=" + document.getElementById('Treble_range').value
+		+ "&Bass=" + document.getElementById('Bass_range').value
+		+ "&rear_on=" + rear
+		+ "&attlf=" + document.getElementById('AttLF_range').value
+		+ "&attrf=" + document.getElementById('AttRF_range').value
+		+ "&attlr=" + document.getElementById('AttLR_range').value
+		+ "&attrr=" + document.getElementById('AttRR_range').value
+		+ "&loud=" + loud
+		+ "&sla=" + document.getElementById('range_sla' + inputnum).value
+		+ "&mute=" + mute
 		+ "&");
 }
+
+
+
+
+
 function instantPlay() {
 	var curl;
 	try {
@@ -1318,6 +1463,12 @@ document.addEventListener("DOMContentLoaded", function () {
 	document.getElementById("tab3").addEventListener("click", function () {
 		if (stchanged) stChanged();
 		curtab = "tab-content3";
+		hardware(0);
+		setMainHeight(curtab);
+	});
+	document.getElementById("tab4").addEventListener("click", function () {
+		if (stchanged) stChanged();
+		curtab = "tab-content4";
 		wifi(0);
 		hardware(0);
 		checkversion();
@@ -1379,5 +1530,6 @@ document.addEventListener("DOMContentLoaded", function () {
 	atheme();
 	checkversion();
 	setMainHeight(curtab);
+	consoleON();
 });
 

@@ -187,7 +187,7 @@ ul#ordered li {float:none;text-align:left;}
 	float:left;
 }
 .tabs hr {
-	size: 1;
+	size: 1px;
 	color: #fff;
 }
 .tabs input[type="radio"] {
@@ -363,7 +363,7 @@ ul#ordered li {float:none;text-align:left;}
   box-shadow:3px 3px 3px 0 rgba(200,200,200,0.5),3px 3px 3px 0 rgba(100,100,100,0.9);
 }
 .tabs label {
-	display:run-in;
+	display:inline-block;
 	padding:14px 14px;
 	font-weight:normal;
 	text-transform:uppercase;
@@ -382,7 +382,7 @@ ul#ordered li {float:none;text-align:left;}
 }
 
 .tabs span.countin label {
-	display:run-in;
+	display:inline-block;
 	padding:4px 4px;
 	top:0px;
 	border-radius:4px;

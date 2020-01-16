@@ -94,7 +94,7 @@ xQueueHandle event_queue;
 static uint16_t FlashOn = 5, FlashOff = 5;
 bool ledStatus = true; // true: normal blink, false: led on when playing
 player_t *player_config;
-static input_mode_t audio_input_mode;
+static input_mode_t audio_input_num;
 static uint8_t clientIvol = 0;
 //ip
 static char localIp[20];
@@ -288,9 +288,8 @@ static void init_hardware()
 	// Настройка термометра
 	init_ds18b20();
 	// Настройка TDA7313...
-	ESP_ERROR_CHECK(tda7313_init());
+	ESP_ERROR_CHECK(tda7313_set_input(audio_input_num));
 	ESP_ERROR_CHECK(tda7313_set_mute(true));
-	ESP_ERROR_CHECK(tda7313_set_input(audio_input_mode));
 	if (VS1053_HW_init()) // init spi
 	{
 		VS1053_Start();
@@ -475,7 +474,7 @@ static void start_wifi()
 			vTaskDelay(1);
 			ESP_ERROR_CHECK(esp_wifi_start());
 
-			audio_input_mode = COMPUTER;
+			audio_input_num = COMPUTER;
 		}
 		else
 		{
@@ -865,6 +864,8 @@ void app_main()
 	//init hardware
 	partitions_init();
 	ESP_LOGI(TAG, "Partition init done...");
+	// init TDA7313...
+	ESP_ERROR_CHECK(tda7313_init());
 
 	if (g_device->cleared != 0xAABB)
 	{
@@ -880,7 +881,7 @@ void app_main()
 			g_device = getDeviceSettings();
 			g_device->cleared = 0xAABB;				 //marker init done
 			g_device->uartspeed = 115200;			 // default
-			g_device->audio_input_mode = COMPUTER;   // default
+			g_device->audio_input_num = COMPUTER;   // default
 			g_device->options |= T_PATCH;			 // 0 = load patch
 			g_device->trace_level = ESP_LOG_VERBOSE; //default
 			g_device->vol = 100;					 //default
@@ -899,13 +900,13 @@ void app_main()
 			ESP_LOGE(TAG, "Device config restored");
 	}
 	copyDeviceSettings(); // copy in the safe partion
-
+	ESP_ERROR_CHECK(tda7313_init_nvs(false));
 	//SPI init for the vs1053 and lcd if spi.
 	VS1053_spi_init();
 	// output mode
-	audio_input_mode = g_device->audio_input_mode;
-	//audio input mode COMPUTER, RADIO, BLUETOOTH
-	ESP_LOGI(TAG, "audio input mode %d\nOne of COMPUTER = 1, RADIO, BLUETOOTH", audio_input_mode);
+	audio_input_num = g_device->audio_input_num;
+	//audio input number COMPUTER, RADIO, BLUETOOTH
+	ESP_LOGI(TAG, "audio input number %d\nOne of COMPUTER = 1, RADIO, BLUETOOTH", audio_input_num);
 
 	// init softwares
 	telnetinit();

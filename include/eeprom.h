@@ -69,7 +69,7 @@ struct device_settings
 	uint32_t sleepValue;
 	uint32_t wakeValue;
 	// esp32
-	input_mode_t audio_input_mode; //
+	input_mode_t audio_input_num; //
 	uint8_t trace_level;
 	uint8_t led_gpio;  // the gpio of the led
 	uint32_t lcd_out;  // timeout in seconds to switch off the lcd. 0 = no timeout

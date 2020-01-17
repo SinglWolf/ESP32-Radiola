@@ -2,7 +2,7 @@ var content = "Content-type",
 	ctype = "application/x-www-form-urlencoded",
 	cjson = "application/json";
 var auto, intervalid, intervalrssi, timeid, websocket, urlmonitor, e, moniPlaying = false, editPlaying = false, editIndex = 0, curtab = "tab-content1", stchanged = false, maxStation = 255, themeIn = "0";
-const mediacentre = "МедиаЦентр";
+const mediacentre = "Радиола";
 const working = "Работаю... Пожалуйста, подождите.";
 const backupConsole = console;
 
@@ -1438,7 +1438,7 @@ function printList() {
 	var html = "<html>";
 	id = 0;
 	html += "</html>";
-	html += "<h1>Список станций МедиаЦентра</h1><br/><hr><br/>";
+	html += "<h1>Список станций Радиолы</h1><br/><hr><br/>";
 	for (id; id < maxStation; id++) {
 		idstr = id.toString();
 		if (localStorage.getItem(idstr) != null) {

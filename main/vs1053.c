@@ -5,7 +5,7 @@
   * @date    07.08.2015
   * @brief   This file provides VS1053 usage and control functions. Based on VS1003 library by Przemyslaw Stasiak.
   * Copyright 2017 karawin (http://www.karawin.fr) for KaRadio32
-  * Modified for EDP32-Media 2019 SinglWolf (https://serverdoma.ru)
+  * Modified for ESP32-Radiola 2019 SinglWolf (https://serverdoma.ru)
   * added control treble, bass and spacialisation
   ***********************************************************************************************************************
 */

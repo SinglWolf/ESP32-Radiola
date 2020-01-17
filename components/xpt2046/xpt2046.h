@@ -3,13 +3,13 @@
  *
  *  Created on: jan 12, 2019
  *      Author: karawin
- *  Modified for EDP32-Media 2019 SinglWolf (https://serverdoma.ru)
+ *  Modified for ESP32-Radiola 2019 SinglWolf (https://serverdoma.ru)
  */
 
 #ifndef _XPT2046_h_
 #define _XPT2046_h_
 
-#define ESP32Media 
+#define ESP32Radiola 
 
 #include "driver/gpio.h"
 #include "driver/spi_master.h"

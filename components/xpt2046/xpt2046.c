@@ -4,7 +4,7 @@
  *  Created on: jan 12, 2019
  *      Author: karawin
  *  adapted from https://github.com/loboris/ESP32_SPI_MASTER_NODMA_EXAMPLE
- *  Modified for EDP32-Media 2019 SinglWolf (https://serverdoma.ru)
+ *  Modified for ESP32-Radiola 2019 SinglWolf (https://serverdoma.ru)
  */
 
 #define LOG_LOCAL_LEVEL ESP_LOG_VERBOSE
@@ -14,7 +14,7 @@
 #include <string.h>
 #include "xpt2046.h"
 #include "esp_log.h"
-#ifdef ESP32Media
+#ifdef ESP32Radiola
 #include "gpio.h"
 #include "vs1053.h"
 #include "eeprom.h"

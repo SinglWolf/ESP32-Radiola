@@ -1,6 +1,6 @@
 /*
  * Copyright 2016 karawin (http://www.karawin.fr)
- * Modified for EDP32-Media 2019 SinglWolf (https://serverdoma.ru)
+ * Modified for ESP32-Radiola 2019 SinglWolf (https://serverdoma.ru)
 */
 #ifndef __WEBCLIENT_H__
 #define __WEBCLIENT_H__

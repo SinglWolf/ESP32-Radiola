@@ -1,6 +1,6 @@
 /*
  * Copyright 2016 karawin (http://www.karawin.fr)
- * Modified for EDP32-Media 2019 SinglWolf (https://serverdoma.ru)
+ * Modified for ESP32-Radiola 2019 SinglWolf (https://serverdoma.ru)
 */
 #define TAG "webclient"
 #define LOG_LOCAL_LEVEL ESP_LOG_VERBOSE
@@ -1214,7 +1214,7 @@ void clientTask(void *pvParams)
 	strcpy(useragent, g_device->ua);
 	if (strlen(useragent) == 0)
 	{
-		strcpy(useragent, "ESP32Media/1.5");
+		strcpy(useragent, "ESP32Radiola/1.5");
 		strcpy(g_device->ua, useragent);
 	}
 

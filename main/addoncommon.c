@@ -1,6 +1,6 @@
 // common data for ucg or u8g
 // to avoid double space (only one type of screen per conf.
-// Modified for EDP32-Media 2019 SinglWolf (https://serverdoma.ru)
+// Modified for ESP32-Radiola 2019 SinglWolf (https://serverdoma.ru)
 #include "addoncommon.h"
 #include "stdlib.h"
 

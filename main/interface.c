@@ -1,7 +1,7 @@
 /******************************************************************************
  * 
  * Copyright 2018 karawin (http://www.karawin.fr)
- * Modified for EDP32-Media 2019 SinglWolf (https://serverdoma.ru)
+ * Modified for ESP32-Radiola 2019 SinglWolf (https://serverdoma.ru)
  *
 *******************************************************************************/
 
@@ -1144,7 +1144,7 @@ void hostname(char *s)
 	}
 
 	if (t_end - t == 0)
-		strcpy(g_device->hostname, "ESP32Media");
+		strcpy(g_device->hostname, "ESP32Radiola");
 	else
 	{
 		if (t_end - t >= HOSTLEN)
@@ -1354,9 +1354,9 @@ void checkCommand(int size, char *s)
 		else if (strcmp(tmp + 4, "conf") == 0)
 			sys_conf();
 		else if (strcmp(tmp + 4, "update") == 0)
-			update_firmware((char *)"ESP32Media");
+			update_firmware((char *)"ESP32Radiola");
 		else if (strcmp(tmp + 4, "prerelease") == 0)
-			update_firmware((char *)"ESP32Mediaprv");
+			update_firmware((char *)"ESP32Radiolaprv");
 		else if (startsWith("patch", tmp + 4))
 			syspatch(tmp);
 		else if (startsWith("ledg", tmp + 4))
@@ -1366,7 +1366,7 @@ void checkCommand(int size, char *s)
 		else if (strcmp(tmp + 4, "date") == 0)
 			ntp_print_time();
 		else if (strncmp(tmp + 4, "vers", 4) == 0)
-			kprintf("Release: %s, Revision: %s, ESP32Media\n", RELEASE, REVISION);
+			kprintf("Release: %s, Revision: %s, ESP32Radiola\n", RELEASE, REVISION);
 		else if (startsWith("tzo", tmp + 4))
 			tzoffset(tmp);
 		else if (strcmp(tmp + 4, "logn") == 0)

@@ -2,7 +2,7 @@
   ESP32-Radiola
   A WiFi webradio player and Media Centre
   Based on source code of  Ka-Radio32 Copyright (C) 2017  KaraWin
-  Modified for EDP32-Media 2019 SinglWolf (https://serverdoma.ru)
+  Modified for ESP32-Radiola 2019 SinglWolf (https://serverdoma.ru)
 
   This program is free software: you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -463,13 +463,13 @@ static void start_wifi()
 			printf("WIFI GO TO AP MODE\n");
 			wifi_config_t ap_config = {
 				.ap = {
-					.ssid = "WifiESP32Media",
+					.ssid = "WifiESP32Radiola",
 					.authmode = WIFI_AUTH_OPEN,
 					.max_connection = 2,
 					.beacon_interval = 200},
 			};
 			ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_AP, &ap_config));
-			ESP_LOGE(TAG, "The default AP is  WifiESP32Media. Connect your wifi to it.\nThen connect a webbrowser to 192.168.4.1 and go to Setting\nMay be long to load the first time.Be patient.");
+			ESP_LOGE(TAG, "The default AP is  WifiESP32Radiola. Connect your wifi to it.\nThen connect a webbrowser to 192.168.4.1 and go to Setting\nMay be long to load the first time.Be patient.");
 
 			vTaskDelay(1);
 			ESP_ERROR_CHECK(esp_wifi_start());
@@ -639,7 +639,7 @@ void start_network()
 			}
 		}
 		saveDeviceSettings(g_device);
-		tcpip_adapter_set_hostname(TCPIP_ADAPTER_IF_STA, "ESP32Media");
+		tcpip_adapter_set_hostname(TCPIP_ADAPTER_IF_STA, "ESP32Radiola");
 	}
 
 	lcd_welcome(localIp, "IP found");
@@ -999,7 +999,7 @@ void app_main()
 	//set hostname and instance name
 	if ((strlen(g_device->hostname) == 0) || (strlen(g_device->hostname) > HOSTLEN))
 	{
-		strcpy(g_device->hostname, "ESP32Media");
+		strcpy(g_device->hostname, "ESP32Radiola");
 	}
 	ESP_LOGE(TAG, "mDNS Hostname: %s", g_device->hostname);
 	err = mdns_hostname_set(g_device->hostname);
@@ -1025,7 +1025,7 @@ void app_main()
 	vTaskDelay(10);
 	ESP_LOGI(TAG, "RAM left %d", esp_get_free_heap_size());
 
-	//start tasks of ESP32Media
+	//start tasks of ESP32Radiola
 	xTaskCreatePinnedToCore(uartInterfaceTask, "uartInterfaceTask", 2400, NULL, PRIO_UART, &pxCreatedTask, CPU_UART);
 	ESP_LOGI(TAG, "%s task: %x", "uartInterfaceTask", (unsigned int)pxCreatedTask);
 	vTaskDelay(1);

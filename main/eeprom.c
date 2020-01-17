@@ -1,7 +1,7 @@
 /******************************************************************************
  * 
  * Copyright 2017 karawin (http://www.karawin.fr)
- * Modified for EDP32-Media 2019 SinglWolf (https://serverdoma.ru)
+ * Modified for ESP32-Radiola 2019 SinglWolf (https://serverdoma.ru)
  *
 *******************************************************************************/
 #define LOG_LOCAL_LEVEL ESP_LOG_VERBOSE

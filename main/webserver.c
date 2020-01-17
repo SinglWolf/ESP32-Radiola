@@ -1,6 +1,6 @@
 /*
  * Copyright 2016 karawin (http://www.karawin.fr)
- * Modified for EDP32-Media 2019 SinglWolf (https://serverdoma.ru)
+ * Modified for ESP32-Radiola 2019 SinglWolf (https://serverdoma.ru)
 */
 
 #define LOG_LOCAL_LEVEL ESP_LOG_VERBOSE
@@ -826,7 +826,7 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 	}
 	else if (strcmp(name, "/upgrade") == 0)
 	{
-		update_firmware((char *)"ESP32Media"); // start the OTA
+		update_firmware((char *)"ESP32Radiola"); // start the OTA
 	}
 	else if (strcmp(name, "/icy") == 0)
 	{
@@ -1075,7 +1075,7 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 				if (aua == NULL)
 				{
 					aua = inmalloc(12);
-					strcpy(aua, "ESP32Media/1.6");
+					strcpy(aua, "ESP32Radiola/1.6");
 				}
 			}
 			if (aua != NULL)

@@ -1,7 +1,7 @@
 /* (c)jp cocatrix May 2016 
  *
  * Copyright 2016 karawin (http://www.karawin.fr)
- * Modified for EDP32-Media 2019 SinglWolf (https://serverdoma.ru)
+ * Modified for ESP32-Radiola 2019 SinglWolf (https://serverdoma.ru)
 	quick and dirty telnet inplementation for wifi webradio
 	minimal implementaion for log and command
 */
@@ -23,7 +23,7 @@
 
 //const char strtMALLOC1[] = {"Telnet %s malloc fails\n"};
 #define strtSOCKET	"Telnet Socket fails %s errno: %d"
-const char strtWELCOME[]  ={"ESP32Media telnet\n> "};
+const char strtWELCOME[]  ={"ESP32Radiola telnet\n> "};
 
 
 int telnetclients[NBCLIENTT];

@@ -204,7 +204,7 @@ void lcd_welcome(const char *ip, const char *state)
 		ClearBuffer();
 	setfont(2);
 	int y = -ucg_GetFontDescent(&ucg) + ucg_GetFontAscent(&ucg) + 3; //interline
-	DrawString(GetWidth() / 4, 2, "ESP32-Media");
+	DrawString(GetWidth() / 4, 2, "ESP32-Radiola");
 	setfont(1);
 	in_welcome(ip, state, y, Version);
 }

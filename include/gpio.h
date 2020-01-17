@@ -14,7 +14,7 @@
 #define GPIO_NONE 255
 
 //---------------------------------//
-// Define GPIO used in ESP32-Media //
+// Define GPIO used in ESP32-Radiola //
 //---------------------------------//
 
 // Default value, can be superseeded by the hardware partition.

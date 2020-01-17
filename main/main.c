@@ -1,5 +1,5 @@
 /*
-  ESP32-Media
+  ESP32-Radiola
   A WiFi webradio player and Media Centre
   Based on source code of  Ka-Radio32 Copyright (C) 2017  KaraWin
   Modified for EDP32-Media 2019 SinglWolf (https://serverdoma.ru)

@@ -68,7 +68,7 @@ void VS1053_spi_init()
 	gpio_num_t sclk;
 
 	uint8_t spi_no; // the spi bus to use
-		//	if(!vsSPI) vSemaphoreCreateBinary(vsSPI);
+					//	if(!vsSPI) vSemaphoreCreateBinary(vsSPI);
 	if (!vsSPI)
 		vsSPI = xSemaphoreCreateMutex();
 	if (!hsSPI)
@@ -696,14 +696,16 @@ void vsTask(void *pvParams)
 	VS1053_SetTrebleFreq(g_device->freqtreble);
 	VS1053_SetBassFreq(g_device->freqbass);
 	VS1053_SetSpatial(g_device->spacial);
-	ESP_ERROR_CHECK(tda7313_set_input(RADIO));
+	g_device->audio_input_num = RADIO;
+	ESP_ERROR_CHECK(tda7313_set_input(g_device->audio_input_num));
 
 	while (1)
 	{
 		// stop requested, terminate immediately
 		if (player->decoder_command == CMD_STOP)
 		{
-			ESP_ERROR_CHECK(tda7313_set_input(COMPUTER));
+			g_device->audio_input_num = COMPUTER;
+			ESP_ERROR_CHECK(tda7313_set_input(g_device->audio_input_num));
 			break;
 		}
 		//size = bufferRead(b, VSTASKBUF);

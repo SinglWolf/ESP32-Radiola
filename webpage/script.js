@@ -498,8 +498,8 @@ function onRangeChangeSpatial($range, $spanid, $nosave) {
 	document.getElementById($spanid).innerHTML = label;
 	if (typeof ($nosave) == 'undefined') saveSoundSettings();
 }
-function onTDAchange($name, $range, $spanid, $nosave) {
-	var val = document.getElementById($range).value,
+function onTDAchange($name, $nosave) {
+	var val = document.getElementById($name + '_range').value,
 		label;
 	switch ($name) {
 		case 'Volume': switch (val) {
@@ -559,15 +559,16 @@ function onTDAchange($name, $range, $spanid, $nosave) {
 			case '12': label = "-1.25"; break;
 			case '13': label = " 0"; break;
 		}; break;
-		case 'SLA': switch (val) {
+		case 'sla1':
+		case 'sla2':
+		case 'sla3': switch (val) {
 			case '0': label = " 0"; break;
 			case '1': label = "+3.75"; break;
 			case '2': label = "+7.5"; break;
 			case '3': label = "+11.25"; break;
 		}; break;
 	}
-
-	document.getElementById($spanid).innerHTML = label;
+	document.getElementById($name + '_span').innerHTML = label + " дБ";
 	if (typeof ($nosave) == 'undefined') hardware(1);
 }
 
@@ -686,23 +687,33 @@ function hardware(save) {
 				document.getElementById("Bluetooth").style.display = "none";
 			}
 			document.getElementById('Volume_range').value = arr["Volume"].replace(/\\/g, "");
+			onTDAchange('Volume', false);
 			document.getElementById('Treble_range').value = arr["Treble"].replace(/\\/g, "");
+			onTDAchange('Treble', false);
 			document.getElementById('Bass_range').value = arr["Bass"].replace(/\\/g, "");
-			if (arr["rear_on"] == "1")
+			onTDAchange('Bass', false);
+			if (arr["rear_on"] == "1") {
 				document.getElementById('rearON').setAttribute("checked", "");
+				document.getElementById('AttLR_range').value = arr["attlr"].replace(/\\/g, "");
+				onTDAchange('AttLR', false);
+				document.getElementById('AttRR_range').value = arr["attrr"].replace(/\\/g, "");
+				onTDAchange('AttRR', false);
+			}
 			else
 				document.getElementById('rearON').removeAttribute("checked");
 			clickrear(false);
 			document.getElementById('AttLF_range').value = arr["attlf"].replace(/\\/g, "");
+			onTDAchange('AttLF', false);
 			document.getElementById('AttRF_range').value = arr["attrf"].replace(/\\/g, "");
-			document.getElementById('AttLR_range').value = arr["attlr"].replace(/\\/g, "");
-			document.getElementById('AttRR_range').value = arr["attrr"].replace(/\\/g, "");
+			onTDAchange('AttRF', false);
+
 			for (i = 1; i < 4; i++) {
 				if (arr["loud" + i] == "1")
 					document.getElementById('loud' + i).setAttribute("checked", "");
 				else
 					document.getElementById('loud' + i).removeAttribute("checked");
-				document.getElementById('range_sla' + i).value = arr["sla" + i].replace(/\\/g, "");
+				document.getElementById('sla' + i + '_range').value = arr["sla" + i].replace(/\\/g, "");
+				onTDAchange('sla' + i, false);
 			}
 			if (arr["mute"] == "1")
 				document.getElementById('mute').setAttribute("checked", "");
@@ -731,7 +742,7 @@ function hardware(save) {
 		+ "&attlr=" + document.getElementById('AttLR_range').value
 		+ "&attrr=" + document.getElementById('AttRR_range').value
 		+ "&loud=" + loud
-		+ "&sla=" + document.getElementById('range_sla' + inputnum).value
+		+ "&sla=" + document.getElementById('sla' + inputnum + '_range').value
 		+ "&mute=" + mute
 		+ "&");
 }

@@ -881,7 +881,7 @@ void app_main()
 			g_device = getDeviceSettings();
 			g_device->cleared = 0xAABB;				 //marker init done
 			g_device->uartspeed = 115200;			 // default
-			g_device->audio_input_num = COMPUTER;   // default
+			g_device->audio_input_num = COMPUTER;	// default
 			g_device->options |= T_PATCH;			 // 0 = load patch
 			g_device->trace_level = ESP_LOG_VERBOSE; //default
 			g_device->vol = 100;					 //default
@@ -903,7 +903,8 @@ void app_main()
 	ESP_ERROR_CHECK(tda7313_init_nvs(false));
 	//SPI init for the vs1053 and lcd if spi.
 	VS1053_spi_init();
-	// output mode
+	//
+	g_device->audio_input_num = COMPUTER;
 	audio_input_num = g_device->audio_input_num;
 	//audio input number COMPUTER, RADIO, BLUETOOTH
 	ESP_LOGI(TAG, "audio input number %d\nOne of COMPUTER = 1, RADIO, BLUETOOTH", audio_input_num);

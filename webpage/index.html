@@ -264,46 +264,44 @@
 					<p>
 						<br>
 						<input class="checkbox" id="mute" type="checkbox" onclick="mute(1)">
-						<label for="mute">ЗВУК:&emsp;&emsp;&emsp;&ensp;&ensp;&emsp;&emsp;&emsp;ВЫКЛ&emsp;&emsp;&emsp;&ensp;ВКЛ</label>
+						<label
+							for="mute">ЗВУК:&emsp;&emsp;&emsp;&ensp;&ensp;&emsp;&emsp;&emsp;ВЫКЛ&emsp;&emsp;&emsp;&ensp;ВКЛ</label>
 						<br>
-						<span class="bold2">Громкость: </span> &nbsp;&nbsp;<span id="Volume_span"></span>
+						<span class="bold2">Громкость: </span> &nbsp;&nbsp;<span id="Volume_span">0 дБ</span>
 						<br>
-						<input type="range" id="Volume_range" name="Volume"
-							onchange="onTDAchange('Volume','Volume_range','Volume_span')" min="0" max="17"
+						<input type="range" id="Volume_range" name="Volume" onchange="onTDAchange('Volume')" min="0"
+							max="17" style="height:25px;">
+					</p>
+					<p>
+						<span class="bold2">Низкие частоты: </span> &nbsp;&nbsp;<span id="Bass_span">0 дБ</span>
+						<br>
+						<input type="range" id="Bass_range" name="Bass" onchange="onTDAchange('Bass')" min="0" max="14"
 							style="height:25px;">
 					</p>
 					<p>
-						<span class="bold2">Низкие частоты: </span> &nbsp;&nbsp;<span id="Bass_span"></span>
+						<span class="bold2">Высокие частоты: </span> &nbsp;&nbsp;<span id="Treble_span">0 дБ</span>
 						<br>
-						<input type="range" id="Bass_range" name="Bass"
-							onchange="onTDAchange('Bass','Bass_range','Bass_span')" min="0" max="14"
-							style="height:25px;">
-					</p>
-					<p>
-						<span class="bold2">Высокие частоты: </span> &nbsp;&nbsp;<span id="Treble_span"></span>
-						<br>
-						<input type="range" id="Treble_range" name="Treble"
-							onchange="onTDAchange('Treble','Treble_range','Treble_span')" min="0" max="14"
-							style="height:25px;">
+						<input type="range" id="Treble_range" name="Treble" onchange="onTDAchange('Treble')" min="0"
+							max="14" style="height:25px;">
 					</p>
 					<span style="font-weight: bold;">ПЕРЕДНИЕ ДИНАМИКИ:</span>
 					<br>
 					<br>
-					<table widh="auto" border="1" id="Front">
+					<table widh="auto" id="Front">
 						<tbody>
 							<tr>
-								<td><span class="bold">Левый канал: </span> &nbsp;&nbsp;<span id="AttLF_span"></span>
+								<td><span class="bold">Левый канал: </span> &nbsp;&nbsp;<span id="AttLF_span">0
+										дБ</span>
 								</td>
-								<td><span class="bold">Правый канал: </span> &nbsp;&nbsp;<span id="AttRF_span"></span>
+								<td><span class="bold">Правый канал: </span> &nbsp;&nbsp;<span id="AttRF_span">0
+										дБ</span>
 								</td>
 							</tr>
 							<tr>
-								<td><input type="range" id="AttLF_range" name="AttLF"
-										onchange="onTDAchange('AttLF','AttLF_range','AttLF_span')" min="0" max="13"
-										style="height:25px;"> </td>
-								<td><input type="range" id="AttRF_range" name="AttRF"
-										onchange="onTDAchange('AttRF','AttRF_range','AttRF_span')" min="0" max="13"
-										style="height:25px;"> </td>
+								<td><input type="range" id="AttLF_range" name="AttLF" onchange="onTDAchange('AttLF')"
+										min="0" max="13" style="height:25px;"> </td>
+								<td><input type="range" id="AttRF_range" name="AttRF" onchange="onTDAchange('AttRF')"
+										min="0" max="13" style="height:25px;"> </td>
 							</tr>
 						</tbody>
 					</table>
@@ -312,21 +310,21 @@
 					<input class="checkbox" id="rearON" type="checkbox" onclick="clickrear()">
 					<label for="rearON">Задние динамики:&ensp;ВЫКЛ&emsp;&emsp;&emsp;&ensp;ВКЛ</label>
 					<br>
-					<table widh="auto" border="1" id="Rear" style="display: none;">
+					<table widh="auto" id="Rear" style="display: none;">
 						<tbody>
 							<tr>
-								<td><span class="bold">Левый канал: </span> &nbsp;&nbsp;<span id="AttLR_span"></span>
+								<td><span class="bold">Левый канал: </span> &nbsp;&nbsp;<span id="AttLR_span">0
+										дБ</span>
 								</td>
-								<td><span class="bold">Правый канал: </span> &nbsp;&nbsp;<span id="AttRR_span"></span>
+								<td><span class="bold">Правый канал: </span> &nbsp;&nbsp;<span id="AttRR_span">0
+										дБ</span>
 								</td>
 							</tr>
 							<tr>
-								<td><input type="range" id="AttLR_range" name="AttLR"
-										onchange="onTDAchange('AttLR','AttLR_range','AttLR_span')" min="0" max="13"
-										style="height:25px;"> </td>
-								<td><input type="range" id="AttRR_range" name="AttRR"
-										onchange="onTDAchange('AttRR','AttRR_range','AttRR_span')" min="0" max="13"
-										style="height:25px;"> </td>
+								<td><input type="range" id="AttLR_range" name="AttLR" onchange="onTDAchange('AttLR')"
+										min="0" max="13" style="height:25px;"> </td>
+								<td><input type="range" id="AttRR_range" name="AttRR" onchange="onTDAchange('AttRR')"
+										min="0" max="13" style="height:25px;"> </td>
 							</tr>
 						</tbody>
 					</table>
@@ -336,9 +334,9 @@
 						<input class="checkbox" id="loud1" type="checkbox" onclick="clickloud()"> <label
 							for="loud1">Тонкомпенсация:&ensp;&ensp;ВЫКЛ&emsp;&emsp;&emsp;&ensp;ВКЛ</label>
 						<br>
-						<span class="bold">Предусиление: </span> <input type="range" id="range_sla1"
-							onchange="onTDAchange('SLA','range_sla1','span_sla1')" name="SLA1" min="0" max="3">
-						<span id="span_sla1">0 дБ</span>
+						<span class="bold">Предусиление: </span> <input type="range" id="sla1_range"
+							onchange="onTDAchange('sla1')" name="SLA1" min="0" max="3">
+						<span id="sla1_span">0 дБ</span>
 						<br>
 					</span>
 					<span id="Bluetooth" style="display: none;">
@@ -347,9 +345,9 @@
 							for="loud3">Тонкомпенсация:&ensp;&ensp;ВЫКЛ&emsp;&emsp;&emsp;&ensp;ВКЛ</label>
 						<br>
 						<span class="bold">Предусиление:
-						</span> <input type="range" id="range_sla3" name="SLA3"
-							onchange="onTDAchange('SLA','range_sla3','span_sla3')" min="0" max="3">
-						<span id="span_sla3">0 дБ</span>
+						</span> <input type="range" id="sla3_range" name="SLA3" onchange="onTDAchange('sla3')" min="0"
+							max="3">
+						<span id="sla3_span">0 дБ</span>
 					</span>
 					<span id="Radio" style="display: block;">
 						<br>
@@ -357,9 +355,9 @@
 							for="loud2">Тонкомпенсация:&ensp;&ensp;ВЫКЛ&emsp;&emsp;&emsp;&ensp;ВКЛ</label>
 						<br>
 						<span class="bold">Предусиление:
-						</span> <input type="range" id="range_sla2" name="SLA2"
-							onchange="onTDAchange('SLA','range_sla2','span_sla2')" min="0" max="3">
-						<span id="span_sla2">0 дБ</span>
+						</span> <input type="range" id="sla2_range" name="SLA2" onchange="onTDAchange('sla2')" min="0"
+							max="3">
+						<span id="sla2_span">0 дБ</span>
 						<br>
 						<br>
 						<span class="bold">Усиление высоких частот: </span> <input type="range" id="treble_range"

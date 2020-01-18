@@ -1,5 +1,5 @@
 # ESP32-Radiola
-Миграция проекта https://github.com/karawin/Ka-Radio32 на VSCode+PlatformIO
+Форк проекта https://github.com/karawin/Ka-Radio32 на VSCode+PlatformIO
 
 **Используемое железо (HARDWARE):**
   + Корпус - старый системный блок компьютера.

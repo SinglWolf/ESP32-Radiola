@@ -53,8 +53,9 @@ dkms.conf
 #
 .pio
 .vscode
-favicon
-index
-script
-style
-style1
+.favicon
+.index
+.logo
+.script
+.style
+.style1

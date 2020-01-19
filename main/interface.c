@@ -16,7 +16,7 @@
 #include "webclient.h"
 #include "webserver.h"
 #include "vs1053.h"
-#include "gpio.h"
+#include "gpios.h"
 #include "ota.h"
 #include "spiram_fifo.h"
 #include "addon.h"

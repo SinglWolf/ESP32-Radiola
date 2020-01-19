@@ -21,6 +21,7 @@
 #include "interface.h"
 #include "addon.h"
 #include "custom.h"
+#include "gpios.h"
 
 #include "lwip/opt.h"
 #include "lwip/arch.h"
@@ -46,6 +47,35 @@ const char strsWIFI[] = {"HTTP/1.1 200 OK\r\nContent-Type:application/json\r\nCo
 ,\"host\":\"%s\",\"tzo\":\"%s\"}"};
 const char strsGSTAT[] = {"HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: %d\r\n\r\n{\"Name\":\"%s\",\"URL\":\"%s\",\"File\":\"%s\",\"Port\":\"%d\",\"ovol\":\"%d\"}"};
 const char HARDWARE[] = {"HTTP/1.1 200 OK\r\nContent-Type:application/json\r\nContent-Length:%d\r\n\r\n{\"inputnum\":\"%u\",\"Volume\":\"%02u\",\"Treble\":\"%02u\",\"Bass\":\"%02u\",\"rear_on\":\"%u\",\"attlf\":\"%02u\",\"attrf\":\"%02u\",\"attlr\":\"%02u\",\"attrr\":\"%02u\",\"loud1\":\"%u\",\"loud2\":\"%u\",\"loud3\":\"%u\",\"sla1\":\"%u\",\"sla2\":\"%u\",\"sla3\":\"%u\",\"mute\":\"%u\"}"};
+const char GPIOS[] = {"HTTP/1.1 200 OK\r\nContent-Type:application/json\r\nContent-Length:%d\r\n\r\n{\
+\"K_SPI\":\"%u\",\
+\"P_MISO\":\"%03u\",\
+\"P_MOSI\":\"%03u\",\
+\"P_CLK\":\"%03u\",\
+\"P_XCS\":\"%03u\",\
+\"P_XDCS\":\"%03u\",\
+\"P_DREQ\":\"%03u\",\
+\"P_LED_GPIO\":\"%03u\",\
+\"P_ENC0_A\":\"%03u\",\
+\"P_ENC0_B\":\"%03u\",\
+\"P_ENC0_BTN\":\"%03u\",\
+\"P_ENC1_A\":\"%03u\",\
+\"P_ENC1_B\":\"%03u\",\
+\"P_ENC1_BTN\":\"%03u\",\
+\"P_I2C_SCL\":\"%03u\",\
+\"P_I2C_SDA\":\"%03u\",\
+\"P_LCD_CS\":\"%03u\",\
+\"P_LCD_A0\":\"%03u\",\
+\"P_LCD_RST\":\"%03u\
+\"P_IR_SIGNAL\":\"%03u\
+\"P_BACKLIGHT\":\"%03u\
+\"P_TACHOMETER\":\"%03u\
+\"P_FAN_SPEED\":\"%03u\
+\"P_DS18B20\":\"%03u\
+\"P_TOUCH_CS\":\"%03u\
+\"P_BUZZER\":\"%03u\
+\"}"};
+
 static int8_t clientOvol = 0;
 
 void *inmalloc(size_t n)
@@ -1194,6 +1224,67 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 	else if (strcmp(name, "/clear") == 0)
 	{
 		eeEraseStations(); //clear all stations
+	}
+	else if (strcmp(name, "/getgpios") == 0)
+	{
+		changed = false;
+		if (data_size > 0)
+		{
+			char save[1];
+			if (getSParameterFromResponse(save, 1, "save=", data, data_size))
+				if (strcmp(save, "0") != 0)
+					changed = true;
+			if (changed)
+			{
+				// char arg[2];
+				// getSParameterFromResponse(arg, 2, "inputnum=", data, data_size);
+				// if (tda7313_get_input() != atoi(arg))
+				// {
+				// 	ESP_ERROR_CHECK(tda7313_set_input(atoi(arg)));
+				// 	g_device->audio_input_num = atoi(arg);
+				// 	ESP_LOGD(TAG, "audio input number: %u", g_device->audio_input_num);
+				// }
+			}
+			int json_length;
+			json_length = 202;
+			uint8_t spi_no;
+			gpio_num_t miso, mosi, sclk, xcs, xdcs, dreq, ledgpio, enca, encb, encbtn, enca1, encb1, encbtn1, sda, scl, cs, a0, rstlcd, ir, lcdb, tach, fanspeed, ds18b20, touch, buzzer;
+			gpio_get_spi_bus(&spi_no, &miso, &mosi, &sclk);
+			gpio_get_vs1053(&xcs, &xdcs, &dreq);
+			gpio_get_ledgpio(&ledgpio);
+			gpio_get_encoders(&enca, &encb, &encbtn, &enca1, &encb1, &encbtn1);
+			gpio_get_i2c(&sda, &scl);
+			gpio_get_spi_lcd(&cs, &a0, &rstlcd);
+			gpio_get_ir_signal(&ir);
+			gpio_get_lcd_backlightl(&lcdb);
+			gpio_get_tachometer(&tach);
+			gpio_get_fanspeed(&fanspeed);
+			gpio_get_ds18b20(&ds18b20);
+			gpio_get_touch(&touch);
+			gpio_get_buzzer(&buzzer);
+
+			char buf[272];
+			sprintf(buf, GPIOS,
+					json_length,
+					spi_no,
+					miso, mosi, sclk,
+					xcs, xdcs, dreq,
+					ledgpio,
+					enca, encb, encbtn,
+					enca1, encb1, encbtn1,
+					sda, scl,
+					cs, a0, rstlcd,
+					ir,
+					lcdb,
+					tach,
+					fanspeed,
+					ds18b20,
+					touch,
+					buzzer);
+			ESP_LOGD(TAG, "Test GPIOS\nSave: %s\nBuf len:%u\n%s", save, strlen(buf), buf);
+			write(conn, buf, strlen(buf));
+			return;
+		}
 	}
 	respOk(conn, NULL);
 }

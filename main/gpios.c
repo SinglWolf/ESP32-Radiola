@@ -8,7 +8,7 @@
 #define LOG_LOCAL_LEVEL ESP_LOG_VERBOSE
 #define TAG "GPIO"
 #include "driver/gpio.h"
-#include "gpio.h"
+#include "gpios.h"
 #include "nvs_flash.h"
 #include "esp_log.h"
 #include "main.h"
@@ -200,13 +200,13 @@ void option_set_lcd_info(uint8_t rt)
 	close_partition(hardware_handle, hardware);
 }
 
-void option_get_ddmm(uint8_t *enca)
+void option_get_ddmm(uint8_t *ddmm)
 {
 	esp_err_t err;
 	nvs_handle hardware_handle;
 	uint8_t dmm;
 	// init default
-	*enca = ((g_device->options32) & T_DDMM) ? 1 : 0;
+	*ddmm = ((g_device->options32) & T_DDMM) ? 1 : 0;
 	;
 
 	if (open_partition(hardware, option_space, NVS_READONLY, &hardware_handle) != ESP_OK)
@@ -222,14 +222,14 @@ void option_get_ddmm(uint8_t *enca)
 	else
 	{
 		if (dmm != 255)
-			*enca = dmm;
-		if (*enca)
-			*enca = 1;
+			*ddmm = dmm;
+		if (*ddmm)
+			*ddmm = 1;
 	}
 
 	close_partition(hardware_handle, hardware);
 }
-void option_set_ddmm(uint8_t enca)
+void option_set_ddmm(uint8_t ddmm)
 {
 	esp_err_t err;
 	nvs_handle hardware_handle;
@@ -240,20 +240,20 @@ void option_set_ddmm(uint8_t enca)
 		return;
 	}
 
-	err = nvs_set_u8(hardware_handle, "O_DDMM_FLAG", enca ? 1 : 0);
+	err = nvs_set_u8(hardware_handle, "O_DDMM_FLAG", ddmm ? 1 : 0);
 	if (err != ESP_OK)
 		ESP_LOGD(TAG, "oset_ddmm err 0x%x", err);
 
 	close_partition(hardware_handle, hardware);
 }
 
-void option_get_lcd_out(uint32_t *enca)
+void option_get_lcd_out(uint32_t *lcd_out)
 {
 	esp_err_t err;
 	nvs_handle hardware_handle;
 	uint32_t lout;
 	// init default
-	*enca = g_device->lcd_out;
+	*lcd_out = g_device->lcd_out;
 
 	if (open_partition(hardware, option_space, NVS_READONLY, &hardware_handle) != ESP_OK)
 	{
@@ -268,11 +268,11 @@ void option_get_lcd_out(uint32_t *enca)
 	{
 		if (lout == 255)
 			lout = 0; // special case
-		*enca = lout;
+		*lcd_out = lout;
 	}
 	close_partition(hardware_handle, hardware);
 }
-void option_set_lcd_out(uint32_t enca)
+void option_set_lcd_out(uint32_t lcd_out)
 {
 	esp_err_t err;
 	nvs_handle hardware_handle;
@@ -283,19 +283,19 @@ void option_set_lcd_out(uint32_t enca)
 		return;
 	}
 
-	err = nvs_set_u32(hardware_handle, "O_LCD_OUT", enca);
+	err = nvs_set_u32(hardware_handle, "O_LCD_OUT", lcd_out);
 	if (err != ESP_OK)
 		ESP_LOGD(TAG, "oset_lcd_out err 0x%x", err);
 
 	close_partition(hardware_handle, hardware);
 }
 
-void gpio_get_ledgpio(gpio_num_t *enca)
+void gpio_get_ledgpio(gpio_num_t *ledgpio)
 {
 	esp_err_t err;
 	nvs_handle hardware_handle;
 	// init default
-	*enca = g_device->led_gpio;
+	*ledgpio = GPIO_LED;
 
 	if (open_partition(hardware, gpio_space, NVS_READONLY, &hardware_handle) != ESP_OK)
 	{
@@ -303,14 +303,14 @@ void gpio_get_ledgpio(gpio_num_t *enca)
 		return;
 	}
 
-	err = nvs_get_u8(hardware_handle, "P_LED_GPIO", (uint8_t *)enca);
+	err = nvs_get_u8(hardware_handle, "P_LED_GPIO", (uint8_t *)ledgpio);
 	if (err != ESP_OK)
 		ESP_LOGD(TAG, "g_get_ledgpio err 0x%x", err);
 
 	close_partition(hardware_handle, hardware);
 }
 
-void gpio_set_ledgpio(gpio_num_t enca)
+void gpio_set_ledgpio(gpio_num_t ledgpio)
 {
 	esp_err_t err;
 	nvs_handle hardware_handle;
@@ -321,7 +321,7 @@ void gpio_set_ledgpio(gpio_num_t enca)
 		return;
 	}
 
-	err = nvs_set_u8(hardware_handle, "P_LED_GPIO", enca);
+	err = nvs_set_u8(hardware_handle, "P_LED_GPIO", ledgpio);
 	if (err != ESP_OK)
 		ESP_LOGD(TAG, "gpio_set_ledgpio err 0x%x", err);
 
@@ -494,12 +494,12 @@ void gpio_get_ds18b20(gpio_num_t *ds18b20)
 	close_partition(hardware_handle, hardware);
 }
 
-void gpio_get_touch(gpio_num_t *cs)
+void gpio_get_touch(gpio_num_t *touch)
 {
 	esp_err_t err;
 	nvs_handle hardware_handle;
 	// init default
-	*cs = PIN_TOUCH_CS;
+	*touch = PIN_TOUCH_CS;
 
 	if (open_partition(hardware, gpio_space, NVS_READONLY, &hardware_handle) != ESP_OK)
 	{
@@ -507,9 +507,48 @@ void gpio_get_touch(gpio_num_t *cs)
 		return;
 	}
 
-	err = nvs_get_u8(hardware_handle, "P_TOUCH_CS", (uint8_t *)cs);
+	err = nvs_get_u8(hardware_handle, "P_TOUCH_CS", (uint8_t *)touch);
 	if (err != ESP_OK)
 		ESP_LOGD(TAG, "g_get_touch err 0x%x", err);
+
+	close_partition(hardware_handle, hardware);
+}
+
+void gpio_get_fanspeed(gpio_num_t *fanspeed)
+{
+	esp_err_t err;
+	nvs_handle hardware_handle;
+	// init default
+	*fanspeed = PIN_NUM_PWM;
+
+	if (open_partition(hardware, gpio_space, NVS_READONLY, &hardware_handle) != ESP_OK)
+	{
+		ESP_LOGD(TAG, "in fanspeed");
+		return;
+	}
+
+	err = nvs_get_u8(hardware_handle, "P_FAN_SPEED", (uint8_t *)fanspeed);
+	if (err != ESP_OK)
+		ESP_LOGD(TAG, "g_get_fanspeed err 0x%x", err);
+
+	close_partition(hardware_handle, hardware);
+}
+void gpio_get_buzzer(gpio_num_t *buzzer)
+{
+	esp_err_t err;
+	nvs_handle hardware_handle;
+	// init default
+	*buzzer = PIN_NUM_PWM;
+
+	if (open_partition(hardware, gpio_space, NVS_READONLY, &hardware_handle) != ESP_OK)
+	{
+		ESP_LOGD(TAG, "in buzzer");
+		return;
+	}
+
+	err = nvs_get_u8(hardware_handle, "P_BUZZER", (uint8_t *)buzzer);
+	if (err != ESP_OK)
+		ESP_LOGD(TAG, "g_get_buzzer err 0x%x", err);
 
 	close_partition(hardware_handle, hardware);
 }

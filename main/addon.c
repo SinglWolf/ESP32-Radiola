@@ -13,7 +13,7 @@
 
 #include "ClickEncoder.h"
 #include "main.h"
-#include "gpio.h"
+#include "gpios.h"
 #include "webclient.h"
 #include "webserver.h"
 #include "interface.h"

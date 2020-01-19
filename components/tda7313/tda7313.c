@@ -11,7 +11,7 @@
 #include "tda7313.h"
 #include <string.h>
 #include <esp_log.h>
-#include "gpio.h"
+#include "gpios.h"
 #include "eeprom.h"
 #include "main.h"
 

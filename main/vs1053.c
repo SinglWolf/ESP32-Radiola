@@ -16,7 +16,7 @@
 #define LOG_LOCAL_LEVEL ESP_LOG_VERBOSE
 #define CHUNK 32
 #include "vs1053.h"
-#include "gpio.h"
+#include "gpios.h"
 #include "eeprom.h"
 #include <string.h>
 #include "driver/spi_master.h"

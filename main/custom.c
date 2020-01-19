@@ -14,7 +14,7 @@
 #include "freertos/event_groups.h"
 #include "freertos/queue.h"
 #include "esp_log.h"
-#include "gpio.h"
+#include "gpios.h"
 
 #include "owb.h"
 #include "owb_rmt.h"

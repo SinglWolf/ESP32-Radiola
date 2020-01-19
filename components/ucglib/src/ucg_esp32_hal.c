@@ -17,7 +17,7 @@
 #include "xpt2046.h"
 
 #ifdef ESP32Radiola
-#include "gpio.h"
+#include "gpios.h"
 #include "vs1053.h"
 
 #endif

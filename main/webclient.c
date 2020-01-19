@@ -17,7 +17,7 @@
 #include "vs1053.h"
 #include "eeprom.h"
 #include "interface.h"
-#include "gpio.h"
+#include "gpios.h"
 #include "audio_player.h"
 #include "spiram_fifo.h"
 #include "main.h"

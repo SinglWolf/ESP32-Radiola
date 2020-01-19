@@ -410,6 +410,7 @@ ul#ordered li {float:none;text-align:left;}
 .tabs [id^="tab"]:checked ~ [id^="tab-content"] {
 	display:block;
 }
+
 table#stationsTable,table#stationsTable th,table#stationsTable td {
 	border:solid 1px;
 	border-collapse:collapse;
@@ -418,14 +419,26 @@ table#stationsTable,table#stationsTable th,table#stationsTable td {
 	border-color:#185213;
 }
 
-table#stationsTable tr:nth-child(even)
+table#GPIOsTable,table#GPIOsTable th,table#GPIOsTable td {
+	border:solid 1px;
+	border-collapse:collapse;
+	width:auto;
+	overflow-x: hidden;
+	border-color:#185213;
+}
+
+table#stationsTable tr:nth-child(even),table#GPIOsTable tr:nth-child(even)
 {
 	background-color: #f8f8f8;
 }
 
-table#stationsTable tr:nth-child(odd)
+table#stationsTable tr:nth-child(odd),table#GPIOsTable tr:nth-child(odd)
 {
 	background-color: #f0f0f0;
+}
+
+table#GPIOsTable tr > *:nth-child(2),table#GPIOsTable tr > *:nth-child(3) {
+    display: none;
 }
 
 a.page {

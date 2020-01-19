@@ -5,8 +5,8 @@
  *
 *******************************************************************************/
 #pragma once
-#ifndef __GPIO_H__
-#define __GPIO_H__
+#ifndef __GPIOS_H__
+#define __GPIOS_H__
 #include "nvs_flash.h"
 #include "driver/spi_master.h"
 #include "esp_adc_cal.h"
@@ -97,15 +97,17 @@ void gpio_get_ir_signal(gpio_num_t *ir);
 void gpio_get_lcd_backlightl(gpio_num_t *lcdb);
 void gpio_get_tachometer(gpio_num_t *tach);
 bool gpio_get_ir_key(nvs_handle handle, const char *key, uint32_t *out_value1, uint32_t *out_value2);
-void gpio_get_touch(gpio_num_t *cs);
-void gpio_get_ledgpio(gpio_num_t *enca);
-void gpio_set_ledgpio(gpio_num_t enca);
+void gpio_get_touch(gpio_num_t *touch);
+void gpio_get_ledgpio(gpio_num_t *ledgpio);
+void gpio_set_ledgpio(gpio_num_t ledgpio);
 void option_get_lcd_info(uint8_t *rt);
 void option_set_lcd_info(uint8_t rt);
-void option_get_ddmm(uint8_t *enca);
-void option_set_ddmm(uint8_t enca);
-void option_get_lcd_out(uint32_t *enca);
-void option_set_lcd_out(uint32_t enca);
+void option_get_ddmm(uint8_t *ddmm);
+void option_set_ddmm(uint8_t ddmm);
+void option_get_lcd_out(uint32_t *lcd_out);
+void option_set_lcd_out(uint32_t lcd_out);
 void gpio_get_ds18b20(gpio_num_t *ds18b20);
+void gpio_get_fanspeed(gpio_num_t *fanspeed);
+void gpio_get_buzzer(gpio_num_t *buzzer);
 
 #endif

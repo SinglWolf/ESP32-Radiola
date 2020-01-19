@@ -56,7 +56,7 @@
 #include "driver/gpio.h"
 #include "driver/i2c.h"
 #include "nvs_flash.h"
-#include "gpio.h"
+#include "gpios.h"
 #include "servers.h"
 #include "webclient.h"
 #include "webserver.h"

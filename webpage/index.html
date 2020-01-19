@@ -219,20 +219,26 @@
 				<input type=radio name=tabs id=tab2 />
 				<label for=tab2>СТАНЦИИ</label>
 				<div id=tab-content2 class=tab-content>
-					<!--<h1>Manage stations</h1>-->
-					<h1>
-						<input type=button id=refresh title="Это перезагрузит станции в Радиоле"
-							onClick="refreshList()" value="Обновить локальный список">
-						<input type=button id=stsave disabled=true style="margin:0px auto"
-							title="Это сохранит все станции в Радиоле" onClick="stChanged()"
-							value="Сохранить список">
-						<input type=button style="margin:0px auto" id=clear
-							title="Предупреждение: Это удалит все станции. Обязательно сохраните их раньше."
-							onClick="clearList()" value="Удалить всё">
-						<input type=button style="margin:0px auto" id=clear
-							title="Печать всего списка станций на принтере" onClick="printList()" value="Печатать всё">
+					<h1>Менеджер станций</h1>
+					<p>
+						<input type="button" onclick="saveTextAsFile()" value="Сохранить станции из Радиолы"> <span
+							style="display:inline-block;"> &nbsp;&nbsp;в &nbsp;&nbsp;&nbsp;<input type="text"
+								style="width:300px;color:black;" value="WebStations.txt" id="filesave"> </span>
 						<br>
-					</h1>
+						<br>
+						<input type="button" onclick="downloadStations()" value="Загрузить станции в Радиолу">
+						<span style="display:inline-block;"> &nbsp;&nbsp;из <input type="file"
+								style="width:300px;color:black;" id="fileload"> </span> <br>
+						<input type="button" id="refresh" title="Это перезагрузит станции в Радиоле"
+							onclick="refreshList()" value="Обновить локальный список"> <input type="button" id="stsave"
+							disabled="true" style="margin:0px auto" title="Это сохранит все станции в Радиоле"
+							onclick="stChanged()" value="Сохранить список"> <input type="button" style="margin:0px auto"
+							id="clear" title="Предупреждение: Это удалит все станции. Обязательно сохраните их раньше."
+							onclick="clearList()" value="Удалить всё"> <input type="button" style="margin:0px auto"
+							id="clear" title="Печать всего списка станций на принтере" onclick="printList()"
+							value="Печатать всё">
+					</p>
+					<br>
 					<span>Вы можете перетаскивать любую строку, чтобы отсортировать список</span>
 					<br>
 					<table id=stationsTable style="table-layout: fixed; width: 100%;">
@@ -396,27 +402,418 @@
 				<input type=radio name=tabs id=tab4 />
 				<label for=tab4>Настройки</label>
 				<div id=tab-content4 class=tab-content>
-					<h1>Сохранение и загрузка станций</h1>
-					<p>
-						<input type=button onClick="saveTextAsFile()" value="Сохранить станции из Радиолы">
-						<span style="display:inline-block;">
-							&nbsp;&nbsp;в &nbsp;&nbsp;&nbsp;<input type=text style="width:300px;color:black;"
-								value=WebStations.txt id=filesave>
-						</span>
-						<!-- <a HREF="" download=WebStations.txt id=downloadlink style="display: none;">Download it</a> -->
-						<br>
-						<br>
-						<input type=button onClick="downloadStations()" value="Загрузить станции в Радиолу">
-						<span style="display:inline-block;">
-							&nbsp;&nbsp;из <input type=file style="width:300px;color:black;" id=fileload>
-						</span>
-						<br>
-
-						<!-- <input type=button id=refresh title="This will reload the stations from the WebRadio" onClick="refreshList()" value="Refresh locale list"> <input type=button style="float:right;" id=clear title="Warning: This will clear all stations.\n Be sure to save them before." onClick="clearList()" value="Clear all stations"><br/> <br/>-->
-					</p>
+					<div>
+						<h1>НАЗНАЧЕНИЕ GPIO</h1>
+						<table id="GPIOsTable">
+							<tbody>
+								<tr>
+									<td>key</td>
+									<td>type</td>
+									<td>encoding</td>
+									<td>value</td>
+								</tr>
+								<tr>
+									<td>label_space</td>
+									<td>namespace</td>
+									<td></td>
+									<td></td>
+								</tr>
+								<tr>
+									<td>L_LABEL</td>
+									<td>data</td>
+									<td>string</td>
+									<td>new_psram.csv</td>
+								</tr>
+								<tr>
+									<td>L_COMMENT</td>
+									<td>data</td>
+									<td>string</td>
+									<td>This is the standard simple configuration for a wrover .</td>
+								</tr>
+								<tr>
+									<td>gpio_space</td>
+									<td>namespace</td>
+									<td></td>
+									<td></td>
+								</tr>
+								<tr>
+									<td>K_SPI</td>
+									<td>data</td>
+									<td>u8</td>
+									<td>2</td>
+								</tr>
+								<tr>
+									<td>P_MISO</td>
+									<td>data</td>
+									<td>u8</td>
+									<td>19</td>
+								</tr>
+								<tr>
+									<td>P_MOSI</td>
+									<td>data</td>
+									<td>u8</td>
+									<td>23</td>
+								</tr>
+								<tr>
+									<td>P_CLK</td>
+									<td>data</td>
+									<td>u8</td>
+									<td>18</td>
+								</tr>
+								<tr>
+									<td>P_XCS</td>
+									<td>data</td>
+									<td>u8</td>
+									<td>255</td>
+								</tr>
+								<tr>
+									<td>P_RST</td>
+									<td>data</td>
+									<td>u8</td>
+									<td>255</td>
+								</tr>
+								<tr>
+									<td>P_XDCS</td>
+									<td>data</td>
+									<td>u8</td>
+									<td>33</td>
+								</tr>
+								<tr>
+									<td>P_DREQ</td>
+									<td>data</td>
+									<td>u8</td>
+									<td>34</td>
+								</tr>
+								<tr>
+									<td>P_ENC0_A</td>
+									<td>data</td>
+									<td>u8</td>
+									<td>15</td>
+								</tr>
+								<tr>
+									<td>P_ENC0_B</td>
+									<td>data</td>
+									<td>u8</td>
+									<td>27</td>
+								</tr>
+								<tr>
+									<td>P_ENC0_BTN</td>
+									<td>data</td>
+									<td>u8</td>
+									<td>5</td>
+								</tr>
+								<tr>
+									<td>P_ENC1_A</td>
+									<td>data</td>
+									<td>u8</td>
+									<td>255</td>
+								</tr>
+								<tr>
+									<td>P_ENC1_B</td>
+									<td>data</td>
+									<td>u8</td>
+									<td>27</td>
+								</tr>
+								<tr>
+									<td>P_ENC1_BTN</td>
+									<td>data</td>
+									<td>u8</td>
+									<td>5</td>
+								</tr>
+								<tr>
+									<td>P_BTN0_A</td>
+									<td>data</td>
+									<td>u8</td>
+									<td>255</td>
+								</tr>
+								<tr>
+									<td>P_BTN0_B</td>
+									<td>data</td>
+									<td>u8</td>
+									<td>255</td>
+								</tr>
+								<tr>
+									<td>P_BTN0_C</td>
+									<td>data</td>
+									<td>u8</td>
+									<td>255</td>
+								</tr>
+								<tr>
+									<td>P_BTN1_A</td>
+									<td>data</td>
+									<td>u8</td>
+									<td>255</td>
+								</tr>
+								<tr>
+									<td>P_BTN1_B</td>
+									<td>data</td>
+									<td>u8</td>
+									<td>255</td>
+								</tr>
+								<tr>
+									<td>P_BTN1_C</td>
+									<td>data</td>
+									<td>u8</td>
+									<td>255</td>
+								</tr>
+								<tr>
+									<td>P_I2C_SCL</td>
+									<td>data</td>
+									<td>u8</td>
+									<td>255</td>
+								</tr>
+								<tr>
+									<td>P_I2C_SDA</td>
+									<td>data</td>
+									<td>u8</td>
+									<td>255</td>
+								</tr>
+								<tr>
+									<td>P_I2C_RST</td>
+									<td>data</td>
+									<td>u8</td>
+									<td>255</td>
+								</tr>
+								<tr>
+									<td>P_LCD_CS</td>
+									<td>data</td>
+									<td>u8</td>
+									<td>255</td>
+								</tr>
+								<tr>
+									<td>P_LCD_A0</td>
+									<td>data</td>
+									<td>u8</td>
+									<td>255</td>
+								</tr>
+								<tr>
+									<td>P_LCD_RST</td>
+									<td>data</td>
+									<td>u8</td>
+									<td>255</td>
+								</tr>
+								<tr>
+									<td>P_IR_SIGNAL</td>
+									<td>data</td>
+									<td>u8</td>
+									<td>255</td>
+								</tr>
+								<tr>
+									<td>P_I2S_LRCK</td>
+									<td>data</td>
+									<td>u8</td>
+									<td>25</td>
+								</tr>
+								<tr>
+									<td>P_I2S_BCLK</td>
+									<td>data</td>
+									<td>u8</td>
+									<td>26</td>
+								</tr>
+								<tr>
+									<td>P_I2S_DATA</td>
+									<td>data</td>
+									<td>u8</td>
+									<td>22</td>
+								</tr>
+								<tr>
+									<td>P_TOUCH_CS</td>
+									<td>data</td>
+									<td>u8</td>
+									<td>255</td>
+								</tr>
+								<tr>
+									<td>P_JOY_0</td>
+									<td>data</td>
+									<td>u8</td>
+									<td>255</td>
+								</tr>
+								<tr>
+									<td>P_JOY_1</td>
+									<td>data</td>
+									<td>u8</td>
+									<td>255</td>
+								</tr>
+								<tr>
+									<td>P_LED_GPIO</td>
+									<td>data</td>
+									<td>u8</td>
+									<td>2</td>
+								</tr>
+								<tr>
+									<td>P_ADC_KBD</td>
+									<td>data</td>
+									<td>u8</td>
+									<td>255</td>
+								</tr>
+								<tr>
+									<td>P_BACKLIGHT</td>
+									<td>data</td>
+									<td>u8</td>
+									<td>255</td>
+								</tr>
+								<tr>
+									<td></td>
+								</tr>
+								<tr>
+									<td>option_space</td>
+									<td>namespace</td>
+									<td></td>
+									<td></td>
+								</tr>
+								<tr>
+									<td>O_LCD_TYPE</td>
+									<td>data</td>
+									<td>u8</td>
+									<td>255</td>
+								</tr>
+								<tr>
+									<td>O_LCD_ROTA</td>
+									<td>data</td>
+									<td>u8</td>
+									<td>255</td>
+								</tr>
+								<tr>
+									<td>O_LCD_OUT</td>
+									<td>data</td>
+									<td>u32</td>
+									<td>255</td>
+								</tr>
+								<tr>
+									<td>O_DDMM_FLAG</td>
+									<td>data</td>
+									<td>u8</td>
+									<td>255</td>
+								</tr>
+								<tr>
+									<td></td>
+								</tr>
+								<tr>
+									<td>custom_ir_space</td>
+									<td>namespace</td>
+									<td></td>
+									<td></td>
+								</tr>
+								<tr>
+									<td>K_UP</td>
+									<td>data</td>
+									<td>string</td>
+									<td></td>
+								</tr>
+								<tr>
+									<td>K_LEFT</td>
+									<td>data</td>
+									<td>string</td>
+									<td></td>
+								</tr>
+								<tr>
+									<td>K_OK</td>
+									<td>data</td>
+									<td>string</td>
+									<td></td>
+								</tr>
+								<tr>
+									<td>K_RIGHT</td>
+									<td>data</td>
+									<td>string</td>
+									<td></td>
+								</tr>
+								<tr>
+									<td>K_DOWN</td>
+									<td>data</td>
+									<td>string</td>
+									<td></td>
+								</tr>
+								<tr>
+									<td>K_0</td>
+									<td>data</td>
+									<td>string</td>
+									<td></td>
+								</tr>
+								<tr>
+									<td>K_1</td>
+									<td>data</td>
+									<td>string</td>
+									<td></td>
+								</tr>
+								<tr>
+									<td>K_2</td>
+									<td>data</td>
+									<td>string</td>
+									<td></td>
+								</tr>
+								<tr>
+									<td>K_3</td>
+									<td>data</td>
+									<td>string</td>
+									<td></td>
+								</tr>
+								<tr>
+									<td>K_4</td>
+									<td>data</td>
+									<td>string</td>
+									<td></td>
+								</tr>
+								<tr>
+									<td>K_5</td>
+									<td>data</td>
+									<td>string</td>
+									<td></td>
+								</tr>
+								<tr>
+									<td>K_6</td>
+									<td>data</td>
+									<td>string</td>
+									<td></td>
+								</tr>
+								<tr>
+									<td>K_7</td>
+									<td>data</td>
+									<td>string</td>
+									<td></td>
+								</tr>
+								<tr>
+									<td>K_8</td>
+									<td>data</td>
+									<td>string</td>
+									<td></td>
+								</tr>
+								<tr>
+									<td>K_9</td>
+									<td>data</td>
+									<td>string</td>
+									<td></td>
+								</tr>
+								<tr>
+									<td>K_STAR</td>
+									<td>data</td>
+									<td>string</td>
+									<td></td>
+								</tr>
+								<tr>
+									<td>K_DIESE</td>
+									<td>data</td>
+									<td>string</td>
+									<td></td>
+								</tr>
+								<tr>
+									<td>K_INFO</td>
+									<td>data</td>
+									<td>string</td>
+									<td></td>
+								</tr>
+								<tr>
+									<td></td>
+								</tr>
+								<tr>
+									<td></td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
 					<h1>
 						Wifi и Сеть &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type=button
-							value="Подтвердить" onclick="valid()" />
+							value="Сохранить" onclick="valid()" />
 					</h1>
 					<p>
 						<span class=bold>AP SSID:</span>
@@ -450,7 +847,7 @@
 					</p>
 					<h1>
 						Другие опции &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type=button
-							value="Подтвердить" onclick="wifi(0)" />
+							value="Сохранить" onclick="wifi(0)" />
 					</h1>
 					<p>
 						<span class=bold>User Agent:</span>

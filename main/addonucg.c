@@ -11,7 +11,7 @@
 #include <stdio.h>
 #include "driver/gpio.h"
 //#include "esp_heap_trace.h"
-#include "gpio.h"
+#include "gpios.h"
 #include "addon.h"
 #include "ucg_esp32_hal.h"
 #include "main.h"

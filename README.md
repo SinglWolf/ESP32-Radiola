@@ -1,5 +1,5 @@
 # ESP32-Radiola
-Миграция проекта https://github.com/karawin/Ka-Radio32 на VSCode+PlatformIO
+Форк проекта https://github.com/karawin/Ka-Radio32 на VSCode+PlatformIO
 
 **Все вопросы по проекту пишите [ТУТ](https://serverdoma.ru/viewtopic.php?f=70&t=1178).**
 

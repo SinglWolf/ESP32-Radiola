@@ -1039,7 +1039,7 @@ void syslcdout(char *s)
 uint32_t getLcdOut()
 {
 	int increm = 0;
-	option_get_lcd_out(&lcd_out);
+	option_get_lcd_out(&lcd_out, 0);
 	if (lcd_out == 0xFFFFFFFF)
 	{
 		lcd_out = g_device->lcd_out;

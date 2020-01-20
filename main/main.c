@@ -657,7 +657,7 @@ void timerTask(void *p)
 
 	initTimers();
 
-	gpio_get_ledgpio(&gpioLed);
+	gpio_get_ledgpio(&gpioLed, 0);
 	setLedGpio(gpioLed);
 	/*
 	printf("FIRST LED GPIO: %d, SSID:%d\n",gpioLed,g_device->current_ap);
@@ -916,14 +916,14 @@ void app_main()
 	setLogLevel(g_device->trace_level);
 	//time display
 	uint8_t ddmm;
-	option_get_ddmm(&ddmm);
+	option_get_ddmm(&ddmm, 0);
 	setDdmm(ddmm ? 1 : 0);
 
 	init_hardware();
 	ESP_LOGI(TAG, "Hardware init done...");
 	// lcd init
 	uint8_t rt;
-	option_get_lcd_info(&rt);
+	option_get_lcd_info(&rt, 0);
 	ESP_LOGI(TAG, "LCD Rotat %d", rt);
 	//lcd rotation
 	setRotat(rt);

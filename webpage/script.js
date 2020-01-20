@@ -661,6 +661,77 @@ function mute() {
 	hardware(1);
 }
 
+function gpios(def, save) {
+	var setgpios = "";
+	xhr = new XMLHttpRequest();
+	xhr.onreadystatechange = function () {
+		if (xhr.readyState == 4 && xhr.status == 200) {
+			var arr = JSON.parse(xhr.responseText);
+			console.log(arr);
+			K_SPI.innerHTML = parseInt(arr["K_SPI"].replace(/\\/g, ""));
+			P_MISO.innerHTML = parseInt(arr["P_MISO"].replace(/\\/g, ""));
+			P_MOSI.innerHTML = parseInt(arr["P_MOSI"].replace(/\\/g, ""));
+			P_CLK.innerHTML = parseInt(arr["P_CLK"].replace(/\\/g, ""));
+			P_XCS.innerHTML = parseInt(arr["P_XCS"].replace(/\\/g, ""));
+			P_XDCS.innerHTML = parseInt(arr["P_XDCS"].replace(/\\/g, ""));
+			P_DREQ.innerHTML = parseInt(arr["P_DREQ"].replace(/\\/g, ""));
+			P_ENC0_A.innerHTML = parseInt(arr["P_ENC0_A"].replace(/\\/g, ""));
+			P_ENC0_B.innerHTML = parseInt(arr["P_ENC0_B"].replace(/\\/g, ""));
+			P_ENC0_BTN.innerHTML = parseInt(arr["P_ENC0_BTN"].replace(/\\/g, ""));
+			P_ENC1_A.innerHTML = parseInt(arr["P_ENC1_A"].replace(/\\/g, ""));
+			P_ENC1_B.innerHTML = parseInt(arr["P_ENC1_B"].replace(/\\/g, ""));
+			P_ENC1_BTN.innerHTML = parseInt(arr["P_ENC1_BTN"].replace(/\\/g, ""));
+			P_I2C_SCL.innerHTML = parseInt(arr["P_I2C_SCL"].replace(/\\/g, ""));
+			P_I2C_SDA.innerHTML = parseInt(arr["P_I2C_SDA"].replace(/\\/g, ""));
+			P_LCD_CS.innerHTML = parseInt(arr["P_LCD_CS"].replace(/\\/g, ""));
+			P_LCD_A0.innerHTML = parseInt(arr["P_LCD_A0"].replace(/\\/g, ""));
+			P_LCD_RST.innerHTML = parseInt(arr["P_LCD_RST"].replace(/\\/g, ""));
+			P_LED_GPIO.innerHTML = parseInt(arr["P_LED_GPIO"].replace(/\\/g, ""));
+			P_IR_SIGNAL.innerHTML = parseInt(arr["P_IR_SIGNAL"].replace(/\\/g, ""));
+			P_BACKLIGHT.innerHTML = parseInt(arr["P_BACKLIGHT"].replace(/\\/g, ""));
+			P_TACHOMETER.innerHTML = parseInt(arr["P_TACHOMETER"].replace(/\\/g, ""));
+			P_FAN_SPEED.innerHTML = parseInt(arr["P_FAN_SPEED"].replace(/\\/g, ""));
+			P_DS18B20.innerHTML = parseInt(arr["P_DS18B20"].replace(/\\/g, ""));
+			P_TOUCH_CS.innerHTML = parseInt(arr["P_TOUCH_CS"].replace(/\\/g, ""));
+			P_BUZZER.innerHTML = parseInt(arr["P_BUZZER"].replace(/\\/g, ""));
+		}
+	}
+	if (save == 1) {
+		setgpios = "save=" + save
+			+ "&K_SPI=" + K_SPI.innerHTML
+			+ "&P_MISO=" + P_MISO.innerHTML
+			+ "&P_MOSI=" + P_MOSI.innerHTML
+			+ "&P_CLK=" + P_CLK.innerHTML
+			+ "&P_XCS=" + P_XCS.innerHTML
+			+ "&P_XDCS=" + P_XDCS.innerHTML
+			+ "&P_DREQ=" + P_DREQ.innerHTML
+			+ "&P_ENC0_A=" + P_ENC0_A.innerHTML
+			+ "&P_ENC0_B=" + P_ENC0_B.innerHTML
+			+ "&P_ENC0_BTN=" + P_ENC0_BTN.innerHTML
+			+ "&P_ENC1_A=" + P_ENC1_A.innerHTML
+			+ "&P_ENC1_B=" + P_ENC1_B.innerHTML
+			+ "&P_ENC1_BTN=" + P_ENC1_BTN.innerHTML
+			+ "&P_I2C_SCL=" + P_I2C_SCL.innerHTML
+			+ "&P_I2C_SDA=" + P_I2C_SDA.innerHTML
+			+ "&P_LCD_CS=" + P_LCD_CS.innerHTML
+			+ "&P_LCD_A0=" + P_LCD_A0.innerHTML
+			+ "&P_LCD_RST=" + P_LCD_RST.innerHTML
+			+ "&P_LED_GPIO=" + P_LED_GPIO.innerHTML
+			+ "&P_IR_SIGNAL=" + P_IR_SIGNAL.innerHTML
+			+ "&P_BACKLIGHT=" + P_BACKLIGHT.innerHTML
+			+ "&P_TACHOMETER=" + P_TACHOMETER.innerHTML
+			+ "&P_FAN_SPEED=" + P_FAN_SPEED.innerHTML
+			+ "&P_DS18B20=" + P_DS18B20.innerHTML
+			+ "&P_TOUCH_CS=" + P_TOUCH_CS.innerHTML
+			+ "&P_BUZZER=" + P_BUZZER.innerHTML;
+	}
+
+	xhr.open("POST", "gpios", false);
+	xhr.setRequestHeader(content, ctype);
+	xhr.send("default=" + def
+		+ setgpios
+		+ "&");
+}
 function hardware(save) {
 	var i, inputnum, loud = 0, mute = 0, rear = 0;
 	xhr = new XMLHttpRequest();
@@ -1480,6 +1551,7 @@ document.addEventListener("DOMContentLoaded", function () {
 	document.getElementById("tab4").addEventListener("click", function () {
 		if (stchanged) stChanged();
 		curtab = "tab-content4";
+		gpios(0, 0);
 		wifi(0);
 		hardware(0);
 		checkversion();

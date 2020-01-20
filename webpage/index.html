@@ -403,414 +403,266 @@
 				<label for=tab4>Настройки</label>
 				<div id=tab-content4 class=tab-content>
 					<div>
-						<h1>НАЗНАЧЕНИЕ GPIO</h1>
+						<h1>НАЗНАЧЕНИЕ GPIO &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input input=""
+								onclick="gpios(0,0)" type="button" value="Считать значения по-умолчанию">
+							&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input input=""
+								onclick="gpios(1,0)" type="button"
+								value="Считать значения из NVS">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input
+								input="" onclick="gpios(1,1)" type="button" value="Сохранить значения в NVS"></h1>
 						<table id="GPIOsTable">
 							<tbody>
 								<tr>
-									<td>key</td>
-									<td>type</td>
-									<td>encoding</td>
-									<td>value</td>
-								</tr>
-								<tr>
-									<td>label_space</td>
-									<td>namespace</td>
-									<td></td>
-									<td></td>
-								</tr>
-								<tr>
-									<td>L_LABEL</td>
-									<td>data</td>
-									<td>string</td>
-									<td>new_psram.csv</td>
-								</tr>
-								<tr>
-									<td>L_COMMENT</td>
-									<td>data</td>
-									<td>string</td>
-									<td>This is the standard simple configuration for a wrover .</td>
-								</tr>
-								<tr>
-									<td>gpio_space</td>
-									<td>namespace</td>
-									<td></td>
-									<td></td>
+									<td>ИМЯ GPIO</td>
+									<td>ЗНАЧЕНИЕ</td>
 								</tr>
 								<tr>
 									<td>K_SPI</td>
-									<td>data</td>
-									<td>u8</td>
-									<td>2</td>
+									<td contenteditable="true" id="K_SPI"></td>
 								</tr>
 								<tr>
 									<td>P_MISO</td>
-									<td>data</td>
-									<td>u8</td>
-									<td>19</td>
+									<td contenteditable="true" id="P_MISO"></td>
 								</tr>
 								<tr>
 									<td>P_MOSI</td>
-									<td>data</td>
-									<td>u8</td>
-									<td>23</td>
+									<td contenteditable="true" id="P_MOSI"></td>
 								</tr>
 								<tr>
 									<td>P_CLK</td>
-									<td>data</td>
-									<td>u8</td>
-									<td>18</td>
+									<td contenteditable="true" id="P_CLK"></td>
 								</tr>
 								<tr>
 									<td>P_XCS</td>
-									<td>data</td>
-									<td>u8</td>
-									<td>255</td>
-								</tr>
-								<tr>
-									<td>P_RST</td>
-									<td>data</td>
-									<td>u8</td>
-									<td>255</td>
+									<td contenteditable="true" id="P_XCS"></td>
 								</tr>
 								<tr>
 									<td>P_XDCS</td>
-									<td>data</td>
-									<td>u8</td>
-									<td>33</td>
+									<td contenteditable="true" id="P_XDCS"></td>
 								</tr>
 								<tr>
 									<td>P_DREQ</td>
-									<td>data</td>
-									<td>u8</td>
-									<td>34</td>
+									<td contenteditable="true" id="P_DREQ"></td>
 								</tr>
 								<tr>
 									<td>P_ENC0_A</td>
-									<td>data</td>
-									<td>u8</td>
-									<td>15</td>
+									<td contenteditable="true" id="P_ENC0_A"></td>
 								</tr>
 								<tr>
 									<td>P_ENC0_B</td>
-									<td>data</td>
-									<td>u8</td>
-									<td>27</td>
+									<td contenteditable="true" id="P_ENC0_B"></td>
 								</tr>
 								<tr>
 									<td>P_ENC0_BTN</td>
-									<td>data</td>
-									<td>u8</td>
-									<td>5</td>
+									<td contenteditable="true" id="P_ENC0_BTN"></td>
 								</tr>
 								<tr>
 									<td>P_ENC1_A</td>
-									<td>data</td>
-									<td>u8</td>
-									<td>255</td>
+									<td contenteditable="true" id="P_ENC1_A"></td>
 								</tr>
 								<tr>
 									<td>P_ENC1_B</td>
-									<td>data</td>
-									<td>u8</td>
-									<td>27</td>
+									<td contenteditable="true" id="P_ENC1_B"></td>
 								</tr>
 								<tr>
 									<td>P_ENC1_BTN</td>
-									<td>data</td>
-									<td>u8</td>
-									<td>5</td>
-								</tr>
-								<tr>
-									<td>P_BTN0_A</td>
-									<td>data</td>
-									<td>u8</td>
-									<td>255</td>
-								</tr>
-								<tr>
-									<td>P_BTN0_B</td>
-									<td>data</td>
-									<td>u8</td>
-									<td>255</td>
-								</tr>
-								<tr>
-									<td>P_BTN0_C</td>
-									<td>data</td>
-									<td>u8</td>
-									<td>255</td>
-								</tr>
-								<tr>
-									<td>P_BTN1_A</td>
-									<td>data</td>
-									<td>u8</td>
-									<td>255</td>
-								</tr>
-								<tr>
-									<td>P_BTN1_B</td>
-									<td>data</td>
-									<td>u8</td>
-									<td>255</td>
-								</tr>
-								<tr>
-									<td>P_BTN1_C</td>
-									<td>data</td>
-									<td>u8</td>
-									<td>255</td>
+									<td contenteditable="true" id="P_ENC1_BTN"></td>
 								</tr>
 								<tr>
 									<td>P_I2C_SCL</td>
-									<td>data</td>
-									<td>u8</td>
-									<td>255</td>
+									<td contenteditable="true" id="P_I2C_SCL"></td>
 								</tr>
 								<tr>
 									<td>P_I2C_SDA</td>
-									<td>data</td>
-									<td>u8</td>
-									<td>255</td>
-								</tr>
-								<tr>
-									<td>P_I2C_RST</td>
-									<td>data</td>
-									<td>u8</td>
-									<td>255</td>
+									<td contenteditable="true" id="P_I2C_SDA"></td>
 								</tr>
 								<tr>
 									<td>P_LCD_CS</td>
-									<td>data</td>
-									<td>u8</td>
-									<td>255</td>
+									<td contenteditable="true" id="P_LCD_CS"></td>
 								</tr>
 								<tr>
 									<td>P_LCD_A0</td>
-									<td>data</td>
-									<td>u8</td>
-									<td>255</td>
+									<td contenteditable="true" id="P_LCD_A0"></td>
 								</tr>
 								<tr>
 									<td>P_LCD_RST</td>
-									<td>data</td>
-									<td>u8</td>
-									<td>255</td>
-								</tr>
-								<tr>
-									<td>P_IR_SIGNAL</td>
-									<td>data</td>
-									<td>u8</td>
-									<td>255</td>
-								</tr>
-								<tr>
-									<td>P_I2S_LRCK</td>
-									<td>data</td>
-									<td>u8</td>
-									<td>25</td>
-								</tr>
-								<tr>
-									<td>P_I2S_BCLK</td>
-									<td>data</td>
-									<td>u8</td>
-									<td>26</td>
-								</tr>
-								<tr>
-									<td>P_I2S_DATA</td>
-									<td>data</td>
-									<td>u8</td>
-									<td>22</td>
-								</tr>
-								<tr>
-									<td>P_TOUCH_CS</td>
-									<td>data</td>
-									<td>u8</td>
-									<td>255</td>
-								</tr>
-								<tr>
-									<td>P_JOY_0</td>
-									<td>data</td>
-									<td>u8</td>
-									<td>255</td>
-								</tr>
-								<tr>
-									<td>P_JOY_1</td>
-									<td>data</td>
-									<td>u8</td>
-									<td>255</td>
+									<td contenteditable="true" id="P_LCD_RST"></td>
 								</tr>
 								<tr>
 									<td>P_LED_GPIO</td>
-									<td>data</td>
-									<td>u8</td>
-									<td>2</td>
+									<td contenteditable="true" id="P_LED_GPIO"></td>
 								</tr>
 								<tr>
-									<td>P_ADC_KBD</td>
-									<td>data</td>
-									<td>u8</td>
-									<td>255</td>
+									<td>P_IR_SIGNAL</td>
+									<td contenteditable="true" id="P_IR_SIGNAL"></td>
 								</tr>
 								<tr>
 									<td>P_BACKLIGHT</td>
-									<td>data</td>
-									<td>u8</td>
-									<td>255</td>
+									<td contenteditable="true" id="P_BACKLIGHT"></td>
 								</tr>
 								<tr>
-									<td></td>
+									<td>P_TACHOMETER</td>
+									<td contenteditable="true" id="P_TACHOMETER"></td>
 								</tr>
 								<tr>
-									<td>option_space</td>
-									<td>namespace</td>
-									<td></td>
-									<td></td>
+									<td>P_FAN_SPEED</td>
+									<td contenteditable="true" id="P_FAN_SPEED"></td>
 								</tr>
 								<tr>
-									<td>O_LCD_TYPE</td>
-									<td>data</td>
-									<td>u8</td>
-									<td>255</td>
+									<td>P_DS18B20</td>
+									<td contenteditable="true" id="P_DS18B20"></td>
 								</tr>
 								<tr>
-									<td>O_LCD_ROTA</td>
-									<td>data</td>
-									<td>u8</td>
-									<td>255</td>
+									<td>P_TOUCH_CS</td>
+									<td contenteditable="true" id="P_TOUCH_CS"></td>
 								</tr>
 								<tr>
-									<td>O_LCD_OUT</td>
-									<td>data</td>
-									<td>u32</td>
-									<td>255</td>
+									<td>P_BUZZER</td>
+									<td contenteditable="true" id="P_BUZZER"></td>
 								</tr>
+							</tbody>
+						</table>
+						<p>&nbsp;</p>
+						<h1>КОДЫ ИК-ПУЛЬТА &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input input=""
+								onclick="ircodes(0,0)" type="button"
+								value="Считать значения по-умолчанию">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input
+								input="" onclick="ircodes(1,0)" type="button"
+								value="Считать значения из NVS">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input
+								input="" onclick="ircodes(1,1)" type="button" value="Сохранить значения в NVS"></h1>
+						<table id="IRcodesTable">
+							<tbody>
 								<tr>
-									<td>O_DDMM_FLAG</td>
-									<td>data</td>
-									<td>u8</td>
-									<td>255</td>
-								</tr>
-								<tr>
-									<td></td>
-								</tr>
-								<tr>
-									<td>custom_ir_space</td>
-									<td>namespace</td>
-									<td></td>
-									<td></td>
+									<td>ИМЯ КНОПКИ</td>
+									<td>ЗНАЧЕНИЕ</td>
 								</tr>
 								<tr>
 									<td>K_UP</td>
-									<td>data</td>
-									<td>string</td>
-									<td></td>
+									<td contenteditable="true" id="K_UP">&nbsp;</td>
 								</tr>
 								<tr>
 									<td>K_LEFT</td>
-									<td>data</td>
-									<td>string</td>
-									<td></td>
+									<td contenteditable="true" id="K_LEFT">&nbsp;</td>
 								</tr>
 								<tr>
 									<td>K_OK</td>
-									<td>data</td>
-									<td>string</td>
-									<td></td>
+									<td contenteditable="true" id="K_OK">&nbsp;</td>
 								</tr>
 								<tr>
 									<td>K_RIGHT</td>
-									<td>data</td>
-									<td>string</td>
-									<td></td>
+									<td contenteditable="true" id="K_RIGHT">&nbsp;</td>
 								</tr>
 								<tr>
 									<td>K_DOWN</td>
-									<td>data</td>
-									<td>string</td>
-									<td></td>
+									<td contenteditable="true" id="K_DOWN">&nbsp;</td>
 								</tr>
 								<tr>
 									<td>K_0</td>
-									<td>data</td>
-									<td>string</td>
-									<td></td>
+									<td contenteditable="true" id="K_0">&nbsp;</td>
 								</tr>
 								<tr>
 									<td>K_1</td>
-									<td>data</td>
-									<td>string</td>
-									<td></td>
+									<td contenteditable="true" id="K_1">&nbsp;</td>
 								</tr>
 								<tr>
 									<td>K_2</td>
-									<td>data</td>
-									<td>string</td>
-									<td></td>
+									<td contenteditable="true" id="K_2">&nbsp;</td>
 								</tr>
 								<tr>
 									<td>K_3</td>
-									<td>data</td>
-									<td>string</td>
-									<td></td>
+									<td contenteditable="true" id="K_3">&nbsp;</td>
 								</tr>
 								<tr>
 									<td>K_4</td>
-									<td>data</td>
-									<td>string</td>
-									<td></td>
+									<td contenteditable="true" id="K_4">&nbsp;</td>
 								</tr>
 								<tr>
 									<td>K_5</td>
-									<td>data</td>
-									<td>string</td>
-									<td></td>
+									<td contenteditable="true" id="K_5">&nbsp;</td>
 								</tr>
 								<tr>
 									<td>K_6</td>
-									<td>data</td>
-									<td>string</td>
-									<td></td>
+									<td contenteditable="true" id="K_6">&nbsp;</td>
 								</tr>
 								<tr>
 									<td>K_7</td>
-									<td>data</td>
-									<td>string</td>
-									<td></td>
+									<td contenteditable="true" id="K_7">&nbsp;</td>
 								</tr>
 								<tr>
 									<td>K_8</td>
-									<td>data</td>
-									<td>string</td>
-									<td></td>
+									<td contenteditable="true" id="K_8">&nbsp;</td>
 								</tr>
 								<tr>
 									<td>K_9</td>
-									<td>data</td>
-									<td>string</td>
-									<td></td>
+									<td contenteditable="true" id="K_9">&nbsp;</td>
 								</tr>
 								<tr>
 									<td>K_STAR</td>
-									<td>data</td>
-									<td>string</td>
-									<td></td>
+									<td contenteditable="true" id="K_STAR">&nbsp;</td>
 								</tr>
 								<tr>
 									<td>K_DIESE</td>
-									<td>data</td>
-									<td>string</td>
-									<td></td>
+									<td contenteditable="true" id="K_DIESE">&nbsp;</td>
 								</tr>
 								<tr>
 									<td>K_INFO</td>
-									<td>data</td>
-									<td>string</td>
-									<td></td>
+									<td contenteditable="true" id="K_INFO">&nbsp;</td>
+								</tr>
+							</tbody>
+						</table>
+						<p>&nbsp;</p>
+						<h1>ОПЦИИ
+							&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input
+								input="" onclick="options(0,0)" type="button"
+								value="Считать значения по-умолчанию">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input
+								input="" onclick="options(1,0)" type="button"
+								value="Считать значения из NVS">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input
+								input="" onclick="options(1,1)" type="button" value="Сохранить значения в NVS"></h1>
+						<table id="CSVname">
+							<tbody>
+								<tr>
+									<td>ИМЯ ОПЦИИ</td>
+									<td style="text-align: center;">ЗНАЧЕНИЕ</td>
 								</tr>
 								<tr>
-									<td></td>
+									<td>O_LCD_OUT</td>
+									<td contenteditable="true" id="O_LCD_OUT"></td>
 								</tr>
 								<tr>
-									<td></td>
+									<td>O_DDMM_FLAG</td>
+									<td contenteditable="true" id="O_DDMM_FLAG"></td>
+								</tr>
+								<tr>
+									<td>O_LCD_ROTA</td>
+									<td contenteditable="true" id="O_LCD_ROTA"></td>
+								</tr>
+							</tbody>
+						</table>
+						<p>&nbsp;</p>
+						<h1>ЗАГРУЗКА\СОХРАНЕНИЕ НАСТРОЕК
+							&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input input=""
+								onclick="loadCSV()" type="button" value="Загрузить настройки из файла">
+							&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input input=""
+								onclick="saveCSV()" type="button" value="Сохранить настройки в файл"></h1>
+						<table id="CSVname">
+							<tbody>
+								<tr>
+									<td>ИМЯ ФАЙЛА</td>
+									<td style="text-align: center;">ЗНАЧЕНИЕ</td>
+								</tr>
+								<tr>
+									<td>L_LABEL</td>
+									<td contenteditable="true" id="L_LABEL">new_psram.csv</td>
+								</tr>
+								<tr>
+									<td>L_COMMENT</td>
+									<td contenteditable="true" id="L_COMMENT">Это стандартная простая конфигурация для
+										wrover.</td>
 								</tr>
 							</tbody>
 						</table>
 					</div>
+					<p>&nbsp;</p>
+
+
 					<h1>
 						Wifi и Сеть &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type=button
 							value="Сохранить" onclick="valid()" />

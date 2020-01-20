@@ -423,7 +423,7 @@ ul#ordered li {float:none;text-align:left;}
 	display:block;
 }
 
-table#stationsTable,table#stationsTable th,table#stationsTable td {
+#stationsTable,#stationsTable th,#stationsTable td {
 	border:solid 1px;
 	border-collapse:collapse;
 	width:100%;
@@ -431,7 +431,7 @@ table#stationsTable,table#stationsTable th,table#stationsTable td {
 	border-color:#6d6f6d;
 }
 
-table#GPIOsTable,table#GPIOsTable th,table#GPIOsTable td {
+#GPIOsTable,#GPIOsTable th,#GPIOsTable td {
 	border:solid 1px;
 	border-collapse:collapse;
 	width:auto;
@@ -439,18 +439,14 @@ table#GPIOsTable,table#GPIOsTable th,table#GPIOsTable td {
 	border-color:#6d6f6d;
 }
 
-table#stationsTable tr:nth-child(even),table#GPIOsTable tr:nth-child(even)
+#stationsTable tr:nth-child(even),#GPIOsTable tr:nth-child(even)
 {
 	background-color: #151515;
 }
 
-table#stationsTable tr:nth-child(odd),table#GPIOsTable tr:nth-child(odd)
+#stationsTable tr:nth-child(odd),#GPIOsTable tr:nth-child(odd)
 {
 	background-color: #0d0d0d;
-}
-
-table#GPIOsTable tr > *:nth-child(2),table#GPIOsTable tr > *:nth-child(3) {
-    display: none;
 }
 
 a.page {

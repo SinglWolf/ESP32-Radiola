@@ -74,7 +74,7 @@ void VS1053_spi_init()
 	if (!hsSPI)
 		hsSPI = xSemaphoreCreateMutex();
 
-	gpio_get_spi_bus(&spi_no, &miso, &mosi, &sclk);
+	gpio_get_spi_bus(&spi_no, &miso, &mosi, &sclk, 0);
 	if (spi_no > 2)
 		return; //Only VSPI and HSPI are valid spi modules.
 
@@ -104,8 +104,8 @@ bool VS1053_HW_init()
 
 	uint8_t spi_no; // the spi bus to use
 
-	gpio_get_spi_bus(&spi_no, &miso, &mosi, &sclk);
-	gpio_get_vs1053(&xcs, &xdcs, &dreq);
+	gpio_get_spi_bus(&spi_no, &miso, &mosi, &sclk, 0);
+	gpio_get_vs1053(&xcs, &xdcs, &dreq, 0);
 
 	// if xcs = 0 the vs1053 is not used
 	if (xcs == GPIO_NONE)

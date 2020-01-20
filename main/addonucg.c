@@ -56,8 +56,7 @@ static uint16_t HHeader = 40;
 static char TTitleStr[15];
 static char TTimeStr[15];
 
-typedef enum Lang
-{
+typedef enum Lang {
 	Latin,
 	Cyrillic,
 	Greek
@@ -65,8 +64,7 @@ typedef enum Lang
 static LANG charset = Latin; // latin or other
 
 ////////////////////////////////////////
-typedef enum sizefont
-{
+typedef enum sizefont {
 	small,
 	text,
 	middle,
@@ -657,7 +655,7 @@ void drawFrameUcg(uint8_t mTscreen)
 		ucg_DrawBox(&ucg, 0, 0, x - 1, 15);
 		for (i = 0; i < LINES; i++)
 			draw(i);
-		// no break
+	// no break
 	case MTREFRESH:
 		markDrawResetUcg(TIME);
 		drawLinesUcg();
@@ -1015,8 +1013,8 @@ void lcd_initUcg()
 	ESP_LOGI(TAG, "lcd init  Rotat: %d", rotat);
 
 	ucg_esp32_hal_t ucg_esp32_hal = UCG_ESP32_HAL_DEFAULT;
-	gpio_get_spi_bus(&spi_no, &miso, &mosi, &sclk);
-	gpio_get_spi_lcd(&cs, &a0, &rstlcd);
+	gpio_get_spi_bus(&spi_no, &miso, &mosi, &sclk, 0);
+	gpio_get_spi_lcd(&cs, &a0, &rstlcd, 0);
 	ucg_esp32_hal.spi_no = spi_no;
 	ucg_esp32_hal.clk = sclk;
 	ucg_esp32_hal.mosi = mosi;

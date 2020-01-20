@@ -42,8 +42,7 @@ xQueueHandle event_lcd = NULL;
 ucg_t ucg;
 static xTaskHandle pxTaskLcd;
 // list of screen
-typedef enum typeScreen
-{
+typedef enum typeScreen {
 	smain,
 	svolume,
 	sstation,
@@ -79,8 +78,7 @@ static int16_t currentValue = 0;
 static bool dvolume = true; // display volume screen
 
 // custom ir code init from hardware nvs
-typedef enum
-{
+typedef enum {
 	KEY_UP,
 	KEY_LEFT,
 	KEY_OK,
@@ -817,7 +815,7 @@ void initButtonDevices()
 	gpio_num_t enca1;
 	gpio_num_t encb1;
 	gpio_num_t encbtn1;
-	gpio_get_encoders(&enca0, &encb0, &encbtn0, &enca1, &encb1, &encbtn1);
+	gpio_get_encoders(&enca0, &encb0, &encbtn0, &enca1, &encb1, &encbtn1, 0);
 	if (enca1 == GPIO_NONE)
 		isEncoder1 = false; //no encoder
 	if (enca0 == GPIO_NONE)
@@ -826,7 +824,6 @@ void initButtonDevices()
 		encoder0 = ClickEncoderInit(enca0, encb0, encbtn0, ((g_device->options32 & T_ENC0) == 0) ? false : true);
 	if (isEncoder1)
 		encoder1 = ClickEncoderInit(enca1, encb1, encbtn1, ((g_device->options32 & T_ENC1) == 0) ? false : true);
-
 }
 
 // custom ir code init from hardware nvs partition

@@ -17,7 +17,7 @@
 #include "main.h"
 #include "eeprom.h"
 
-#define stack  4400
+#define stack  5400
 #define TAG	"servers"
 
 #define  strsTELNET  "Servers Telnet Socket fails %s errno: %d"

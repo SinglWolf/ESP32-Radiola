@@ -657,7 +657,7 @@ void timerTask(void *p)
 
 	initTimers();
 
-	gpio_get_ledgpio(&gpioLed, 0);
+	gpio_get_ledgpio(&gpioLed, g_device->gpio_mode);
 	setLedGpio(gpioLed);
 	/*
 	printf("FIRST LED GPIO: %d, SSID:%d\n",gpioLed,g_device->current_ap);
@@ -686,12 +686,12 @@ void timerTask(void *p)
 			case TIMER_WAKE:
 				clientConnect(); // start the player
 				break;
-				//					case TIMER_1MS: // 1 ms
-				//					  ctimeMs++;	// for led
-				//					  ctimeVol++; // to save volume
-				//					break;
-				//					case TIMER_1mS:  //1µs
-				//					break;
+			//					case TIMER_1MS: // 1 ms
+			//					  ctimeMs++;	// for led
+			//					  ctimeVol++; // to save volume
+			//					break;
+			//					case TIMER_1mS:  //1µs
+			//					break;
 			default:
 				break;
 			}
@@ -864,8 +864,6 @@ void app_main()
 	//init hardware
 	partitions_init();
 	ESP_LOGI(TAG, "Partition init done...");
-	// init TDA7313...
-	ESP_ERROR_CHECK(tda7313_init());
 
 	if (g_device->cleared != 0xAABB)
 	{
@@ -879,12 +877,13 @@ void app_main()
 			free(g_device);
 			eeEraseAll();
 			g_device = getDeviceSettings();
-			g_device->cleared = 0xAABB;				 //marker init done
-			g_device->uartspeed = 115200;			 // default
-			g_device->audio_input_num = COMPUTER;	// default
-			g_device->options |= T_PATCH;			 // 0 = load patch
-			g_device->trace_level = ESP_LOG_VERBOSE; //default
-			g_device->vol = 100;					 //default
+			g_device->cleared = 0xAABB;			   //marker init done
+			g_device->gpio_mode = 0;			   // Режим считывания GPIO 0 - по-умолчанию, 1 - из NVS
+			g_device->uartspeed = 115200;		   // default
+			g_device->audio_input_num = COMPUTER;  // default
+			g_device->options |= T_PATCH;		   // 0 = load patch
+			g_device->trace_level = ESP_LOG_DEBUG; //default
+			g_device->vol = 100;				   //default
 			g_device->led_gpio = GPIO_NUM_25;
 			g_device->tzoffset = 5;
 			g_device->options32 |= T_ROTAT;
@@ -900,6 +899,11 @@ void app_main()
 			ESP_LOGE(TAG, "Device config restored");
 	}
 	copyDeviceSettings(); // copy in the safe partion
+
+	//	g_device->gpio_mode = 0;
+
+	// init TDA7313...
+	ESP_ERROR_CHECK(tda7313_init());
 	ESP_ERROR_CHECK(tda7313_init_nvs(false));
 	//SPI init for the vs1053 and lcd if spi.
 	VS1053_spi_init();
@@ -908,6 +912,7 @@ void app_main()
 	audio_input_num = g_device->audio_input_num;
 	//audio input number COMPUTER, RADIO, BLUETOOTH
 	ESP_LOGI(TAG, "audio input number %d\nOne of COMPUTER = 1, RADIO, BLUETOOTH", audio_input_num);
+	ESP_LOGD(TAG, "gpio_mode: %u", g_device->gpio_mode);
 
 	// init softwares
 	telnetinit();
@@ -923,7 +928,7 @@ void app_main()
 	ESP_LOGI(TAG, "Hardware init done...");
 	// lcd init
 	uint8_t rt;
-	option_get_lcd_info(&rt, 0);
+	option_get_lcd_rotat(&rt, 0);
 	ESP_LOGI(TAG, "LCD Rotat %d", rt);
 	//lcd rotation
 	setRotat(rt);

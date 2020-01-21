@@ -815,7 +815,7 @@ void initButtonDevices()
 	gpio_num_t enca1;
 	gpio_num_t encb1;
 	gpio_num_t encbtn1;
-	gpio_get_encoders(&enca0, &encb0, &encbtn0, &enca1, &encb1, &encbtn1, 0);
+	gpio_get_encoders(&enca0, &encb0, &encbtn0, &enca1, &encb1, &encbtn1, g_device->gpio_mode);
 	if (enca1 == GPIO_NONE)
 		isEncoder1 = false; //no encoder
 	if (enca0 == GPIO_NONE)

@@ -661,13 +661,26 @@ function mute() {
 	hardware(1);
 }
 
-function gpios(def, save) {
-	var setgpios = "";
+function gpios(gpio_mode, save, load) {
+	var setgpios = "", gpio_mode_txt;
 	xhr = new XMLHttpRequest();
 	xhr.onreadystatechange = function () {
 		if (xhr.readyState == 4 && xhr.status == 200) {
 			var arr = JSON.parse(xhr.responseText);
 			console.log(arr);
+			if (load == 1) {
+				gpio_mode = parseInt(arr["GPIO_MODE"].replace(/\\/g, ""));
+			}
+			if (parseInt(arr["ERROR"].replace(/\\/g, "")) != 0) {
+				GPIOsErr.innerHTML = "ОШИБКА";
+			} else {
+				if (gpio_mode == 0) {
+					gpio_mode_txt = "СЧИТАНО ИЗ FLASH"
+				} else {
+					gpio_mode_txt = "СЧИТАНО ИЗ NVS"
+				}
+				GPIOsErr.innerHTML = gpio_mode_txt;
+			}
 			K_SPI.innerHTML = parseInt(arr["K_SPI"].replace(/\\/g, ""));
 			P_MISO.innerHTML = parseInt(arr["P_MISO"].replace(/\\/g, ""));
 			P_MOSI.innerHTML = parseInt(arr["P_MOSI"].replace(/\\/g, ""));
@@ -696,7 +709,9 @@ function gpios(def, save) {
 			P_BUZZER.innerHTML = parseInt(arr["P_BUZZER"].replace(/\\/g, ""));
 		}
 	}
-	if (save == 1) {
+	if ((save == 1) && (confirm("Записать зачения GPIO в NVS?"))) {
+		//		if (confirm("Записать зачения GPIO в NVS?")) {
+		//		alert("Перезагрузка Радиолы. Пожалуйста, подождите.");
 		setgpios = "save=" + save
 			+ "&K_SPI=" + K_SPI.innerHTML
 			+ "&P_MISO=" + P_MISO.innerHTML
@@ -724,11 +739,11 @@ function gpios(def, save) {
 			+ "&P_DS18B20=" + P_DS18B20.innerHTML
 			+ "&P_TOUCH_CS=" + P_TOUCH_CS.innerHTML
 			+ "&P_BUZZER=" + P_BUZZER.innerHTML;
-	}
+	} else save = 0;
 
 	xhr.open("POST", "gpios", false);
 	xhr.setRequestHeader(content, ctype);
-	xhr.send("default=" + def
+	xhr.send("gpio_mode=" + gpio_mode
 		+ setgpios
 		+ "&");
 }
@@ -1551,7 +1566,7 @@ document.addEventListener("DOMContentLoaded", function () {
 	document.getElementById("tab4").addEventListener("click", function () {
 		if (stchanged) stChanged();
 		curtab = "tab-content4";
-		gpios(0, 0);
+		gpios(0, 0, 1);
 		wifi(0);
 		hardware(0);
 		checkversion();

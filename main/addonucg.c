@@ -1013,8 +1013,8 @@ void lcd_initUcg()
 	ESP_LOGI(TAG, "lcd init  Rotat: %d", rotat);
 
 	ucg_esp32_hal_t ucg_esp32_hal = UCG_ESP32_HAL_DEFAULT;
-	gpio_get_spi_bus(&spi_no, &miso, &mosi, &sclk, 0);
-	gpio_get_spi_lcd(&cs, &a0, &rstlcd, 0);
+	gpio_get_spi_bus(&spi_no, &miso, &mosi, &sclk, g_device->gpio_mode);
+	gpio_get_spi_lcd(&cs, &a0, &rstlcd, g_device->gpio_mode);
 	ucg_esp32_hal.spi_no = spi_no;
 	ucg_esp32_hal.clk = sclk;
 	ucg_esp32_hal.mosi = mosi;

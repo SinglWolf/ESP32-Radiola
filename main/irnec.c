@@ -26,6 +26,7 @@
 #include "driver/rmt.h"
 #include "driver/periph_ctrl.h"
 #include "soc/rmt_reg.h"
+#include "eeprom.h"
 
 //IR
 #define RMT_RX_ACTIVE_LEVEL 0							 /*!< If we connect with a IR receiver, the data is active low */
@@ -201,7 +202,7 @@ static bool nec_rx_init()
 {
 	esp_err_t err = ESP_OK;
 	gpio_num_t ir;
-	gpio_get_ir_signal(&ir, 0);
+	gpio_get_ir_signal(&ir, g_device->gpio_mode);
 	if (ir == GPIO_NONE)
 		return false; //no IR needed
 	rmt_config_t rmt_rx;

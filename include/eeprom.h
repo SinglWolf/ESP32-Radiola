@@ -40,6 +40,7 @@
 struct device_settings
 {
 	uint16_t cleared; // 0xAABB if initialized
+	uint8_t gpio_mode;
 	uint8_t dhcpEn1;
 	uint8_t ipAddr1[4];
 	uint8_t mask1[4];

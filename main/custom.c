@@ -19,6 +19,7 @@
 #include "owb.h"
 #include "owb_rmt.h"
 #include "ds18b20.h"
+#include "eeprom.h"
 
 #define TAG "custom"
 
@@ -40,7 +41,7 @@ gpio_num_t lcdb;
 
 void LedBacklightInit()
 {
-	gpio_get_lcd_backlightl(&lcdb, 0);
+	gpio_get_lcd_backlightl(&lcdb, g_device->gpio_mode);
 	if (lcdb != GPIO_NONE)
 	{
 		gpio_output_conf(lcdb);
@@ -130,7 +131,7 @@ void ds18b20Task(void *pvParameters)
 /* Initialize tachometer */
 void tach_init()
 {
-	gpio_get_tachometer(&tach, 0);
+	gpio_get_tachometer(&tach, g_device->gpio_mode);
 	if (tach != GPIO_NONE)
 	{
 		tachTmr = xTimerCreate("TachTimer", pdMS_TO_TICKS(interval), pdTRUE, (void *)id, &TachTimer);
@@ -191,7 +192,7 @@ int16_t getRpmFan()
 }
 void init_ds18b20()
 {
-	gpio_get_ds18b20(&ds18b20, 0);
+	gpio_get_ds18b20(&ds18b20, g_device->gpio_mode);
 	if (ds18b20 != GPIO_NONE)
 	{
 		xTaskHandle pxCreatedTask;

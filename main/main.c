@@ -642,7 +642,7 @@ void start_network()
 		tcpip_adapter_set_hostname(TCPIP_ADAPTER_IF_STA, "ESP32Radiola");
 	}
 
-	lcd_welcome(localIp, "IP found");
+	lcd_welcome(localIp, "IP найден");
 	vTaskDelay(10);
 }
 
@@ -822,7 +822,7 @@ void autoPlay()
 			playStationInt(g_device->currentstation);
 		}
 		else
-			clientSaveOneHeader("Ready", 5, METANAME);
+			clientSaveOneHeader("ОЖИДАНИЕ", 17, METANAME);
 	}
 }
 
@@ -970,7 +970,7 @@ void app_main()
 	ESP_LOGI(TAG, "Heap size: %d", xPortGetFreeHeapSize());
 
 	lcd_welcome("", "");
-	lcd_welcome("", "STARTING");
+	lcd_welcome("", "ЗАПУСК");
 
 	// volume
 	setIvol(g_device->vol);
@@ -1026,7 +1026,7 @@ void app_main()
 	audio_player_init(player_config);
 
 	// LCD Display infos
-	lcd_welcome(localIp, "STARTED");
+	lcd_welcome(localIp, "ЗАПУЩЕНО");
 	vTaskDelay(10);
 	ESP_LOGI(TAG, "RAM left %d", esp_get_free_heap_size());
 

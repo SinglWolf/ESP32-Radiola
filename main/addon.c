@@ -34,7 +34,8 @@ static void evtClearScreen();
 // second before time display in stop state
 #define DTIDLE 60
 
-const char *stopped = "STOPPED";
+const char *stopped = "ОСТАНОВЛЕН";
+const char *starting = "ЗАПУСК";
 
 char irStr[4];
 xQueueHandle event_ir = NULL;
@@ -196,15 +197,22 @@ void in_welcome(const char *ip, const char *state, int y, char *Version)
 
 void lcd_welcome(const char *ip, const char *state)
 {
-	char Version[20];
-	sprintf(Version, "Version %s R%s\n", RELEASE, REVISION);
+
+	char text[30];
+	char *text1=strdup(state);
+
+	removeUtf8(text1);
 	if ((strlen(ip) == 0) && (strlen(state) == 0))
 		ClearBuffer();
 	setfont(2);
 	int y = -ucg_GetFontDescent(&ucg) + ucg_GetFontAscent(&ucg) + 3; //interline
-	DrawString(GetWidth() / 4, 2, "ESP32-Radiola");
+	sprintf(text, "ESP32-Радиола");
+	removeUtf8(text);
+	DrawString(GetWidth() / 4, 2, text);
 	setfont(1);
-	in_welcome(ip, state, y, Version);
+	sprintf(text, "Версия: %s Rev: %s\n", RELEASE, REVISION);
+	removeUtf8(text);
+	in_welcome(ip, text1, y, text);
 }
 
 // ----------------------------------------------------------------------------
@@ -982,7 +990,7 @@ void task_lcd(void *pvParams)
 					break;
 				case lnameset:
 					namesetUcg(evt.lline);
-					statusUcg("STARTING");
+					statusUcg(starting);
 					Screen(smain);
 					wakeLcd();
 					break;

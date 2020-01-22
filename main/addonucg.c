@@ -61,7 +61,7 @@ typedef enum Lang {
 	Cyrillic,
 	Greek
 } LANG;
-static LANG charset = Latin; // latin or other
+static LANG charset = Cyrillic; // latin or other
 
 ////////////////////////////////////////
 typedef enum sizefont {
@@ -685,12 +685,13 @@ void drawTTitleUcg(char *ttitle)
 void drawNumberUcg(uint8_t mTscreen, char *irStr)
 {
 	uint16_t xxx;
-	char ststr[] = {"Number"};
+	char number[] = {"Номер"};
+	removeUtf8(number);
 	switch (mTscreen)
 	{
 	case 1:
 		TTitleStr[0] = 0;
-		drawTTitleUcg(ststr);
+		drawTTitleUcg(number);
 	// no break
 	case 2:
 		xxx = (x / 2) - (ucg_GetStrWidth(&ucg, irStr) / 2);
@@ -709,11 +710,9 @@ void drawNumberUcg(uint8_t mTscreen, char *irStr)
 void drawStationUcg(uint8_t mTscreen, char *snum, char *ddot)
 {
 
-	char ststr[] = {"Station"};
+	char ststr[] = {"Станция"};
+	removeUtf8(ststr);
 	int16_t len;
-	LANG scharset;
-	scharset = charset;
-	charset = Latin;
 	switch (mTscreen)
 	{
 	case 1:
@@ -740,7 +739,6 @@ void drawStationUcg(uint8_t mTscreen, char *snum, char *ddot)
 		break;
 	default:;
 	}
-	charset = scharset;
 
 	//  screenBottomUcg();
 }
@@ -748,7 +746,8 @@ void drawStationUcg(uint8_t mTscreen, char *snum, char *ddot)
 //void drawVolumeUcg(uint8_t mTscreen,char* aVolume)
 void drawVolumeUcg(uint8_t mTscreen)
 {
-	char vlstr[] = {"Volume"};
+	char vlstr[] = {"Громкость"};
+	removeUtf8(vlstr);
 	//  volume = atoi(aVolume);
 	char aVolume[4];
 	sprintf(aVolume, "%d", volume);
@@ -961,6 +960,7 @@ void statusUcg(const char *label)
 	cleartitleUcg(TITLE2);
 	cleartitleUcg(TITLE21);
 	strcpy(title, label);
+	removeUtf8(title);
 	lline[TITLE1] = title;
 }
 //cli.nameset

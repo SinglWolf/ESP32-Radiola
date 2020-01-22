@@ -1460,8 +1460,8 @@ static bool httpServerHandleConnection(int conn, char *buf, uint16_t buflen)
 				if (param != NULL)
 				{
 					char vr[30]; // = malloc(30);
-					sprintf(vr, "Release: %s, Revision: %s\n", RELEASE, REVISION);
-					printf("Version:%s\n", vr);
+					sprintf(vr, "Релиз: %s, Rev: %s\n", RELEASE, REVISION);
+					printf("Версия: %s\n", vr);
 					respOk(conn, vr);
 					return true;
 				}

@@ -26,6 +26,7 @@ void drawTimeUcg(uint8_t mTscreen,unsigned timein);
 void lcd_initUcg();
 void setVolumeUcg(uint16_t vol);
 void drawLinesUcg();
+void removeUtf8(char *characters);
 
 
 #endif /* ADDONUCG_H_ */

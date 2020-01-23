@@ -428,7 +428,13 @@ esp_err_t tda7313_init_nvs(bool erase)
 	{
 		if (!erase)
 		{
-			ESP_LOGI(TAG, "Keys for the TDA7313 in NVS not founds.");
+			ESP_LOGI(TAG, "Keys for the TDA7313 in NVS not founds!");
+			if (err == ESP_ERR_NVS_NOT_FOUND)
+			{
+				err = tda7313_init();
+				if (err != ESP_OK)
+					erase = true;
+			}
 		}
 		else
 		{
@@ -505,7 +511,7 @@ esp_err_t tda7313_init_nvs(bool erase)
 	nvs_close(tda_nvs);
 	if (erase)
 	{
-		ESP_LOGV(TAG, "Returning after Forced erasing all keys of the TDA7313.");
+		ESP_LOGV(TAG, "Returning after Forced erasing all keys or first init of the TDA7313.");
 		return ESP_OK;
 	}
 	ESP_ERROR_CHECK(tda7313_set_input(TDA.Input));

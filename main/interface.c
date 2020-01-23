@@ -1192,8 +1192,11 @@ void setLogLevel(esp_log_level_t level)
 {
 	esp_log_level_set("*", level);
 	s_log_default_level = level;
-	g_device->trace_level = level;
-	saveDeviceSettings(g_device);
+	if (g_device->trace_level != level)
+	{
+		g_device->trace_level = level;
+		saveDeviceSettings(g_device);
+	}
 	displayLogLevel();
 }
 

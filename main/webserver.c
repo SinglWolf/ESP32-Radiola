@@ -1234,17 +1234,24 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 		{
 			char arg[3];
 			bool gpio_mode = false;
-			esp_err_t err;
+			nvs_handle hardware_handle;
+			esp_err_t err = ESP_OK;
+
 			uint8_t spi_no;
 			gpio_num_t miso, mosi, sclk, xcs, xdcs, dreq, ledgpio, enca, encb, encbtn, enca1, encb1, encbtn1, sda, scl, cs, a0, rstlcd, ir, lcdb, tach, fanspeed, ds18b20, touch, buzzer;
 			if (getSParameterFromResponse(arg, 3, "save=", data, data_size))
 				if (strcmp(arg, "1") == 0)
 					changed = true;
 			if (getSParameterFromResponse(arg, 3, "gpio_mode=", data, data_size))
-				if (strcmp(arg, "1") == 0)
+				if ((strcmp(arg, "1") == 0))
 					gpio_mode = true;
-
-			err = gpio_get_spi_bus(&spi_no, &miso, &mosi, &sclk, gpio_mode);
+			if (gpio_mode)
+			{
+				err = open_partition("hardware", "gpio_space", NVS_READONLY, &hardware_handle);
+				if (err != ESP_OK)
+					gpio_mode = false;
+			}
+			err |= gpio_get_spi_bus(&spi_no, &miso, &mosi, &sclk, gpio_mode);
 			err |= gpio_get_vs1053(&xcs, &xdcs, &dreq, gpio_mode);
 			err |= gpio_get_ledgpio(&ledgpio, gpio_mode);
 			err |= gpio_get_encoders(&enca, &encb, &encbtn, &enca1, &encb1, &encbtn1, gpio_mode);
@@ -1258,6 +1265,11 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 			err |= gpio_get_touch(&touch, gpio_mode);
 			err |= gpio_get_buzzer(&buzzer, gpio_mode);
 
+			if (err != ESP_OK)
+			{
+				changed = false;
+				err = 255;
+			}
 			if (changed)
 			{
 				getSParameterFromResponse(arg, 3, "K_SPI=", data, data_size);
@@ -1351,8 +1363,8 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 					ds18b20,
 					touch,
 					buzzer);
-			//ESP_LOGE(TAG, "Test GPIOS\nSave: %d\nERR: %u\ngpio_mode: %d\nBuf len: %u\nBuf: %s\nData: %s\nData size: %d\n\n", changed, err, gpio_mode, strlen(buf), buf, data, data_size);
-			//ESP_LOGE(TAG, "GPIO VALUE:\nerr: %u, spi_no: %u,miso: %u, mosi: %u, sclk: %u, xcs: %u, xdcs: %u, dreq: %u, ledgpio: %u, enca: %u, encb: %u, encbtn: %u, enca1: %u, encb1: %u, encbtn1: %u, sda: %u, scl: %u, cs: %u, a0: %u, rstlcd: %u, ir: %u, lcdb: %u, tach: %u, fanspeed: %u, ds18b20: %u, touch: %u, buzzer: %u\n\n", err, spi_no, miso, mosi, sclk, xcs, xdcs, dreq, ledgpio, enca, encb, encbtn, enca1, encb1, encbtn1, sda, scl, cs, a0, rstlcd, ir, lcdb, tach, fanspeed, ds18b20, touch, buzzer);
+			ESP_LOGE(TAG, "Test GPIOS\nSave: %d\nERR: %u\ngpio_mode: %d\nBuf len: %u\nBuf: %s\nData: %s\nData size: %d\n\n", changed, err, gpio_mode, strlen(buf), buf, data, data_size);
+			ESP_LOGE(TAG, "GPIO VALUE:\nerr: %u, spi_no: %u,miso: %u, mosi: %u, sclk: %u, xcs: %u, xdcs: %u, dreq: %u, ledgpio: %u, enca: %u, encb: %u, encbtn: %u, enca1: %u, encb1: %u, encbtn1: %u, sda: %u, scl: %u, cs: %u, a0: %u, rstlcd: %u, ir: %u, lcdb: %u, tach: %u, fanspeed: %u, ds18b20: %u, touch: %u, buzzer: %u\n\n", err, spi_no, miso, mosi, sclk, xcs, xdcs, dreq, ledgpio, enca, encb, encbtn, enca1, encb1, encbtn1, sda, scl, cs, a0, rstlcd, ir, lcdb, tach, fanspeed, ds18b20, touch, buzzer);
 			write(conn, buf, strlen(buf));
 			if (changed)
 			{

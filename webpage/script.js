@@ -675,7 +675,7 @@ function gpios(gpio_mode, save, load) {
 				GPIOsErr.innerHTML = "ОШИБКА";
 			} else {
 				if (gpio_mode == 0) {
-					gpio_mode_txt = "СЧИТАНО ИЗ FLASH"
+					gpio_mode_txt = "ПО УМОЛЧАНИЮ"
 				} else {
 					gpio_mode_txt = "СЧИТАНО ИЗ NVS"
 				}

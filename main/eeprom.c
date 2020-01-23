@@ -115,12 +115,12 @@ void eeEraseAll()
 																					//			eeSetClear(4096*i,buffer);
 			vTaskDelay(1);															// avoid watchdog
 		}
+		ESP_ERROR_CHECK(tda7313_init_nvs(true));
 		kprintf("#erase All done##\n");
 		free(buffer);
 	}
 	else
 		ESP_LOGE(TAG, "erase All fails");
-	ESP_ERROR_CHECK(tda7313_init_nvs(true));
 }
 
 void eeErasesettings(void)

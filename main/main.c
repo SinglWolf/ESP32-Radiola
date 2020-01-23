@@ -288,13 +288,15 @@ static void init_hardware()
 	// Настройка термометра
 	init_ds18b20();
 	// Настройка TDA7313...
-	ESP_ERROR_CHECK(tda7313_set_input(audio_input_num));
-	ESP_ERROR_CHECK(tda7313_set_mute(true));
+	if (tda7313_init() == ESP_OK)
+	{
+		ESP_ERROR_CHECK(tda7313_init_nvs(false));
+		ESP_ERROR_CHECK(tda7313_set_input(audio_input_num));
+	}
 	if (VS1053_HW_init()) // init spi
 	{
 		VS1053_Start();
 	}
-	ESP_ERROR_CHECK(tda7313_set_mute(false));
 	ESP_LOGI(TAG, "hardware initialized");
 }
 
@@ -882,7 +884,7 @@ void app_main()
 			g_device->uartspeed = 115200;		   // default
 			g_device->audio_input_num = COMPUTER;  // default
 			g_device->options |= T_PATCH;		   // 0 = load patch
-			g_device->trace_level = ESP_LOG_DEBUG; //default
+			g_device->trace_level = ESP_LOG_VERBOSE; //default
 			g_device->vol = 100;				   //default
 			g_device->led_gpio = GPIO_NUM_25;
 			g_device->tzoffset = 5;
@@ -902,9 +904,6 @@ void app_main()
 
 	//	g_device->gpio_mode = 0;
 
-	// init TDA7313...
-	ESP_ERROR_CHECK(tda7313_init());
-	ESP_ERROR_CHECK(tda7313_init_nvs(false));
 	//SPI init for the vs1053 and lcd if spi.
 	VS1053_spi_init();
 	//

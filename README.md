@@ -1,32 +1,6 @@
 # ESP32-Radiola
 Форк проекта https://github.com/karawin/Ka-Radio32 на VSCode+PlatformIO
 
-**Распиновка** 
-
-| ESP32(WROVER) | VS1053  | TFT-Display  | XPT2046  | TDA7317  | DS1820  | 4-Pin Fan  | LED  | DS3231SN  |   IRLED   |  BUZZER   |
-| :-----------: | :-----: | :----------: | :------: | :------: | :-----: | :--------: | :--: | :-------: | :-------: | :-------: |
-|      19       |  MISO   |     MISO     |  T_MISO  |          |         |            |      |           |           |           |
-|      23       |  MOSI   |     MOSI     |  T_MOSI  |          |         |            |      |           |           |           |
-|      18       |  CLK    |     CLK      |  T_CLK   |          |         |            |      |           |           |           |
-|       5       |  XCS    |              |          |          |         |            |      |           |           |           |
-|      32       |  XDCS   |              |          |          |         |            |      |           |           |           |
-|       4       |  DREQ   |              |          |          |         |            |      |           |           |           |
-|      21       |         |              |          |    SCL   |         |            |      |    SCL    |           |           |
-|      22       |         |              |          |    SDA   |         |            |      |    SDA    |           |           |
-|      27       |         |      CS      |          |          |         |            |      |           |           |           |
-|       2       |         |      DC      |          |          |         |            |      |           |           |           |
-|      25       |         |              |          |          |         |            | LED  |           |           |           |
-|      35       |         |              |          |          |         |            |      |           |   IRLED   |           |
-|      26       |         |      LED     |          |          |         |            |      |           |           |           |
-|      12       |         |              |          |          |         |    TACH    |      |           |           |           |
-|      13       |         |              |          |          |         |    PWP     |      |           |           |           |
-|      14       |         |              |          |          |  DS1820 |            |      |           |           |           |
-|       0       |         |              |   T_CS   |          |         |            |      |           |           |           |
-|      33       |         |              |          |          |         |            |      |           |           |  BUZZER   |
-|    RES(EN)    |  RESET  |    RESET     |          |          |         |            |      |           |           |           |
-|               |         |              |          |          |         |            |      |           |           |           |
-|               |         |              |          |          |         |            |      |           |           |           |
-
 **Все вопросы по проекту пишите [ТУТ](https://serverdoma.ru/viewtopic.php?f=70&t=1178).**
 
 **Используемое железо (HARDWARE):**
@@ -78,6 +52,32 @@
   + Добавить автоматическое управление оборотами вентилятора охлаждения радиаторов усилителя в зависимости то температуры радиаторов
   + Добавить звуковую индикацию событий BUZZER (пищалки).
   + etc...
+
+**Распиновка** 
+
+| ESP32(WROVER) | VS1053  | TFT-Display  | XPT2046  | TDA7317  | DS1820  | 4-Pin Fan  | LED  | DS3231SN  |   IRLED   |  BUZZER   |
+| :-----------: | :-----: | :----------: | :------: | :------: | :-----: | :--------: | :--: | :-------: | :-------: | :-------: |
+|      19       |  MISO   |     MISO     |  T_MISO  |          |         |            |      |           |           |           |
+|      23       |  MOSI   |     MOSI     |  T_MOSI  |          |         |            |      |           |           |           |
+|      18       |  CLK    |     CLK      |  T_CLK   |          |         |            |      |           |           |           |
+|       5       |  XCS    |              |          |          |         |            |      |           |           |           |
+|      32       |  XDCS   |              |          |          |         |            |      |           |           |           |
+|       4       |  DREQ   |              |          |          |         |            |      |           |           |           |
+|      21       |         |              |          |    SCL   |         |            |      |    SCL    |           |           |
+|      22       |         |              |          |    SDA   |         |            |      |    SDA    |           |           |
+|      27       |         |      CS      |          |          |         |            |      |           |           |           |
+|       2       |         |      DC      |          |          |         |            |      |           |           |           |
+|      25       |         |              |          |          |         |            | LED  |           |           |           |
+|      35       |         |              |          |          |         |            |      |           |   IRLED   |           |
+|      26       |         |      LED     |          |          |         |            |      |           |           |           |
+|      12       |         |              |          |          |         |    TACH    |      |           |           |           |
+|      13       |         |              |          |          |         |    PWP     |      |           |           |           |
+|      14       |         |              |          |          |  DS1820 |            |      |           |           |           |
+|       0       |         |              |   T_CS   |          |         |            |      |           |           |           |
+|      33       |         |              |          |          |         |            |      |           |           |  BUZZER   |
+|    RES(EN)    |  RESET  |    RESET     |          |          |         |            |      |           |           |           |
+|               |         |              |          |          |         |            |      |           |           |           |
+|               |         |              |          |          |         |            |      |           |           |           |
 
 ![Image alt](https://github.com/SinglWolf/ESP32-Radiola/raw/master/pictures/ESP32-Radiola.png)
 ![Image alt](https://github.com/SinglWolf/ESP32-Radiola/raw/master/pictures/amplifier.jpg)

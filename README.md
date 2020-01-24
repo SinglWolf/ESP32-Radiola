@@ -1,8 +1,7 @@
 # ESP32-Radiola
 Форк проекта https://github.com/karawin/Ka-Radio32 на VSCode+PlatformIO
 
-                                      **РАСИНОВКА**
-
+**Распиновка**
 | ESP32(WROVER) | VS1053  | TFT-Display  | XPT2046  | TDA7317  | DS1820  | 4-Pin Fan  | LED  | DS3231SN  |   IRLED   |  BUZZER   |
 | :-----------: | :-----: | :----------: | :------: | :------: | :-----: | :--------: | :--: | :-------: | :-------: | :-------: |
 |      19       |  MISO   |     MISO     |  T_MISO  |          |         |            |      |           |           |           |

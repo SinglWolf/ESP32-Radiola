@@ -100,7 +100,7 @@
 								<img class="icon icons8" width=50 height=50 title="Остановить воспроизведение"
 									onClick="stopStation()"
 									src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAAiklEQVRoge3YsQmAMBBAUUfISA4gwXFEUqR3kXQWEpwnG7hB7MRAIhZeivgfXHlwv72uAwAAACQN09bnZrSrKu2MdlWlvYqnp/TsY26ejhqmrS/tVTw9pWcfjQtx2Y9r3obcd4wLhHyCEEKEEEKIEEIIEUIIIUIIIUQIIYQIaeb50Mw7CAAAAP9wAgwPdP6eVGKaAAAAAElFTkSuQmCC">
-								<img class="icon icons8" width=50 height=50 title="Сдедующая станция"
+								<img class="icon icons8" width=50 height=50 title="Следующая станция"
 									onClick="nextStation()"
 									src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAADAElEQVRoge2Yy0tUURjAZ9GyZato0bJlixYtWvQHNPc1ZoWCRZKIRUZlzrnnjpNOvm6CpGIRlUGCRaE5c+65V0WRwKHMRCyLDMGih++L48jM5Pi1yIHIbO4VxzE7PzjLD74f936PcxwOBoPBYDAYDAZjIznqfbRzM+NSBicTvxORk7bjkDbqlLWDKUhpfYiYBjlEgJfpPU4mB6zGcYiAgGmIQ4FSrujp7lTmaAkR0+CpmiBklnZFeazNOd3kiJU4DhHIqxsAEesxHtPXTrd/X6pz/SsipsGzN4ehisxCXv2rMIcISIrRnKwGOEQAt4yDr20SsiufzfNIizndgcLNynsVCRGVmqBSE3DLOLi8HWEB69+csv/QWnEJkUTchbvvlgWZxiSP0S8VaXs208HhcKwWUakJFf5pOF37PMQjEpcUve6wt2dHMhGVmnD1yVc44esJ8VgLcyiQnXaRxCl+MAaiokckjz4qILI/mYhKTajW5uDcreEYL5O45NF1p9e/K+0iKjWhvH0KctS+eV6mMRHrVxJfZy2RxPE+/gyZpV0LAtanrTaQlIokzqWm9yBgGpU8+oBQTPcmE1GpCVVkFvLrBxd5mcRdHqMppUPUqohKTShrnYCs8t4QL2sRKyK/NZBFUdG/pGyI2hFJnMI7I8t2RFRqQmVgBnJr+xd4ROKuEr3mTw0kDSJv/20RX9skZFXY/7WUhx8hw9u5NX6ty/dHQVRoVCoxLBd7tTYH+Q2DEV4mcZe3I73FXt4+BTnX+0KcrH0XMHXbab/HyrpDokJn0t5+3c1j4PJ0LIqK/sHOQDx/e2SJR9qSq8Qw0joQKwMzcObGwAKPSFwqMRqsrihlrROQVdE7vyVWFM+jT5Dh7QyLij5hZ2lcGZgxl8d4mdalsVqbg4LGocjPHclosbrG/7rCCFi/uFl5r0LENJhb+wKO+7qjgkxNOxergsYhkBQjJsj0zZa4WK1cdQN2CpNDBHhE4rysXdvw4bYets3jw7Z5DmIwGAwGg8Fg/J/8ALvQciqFBZLiAAAAAElFTkSuQmCC">
 								<br>
@@ -215,11 +215,11 @@
 							<input type=text id=instant_path name=path value="/" onkeyup="buildURL()">
 							<br>
 							<br>
-							<img class="icon icons8" width=40 height=40 title="Воспроизведение быстрой странции"
+							<img class="icon icons8" width=40 height=40 title="Быстрое воспроизведение станции"
 								onClick="instantPlay()"
 								src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAACBElEQVRoge3XPWsUQRgH8C0sLFP6AfwAfoAUqcXszG5QCw8sIljkCkGFZGd33RwJFz3FgC9JIWgTTRGMx2VeLkQOtVhOsDgF30AlRUCOaC6bEI/T87EICxGieTFhGHx+8PT/P+zOPGNZCCGEEEII7TcaTXfozrAnCBOKMFEwvpDjy9j2OBBfLNn9pWxXVDmgO9OuOL6M+8ZqkB2vtSiTLRqo+e4Bfkx3rh1zfBlnx19BQTZguFiHM6PPVwnjbScsx9TjR3Tn27aNRdKJphYgM/I0IR5vu4GaOHqRH9Kdc0ubFUnHu/8JTuQerxAmmoSJsCuqHNSd94/+VqQgG3BFLMH5u+/ADcvfqC8XbW8mozvzprYqks7IzBfou11rEiZ+OKF6081Knbqz/2a7RdIZelSH3uvVxPY4uKFSdn/xsO4OlmXtvMjGA+FU/klCmGw5obqp/ULdbZF0BiY+wvHBuVXqy0TrhbonRXIGF4mmFiCTf7ZsM/HdDcq3jPu0hot16B2trhDG2z3hrHk/+2X+FbJj6/uYE6i3Rh6/F+69h55wdo36yswL0Z+ch5NDlYQw0SSBGDRuRck9/Aynr8bLxONt91L5gXFLY760CGdvvFhbX+NV1cA1/iWcu/ManEC1KBMfjH1YEU/8pEw2jH7qEiYUZfKa9gvtXxlfACGEEEII/T9+AR8nzQFJqsL+AAAAAElFTkSuQmCC">
 							&nbsp;<img class="icon icons8" width=40 height=40
-								title="Остановить воспроизведение быстрой странции" onClick="stopStation()"
+								title="Остановить быстрое воспроизведение станции" onClick="stopStation()"
 								src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAAiklEQVRoge3YsQmAMBBAUUfISA4gwXFEUqR3kXQWEpwnG7hB7MRAIhZeivgfXHlwv72uAwAAACQN09bnZrSrKu2MdlWlvYqnp/TsY26ejhqmrS/tVTw9pWcfjQtx2Y9r3obcd4wLhHyCEEKEEEKIEEIIEUIIIUIIIUQIIYQIaeb50Mw7CAAAAP9wAgwPdP6eVGKaAAAAAElFTkSuQmCC">
 							<!-- <input type="button" value=Play onClick="instantPlay()">&nbsp; <input type="button" value="Стоп" onClick="stopStation()"> -->
 						</p>

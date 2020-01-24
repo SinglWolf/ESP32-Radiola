@@ -1005,7 +1005,6 @@ void lcd_initUcg()
 
 	gpio_num_t cs;
 	gpio_num_t a0;
-	gpio_num_t rstlcd;
 	//	gpio_num_t t_cs;
 	//	gpio_num_t t_irq;
 	dt = getDt();
@@ -1014,14 +1013,12 @@ void lcd_initUcg()
 
 	ucg_esp32_hal_t ucg_esp32_hal = UCG_ESP32_HAL_DEFAULT;
 	gpio_get_spi_bus(&spi_no, &miso, &mosi, &sclk, g_device->gpio_mode);
-	gpio_get_spi_lcd(&cs, &a0, &rstlcd, g_device->gpio_mode);
+	gpio_get_spi_lcd(&cs, &a0, g_device->gpio_mode);
 	ucg_esp32_hal.spi_no = spi_no;
 	ucg_esp32_hal.clk = sclk;
 	ucg_esp32_hal.mosi = mosi;
 	ucg_esp32_hal.cs = cs;
 	ucg_esp32_hal.dc = a0;
-	if (rstlcd != GPIO_NONE)
-		ucg_esp32_hal.reset = rstlcd;
 	ucg_esp32_hal_init(ucg_esp32_hal);
 
 	ucg_Init(&ucg, ucg_dev_ili9341_18x240x320, ucg_ext_ili9341_18, ucg_com_hal);

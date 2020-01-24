@@ -211,7 +211,7 @@ void init_ds18b20()
 			}
 
 			xTaskHandle pxCreatedTask;
-			xTaskCreatePinnedToCore(ds18b20Task, "ds18b20Task", 1800, NULL, PRIO_DS18B20, &pxCreatedTask, CPU_DS18B20);
+			xTaskCreatePinnedToCore(ds18b20Task, "ds18b20Task", 2200, NULL, PRIO_DS18B20, &pxCreatedTask, CPU_DS18B20);
 			vTaskDelay(1);
 			ESP_LOGI(TAG, "%s task: %x", "ds18b20Task", (unsigned int)pxCreatedTask);
 			return;

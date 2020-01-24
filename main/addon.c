@@ -104,8 +104,7 @@ typedef enum {
 static uint32_t customKey[KEY_MAX][2];
 static bool isCustomKey = false;
 
-static bool isEncoder0 = true;
-static bool isEncoder1 = true;
+static bool isEncoder = true;
 
 void Screen(typeScreen st);
 void drawScreen();
@@ -565,11 +564,8 @@ void encoderCompute(Encoder_t *enc, bool role)
 void encoderLoop()
 {
 	// encoder0 = volume control or station when pushed
-	// encoder1 = station control or volume when pushed
-	if (isEncoder0)
+	if (isEncoder)
 		encoderCompute(encoder0, VCTRL);
-	if (isEncoder1)
-		encoderCompute(encoder1, SCTRL);
 }
 
 // compute custom IR
@@ -820,18 +816,11 @@ void initButtonDevices()
 	gpio_num_t enca0;
 	gpio_num_t encb0;
 	gpio_num_t encbtn0;
-	gpio_num_t enca1;
-	gpio_num_t encb1;
-	gpio_num_t encbtn1;
-	gpio_get_encoders(&enca0, &encb0, &encbtn0, &enca1, &encb1, &encbtn1, g_device->gpio_mode);
-	if (enca1 == GPIO_NONE)
-		isEncoder1 = false; //no encoder
+	gpio_get_encoders(&enca0, &encb0, &encbtn0, g_device->gpio_mode);
 	if (enca0 == GPIO_NONE)
-		isEncoder0 = false; //no encoder
-	if (isEncoder0)
+		isEncoder = false; //no encoder
+	if (isEncoder)
 		encoder0 = ClickEncoderInit(enca0, encb0, encbtn0, ((g_device->options32 & T_ENC0) == 0) ? false : true);
-	if (isEncoder1)
-		encoder1 = ClickEncoderInit(enca1, encb1, encbtn1, ((g_device->options32 & T_ENC1) == 0) ? false : true);
 }
 
 // custom ir code init from hardware nvs partition
@@ -919,10 +908,8 @@ static uint8_t divide = 0;
 // indirect call to service
 IRAM_ATTR void multiService() // every 1ms
 {
-	if (isEncoder0)
+	if (isEncoder)
 		service(encoder0);
-	if (isEncoder1)
-		service(encoder1);
 	ServiceAddon();
 	if (divide++ == 10) // only every 10ms
 	{

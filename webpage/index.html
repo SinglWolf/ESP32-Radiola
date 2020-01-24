@@ -46,9 +46,9 @@
 							<input type=range id=ovol name=ovol step=2 min=-126 max=126>
 							<br>
 							<br>
-							<input type=button onClick="saveStation()" value="сохранить">
-							&nbsp;<input type=button onClick="eraseStation()" value="стереть">
-							&nbsp;<input type=button onClick="abortStation()" value="выйти">
+							<input type="button" onClick="saveStation()" value="сохранить">
+							&nbsp;<input type="button" onClick="eraseStation()" value="стереть">
+							&nbsp;<input type="button" onClick="abortStation()" value="выйти">
 						</p>
 					</div>
 				</div>
@@ -163,7 +163,7 @@
 							&nbsp;<img class="icon icons8" width=40 height=40 title="Остановка мониторинга"
 								onClick="mstop()"
 								src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAAiklEQVRoge3YsQmAMBBAUUfISA4gwXFEUqR3kXQWEpwnG7hB7MRAIhZeivgfXHlwv72uAwAAACQN09bnZrSrKu2MdlWlvYqnp/TsY26ejhqmrS/tVTw9pWcfjQtx2Y9r3obcd4wLhHyCEEKEEEKIEEIIEUIIIUIIIUQIIYQIaeb50Mw7CAAAAP9wAgwPdP6eVGKaAAAAAElFTkSuQmCC">
-							<!-- <input type=button value=Play onClick="mplay()"> &nbsp; <input type=button value="Стоп" onClick="mstop()"></p> -->
+							<!-- <input type="button" value=Play onClick="mplay()"> &nbsp; <input type="button" value="Стоп" onClick="mstop()"></p> -->
 						</p>
 						<p>
 							<span class=bold2>Громкость</span>
@@ -181,8 +181,8 @@
 							<span class=bold1 title="Режим времени: ЧЧ:ММ или Режим задержки (минуты): ММ">ВЫКЛ :
 							</span>
 							<input type=text id=sleepdelay onkeyup="sleepup(event)">
-							&nbsp;<input type=button value="Старт" onClick="startSleep()">
-							<input type=button value="Стоп" onClick="stopSleep()">
+							&nbsp;<input type="button" value="Старт" onClick="startSleep()">
+							<input type="button" value="Стоп" onClick="stopSleep()">
 							&nbsp;&nbsp;В: <span id=sminutes>0</span>
 							Сек.
 						</p>
@@ -190,14 +190,14 @@
 							<span class=bold1 title="Режим времени: ЧЧ:ММ или Режим задержки (минуты): ММ">ВКЛ :
 							</span>
 							<input type=text id=wakedelay onkeyup="wakeup(event)">
-							&nbsp;<input type=button value="Старт" onClick="startWake()">
-							<input type=button value="Стоп" onClick="stopWake()">
+							&nbsp;<input type="button" value="Старт" onClick="startWake()">
+							<input type="button" value="Стоп" onClick="stopWake()">
 							&nbsp;&nbsp;В: <span id=wminutes>0</span>
 							Сек.
 						</p>
 						<h1>
 							Быстрое воспроизведение
-							&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type=button
+							&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="button"
 								onClick="editInstantStation()" value="Добавить и править">
 						</h1>
 						<p>
@@ -221,7 +221,7 @@
 							&nbsp;<img class="icon icons8" width=40 height=40
 								title="Остановить воспроизведение быстрой странции" onClick="stopStation()"
 								src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAAiklEQVRoge3YsQmAMBBAUUfISA4gwXFEUqR3kXQWEpwnG7hB7MRAIhZeivgfXHlwv72uAwAAACQN09bnZrSrKu2MdlWlvYqnp/TsY26ejhqmrS/tVTw9pWcfjQtx2Y9r3obcd4wLhHyCEEKEEEKIEEIIEUIIIUIIIUQIIYQIaeb50Mw7CAAAAP9wAgwPdP6eVGKaAAAAAElFTkSuQmCC">
-							<!-- <input type=button value=Play onClick="instantPlay()">&nbsp; <input type=button value="Стоп" onClick="stopStation()"> -->
+							<!-- <input type="button" value=Play onClick="instantPlay()">&nbsp; <input type="button" value="Стоп" onClick="stopStation()"> -->
 						</p>
 					</div>
 				<li>
@@ -419,237 +419,214 @@
 					<div id=tab-content4 class=tab-content>
 						<div>
 							<h1>НАЗНАЧЕНИЕ GPIO &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input
-									input="" onclick="gpios(0,0)" type="button" value="Считать значения по-умолчанию">
-								&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input input=""
-									onclick="gpios(1,0)" type="button"
-									value="Считать значения из NVS">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input
-									input="" onclick="gpios(1,1)" type="button" value="Сохранить значения в NVS">
+									type="button" value="Считать значения по-умолчанию" onclick="gpios(0,0,0)">
+								&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="button"
+									value="Считать значения из NVS"
+									onclick="gpios(1,0,0)">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input
+									type="button" value="Сохранить значения в NVS" onclick="gpios(1,1,0)">
 							</h1>
+							<div>
+								СТАТУС:
+							</div>
+							<div id="GPIOsErr"></div>
+							<br>
 							<table id="GPIOsTable">
 								<tbody>
-									<tr>
-										<td>СТАТУС</td>
-										<td id="GPIOsErr"></td>
-									</tr>
 									<tr>
 										<td>ИМЯ GPIO</td>
 										<td>ЗНАЧЕНИЕ</td>
 									</tr>
 									<tr>
-										<td>K_SPI</td>
+										<td>SPI</td>
 										<td contenteditable="true" id="K_SPI"></td>
 									</tr>
 									<tr>
-										<td>P_MISO</td>
+										<td>MISO</td>
 										<td contenteditable="true" id="P_MISO"></td>
 									</tr>
 									<tr>
-										<td>P_MOSI</td>
+										<td>MOSI</td>
 										<td contenteditable="true" id="P_MOSI"></td>
 									</tr>
 									<tr>
-										<td>P_CLK</td>
+										<td>CLK</td>
 										<td contenteditable="true" id="P_CLK"></td>
 									</tr>
 									<tr>
-										<td>P_XCS</td>
+										<td>XCS</td>
 										<td contenteditable="true" id="P_XCS"></td>
 									</tr>
 									<tr>
-										<td>P_XDCS</td>
+										<td>XDCS</td>
 										<td contenteditable="true" id="P_XDCS"></td>
 									</tr>
 									<tr>
-										<td>P_DREQ</td>
+										<td>DREQ</td>
 										<td contenteditable="true" id="P_DREQ"></td>
 									</tr>
 									<tr>
-										<td>P_ENC0_A</td>
+										<td>ENC0_A</td>
 										<td contenteditable="true" id="P_ENC0_A"></td>
 									</tr>
 									<tr>
-										<td>P_ENC0_B</td>
+										<td>ENC0_B</td>
 										<td contenteditable="true" id="P_ENC0_B"></td>
 									</tr>
 									<tr>
-										<td>P_ENC0_BTN</td>
+										<td>ENC0_BTN</td>
 										<td contenteditable="true" id="P_ENC0_BTN"></td>
 									</tr>
 									<tr>
-										<td>P_ENC1_A</td>
-										<td contenteditable="true" id="P_ENC1_A"></td>
-									</tr>
-									<tr>
-										<td>P_ENC1_B</td>
-										<td contenteditable="true" id="P_ENC1_B"></td>
-									</tr>
-									<tr>
-										<td>P_ENC1_BTN</td>
-										<td contenteditable="true" id="P_ENC1_BTN"></td>
-									</tr>
-									<tr>
-										<td>P_I2C_SCL</td>
+										<td>I2C_SCL</td>
 										<td contenteditable="true" id="P_I2C_SCL"></td>
 									</tr>
 									<tr>
-										<td>P_I2C_SDA</td>
+										<td>I2C_SDA</td>
 										<td contenteditable="true" id="P_I2C_SDA"></td>
 									</tr>
 									<tr>
-										<td>P_LCD_CS</td>
+										<td>LCD_CS</td>
 										<td contenteditable="true" id="P_LCD_CS"></td>
 									</tr>
 									<tr>
-										<td>P_LCD_A0</td>
+										<td>LCD_A0</td>
 										<td contenteditable="true" id="P_LCD_A0"></td>
 									</tr>
 									<tr>
-										<td>P_LCD_RST</td>
-										<td contenteditable="true" id="P_LCD_RST"></td>
-									</tr>
-									<tr>
-										<td>P_LED_GPIO</td>
+										<td>LED_GPIO</td>
 										<td contenteditable="true" id="P_LED_GPIO"></td>
 									</tr>
 									<tr>
-										<td>P_IR_SIGNAL</td>
+										<td>IR_SIGNAL</td>
 										<td contenteditable="true" id="P_IR_SIGNAL"></td>
 									</tr>
 									<tr>
-										<td>P_BACKLIGHT</td>
+										<td>BACKLIGHT</td>
 										<td contenteditable="true" id="P_BACKLIGHT"></td>
 									</tr>
 									<tr>
-										<td>P_TACHOMETER</td>
+										<td>TACHOMETER</td>
 										<td contenteditable="true" id="P_TACHOMETER"></td>
 									</tr>
 									<tr>
-										<td>P_FAN_SPEED</td>
+										<td>FAN_SPEED</td>
 										<td contenteditable="true" id="P_FAN_SPEED"></td>
 									</tr>
 									<tr>
-										<td>P_DS18B20</td>
+										<td>DS18B20</td>
 										<td contenteditable="true" id="P_DS18B20"></td>
 									</tr>
 									<tr>
-										<td>P_TOUCH_CS</td>
+										<td>TOUCH_CS</td>
 										<td contenteditable="true" id="P_TOUCH_CS"></td>
 									</tr>
 									<tr>
-										<td>P_BUZZER</td>
+										<td>BUZZER</td>
 										<td contenteditable="true" id="P_BUZZER"></td>
 									</tr>
 								</tbody>
 							</table>
 							<p>&nbsp;</p>
 							<h1>КОДЫ ИК-ПУЛЬТА &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input
-									input="" onclick="ircodes(0,0)" type="button"
-									value="Считать значения по-умолчанию">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input
-									input="" onclick="ircodes(1,0)" type="button"
-									value="Считать значения из NVS">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input
-									input="" onclick="ircodes(1,1)" type="button" value="Сохранить значения в NVS">
+									type="button" value="Считать значения по-умолчанию"
+									onclick="ircodes(0,0)">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input
+									type="button" value="Считать значения из NVS"
+									onclick="ircodes(1,0)">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input
+									type="button" value="Сохранить значения в NVS" onclick="ircodes(1,1)">
 							</h1>
 							<table id="IRcodesTable">
 								<tbody>
 									<tr>
 										<td>ИМЯ КНОПКИ</td>
-										<td>ЗНАЧЕНИЕ</td>
+										<td>КОД</td>
 									</tr>
 									<tr>
-										<td>K_UP</td>
+										<td>ВВЕРХ</td>
 										<td contenteditable="true" id="K_UP">&nbsp;</td>
 									</tr>
 									<tr>
-										<td>K_LEFT</td>
+										<td>ВЛЕВО</td>
 										<td contenteditable="true" id="K_LEFT">&nbsp;</td>
 									</tr>
 									<tr>
-										<td>K_OK</td>
+										<td>ОК</td>
 										<td contenteditable="true" id="K_OK">&nbsp;</td>
 									</tr>
 									<tr>
-										<td>K_RIGHT</td>
+										<td>ВПРАВО</td>
 										<td contenteditable="true" id="K_RIGHT">&nbsp;</td>
 									</tr>
 									<tr>
-										<td>K_DOWN</td>
+										<td>ВНИЗ</td>
 										<td contenteditable="true" id="K_DOWN">&nbsp;</td>
 									</tr>
 									<tr>
-										<td>K_0</td>
+										<td>0</td>
 										<td contenteditable="true" id="K_0">&nbsp;</td>
 									</tr>
 									<tr>
-										<td>K_1</td>
+										<td>1</td>
 										<td contenteditable="true" id="K_1">&nbsp;</td>
 									</tr>
 									<tr>
-										<td>K_2</td>
+										<td>2</td>
 										<td contenteditable="true" id="K_2">&nbsp;</td>
 									</tr>
 									<tr>
-										<td>K_3</td>
+										<td>3</td>
 										<td contenteditable="true" id="K_3">&nbsp;</td>
 									</tr>
 									<tr>
-										<td>K_4</td>
+										<td>4</td>
 										<td contenteditable="true" id="K_4">&nbsp;</td>
 									</tr>
 									<tr>
-										<td>K_5</td>
+										<td>5</td>
 										<td contenteditable="true" id="K_5">&nbsp;</td>
 									</tr>
 									<tr>
-										<td>K_6</td>
+										<td>6</td>
 										<td contenteditable="true" id="K_6">&nbsp;</td>
 									</tr>
 									<tr>
-										<td>K_7</td>
+										<td>7</td>
 										<td contenteditable="true" id="K_7">&nbsp;</td>
 									</tr>
 									<tr>
-										<td>K_8</td>
+										<td>8</td>
 										<td contenteditable="true" id="K_8">&nbsp;</td>
 									</tr>
 									<tr>
-										<td>K_9</td>
+										<td>9</td>
 										<td contenteditable="true" id="K_9">&nbsp;</td>
 									</tr>
 									<tr>
-										<td>K_STAR</td>
+										<td>*</td>
 										<td contenteditable="true" id="K_STAR">&nbsp;</td>
 									</tr>
 									<tr>
-										<td>K_DIESE</td>
+										<td>#</td>
 										<td contenteditable="true" id="K_DIESE">&nbsp;</td>
-									</tr>
-									<tr>
-										<td>K_INFO</td>
-										<td contenteditable="true" id="K_INFO">&nbsp;</td>
 									</tr>
 								</tbody>
 							</table>
 							<p>&nbsp;</p>
 							<h1>ЗАГРУЗКА\СОХРАНЕНИЕ НАСТРОЕК
-								&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input input=""
-									onclick="loadCSV()" type="button" value="Загрузить настройки из файла">
-								&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input input=""
-									onclick="saveCSV()" type="button" value="Сохранить настройки в файл"></h1>
+								&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="button"
+									value="Загрузить настройки из файла" onclick="loadCSV()">
+								&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="button"
+									value="Сохранить настройки в файл" onclick="saveCSV()"></h1>
 							<table id="CSVname">
 								<tbody>
 									<tr>
 										<td>ИМЯ ФАЙЛА</td>
-										<td style="text-align: center;">ЗНАЧЕНИЕ</td>
-									</tr>
-									<tr>
-										<td>L_LABEL</td>
 										<td contenteditable="true" id="L_LABEL">new_psram.csv</td>
 									</tr>
 									<tr>
-										<td>L_COMMENT</td>
-										<td contenteditable="true" id="L_COMMENT">Это стандартная простая
+										<td>ОПИСАНИЕ</td>
+										<td contenteditable="true" id="L_COMMENT">Это стандартная
 											конфигурация для
-											wrover.</td>
+											ESP32-WROVER.</td>
 									</tr>
 								</tbody>
 							</table>
@@ -658,7 +635,7 @@
 
 
 						<h1>
-							Wifi и Сеть &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type=button
+							Wifi и Сеть &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="button"
 								value="Сохранить" onclick="valid()" />
 						</h1>
 						<p>
@@ -704,11 +681,9 @@
 						</p>
 						<h1>ОПЦИИ
 							&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input
-								input="" onclick="options(0,0)" type="button"
-								value="Считать значения по-умолчанию">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input
-								input="" onclick="options(1,0)" type="button"
-								value="Считать значения из NVS">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input
-								input="" onclick="options(1,1)" type="button" value="Сохранить значения в NVS"></h1>
+								type="button" onclick="options(0)"
+								value="Обновить">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input
+								type="button" onclick="options(1)" value="Сохранить"></h1>
 						<p>
 							<table id="OptionsTable">
 								<tbody>
@@ -717,29 +692,103 @@
 										<td style="text-align: center;">ЗНАЧЕНИЕ</td>
 									</tr>
 									<tr>
-										<td>O_LCD_OUT</td>
-										<td contenteditable="true" id="O_LCD_OUT"></td>
+										<td>Логи CMD-Консоли</td>
+										<td>
+											<select id="O_CMD_OUT">
+												<option>Выключить</option>
+												<option>Подробно</option>
+												<option>Отладка</option>
+												<option>Информация</option>
+												<option>Предупреждения</option>
+												<option>Ошибки</option>
+											</select>
+										</td>
 									</tr>
 									<tr>
-										<td>O_DDMM_FLAG</td>
-										<td contenteditable="true" id="O_DDMM_FLAG"></td>
+										<td>Выключить дисплей</td>
+										<td>
+											<select id="O_LCD_OUT">
+												<option>Не выключать</option>
+												<option>через 5 мин</option>
+												<option>через 10 мин</option>
+												<option>через 15 мин</option>
+												<option>через 20 мин</option>
+												<option>через 25 мин</option>
+												<option>через 30 мин</option>
+											</select>
+										</td>
 									</tr>
 									<tr>
-										<td>O_LCD_ROTA</td>
-										<td contenteditable="true" id="O_LCD_ROTA"></td>
+										<td>Яркость дисплея</td>
+										<td>
+											<select id="O_LCD_BRG">
+												<option>Не регулировать</option>
+												<option>автоматически по времени</option>
+												<option>автоматически от освещения</option>
+												<option>вручную</option>
+											</select>
+										</td>
+									</tr>
+									<tr>
+										<td>Поворот дисплея</td>
+										<td>
+											<select id="O_LCD_ROTA">
+												<option>НЕТ</option>
+												<option>ДА</option>
+											</select>
+										</td>
+									</tr>
+									<tr>
+										<td>Формат вывода даты</td>
+										<td>
+											<select id="O_DDMM_FLAG">
+												<option>ММДД</option>
+												<option>ДДММ</option>
+											</select>
+										</td>
+									</tr>
+									<tr>
+										<td>Смещение часового пояса</td>
+										<td>
+											<select id="O_TZONE">
+												<option>-12</option>
+												<option>-11</option>
+												<option>-10</option>
+												<option>-9</option>
+												<option>-8</option>
+												<option>-7</option>
+												<option>-6</option>
+												<option>-5</option>
+												<option>-4</option>
+												<option>-3</option>
+												<option>-2</option>
+												<option>-1</option>
+												<option>0</option>
+												<option>+1</option>
+												<option>+2</option>
+												<option>+3</option>
+												<option>+4</option>
+												<option>+5</option>
+												<option>+6</option>
+												<option>+7</option>
+												<option>+8</option>
+												<option>+9</option>
+												<option>+10</option>
+												<option>+11</option>
+												<option>+12</option>
+											</select>
+										</td>
 									</tr>
 								</tbody>
-							</table>
-							<br>
+							</table> <br>
 							<input class="checkbox" id="consON" type="checkbox" onclick="consoleON()">
-							<label
-								for="consON">Консоль:&emsp;&emsp;&emsp;&emsp;&ensp;ВЫКЛ&emsp;&emsp;&emsp;&ensp;ВКЛ</label>
+							<label for="consON">WEB-Консоль:&emsp;&emsp;&emsp;ВЫКЛ&emsp;&emsp;&emsp;&ensp;ВКЛ</label>
 							<br>
 
 						</p>
 						<h1>
 							Обновить до: <span id=newrelease></span>
-							&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type=button value="Обновить сейчас"
+							&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="button" value="Обновить сейчас"
 								onclick="upgrade()" />
 							&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span id=updatefb></span>
 							<br>
@@ -750,14 +799,14 @@
 							<span class=bold4>Чтобы обновить или перезагрузить текущий релиз:</span>
 							<br>
 							<br>
-							<input type=button value="Обновить сейчас" onclick="upgrade()" />
+							<input type="button" value="Обновить сейчас" onclick="upgrade()" />
 							<br>
 							<span class=bold4 id=Infos></span>
 							<br>
 						</p>
 						<h1>История:</h1>
 						<br>
-						<input type=button value="Read the history" onclick="checkhistory()" />
+						<input type="button" value="Read the history" onclick="checkhistory()" />
 						<br>
 						<span class=bold4 id=History></span>
 						<br>

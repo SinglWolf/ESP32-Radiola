@@ -49,7 +49,7 @@ const char strsGSTAT[] = {"HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n
 const char HARDWARE[] = {"HTTP/1.1 200 OK\r\nContent-Type:application/json\r\nContent-Length:%d\r\n\r\n{\"inputnum\":\"%u\",\"Volume\":\"%02u\",\"Treble\":\"%02u\",\"Bass\":\"%02u\",\"rear_on\":\"%u\",\"attlf\":\"%02u\",\"attrf\":\"%02u\",\"attlr\":\"%02u\",\"attrr\":\"%02u\",\"loud1\":\"%u\",\"loud2\":\"%u\",\"loud3\":\"%u\",\"sla1\":\"%u\",\"sla2\":\"%u\",\"sla3\":\"%u\",\"mute\":\"%u\"}"};
 const char GPIOS[] = {"HTTP/1.1 200 OK\r\nContent-Type:application/json\r\nContent-Length:%d\r\n\r\n{\
 \"GPIO_MODE\":\"%u\",\
-\"ERROR\":\"%03u\",\
+\"ERROR\":\"%04X\",\
 \"K_SPI\":\"%u\",\
 \"P_MISO\":\"%03u\",\
 \"P_MOSI\":\"%03u\",\
@@ -60,14 +60,10 @@ const char GPIOS[] = {"HTTP/1.1 200 OK\r\nContent-Type:application/json\r\nConte
 \"P_ENC0_A\":\"%03u\",\
 \"P_ENC0_B\":\"%03u\",\
 \"P_ENC0_BTN\":\"%03u\",\
-\"P_ENC1_A\":\"%03u\",\
-\"P_ENC1_B\":\"%03u\",\
-\"P_ENC1_BTN\":\"%03u\",\
 \"P_I2C_SCL\":\"%03u\",\
 \"P_I2C_SDA\":\"%03u\",\
 \"P_LCD_CS\":\"%03u\",\
 \"P_LCD_A0\":\"%03u\",\
-\"P_LCD_RST\":\"%03u\",\
 \"P_LED_GPIO\":\"%03u\",\
 \"P_IR_SIGNAL\":\"%03u\",\
 \"P_BACKLIGHT\":\"%03u\",\
@@ -1229,34 +1225,38 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 	}
 	else if (strcmp(name, "/gpios") == 0)
 	{
-		changed = false;
 		if (data_size > 0)
 		{
-			char arg[3];
+			changed = false;
+			char arg[4];
 			bool gpio_mode = false;
 			nvs_handle hardware_handle;
 			esp_err_t err = ESP_OK;
 
 			uint8_t spi_no;
-			gpio_num_t miso, mosi, sclk, xcs, xdcs, dreq, ledgpio, enca, encb, encbtn, enca1, encb1, encbtn1, sda, scl, cs, a0, rstlcd, ir, lcdb, tach, fanspeed, ds18b20, touch, buzzer;
-			if (getSParameterFromResponse(arg, 3, "save=", data, data_size))
+			gpio_num_t miso, mosi, sclk, xcs, xdcs, dreq, ledgpio, enca, encb, encbtn, sda, scl, cs, a0, ir, lcdb, tach, fanspeed, ds18b20, touch, buzzer;
+			if (getSParameterFromResponse(arg, 4, "save=", data, data_size))
 				if (strcmp(arg, "1") == 0)
 					changed = true;
-			if (getSParameterFromResponse(arg, 3, "gpio_mode=", data, data_size))
+			if (getSParameterFromResponse(arg, 4, "gpio_mode=", data, data_size))
 				if ((strcmp(arg, "1") == 0))
 					gpio_mode = true;
 			if (gpio_mode)
 			{
-				err = open_partition("hardware", "gpio_space", NVS_READONLY, &hardware_handle);
+				err = open_partition("hardware", "gpio_space", (changed == false ? NVS_READONLY : NVS_READWRITE), &hardware_handle);
 				if (err != ESP_OK)
 					gpio_mode = false;
+				else
+					close_partition(hardware_handle, "hardware");
 			}
+			if (changed)
+				gpio_mode = false;
 			err |= gpio_get_spi_bus(&spi_no, &miso, &mosi, &sclk, gpio_mode);
 			err |= gpio_get_vs1053(&xcs, &xdcs, &dreq, gpio_mode);
 			err |= gpio_get_ledgpio(&ledgpio, gpio_mode);
-			err |= gpio_get_encoders(&enca, &encb, &encbtn, &enca1, &encb1, &encbtn1, gpio_mode);
+			err |= gpio_get_encoders(&enca, &encb, &encbtn, gpio_mode);
 			err |= gpio_get_i2c(&sda, &scl, gpio_mode);
-			err |= gpio_get_spi_lcd(&cs, &a0, &rstlcd, gpio_mode);
+			err |= gpio_get_spi_lcd(&cs, &a0, gpio_mode);
 			err |= gpio_get_ir_signal(&ir, gpio_mode);
 			err |= gpio_get_lcd_backlightl(&lcdb, gpio_mode);
 			err |= gpio_get_tachometer(&tach, gpio_mode);
@@ -1264,97 +1264,86 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 			err |= gpio_get_ds18b20(&ds18b20, gpio_mode);
 			err |= gpio_get_touch(&touch, gpio_mode);
 			err |= gpio_get_buzzer(&buzzer, gpio_mode);
-
 			if (err != ESP_OK)
 			{
 				changed = false;
-				err = 255;
 			}
 			if (changed)
 			{
-				getSParameterFromResponse(arg, 3, "K_SPI=", data, data_size);
+				getSParameterFromResponse(arg, 4, "K_SPI=", data, data_size);
 				spi_no = atoi(arg);
-				getSParameterFromResponse(arg, 3, "P_MISO=", data, data_size);
+				getSParameterFromResponse(arg, 4, "P_MISO=", data, data_size);
 				miso = atoi(arg);
-				getSParameterFromResponse(arg, 3, "P_MOSI=", data, data_size);
+				getSParameterFromResponse(arg, 4, "P_MOSI=", data, data_size);
 				mosi = atoi(arg);
-				getSParameterFromResponse(arg, 3, "P_CLK=", data, data_size);
+				getSParameterFromResponse(arg, 4, "P_CLK=", data, data_size);
 				sclk = atoi(arg);
 				err |= gpio_set_spi_bus(spi_no, miso, mosi, sclk);
-				getSParameterFromResponse(arg, 3, "P_XCS=", data, data_size);
+				getSParameterFromResponse(arg, 4, "P_XCS=", data, data_size);
 				xcs = atoi(arg);
-				getSParameterFromResponse(arg, 3, "P_XDCS=", data, data_size);
+				getSParameterFromResponse(arg, 4, "P_XDCS=", data, data_size);
 				xdcs = atoi(arg);
-				getSParameterFromResponse(arg, 3, "P_DREQ=", data, data_size);
+				getSParameterFromResponse(arg, 4, "P_DREQ=", data, data_size);
 				dreq = atoi(arg);
 				err |= gpio_set_vs1053(xcs, xdcs, dreq);
-				getSParameterFromResponse(arg, 3, "P_ENC0_A=", data, data_size);
+				getSParameterFromResponse(arg, 4, "P_ENC0_A=", data, data_size);
 				enca = atoi(arg);
-				getSParameterFromResponse(arg, 3, "P_ENC0_B=", data, data_size);
+				getSParameterFromResponse(arg, 4, "P_ENC0_B=", data, data_size);
 				encb = atoi(arg);
-				getSParameterFromResponse(arg, 3, "P_ENC0_BTN=", data, data_size);
+				getSParameterFromResponse(arg, 4, "P_ENC0_BTN=", data, data_size);
 				encbtn = atoi(arg);
-				getSParameterFromResponse(arg, 3, "P_ENC1_A=", data, data_size);
-				enca1 = atoi(arg);
-				getSParameterFromResponse(arg, 3, "P_ENC1_B=", data, data_size);
-				encb1 = atoi(arg);
-				getSParameterFromResponse(arg, 3, "P_ENC1_BTN=", data, data_size);
-				encbtn1 = atoi(arg);
-				err |= gpio_set_encoders(enca, encb, encbtn, enca1, encb1, encbtn1);
-				getSParameterFromResponse(arg, 3, "P_I2C_SCL=", data, data_size);
+				err |= gpio_set_encoders(enca, encb, encbtn);
+				getSParameterFromResponse(arg, 4, "P_I2C_SCL=", data, data_size);
 				sda = atoi(arg);
-				getSParameterFromResponse(arg, 3, "P_I2C_SDA=", data, data_size);
+				getSParameterFromResponse(arg, 4, "P_I2C_SDA=", data, data_size);
 				scl = atoi(arg);
 				err |= gpio_set_i2c(sda, scl);
-				getSParameterFromResponse(arg, 3, "P_LCD_CS=", data, data_size);
+				getSParameterFromResponse(arg, 4, "P_LCD_CS=", data, data_size);
 				cs = atoi(arg);
-				getSParameterFromResponse(arg, 3, "P_LCD_A0=", data, data_size);
+				getSParameterFromResponse(arg, 4, "P_LCD_A0=", data, data_size);
 				a0 = atoi(arg);
-				getSParameterFromResponse(arg, 3, "P_LCD_RST=", data, data_size);
-				rstlcd = atoi(arg);
-				err |= gpio_set_spi_lcd(cs, a0, rstlcd);
-				getSParameterFromResponse(arg, 3, "P_LED_GPIO=", data, data_size);
+				err |= gpio_set_spi_lcd(cs, a0);
+				getSParameterFromResponse(arg, 4, "P_LED_GPIO=", data, data_size);
 				err |= gpio_set_ledgpio(ledgpio);
-				getSParameterFromResponse(arg, 3, "P_IR_SIGNAL=", data, data_size);
+				getSParameterFromResponse(arg, 4, "P_IR_SIGNAL=", data, data_size);
 				ir = atoi(arg);
 				err |= gpio_set_ir_signal(ir);
-				getSParameterFromResponse(arg, 3, "P_BACKLIGHT=", data, data_size);
+				getSParameterFromResponse(arg, 4, "P_BACKLIGHT=", data, data_size);
 				lcdb = atoi(arg);
 				err |= gpio_set_lcd_backlightl(lcdb);
-				getSParameterFromResponse(arg, 3, "P_TACHOMETER=", data, data_size);
+				getSParameterFromResponse(arg, 4, "P_TACHOMETER=", data, data_size);
 				tach = atoi(arg);
 				err |= gpio_set_tachometer(tach);
-				getSParameterFromResponse(arg, 3, "P_FAN_SPEED=", data, data_size);
+				getSParameterFromResponse(arg, 4, "P_FAN_SPEED=", data, data_size);
 				fanspeed = atoi(arg);
 				err |= gpio_set_fanspeed(fanspeed);
-				getSParameterFromResponse(arg, 3, "P_DS18B20=", data, data_size);
+				getSParameterFromResponse(arg, 4, "P_DS18B20=", data, data_size);
 				ds18b20 = atoi(arg);
 				err |= gpio_set_ds18b20(ds18b20);
-				getSParameterFromResponse(arg, 3, "P_TOUCH_CS=", data, data_size);
+				getSParameterFromResponse(arg, 4, "P_TOUCH_CS=", data, data_size);
 				touch = atoi(arg);
 				err |= gpio_set_touch(touch);
-				getSParameterFromResponse(arg, 3, "P_BUZZER=", data, data_size);
+				getSParameterFromResponse(arg, 4, "P_BUZZER=", data, data_size);
 				buzzer = atoi(arg);
 				err |= gpio_set_buzzer(buzzer);
 				if (err != ESP_OK)
 				{
 					changed = false;
-					err = 255;
 				}
 			}
 			int json_length;
-			json_length = 479;
+			json_length = 409;
 
-			char buf[549];
+			char buf[479];
 			sprintf(buf, GPIOS,
 					json_length,
 					g_device->gpio_mode,
 					err,
 					spi_no, miso, mosi, sclk,
 					xcs, xdcs, dreq,
-					enca, encb, encbtn, enca1, encb1, encbtn1,
+					enca, encb, encbtn,
 					sda, scl,
-					cs, a0, rstlcd,
+					cs, a0,
 					ledgpio,
 					ir,
 					lcdb,
@@ -1363,8 +1352,7 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 					ds18b20,
 					touch,
 					buzzer);
-			ESP_LOGE(TAG, "Test GPIOS\nSave: %d\nERR: %u\ngpio_mode: %d\nBuf len: %u\nBuf: %s\nData: %s\nData size: %d\n\n", changed, err, gpio_mode, strlen(buf), buf, data, data_size);
-			ESP_LOGE(TAG, "GPIO VALUE:\nerr: %u, spi_no: %u,miso: %u, mosi: %u, sclk: %u, xcs: %u, xdcs: %u, dreq: %u, ledgpio: %u, enca: %u, encb: %u, encbtn: %u, enca1: %u, encb1: %u, encbtn1: %u, sda: %u, scl: %u, cs: %u, a0: %u, rstlcd: %u, ir: %u, lcdb: %u, tach: %u, fanspeed: %u, ds18b20: %u, touch: %u, buzzer: %u\n\n", err, spi_no, miso, mosi, sclk, xcs, xdcs, dreq, ledgpio, enca, encb, encbtn, enca1, encb1, encbtn1, sda, scl, cs, a0, rstlcd, ir, lcdb, tach, fanspeed, ds18b20, touch, buzzer);
+			//ESP_LOGE(TAG, "Test GPIOS\nSave: %d\nERR: %X\ngpio_mode: %d\nBuf len: %u\nBuf: %s\nData: %s\nData size: %d\n\n", changed, err, gpio_mode, strlen(buf), buf, data, data_size);
 			write(conn, buf, strlen(buf));
 			if (changed)
 			{

@@ -16,7 +16,7 @@
 
 static xSemaphoreHandle muxnvs = NULL;
 const char hardware[] = {"hardware"};
-const char option_space[] = {"option_space"};
+const char ircodes_space[] = {"ircodes_space"};
 const char gpio_space[] = {"gpio_space"};
 
 // init a gpio as output
@@ -115,7 +115,7 @@ esp_err_t gpio_get_spi_bus(uint8_t *spi_no, gpio_num_t *miso, gpio_num_t *mosi, 
 	{
 		err = nvs_get_u8(hardware_handle, "K_SPI", &val);
 		*spi_no = val;
-		}
+	}
 	if (miso != NULL)
 	{
 		err |= nvs_get_u8(hardware_handle, "P_MISO", &val);
@@ -187,157 +187,42 @@ esp_err_t gpio_set_vs1053(gpio_num_t xcs, gpio_num_t xdcs, gpio_num_t dreq)
 	return err;
 }
 
-esp_err_t option_get_lcd_rotat(uint8_t *rt, bool gpio_mode)
+void option_get_lcd_rotat(uint8_t *rt)
 {
-	// init default
-	if (!gpio_mode)
-	{
-		*rt = ((g_device->options32) & T_ROTAT) ? 1 : 0;
-		return 0;
-	}
-
-	uint8_t rot;
-	nvs_handle hardware_handle;
-	esp_err_t err = open_partition(hardware, option_space, NVS_READWRITE, &hardware_handle);
-
-	if (err != ESP_OK)
-	{
-		ESP_LOGD(TAG, "in lcd_rotat");
-		return err;
-	}
-
-	err = nvs_get_u8(hardware_handle, "O_LCD_ROTA", &rot);
-	if (rot != 255)
-		*rt = rot;
-	if (*rt)
-		*rt = 1;
-	if (err != ESP_OK)
-		ESP_LOGD(TAG, "oget_lcd_rotat err 0x%x", err);
-	close_partition(hardware_handle, hardware);
-	return err;
+	*rt = ((g_device->options32) & T_ROTAT) ? 1 : 0;
 }
 
-esp_err_t option_set_lcd_rotat(uint8_t rt)
+void option_set_lcd_rotat(uint8_t rt)
 {
-	nvs_handle hardware_handle;
-	esp_err_t err = open_partition(hardware, option_space, NVS_READWRITE, &hardware_handle);
-
-	if (err != ESP_OK)
-	{
-		ESP_LOGD(TAG, "in set lcd_rotat");
-		return err;
-	}
-
-	err = nvs_set_u8(hardware_handle, "O_LCD_ROTA", rt ? 1 : 0);
-	if (err != ESP_OK)
-		ESP_LOGD(TAG, "oset_lcd_rotat err 0x%x", err);
-
-	close_partition(hardware_handle, hardware);
-	return err;
-}
-
-esp_err_t option_get_ddmm(uint8_t *ddmm, bool gpio_mode)
-{
-	// init default
-	if (!gpio_mode)
-	{
-		*ddmm = ((g_device->options32) & T_DDMM) ? 1 : 0;
-		return 0;
-	}
-
-	uint8_t dmm;
-	nvs_handle hardware_handle;
-	esp_err_t err = open_partition(hardware, option_space, NVS_READWRITE, &hardware_handle);
-
-	if (err != ESP_OK)
-	{
-		ESP_LOGD(TAG, "in ddmm");
-		return err;
-	}
-
-	err = nvs_get_u8(hardware_handle, "O_DDMM_FLAG", &dmm);
-
-	if (err != ESP_OK)
-		ESP_LOGD(TAG, "oget_ddmm err 0x%x", err);
+	if (rt == 0)
+		g_device->options32 &= NT_ROTAT;
 	else
-	{
-		if (dmm != 255)
-			*ddmm = dmm;
-		if (*ddmm)
-			*ddmm = 1;
-	}
-
-	close_partition(hardware_handle, hardware);
-	return err;
+		g_device->options32 |= T_ROTAT;
+	saveDeviceSettings(g_device);
 }
 
-esp_err_t option_set_ddmm(uint8_t ddmm)
+void option_get_ddmm(uint8_t *ddmm)
 {
-	nvs_handle hardware_handle;
-	esp_err_t err = open_partition(hardware, option_space, NVS_READWRITE, &hardware_handle);
-
-	if (err != ESP_OK)
-	{
-		ESP_LOGD(TAG, "in set_ddmm");
-		return err;
-	}
-
-	err = nvs_set_u8(hardware_handle, "O_DDMM_FLAG", ddmm ? 1 : 0);
-	if (err != ESP_OK)
-		ESP_LOGD(TAG, "oset_ddmm err 0x%x", err);
-
-	close_partition(hardware_handle, hardware);
-	return err;
+	*ddmm = ((g_device->options32) & T_DDMM) ? 1 : 0;
 }
 
-esp_err_t option_get_lcd_out(uint32_t *lcd_out, bool gpio_mode)
+void option_set_ddmm(uint8_t ddmm)
 {
-	// init default
-	if (!gpio_mode)
-	{
-		*lcd_out = g_device->lcd_out;
-		return 0;
-	}
-
-	uint32_t lout;
-	nvs_handle hardware_handle;
-	esp_err_t err = open_partition(hardware, option_space, NVS_READWRITE, &hardware_handle);
-
-	if (err != ESP_OK)
-	{
-		ESP_LOGD(TAG, "in lcd_out");
-		return err;
-	}
-
-	err = nvs_get_u32(hardware_handle, "O_LCD_OUT", (uint32_t *)&lout);
-	if (err != ESP_OK)
-		ESP_LOGD(TAG, "oget_lcd_out err 0x%x", err);
+	if (ddmm == 0)
+		g_device->options32 &= NT_DDMM;
 	else
-	{
-		if (lout == 255)
-			lout = 0; // special case
-		*lcd_out = lout;
-	}
-	close_partition(hardware_handle, hardware);
-	return err;
+		g_device->options32 |= T_DDMM;
+	saveDeviceSettings(g_device);
 }
-esp_err_t option_set_lcd_out(uint32_t lcd_out)
+
+void option_get_lcd_out(uint32_t *lcd_out)
 {
-	nvs_handle hardware_handle;
-	esp_err_t err = open_partition(hardware, option_space, NVS_READWRITE, &hardware_handle);
-
-	if (err != ESP_OK)
-	{
-		ESP_LOGD(TAG, "in set_lcd_out");
-		return err;
-	}
-
-	err = nvs_set_u32(hardware_handle, "O_LCD_OUT", lcd_out);
-	if (err != ESP_OK)
-		ESP_LOGD(TAG, "oset_lcd_out err 0x%x", err);
-
-	close_partition(hardware_handle, hardware);
-	return err;
+	*lcd_out = g_device->lcd_out;
+}
+void option_set_lcd_out(uint32_t lcd_out)
+{
+	g_device->lcd_out = lcd_out;
+	saveDeviceSettings(g_device);
 }
 
 esp_err_t gpio_get_ledgpio(gpio_num_t *ledgpio, bool gpio_mode)
@@ -386,7 +271,7 @@ esp_err_t gpio_set_ledgpio(gpio_num_t ledgpio)
 	return err;
 }
 
-esp_err_t gpio_get_encoders(gpio_num_t *enca, gpio_num_t *encb, gpio_num_t *encbtn, gpio_num_t *enca1, gpio_num_t *encb1, gpio_num_t *encbtn1, bool gpio_mode)
+esp_err_t gpio_get_encoders(gpio_num_t *enca, gpio_num_t *encb, gpio_num_t *encbtn, bool gpio_mode)
 {
 	// init default
 	if (!gpio_mode)
@@ -394,9 +279,6 @@ esp_err_t gpio_get_encoders(gpio_num_t *enca, gpio_num_t *encb, gpio_num_t *encb
 		*enca = PIN_ENC0_A;
 		*encb = PIN_ENC0_B;
 		*encbtn = PIN_ENC0_BTN;
-		*enca1 = PIN_ENC1_A;
-		*encb1 = PIN_ENC1_B;
-		*encbtn1 = PIN_ENC1_BTN;
 		return 0;
 	}
 	nvs_handle hardware_handle;
@@ -414,12 +296,6 @@ esp_err_t gpio_get_encoders(gpio_num_t *enca, gpio_num_t *encb, gpio_num_t *encb
 	*encb = val;
 	err |= nvs_get_u8(hardware_handle, "P_ENC0_BTN", &val);
 	*encbtn = val;
-	err |= nvs_get_u8(hardware_handle, "P_ENC1_A", &val);
-	*enca1 = val;
-	err |= nvs_get_u8(hardware_handle, "P_ENC1_B", &val);
-	*encb1 = val;
-	err |= nvs_get_u8(hardware_handle, "P_ENC1_BTN", &val);
-	*encbtn1 = val;
 	if (err != ESP_OK)
 		ESP_LOGD(TAG, "g_get_encoder0 err 0x%x", err);
 
@@ -427,7 +303,7 @@ esp_err_t gpio_get_encoders(gpio_num_t *enca, gpio_num_t *encb, gpio_num_t *encb
 	return err;
 }
 
-esp_err_t gpio_set_encoders(gpio_num_t enca, gpio_num_t encb, gpio_num_t encbtn, gpio_num_t enca1, gpio_num_t encb1, gpio_num_t encbtn1)
+esp_err_t gpio_set_encoders(gpio_num_t enca, gpio_num_t encb, gpio_num_t encbtn)
 {
 	nvs_handle hardware_handle;
 	esp_err_t err = open_partition(hardware, gpio_space, NVS_READWRITE, &hardware_handle);
@@ -441,9 +317,6 @@ esp_err_t gpio_set_encoders(gpio_num_t enca, gpio_num_t encb, gpio_num_t encbtn,
 	err = nvs_set_u8(hardware_handle, "P_ENC0_A", (uint8_t)enca);
 	err |= nvs_set_u8(hardware_handle, "P_ENC0_B", (uint8_t)encb);
 	err |= nvs_set_u8(hardware_handle, "P_ENC0_BTN", (uint8_t)encbtn);
-	err |= nvs_set_u8(hardware_handle, "P_ENC1_A", (uint8_t)enca1);
-	err |= nvs_set_u8(hardware_handle, "P_ENC1_B", (uint8_t)encb1);
-	err |= nvs_set_u8(hardware_handle, "P_ENC1_BTN", (uint8_t)encbtn1);
 	if (err != ESP_OK)
 		ESP_LOGD(TAG, "gpio_set_encoders err 0x%x", err);
 
@@ -501,14 +374,13 @@ esp_err_t gpio_set_i2c(gpio_num_t sda, gpio_num_t scl)
 	return err;
 }
 
-esp_err_t gpio_get_spi_lcd(gpio_num_t *cs, gpio_num_t *a0, gpio_num_t *rstlcd, bool gpio_mode)
+esp_err_t gpio_get_spi_lcd(gpio_num_t *cs, gpio_num_t *a0, bool gpio_mode)
 {
 	// init default
 	if (!gpio_mode)
 	{
 		*cs = PIN_LCD_CS;
 		*a0 = PIN_LCD_A0;
-		*rstlcd = PIN_LCD_RST;
 		return 0;
 	}
 
@@ -522,11 +394,9 @@ esp_err_t gpio_get_spi_lcd(gpio_num_t *cs, gpio_num_t *a0, gpio_num_t *rstlcd, b
 
 	uint8_t val;
 	err = nvs_get_u8(hardware_handle, "P_LCD_CS", &val);
-	*cs = PIN_LCD_CS;
+	*cs = val;
 	err |= nvs_get_u8(hardware_handle, "P_LCD_A0", &val);
-	*a0 = PIN_LCD_A0;
-	err |= nvs_get_u8(hardware_handle, "P_LCD_RST", &val);
-	*rstlcd = PIN_LCD_RST;
+	*a0 = val;
 	if (err != ESP_OK)
 		ESP_LOGD(TAG, "g_get_spi_lcd err 0x%x", err);
 
@@ -534,7 +404,7 @@ esp_err_t gpio_get_spi_lcd(gpio_num_t *cs, gpio_num_t *a0, gpio_num_t *rstlcd, b
 	return err;
 }
 
-esp_err_t gpio_set_spi_lcd(gpio_num_t cs, gpio_num_t a0, gpio_num_t rstlcd)
+esp_err_t gpio_set_spi_lcd(gpio_num_t cs, gpio_num_t a0)
 {
 	nvs_handle hardware_handle;
 	esp_err_t err = open_partition(hardware, gpio_space, NVS_READWRITE, &hardware_handle);
@@ -547,7 +417,6 @@ esp_err_t gpio_set_spi_lcd(gpio_num_t cs, gpio_num_t a0, gpio_num_t rstlcd)
 
 	err = nvs_set_u8(hardware_handle, "P_LCD_CS", (uint8_t)cs);
 	err |= nvs_set_u8(hardware_handle, "P_LCD_A0", (uint8_t)a0);
-	err |= nvs_set_u8(hardware_handle, "P_LCD_RST", (uint8_t)rstlcd);
 	if (err != ESP_OK)
 		ESP_LOGD(TAG, "gpio_set_spi_lcd err 0x%x", err);
 
@@ -836,7 +705,7 @@ esp_err_t gpio_get_buzzer(gpio_num_t *buzzer, bool gpio_mode)
 	// init default
 	if (!gpio_mode)
 	{
-		*buzzer = PIN_NUM_PWM;
+		*buzzer = PIN_NUM_BUZZ;
 		return 0;
 	}
 

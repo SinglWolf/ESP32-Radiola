@@ -130,7 +130,7 @@ A command error display:\n\
 ##CMD_ERROR#\n\r"};
 
 uint16_t currentStation = 0;
-static gpio_num_t led_gpio = GPIO_NONE;
+static gpio_num_t gpioLed = GPIO_NONE;
 static IRAM_ATTR uint32_t lcd_out = 0xFFFFFFFF;
 static esp_log_level_t s_log_default_level = CONFIG_LOG_BOOTLOADER_LEVEL;
 extern void wsVol(char *vol);
@@ -844,10 +844,11 @@ void syspatch(char *s)
 // the gpio to use for the led indicator
 void sysledgpio(char *s)
 {
+	gpio_get_ledgpio(&gpioLed, g_device->gpio_mode);
 	char *t = strstr(s, parslashquote);
 	if (t == NULL)
 	{
-		kprintf("##Led GPIO is %d#\n", g_device->led_gpio);
+		kprintf("##Led GPIO is %d#\n", gpioLed);
 		return;
 	}
 	char *t_end = strstr(t, parquoteslash);
@@ -857,35 +858,13 @@ void sysledgpio(char *s)
 		kprintf(stritCMDERROR);
 		return;
 	}
-	g_device->led_gpio = value;
-	led_gpio = value;
-	gpio_output_conf(value);
-	saveDeviceSettings(g_device);
-	gpio_set_ledgpio(value); // write in nvs if any
-	sysledgpio((char *)"");
-	//	led_gpio = GPIO_NONE; // for getLedGpio
-}
-
-void setLedGpio(uint8_t val)
-{
-	led_gpio = val;
-	g_device->led_gpio = val;
-}
-
-uint8_t getLedGpio()
-{
-	/*	if (led_gpio == GPIO_NONE)
+	if (gpioLed != GPIO_NONE)
 	{
-		gpio_get_ledgpio(&led_gpio);
-		if (led_gpio != g_device->led_gpio) 
-		{
-			g_device->led_gpio = led_gpio;
-			saveDeviceSettings(g_device);
-		} 
-	} 
-	
-	*/
-	return led_gpio;
+		gpio_output_conf(gpioLed);
+	}
+	gpio_set_ledgpio(gpioLed); // write in nvs if any
+
+	sysledgpio((char *)"");
 }
 
 // display or change the DDMM display mode
@@ -1038,7 +1017,7 @@ void syslcdout(char *s)
 uint32_t getLcdOut()
 {
 	int increm = 0;
-	option_get_lcd_out(&lcd_out, g_device->gpio_mode);
+	option_get_lcd_out(&lcd_out);
 	if (lcd_out == 0xFFFFFFFF)
 	{
 		lcd_out = g_device->lcd_out;
@@ -1051,6 +1030,7 @@ uint32_t getLcdOut()
 // mode of the led indicator. Blink or play/stop
 void sysled(char *s)
 {
+	gpio_get_ledgpio(&gpioLed, g_device->gpio_mode);
 	char *t = strstr(s, parslashquote);
 	extern bool ledStatus;
 	if (t == NULL)
@@ -1070,7 +1050,7 @@ void sysled(char *s)
 		g_device->options |= T_LED;
 		ledStatus = false;
 		if (getState())
-			gpio_set_level(getLedGpio(), 0);
+			gpio_set_level(gpioLed, 0);
 	}
 	else
 	{

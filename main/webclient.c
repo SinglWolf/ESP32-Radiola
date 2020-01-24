@@ -35,6 +35,7 @@ xSemaphoreHandle sConnect, sConnected, sDisconnect, sHeader;
 
 static uint8_t once = 0;
 static uint8_t playing = 0;
+static gpio_num_t gpioLed;
 
 static const char *icyHeaders[] = {"icy-name:", "icy-notice1:", "icy-notice2:", "icy-url:", "icy-genre:", "icy-br:", "icy-description:", "ice-audio-info:", "icy-metaint:"};
 contentType_t contentType;
@@ -817,7 +818,13 @@ void clientDisconnect(const char *from)
 	}
 	if ((from[0] != 'C') || (from[1] != '_'))
 		if (!ledStatus)
-			gpio_set_level(getLedGpio(), 0);
+		{
+			gpio_get_ledgpio(&gpioLed, g_device->gpio_mode);
+			if (gpioLed != GPIO_NONE)
+			{
+				gpio_set_level(gpioLed, 0);
+			}
+		}
 	esp_wifi_set_ps(WIFI_PS_MAX_MODEM);
 	vTaskDelay(5);
 }
@@ -893,7 +900,7 @@ void clientReceiveCallback(int sockfd, char *pdata, int len)
 			}
 			break;
 		}
-		//no break here
+	//no break here
 	case C_HEADER1: // not ended
 	{
 		int i = 0;
@@ -1189,7 +1196,7 @@ void clientReceiveCallback(int sockfd, char *pdata, int len)
 			setVolumei(getVolume());
 			kprintf(CLIPLAY, 0x0d, 0x0a);
 			if (!ledStatus)
-				gpio_set_level(getLedGpio(), 1);
+				gpio_set_level(gpioLed, 1);
 		}
 	}
 }

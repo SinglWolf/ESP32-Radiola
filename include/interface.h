@@ -32,8 +32,6 @@ char* webList(int id);
 uint16_t getCurrentStation();
 void setCurrentStation( uint16_t vol);
 void clientVol(char *s);
-uint8_t getLedGpio();
-void setLedGpio(uint8_t val);
 uint32_t getLcdOut();
 bool getAutoWifi(void);
 void setAutoWifi();

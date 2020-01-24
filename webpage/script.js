@@ -660,9 +660,22 @@ function clickloud() {
 function mute() {
 	hardware(1);
 }
+function loadCSV() {
+	alert("Ещё не реализовано...");
+}
+function saveCSV() {
+	alert("Ещё не реализовано...");
+}
+function options(save) {
+	alert("Ещё не реализовано...");
+}
 
+function ircodes(ircode_mode, save, load) {
+	alert("Ещё не реализовано...");
+
+}
 function gpios(gpio_mode, save, load) {
-	var setgpios = "", gpio_mode_txt;
+	var setgpios = "", gpio_mode_txt, err, style_color;
 	xhr = new XMLHttpRequest();
 	xhr.onreadystatechange = function () {
 		if (xhr.readyState == 4 && xhr.status == 200) {
@@ -671,16 +684,27 @@ function gpios(gpio_mode, save, load) {
 			if (load == 1) {
 				gpio_mode = parseInt(arr["GPIO_MODE"].replace(/\\/g, ""));
 			}
-			if (parseInt(arr["ERROR"].replace(/\\/g, "")) != 0) {
-				GPIOsErr.innerHTML = "ОШИБКА";
+			err = arr["ERROR"].replace(/\\/g, "");
+			if (err != "0000") {
+				gpio_mode_txt = "ОШИБКА " + err + "<br>";
+				if (err == "1102")
+					gpio_mode_txt = gpio_mode_txt + "Записей в NVS ещё нет!!!";
+				style_color = "red";
 			} else {
 				if (gpio_mode == 0) {
-					gpio_mode_txt = "ПО УМОЛЧАНИЮ"
+					gpio_mode_txt = "ПО УМОЛЧАНИЮ<br>";
+					style_color = "blue";
 				} else {
-					gpio_mode_txt = "СЧИТАНО ИЗ NVS"
+					if (save == 0) {
+						gpio_mode_txt = "СЧИТАНО ИЗ NVS<br>";
+					} else {
+						gpio_mode_txt = "ЗАПИСАНО В NVS<br>";
+					}
+					style_color = "green";
 				}
-				GPIOsErr.innerHTML = gpio_mode_txt;
 			}
+			document.getElementById("GPIOsErr").style.color = style_color;
+			GPIOsErr.innerHTML = gpio_mode_txt;
 			K_SPI.innerHTML = parseInt(arr["K_SPI"].replace(/\\/g, ""));
 			P_MISO.innerHTML = parseInt(arr["P_MISO"].replace(/\\/g, ""));
 			P_MOSI.innerHTML = parseInt(arr["P_MOSI"].replace(/\\/g, ""));
@@ -691,14 +715,10 @@ function gpios(gpio_mode, save, load) {
 			P_ENC0_A.innerHTML = parseInt(arr["P_ENC0_A"].replace(/\\/g, ""));
 			P_ENC0_B.innerHTML = parseInt(arr["P_ENC0_B"].replace(/\\/g, ""));
 			P_ENC0_BTN.innerHTML = parseInt(arr["P_ENC0_BTN"].replace(/\\/g, ""));
-			P_ENC1_A.innerHTML = parseInt(arr["P_ENC1_A"].replace(/\\/g, ""));
-			P_ENC1_B.innerHTML = parseInt(arr["P_ENC1_B"].replace(/\\/g, ""));
-			P_ENC1_BTN.innerHTML = parseInt(arr["P_ENC1_BTN"].replace(/\\/g, ""));
 			P_I2C_SCL.innerHTML = parseInt(arr["P_I2C_SCL"].replace(/\\/g, ""));
 			P_I2C_SDA.innerHTML = parseInt(arr["P_I2C_SDA"].replace(/\\/g, ""));
 			P_LCD_CS.innerHTML = parseInt(arr["P_LCD_CS"].replace(/\\/g, ""));
 			P_LCD_A0.innerHTML = parseInt(arr["P_LCD_A0"].replace(/\\/g, ""));
-			P_LCD_RST.innerHTML = parseInt(arr["P_LCD_RST"].replace(/\\/g, ""));
 			P_LED_GPIO.innerHTML = parseInt(arr["P_LED_GPIO"].replace(/\\/g, ""));
 			P_IR_SIGNAL.innerHTML = parseInt(arr["P_IR_SIGNAL"].replace(/\\/g, ""));
 			P_BACKLIGHT.innerHTML = parseInt(arr["P_BACKLIGHT"].replace(/\\/g, ""));
@@ -712,7 +732,7 @@ function gpios(gpio_mode, save, load) {
 	if ((save == 1) && (confirm("Записать зачения GPIO в NVS?"))) {
 		//		if (confirm("Записать зачения GPIO в NVS?")) {
 		//		alert("Перезагрузка Радиолы. Пожалуйста, подождите.");
-		setgpios = "save=" + save
+		setgpios = "&save=" + save
 			+ "&K_SPI=" + K_SPI.innerHTML
 			+ "&P_MISO=" + P_MISO.innerHTML
 			+ "&P_MOSI=" + P_MOSI.innerHTML
@@ -723,14 +743,10 @@ function gpios(gpio_mode, save, load) {
 			+ "&P_ENC0_A=" + P_ENC0_A.innerHTML
 			+ "&P_ENC0_B=" + P_ENC0_B.innerHTML
 			+ "&P_ENC0_BTN=" + P_ENC0_BTN.innerHTML
-			+ "&P_ENC1_A=" + P_ENC1_A.innerHTML
-			+ "&P_ENC1_B=" + P_ENC1_B.innerHTML
-			+ "&P_ENC1_BTN=" + P_ENC1_BTN.innerHTML
 			+ "&P_I2C_SCL=" + P_I2C_SCL.innerHTML
 			+ "&P_I2C_SDA=" + P_I2C_SDA.innerHTML
 			+ "&P_LCD_CS=" + P_LCD_CS.innerHTML
 			+ "&P_LCD_A0=" + P_LCD_A0.innerHTML
-			+ "&P_LCD_RST=" + P_LCD_RST.innerHTML
 			+ "&P_LED_GPIO=" + P_LED_GPIO.innerHTML
 			+ "&P_IR_SIGNAL=" + P_IR_SIGNAL.innerHTML
 			+ "&P_BACKLIGHT=" + P_BACKLIGHT.innerHTML

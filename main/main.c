@@ -660,7 +660,6 @@ void timerTask(void *p)
 	initTimers();
 
 	gpio_get_ledgpio(&gpioLed, g_device->gpio_mode);
-	setLedGpio(gpioLed);
 	/*
 	printf("FIRST LED GPIO: %d, SSID:%d\n",gpioLed,g_device->current_ap);
 */
@@ -702,7 +701,7 @@ void timerTask(void *p)
 		{
 			if (ctimeMs >= cCur)
 			{
-				gpioLed = getLedGpio();
+				gpio_get_ledgpio(&gpioLed, g_device->gpio_mode);
 
 				if (stateLed)
 				{
@@ -879,14 +878,13 @@ void app_main()
 			free(g_device);
 			eeEraseAll();
 			g_device = getDeviceSettings();
-			g_device->cleared = 0xAABB;			   //marker init done
-			g_device->gpio_mode = 0;			   // Режим считывания GPIO 0 - по-умолчанию, 1 - из NVS
-			g_device->uartspeed = 115200;		   // default
-			g_device->audio_input_num = COMPUTER;  // default
-			g_device->options |= T_PATCH;		   // 0 = load patch
+			g_device->cleared = 0xAABB;				 //marker init done
+			g_device->gpio_mode = 0;				 // Режим считывания GPIO 0 - по-умолчанию, 1 - из NVS
+			g_device->uartspeed = 115200;			 // default
+			g_device->audio_input_num = COMPUTER;	// default
+			g_device->options |= T_PATCH;			 // 0 = load patch
 			g_device->trace_level = ESP_LOG_VERBOSE; //default
-			g_device->vol = 100;				   //default
-			g_device->led_gpio = GPIO_NUM_25;
+			g_device->vol = 100;					 //default
 			g_device->tzoffset = 5;
 			g_device->options32 |= T_ROTAT;
 			g_device->options32 |= T_DDMM;
@@ -920,14 +918,14 @@ void app_main()
 	setLogLevel(g_device->trace_level);
 	//time display
 	uint8_t ddmm;
-	option_get_ddmm(&ddmm, 0);
+	option_get_ddmm(&ddmm);
 	setDdmm(ddmm ? 1 : 0);
 
 	init_hardware();
 	ESP_LOGI(TAG, "Hardware init done...");
 	// lcd init
 	uint8_t rt;
-	option_get_lcd_rotat(&rt, 0);
+	option_get_lcd_rotat(&rt);
 	ESP_LOGI(TAG, "LCD Rotat %d", rt);
 	//lcd rotation
 	setRotat(rt);

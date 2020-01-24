@@ -25,6 +25,7 @@
 #define PIN_NUM_TACH GPIO_NUM_12    //Пин контроля оборотов вентилятора
 #define PIN_NUM_DS18B20 GPIO_NUM_14 //пин датчика температуры
 #define PIN_NUM_SDCS GPIO_NUM_15    //пин выбора SD карты
+#define PIN_NUM_BUZZ GPIO_NUM_33    //пин выбора SD карты
 
 // I2C
 //------------------------------------------------
@@ -59,9 +60,6 @@
 #define PIN_ENC0_A GPIO_NONE   //16	// 255 if encoder not used
 #define PIN_ENC0_B GPIO_NONE   //17	// DT
 #define PIN_ENC0_BTN GPIO_NONE //5// SW
-#define PIN_ENC1_A GPIO_NONE   // 255 if encoder not used
-#define PIN_ENC1_B GPIO_NONE   // DT
-#define PIN_ENC1_BTN GPIO_NONE // SW
 
 // SPI lcd
 //---------
@@ -90,12 +88,12 @@ esp_err_t gpio_get_spi_bus(uint8_t *spi_no, gpio_num_t *miso, gpio_num_t *mosi, 
 esp_err_t gpio_set_spi_bus(uint8_t spi_no, gpio_num_t miso, gpio_num_t mosi, gpio_num_t sclk);
 esp_err_t gpio_get_vs1053(gpio_num_t *xcs, gpio_num_t *xdcs, gpio_num_t *dreq, bool gpio_mode);
 esp_err_t gpio_set_vs1053(gpio_num_t xcs, gpio_num_t xdcs, gpio_num_t dreq);
-esp_err_t gpio_get_encoders(gpio_num_t *enca, gpio_num_t *encb, gpio_num_t *encbtn, gpio_num_t *enca1, gpio_num_t *encb1, gpio_num_t *encbtn1, bool gpio_mode);
-esp_err_t gpio_set_encoders(gpio_num_t enca, gpio_num_t encb, gpio_num_t encbtn, gpio_num_t enca1, gpio_num_t encb1, gpio_num_t encbtn1);
+esp_err_t gpio_get_encoders(gpio_num_t *enca, gpio_num_t *encb, gpio_num_t *encbtn, bool gpio_mode);
+esp_err_t gpio_set_encoders(gpio_num_t enca, gpio_num_t encb, gpio_num_t encbtn);
 esp_err_t gpio_get_i2c(gpio_num_t *sda, gpio_num_t *scl, bool gpio_mode);
 esp_err_t gpio_set_i2c(gpio_num_t sda, gpio_num_t scl);
-esp_err_t gpio_get_spi_lcd(gpio_num_t *cs, gpio_num_t *a0, gpio_num_t *rstlcd, bool gpio_mode);
-esp_err_t gpio_set_spi_lcd(gpio_num_t cs, gpio_num_t a0, gpio_num_t rstlcd);
+esp_err_t gpio_get_spi_lcd(gpio_num_t *cs, gpio_num_t *a0, bool gpio_mode);
+esp_err_t gpio_set_spi_lcd(gpio_num_t cs, gpio_num_t a0);
 esp_err_t gpio_get_ir_signal(gpio_num_t *ir, bool gpio_mode);
 esp_err_t gpio_set_ir_signal(gpio_num_t ir);
 esp_err_t gpio_get_lcd_backlightl(gpio_num_t *lcdb, bool gpio_mode);
@@ -107,12 +105,12 @@ esp_err_t gpio_get_touch(gpio_num_t *touch, bool gpio_mode);
 esp_err_t gpio_set_touch(gpio_num_t touch);
 esp_err_t gpio_get_ledgpio(gpio_num_t *ledgpio, bool gpio_mode);
 esp_err_t gpio_set_ledgpio(gpio_num_t ledgpio);
-esp_err_t option_get_lcd_rotat(uint8_t *rt, bool gpio_mode);
-esp_err_t option_set_lcd_rotat(uint8_t rt);
-esp_err_t option_get_ddmm(uint8_t *ddmm, bool gpio_mode);
-esp_err_t option_set_ddmm(uint8_t ddmm);
-esp_err_t option_get_lcd_out(uint32_t *lcd_out, bool gpio_mode);
-esp_err_t option_set_lcd_out(uint32_t lcd_out);
+void option_get_lcd_rotat(uint8_t *rt);
+void option_set_lcd_rotat(uint8_t rt);
+void option_get_ddmm(uint8_t *ddmm);
+void option_set_ddmm(uint8_t ddmm);
+void option_get_lcd_out(uint32_t *lcd_out);
+void option_set_lcd_out(uint32_t lcd_out);
 esp_err_t gpio_get_ds18b20(gpio_num_t *ds18b20, bool gpio_mode);
 esp_err_t gpio_set_ds18b20(gpio_num_t ds18b20);
 esp_err_t gpio_get_fanspeed(gpio_num_t *fanspeed, bool gpio_mode);

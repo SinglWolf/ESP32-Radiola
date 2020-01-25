@@ -59,28 +59,28 @@
 
 **Распиновка по-умолчанию** 
 
-| ESP32 | VS1053  | TFT  | XPT2046 | TDA7313\nTDA7317 | DS1820 |  Fan  | LED  | DS3231 | IRLED | BUZZER |
-| :---: | :-----: | :--: | :-----: | :-----: | :----: | :---: | :--: | :----: | :---: | :----: |
-|   19  |  MISO   | MISO | T_MISO  |         |        |       |      |        |       |        |
-|   23  |  MOSI   | MOSI | T_MOSI  |         |        |       |      |        |       |        |
-|   18  |  CLK    | CLK  | T_CLK   |         |        |       |      |        |       |        |
-|   5   |  XCS    |      |         |         |        |       |      |        |       |        |
-|   32  |  XDCS   |      |         |         |        |       |      |        |       |        |
-|   4   |  DREQ   |      |         |         |        |       |      |        |       |        |
-|   21  |         |      |         |   SCL   |        |       |      |   SCL  |       |        |
-|   22  |         |      |         |   SDA   |        |       |      |   SDA  |       |        |
-|   27  |         | CS   |         |         |        |       |      |        |       |        |
-|   2   |         | DC   |         |         |        |       |      |        |       |        |
-|   25  |         |      |         |         |        |       | +LED |        |       |        |
-|   35  |         |      |         |         |        |       |      |        |+IRLED |        |
-|   26  |         | LED  |         |         |        |       |      |        |       |        |
-|   12  |         |      |         |         |        | TACH  |      |        |       |        |
-|   13  |         |      |         |         |        | PWM   |      |        |       |        |
-|   14  |         |      |         |         | DS1820 |       |      |        |       |        |
-|   0   |         |      | T_CS    |         |        |       |      |        |       |        |
-|   33  |         |      |         |         |        |       |      |        |       |+BUZZER |
-| (EN)  |  RESET  | RES  |         |         |        |       |      |        |       |        |
-|       |         |      |         |         |        |       |      |        |       |        |
+| ESP32 | VS1053  | TFT  | XPT2046 | TDA7313<br/>TDA7317<br/>DS3231 | DS1820 |  Fan  | LED  | IRLED | BUZZER |
+| :---: | :-----: | :--: | :-----: | :-----: | :----: | :---: | :--: | :---: | :----: |
+|   19  |  MISO   | MISO | T_MISO  |         |        |       |      |       |        |
+|   23  |  MOSI   | MOSI | T_MOSI  |         |        |       |      |       |        |
+|   18  |  CLK    | CLK  | T_CLK   |         |        |       |      |       |        |
+|   5   |  XCS    |      |         |         |        |       |      |       |        |
+|   32  |  XDCS   |      |         |         |        |       |      |       |        |
+|   4   |  DREQ   |      |         |         |        |       |      |       |        |
+|   21  |         |      |         |   SCL   |        |       |      |       |        |
+|   22  |         |      |         |   SDA   |        |       |      |       |        |
+|   27  |         | CS   |         |         |        |       |      |       |        |
+|   2   |         | DC   |         |         |        |       |      |       |        |
+|   25  |         |      |         |         |        |       | +LED |       |        |
+|   35  |         |      |         |         |        |       |      |+IRLED |        |
+|   26  |         | LED  |         |         |        |       |      |       |        |
+|   12  |         |      |         |         |        | TACH  |      |       |        |
+|   13  |         |      |         |         |        | PWM   |      |       |        |
+|   14  |         |      |         |         | DS1820 |       |      |       |        |
+|   0   |         |      | T_CS    |         |        |       |      |       |        |
+|   33  |         |      |         |         |        |       |      |       |+BUZZER |
+| (EN)  |  RESET  | RES  |         |         |        |       |      |       |        |
+|       |         |      |         |         |        |       |      |       |        |
 
 ![Image alt](https://github.com/SinglWolf/ESP32-Radiola/raw/master/pictures/ESP32-Radiola.png)
 ![Image alt](https://github.com/SinglWolf/ESP32-Radiola/raw/master/pictures/amplifier.jpg)

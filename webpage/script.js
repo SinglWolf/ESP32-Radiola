@@ -131,7 +131,7 @@ function monerror() {
 function mstop() {
 	monitor = document.getElementById("audio");
 	monitor.muted = true;
-	monitor.src = 'http://karadio.karawin.fr/silence-1sec.mp3';
+	monitor.src = 'https://serverdoma.ru/esp32/silence-1sec.mp3';
 	moniPlaying = false;
 }
 function mpause() {
@@ -1195,7 +1195,7 @@ function checkhistory() {
 	xhr.onload = function () {
 		document.getElementById('History').innerHTML = xhr.responseText;
 	}
-	xhr.open("GET", "http://KaraDio.karawin.fr/history132.php", false);
+	xhr.open("GET", "https://serverdoma.ru/esp32/history132.php", false);
 	try {
 		xhr.send(null);
 	} catch (e) { ; }
@@ -1210,7 +1210,7 @@ function checkinfos() {
 	xhr.onload = function () {
 		document.getElementById('Infos').innerHTML = xhr.responseText;
 	}
-	xhr.open("GET", "http://KaraDio.karawin.fr/infos.php", false);
+	xhr.open("GET", "https://serverdoma.ru/esp32/infos.php", false);
 	try {
 		xhr.send(null);
 	} catch (e) { ; }
@@ -1226,7 +1226,7 @@ function checkversion() {
 		document.getElementById('Version').innerHTML = xhr.responseText;
 		document.getElementById('newrelease').innerHTML = document.getElementById('firmware_last').innerHTML;
 	}
-	xhr.open("GET", "http://KaraDio.karawin.fr/version32.php", false);
+	xhr.open("GET", "https://serverdoma.ru/esp32/version32.php", false);
 	try {
 		xhr.send(null);
 	} catch (e) { ; }

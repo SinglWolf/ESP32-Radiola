@@ -1103,7 +1103,7 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 				if (aua == NULL)
 				{
 					aua = inmalloc(12);
-					strcpy(aua, "ESP32Radiola/1.6");
+					strcpy(aua, "ESP32Radiola/1.5");
 				}
 			}
 			if (aua != NULL)

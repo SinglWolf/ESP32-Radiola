@@ -4,13 +4,19 @@
 
 <body>
 
-	<p><span class="label label-success">Релиз <span id="firmware_last">1.0 Rev: Beta 1</span> - Дата не определена...
+	<p><span class="label label-success">Релиз <span id="firmware_last">1.0 Rev: Beta 2</span> - Дата не определена...
 		</span>
 	</p>
 	<p>
 		Анонс:
 		<ul id="ordered">
-			<li> 1.0 R B1:
+			<li> 1.0 Rev Beta 2:
+				<ul id="ordered">
+					<li>Работает обновление через OTA. (Прошивать на чистую FLASH!!!)</li>
+					<li>Анонсы проекта можно смотреть в веб-интерфейсе.</li>
+				</ul>
+			</li>
+			<li> 1.0 Rev Beta 1:
 				<ul id="ordered">
 					<li>Переопределение GPIOs (пинов ESP32) через web-интерфейс. (Прошивать на чистую FLASH!!!)</li>
 					<li>Русифицированы сообщения, выводимые на дисплей.</li>

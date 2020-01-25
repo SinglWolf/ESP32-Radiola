@@ -59,8 +59,7 @@
 
 **Распиновка по-умолчанию** 
 
-| ESP32 | VS1053  | TFT  | XPT2046 | TDA7313 | DS1820 |  Fan  | LED  | DS3231 | IRLED | BUZZER |
-|       |         |      |         | TDA7317 |        |       |      |        |       |        |
+| ESP32 | VS1053  | TFT  | XPT2046 | TDA7313\nTDA7317 | DS1820 |  Fan  | LED  | DS3231 | IRLED | BUZZER |
 | :---: | :-----: | :--: | :-----: | :-----: | :----: | :---: | :--: | :----: | :---: | :----: |
 |   19  |  MISO   | MISO | T_MISO  |         |        |       |      |        |       |        |
 |   23  |  MOSI   | MOSI | T_MOSI  |         |        |       |      |        |       |        |

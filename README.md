@@ -89,8 +89,11 @@
 | (EN)  |  RESET  | RES  |         |         |        |       |       |        |
 |       |         |      |         |         |        |       |       |        |
 
+**[flash_download_tools_v3.6.8](https://www.espressif.com/sites/default/files/tools/flash_download_tools_v3.6.8.zip)**
+
 **Прошивка**
-*адреса:*
+ 
+ *адреса:*
   + bootloader.bin - 0x1000
   + partitions.bin - 0x8000
   + ESP32Radiola.bin - 0x10000 и 0x1D0000

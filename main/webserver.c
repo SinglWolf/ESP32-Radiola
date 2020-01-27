@@ -48,6 +48,8 @@ const char strsWIFI[] = {"HTTP/1.1 200 OK\r\nContent-Type:application/json\r\nCo
 const char strsGSTAT[] = {"HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: %d\r\n\r\n{\"Name\":\"%s\",\"URL\":\"%s\",\"File\":\"%s\",\"Port\":\"%d\",\"ovol\":\"%d\"}"};
 const char HARDWARE[] = {"HTTP/1.1 200 OK\r\nContent-Type:application/json\r\nContent-Length:%d\r\n\r\n{\"inputnum\":\"%u\",\"Volume\":\"%02u\",\"Treble\":\"%02u\",\"Bass\":\"%02u\",\"rear_on\":\"%u\",\"attlf\":\"%02u\",\"attrf\":\"%02u\",\"attlr\":\"%02u\",\"attrr\":\"%02u\",\"loud1\":\"%u\",\"loud2\":\"%u\",\"loud3\":\"%u\",\"sla1\":\"%u\",\"sla2\":\"%u\",\"sla3\":\"%u\",\"mute\":\"%u\"}"};
 const char GPIOS[] = {"HTTP/1.1 200 OK\r\nContent-Type:application/json\r\nContent-Length:%d\r\n\r\n{\
+\"RELEASE\":\"%s\",\
+\"REVISION\":\"%s\",\
 \"GPIO_MODE\":\"%u\",\
 \"ERROR\":\"%04X\",\
 \"K_SPI\":\"%u\",\
@@ -72,7 +74,8 @@ const char GPIOS[] = {"HTTP/1.1 200 OK\r\nContent-Type:application/json\r\nConte
 \"P_TOUCH_CS\":\"%03u\",\
 \"P_BUZZER\":\"%03u\",\
 \"P_RXD\":\"%03u\",\
-\"P_TXD\":\"%03u\"\
+\"P_TXD\":\"%03u\",\
+\"P_LDR\":\"%03u\"\
 }"};
 
 static int8_t clientOvol = 0;
@@ -1235,7 +1238,7 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 			esp_err_t err = ESP_OK;
 
 			uint8_t spi_no;
-			gpio_num_t miso, mosi, sclk, xcs, xdcs, dreq, enca, encb, encbtn, sda, scl, cs, a0, ir, lcdb, tach, fanspeed, ds18b20, touch, buzzer, rxd, txd;
+			gpio_num_t miso, mosi, sclk, xcs, xdcs, dreq, enca, encb, encbtn, sda, scl, cs, a0, ir, lcdb, tach, fanspeed, ds18b20, touch, buzzer, rxd, txd, ldr;
 			if (getSParameterFromResponse(arg, 4, "save=", data, data_size))
 				if (strcmp(arg, "1") == 0)
 					changed = true;
@@ -1265,6 +1268,7 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 			err |= gpio_get_touch(&touch, gpio_mode);
 			err |= gpio_get_buzzer(&buzzer, gpio_mode);
 			err |= gpio_get_uart(&rxd, &txd, gpio_mode);
+			err |= gpio_get_ldr(&ldr, gpio_mode);
 			if (err != ESP_OK)
 			{
 				changed = false;
@@ -1330,17 +1334,20 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 				getSParameterFromResponse(arg, 4, "P_TXD=", data, data_size);
 				txd = atoi(arg);
 				err |= gpio_set_uart(rxd, txd);
+				getSParameterFromResponse(arg, 4, "P_LDR=", data, data_size);
+				ldr = atoi(arg);
+				err |= gpio_set_ldr(ldr);
 				if (err != ESP_OK)
 				{
 					changed = false;
 				}
 			}
-			int json_length;
-			json_length = 418;
+			int json_length = 459 + strlen(RELEASE) + strlen(REVISION);
 
-			char buf[488];
+			char buf[529 + strlen(RELEASE) + strlen(REVISION)];
 			sprintf(buf, GPIOS,
 					json_length,
+					RELEASE, REVISION,
 					g_device->gpio_mode,
 					err,
 					spi_no, miso, mosi, sclk,
@@ -1355,7 +1362,8 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 					ds18b20,
 					touch,
 					buzzer,
-					rxd, txd);
+					rxd, txd,
+					ldr);
 			ESP_LOGE(TAG, "Test GPIOS\nSave: %d\nERR: %X\ngpio_mode: %d\nBuf len: %u\nBuf: %s\nData: %s\nData size: %d\n\n", changed, err, gpio_mode, strlen(buf), buf, data, data_size);
 			write(conn, buf, strlen(buf));
 			if (changed)

@@ -703,6 +703,51 @@ esp_err_t gpio_set_fanspeed(gpio_num_t fanspeed)
 	return err;
 }
 
+esp_err_t gpio_get_ldr(gpio_num_t *ldr, bool gpio_mode)
+{
+	// init default
+	if (!gpio_mode)
+	{
+		*ldr = PIN_NUM_LDR;
+		return 0;
+	}
+
+	nvs_handle hardware_handle;
+	esp_err_t err = open_partition(hardware, gpio_space, NVS_READONLY, &hardware_handle);
+	if (err != ESP_OK)
+	{
+		ESP_LOGD(TAG, "in ldr");
+		return err;
+	}
+
+	uint8_t val;
+	err = nvs_get_u8(hardware_handle, "P_LDR", &val);
+	*ldr = val;
+	if (err != ESP_OK)
+		ESP_LOGD(TAG, "g_get_ldr err 0x%x", err);
+
+	close_partition(hardware_handle, hardware);
+	return err;
+}
+
+esp_err_t gpio_set_ldr(gpio_num_t ldr)
+{
+	nvs_handle hardware_handle;
+	esp_err_t err = open_partition(hardware, gpio_space, NVS_READWRITE, &hardware_handle);
+
+	if (err != ESP_OK)
+	{
+		ESP_LOGD(TAG, "in gpio_set_ldr");
+		return err;
+	}
+
+	err = nvs_set_u8(hardware_handle, "P_LDR", (uint8_t)ldr);
+	if (err != ESP_OK)
+		ESP_LOGD(TAG, "gpio_set_ldr err 0x%x", err);
+
+	close_partition(hardware_handle, hardware);
+	return err;
+}
 esp_err_t gpio_get_buzzer(gpio_num_t *buzzer, bool gpio_mode)
 {
 	// init default

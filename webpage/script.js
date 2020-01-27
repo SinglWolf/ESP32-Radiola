@@ -753,6 +753,10 @@ function gpios(gpio_mode, save, load) {
 			P_DS18B20.innerHTML = parseInt(arr["P_DS18B20"].replace(/\\/g, ""));
 			P_TOUCH_CS.innerHTML = parseInt(arr["P_TOUCH_CS"].replace(/\\/g, ""));
 			P_BUZZER.innerHTML = parseInt(arr["P_BUZZER"].replace(/\\/g, ""));
+			P_RXD.innerHTML = parseInt(arr["P_RXD"].replace(/\\/g, ""));
+			P_TXD.innerHTML = parseInt(arr["P_TXD"].replace(/\\/g, ""));
+			P_LDR.innerHTML = parseInt(arr["P_LDR"].replace(/\\/g, ""));
+			document.getElementById('currentrelease').innerHTML = arr["RELEASE"].replace(/\\/g, "") + " Rev: " + arr["REVISION"].replace(/\\/g, "");
 		}
 	}
 	if ((save == 1) && (confirm("Записать зачения GPIO в NVS?"))) {
@@ -779,7 +783,10 @@ function gpios(gpio_mode, save, load) {
 			+ "&P_FAN_SPEED=" + P_FAN_SPEED.innerHTML
 			+ "&P_DS18B20=" + P_DS18B20.innerHTML
 			+ "&P_TOUCH_CS=" + P_TOUCH_CS.innerHTML
-			+ "&P_BUZZER=" + P_BUZZER.innerHTML;
+			+ "&P_BUZZER=" + P_BUZZER.innerHTML
+			+ "&P_RXD=" + P_BUZZER.innerHTML
+			+ "&P_TXD=" + P_BUZZER.innerHTML
+			+ "&P_LDR=" + P_BUZZER.innerHTML;
 	} else save = 0;
 
 	xhr.open("POST", "gpios", false);
@@ -789,7 +796,7 @@ function gpios(gpio_mode, save, load) {
 		+ "&");
 }
 function hardware(save) {
-	var i, inputnum, loud = 0, mute = 0, rear = 0;
+	var i, inputnum, loud = 0, mute = 1, rear = 0;
 	xhr = new XMLHttpRequest();
 	xhr.onreadystatechange = function () {
 		if (xhr.readyState == 4 && xhr.status == 200) {
@@ -851,10 +858,9 @@ function hardware(save) {
 	for (inputnum = 1; inputnum < 4; inputnum++) if (document.getElementById('audioinput' + inputnum).checked) break;
 	if (inputnum == 4) inputnum = 1;
 
-
 	if (document.getElementById('rearON').checked) rear = 1;
 	if (document.getElementById('loud' + inputnum).checked) loud = 1;
-	if (document.getElementById('mute').checked) mute = 1;
+	if (document.getElementById('mute').checked) mute = 0;
 
 	xhr.open("POST", "hardware", false);
 	xhr.setRequestHeader(content, ctype);

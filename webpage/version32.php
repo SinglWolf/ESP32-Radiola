@@ -4,13 +4,13 @@
 
 <body>
 
-	<p><span class="label label-success">Релиз <span id="firmware_last">1.0 Rev: Beta 3</span> - Дата не определена...
+	<p><span class="label label-success">Релиз <span id="firmware_last">1.0 Rev: Beta 4</span> - Дата не определена...
 		</span>
 	</p>
 	<p>
 		Анонс:
 		<ul id="ordered">
-			<li> 1.0 Rev Beta 3:
+			<li> 1.0 Rev Beta 4:
 				<ul id="ordered">
 					<li>Проверена заливка прошивки через flash_download_tools_v3.6.8 - ОК</li>
 					<li>При отсутствии TDA7313 Радиола не перезагружается</li>

@@ -26,12 +26,13 @@
 #define PIN_NUM_DS18B20 GPIO_NUM_14 //пин датчика температуры
 #define PIN_NUM_SDCS GPIO_NUM_15    //пин выбора SD карты
 #define PIN_NUM_BUZZ GPIO_NUM_33    //пин BUZZER
+#define PIN_NUM_LDR GPIO_NONE       //пин фоторезистора
 
 // I2C
 //------------------------------------------------
 #define PIN_I2C_SDA GPIO_NUM_21
 #define PIN_I2C_SCL GPIO_NUM_22
-//-------------------------
+
 // SOFTUART
 //------------------------------------------------
 #define PIN_NUM_RXD GPIO_NONE
@@ -114,5 +115,7 @@ esp_err_t gpio_get_fanspeed(gpio_num_t *fanspeed, bool gpio_mode);
 esp_err_t gpio_set_fanspeed(gpio_num_t fanspeed);
 esp_err_t gpio_get_buzzer(gpio_num_t *buzzer, bool gpio_mode);
 esp_err_t gpio_set_buzzer(gpio_num_t buzzer);
+esp_err_t gpio_get_ldr(gpio_num_t *ldr, bool gpio_mode);
+esp_err_t gpio_set_ldr(gpio_num_t ldr);
 
 #endif

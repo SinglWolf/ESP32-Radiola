@@ -449,6 +449,36 @@ ul#ordered li {float:none;text-align:left;}
 	background-color: #0d0d0d;
 }
 
+#OptionsTable,#OptionsTable th,#OptionsTable td {
+	border: solid 1px;
+	border-collapse: collapse;
+	width: auto;
+	overflow-x: hidden;
+	border-color: #6d6f6d;
+}
+
+#OptionsTable tr:nth-child(even){
+	background-color: #151515;
+}
+
+table#OptionsTable tr:nth-child(odd){
+	background-color: #0d0d0d;
+}
+#OptionsTable select {
+	min-width: 25%;
+	color: #fff;
+    border: 1px solid #444;
+    background: #554;
+    border-radius: 5px;
+}
+#OptionsTable option {
+    min-width: 25%;
+    color: #000;
+    border: 1px solid #444;
+    background-color: #554;
+    border-radius: 5px;
+}
+
 a.page {
 	font-size:18pt!important;
 	margin-right:10px;

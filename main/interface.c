@@ -109,7 +109,6 @@ sys.dlog: Display the current log level\n\
 sys.logx: Set log level to x with x=n for none, v for verbose, d for debug, i for info, w for warning, e for error\n\
 sys.log: do nothing apart a trace on uart (debug use)\n\
 sys.lcdout and sys.lcdout(\"x\"): Timer in seconds to switch off the lcd. 0= no timer\n\
-sys.ledgpio and sys.ledgpio(\"x\"): Display and Change the default Led GPIO (4) to x\n\
 "};
 
 const char stritHELP4[] = {"\
@@ -130,7 +129,6 @@ A command error display:\n\
 ##CMD_ERROR#\n\r"};
 
 uint16_t currentStation = 0;
-static gpio_num_t gpioLed = GPIO_NONE;
 static IRAM_ATTR uint32_t lcd_out = 0xFFFFFFFF;
 static esp_log_level_t s_log_default_level = CONFIG_LOG_BOOTLOADER_LEVEL;
 extern void wsVol(char *vol);
@@ -239,7 +237,10 @@ void wifiScan()
 	esp_wifi_scan_get_ap_num(&number);
 	records = malloc(sizeof(wifi_ap_record_t) * number);
 	if (records == NULL)
+	{
+		free(records);
 		return;
+	}
 	esp_wifi_scan_get_ap_records(&number, records); // get the records
 	kprintf(hscan1, number);
 	if (number == 0)
@@ -425,9 +426,18 @@ void clientParseUrl(char *s)
 		strncpy(url, t + 2, (t_end - t));
 		clientSetURL(url);
 		char *title = malloc(88);
+		if (title == NULL)
+		{
+			free(title);
+			return;
+		}
 		sprintf(title, "{\"iurl\":\"%s\"}", url);
 		websocketbroadcast(title, strlen(title));
 		free(title);
+		free(url);
+	}
+	else
+	{
 		free(url);
 	}
 }
@@ -455,11 +465,18 @@ void clientParsePath(char *s)
 		//kprintf("cli.path: %s\n",path);
 		clientSetPath(path);
 		char *title = malloc(130);
+		if (title == NULL)
+		{
+			free(title);
+			return;
+		}
 		sprintf(title, "{\"ipath\":\"%s\"}", path);
 		websocketbroadcast(title, strlen(title));
 		free(title);
 		free(path);
 	}
+	else
+		free(path);
 }
 
 void clientParsePort(char *s)
@@ -485,11 +502,18 @@ void clientParsePort(char *s)
 		uint16_t porti = atoi(port);
 		clientSetPort(porti);
 		char *title = malloc(130);
+		if (title == NULL)
+		{
+			free(title);
+			return;
+		}
 		sprintf(title, "{\"iport\":\"%d\"}", porti);
 		websocketbroadcast(title, strlen(title));
 		free(title);
 		free(port);
 	}
+	else
+		free(port);
 }
 
 void clientPlay(char *s)
@@ -515,6 +539,8 @@ void clientPlay(char *s)
 		playStation(id);
 		free(id);
 	}
+	else
+		free(id);
 }
 
 const char strilLIST[] = {"##CLI.LIST#\n"};
@@ -811,6 +837,8 @@ void clientVol(char *s)
 		}
 		free(vol);
 	}
+	else
+		free(vol);
 }
 
 // option for loading or not the pacth of the vs1053
@@ -839,32 +867,6 @@ void syspatch(char *s)
 
 	saveDeviceSettings(g_device);
 	kprintf(stritPATCH, (g_device->options & T_PATCH) != 0 ? "unloaded" : "Loaded");
-}
-
-// the gpio to use for the led indicator
-void sysledgpio(char *s)
-{
-	gpio_get_ledgpio(&gpioLed, g_device->gpio_mode);
-	char *t = strstr(s, parslashquote);
-	if (t == NULL)
-	{
-		kprintf("##Led GPIO is %d#\n", gpioLed);
-		return;
-	}
-	char *t_end = strstr(t, parquoteslash);
-	uint8_t value = atoi(t + 2);
-	if ((t_end == NULL) || (value >= GPIO_NUM_MAX))
-	{
-		kprintf(stritCMDERROR);
-		return;
-	}
-	if (gpioLed != GPIO_NONE)
-	{
-		gpio_output_conf(gpioLed);
-	}
-	gpio_set_ledgpio(gpioLed); // write in nvs if any
-
-	sysledgpio((char *)"");
 }
 
 // display or change the DDMM display mode
@@ -1025,41 +1027,6 @@ uint32_t getLcdOut()
 	if (lcd_out > 0)
 		increm++; //adjust
 	return lcd_out + increm;
-}
-
-// mode of the led indicator. Blink or play/stop
-void sysled(char *s)
-{
-	gpio_get_ledgpio(&gpioLed, g_device->gpio_mode);
-	char *t = strstr(s, parslashquote);
-	extern bool ledStatus;
-	if (t == NULL)
-	{
-		kprintf("##Led is in %s mode#\n", ((g_device->options & T_LED) == 0) ? "Blink" : "Play");
-		return;
-	}
-	char *t_end = strstr(t, parquoteslash);
-	if (t_end == NULL)
-	{
-		kprintf(stritCMDERROR);
-		return;
-	}
-	uint8_t value = atoi(t + 2);
-	if (value != 0)
-	{
-		g_device->options |= T_LED;
-		ledStatus = false;
-		if (getState())
-			gpio_set_level(gpioLed, 0);
-	}
-	else
-	{
-		g_device->options &= NT_LED;
-		ledStatus = true;
-	} // options:0 = ledStatus true = Blink mode
-
-	saveDeviceSettings(g_device);
-	sysled((char *)"");
 }
 
 // display or change the tzo for ntp
@@ -1314,10 +1281,6 @@ void checkCommand(int size, char *s)
 			update_firmware((char *)"ESP32Radiolaprv");
 		else if (startsWith("patch", tmp + 4))
 			syspatch(tmp);
-		else if (startsWith("ledg", tmp + 4))
-			sysledgpio(tmp); //ledgpio
-		else if (startsWith("led", tmp + 4))
-			sysled(tmp);
 		else if (strcmp(tmp + 4, "date") == 0)
 			ntp_print_time();
 		else if (strncmp(tmp + 4, "vers", 4) == 0)

@@ -225,52 +225,6 @@ void option_set_lcd_out(uint32_t lcd_out)
 	saveDeviceSettings(g_device);
 }
 
-esp_err_t gpio_get_ledgpio(gpio_num_t *ledgpio, bool gpio_mode)
-{
-	// init default
-	if (!gpio_mode)
-	{
-		*ledgpio = GPIO_LED;
-		return 0;
-	}
-
-	nvs_handle hardware_handle;
-	esp_err_t err = open_partition(hardware, gpio_space, NVS_READONLY, &hardware_handle);
-	if (err != ESP_OK)
-	{
-		ESP_LOGD(TAG, "in ledgpio");
-		return err;
-	}
-
-	uint8_t val;
-	err = nvs_get_u8(hardware_handle, "P_LED_GPIO", &val);
-	*ledgpio = val;
-	if (err != ESP_OK)
-		ESP_LOGD(TAG, "g_get_ledgpio err 0x%x", err);
-
-	close_partition(hardware_handle, hardware);
-	return err;
-}
-
-esp_err_t gpio_set_ledgpio(gpio_num_t ledgpio)
-{
-	nvs_handle hardware_handle;
-	esp_err_t err = open_partition(hardware, gpio_space, NVS_READWRITE, &hardware_handle);
-
-	if (err != ESP_OK)
-	{
-		ESP_LOGD(TAG, "in set_ledgpio");
-		return err;
-	}
-
-	err = nvs_set_u8(hardware_handle, "P_LED_GPIO", ledgpio);
-	if (err != ESP_OK)
-		ESP_LOGD(TAG, "gpio_set_ledgpio err 0x%x", err);
-
-	close_partition(hardware_handle, hardware);
-	return err;
-}
-
 esp_err_t gpio_get_encoders(gpio_num_t *enca, gpio_num_t *encb, gpio_num_t *encbtn, bool gpio_mode)
 {
 	// init default
@@ -369,6 +323,55 @@ esp_err_t gpio_set_i2c(gpio_num_t sda, gpio_num_t scl)
 	err |= nvs_set_u8(hardware_handle, "P_I2C_SDA", (uint8_t)sda);
 	if (err != ESP_OK)
 		ESP_LOGD(TAG, "gpio_set_i2c err 0x%x", err);
+
+	close_partition(hardware_handle, hardware);
+	return err;
+}
+esp_err_t gpio_get_uart(gpio_num_t *rxd, gpio_num_t *txd, bool gpio_mode)
+{
+	// init default
+	if (!gpio_mode)
+	{
+		*rxd = PIN_NUM_RXD;
+		*txd = PIN_NUM_TXD;
+		return 0;
+	}
+
+	nvs_handle hardware_handle;
+	esp_err_t err = open_partition(hardware, gpio_space, NVS_READONLY, &hardware_handle);
+	if (err != ESP_OK)
+	{
+		ESP_LOGD(TAG, "in uart");
+		return err;
+	}
+
+	uint8_t val;
+	err = nvs_get_u8(hardware_handle, "P_RXD", &val);
+	*rxd = val;
+	err |= nvs_get_u8(hardware_handle, "P_TXD", &val);
+	*txd = val;
+	if (err != ESP_OK)
+		ESP_LOGD(TAG, "g_get_uart err 0x%x", err);
+
+	close_partition(hardware_handle, hardware);
+	return err;
+}
+
+esp_err_t gpio_set_uart(gpio_num_t rxd, gpio_num_t txd)
+{
+	nvs_handle hardware_handle;
+	esp_err_t err = open_partition(hardware, gpio_space, NVS_READWRITE, &hardware_handle);
+
+	if (err != ESP_OK)
+	{
+		ESP_LOGD(TAG, "in gpio_set_uart");
+		return err;
+	}
+
+	err = nvs_set_u8(hardware_handle, "P_TXD", (uint8_t)txd);
+	err |= nvs_set_u8(hardware_handle, "P_RXD", (uint8_t)rxd);
+	if (err != ESP_OK)
+		ESP_LOGD(TAG, "gpio_set_uart err 0x%x", err);
 
 	close_partition(hardware_handle, hardware);
 	return err;

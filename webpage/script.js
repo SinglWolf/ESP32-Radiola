@@ -666,13 +666,40 @@ function loadCSV() {
 function saveCSV() {
 	alert("Ещё не реализовано...");
 }
-function options(save) {
-	alert("Ещё не реализовано...");
+function devoptions(save) {
+	displaybright();
+	if (save == 1)
+		alert("Ещё не реализовано...");
 }
 
 function ircodes(ircode_mode, save, load) {
 	alert("Ещё не реализовано...");
 
+}
+function displaybright() {
+	if (document.getElementById('O_LCD_BRG').value == 0) {
+		document.getElementById("brightOn").style.display = "none";
+	} else {
+		document.getElementById("brightOn").style.display = "block";
+		if (document.getElementById('O_LCD_BRG').value == 1) {
+			document.getElementById("by_hand").style.display = "none";
+			document.getElementById("by_time").style.display = "block";
+			document.getElementById("brightness").style.display = "block";
+			document.getElementById("by_lighting").style.display = "none";
+		}
+		if (document.getElementById('O_LCD_BRG').value == 2) {
+			document.getElementById("by_hand").style.display = "none";
+			document.getElementById("by_time").style.display = "none";
+			document.getElementById("brightness").style.display = "block";
+			document.getElementById("by_lighting").style.display = "block";
+		}
+		if (document.getElementById('O_LCD_BRG').value == 3) {
+			document.getElementById("by_hand").style.display = "block";
+			document.getElementById("by_time").style.display = "none";
+			document.getElementById("brightness").style.display = "none";
+			document.getElementById("by_lighting").style.display = "none";
+		}
+	}
 }
 function gpios(gpio_mode, save, load) {
 	var setgpios = "", gpio_mode_txt, err, style_color;
@@ -719,7 +746,6 @@ function gpios(gpio_mode, save, load) {
 			P_I2C_SDA.innerHTML = parseInt(arr["P_I2C_SDA"].replace(/\\/g, ""));
 			P_LCD_CS.innerHTML = parseInt(arr["P_LCD_CS"].replace(/\\/g, ""));
 			P_LCD_A0.innerHTML = parseInt(arr["P_LCD_A0"].replace(/\\/g, ""));
-			P_LED_GPIO.innerHTML = parseInt(arr["P_LED_GPIO"].replace(/\\/g, ""));
 			P_IR_SIGNAL.innerHTML = parseInt(arr["P_IR_SIGNAL"].replace(/\\/g, ""));
 			P_BACKLIGHT.innerHTML = parseInt(arr["P_BACKLIGHT"].replace(/\\/g, ""));
 			P_TACHOMETER.innerHTML = parseInt(arr["P_TACHOMETER"].replace(/\\/g, ""));
@@ -747,7 +773,6 @@ function gpios(gpio_mode, save, load) {
 			+ "&P_I2C_SDA=" + P_I2C_SDA.innerHTML
 			+ "&P_LCD_CS=" + P_LCD_CS.innerHTML
 			+ "&P_LCD_A0=" + P_LCD_A0.innerHTML
-			+ "&P_LED_GPIO=" + P_LED_GPIO.innerHTML
 			+ "&P_IR_SIGNAL=" + P_IR_SIGNAL.innerHTML
 			+ "&P_BACKLIGHT=" + P_BACKLIGHT.innerHTML
 			+ "&P_TACHOMETER=" + P_TACHOMETER.innerHTML
@@ -817,7 +842,7 @@ function hardware(save) {
 				document.getElementById('sla' + i + '_range').value = arr["sla" + i].replace(/\\/g, "");
 				onTDAchange('sla' + i, false);
 			}
-			if (arr["mute"] == "1")
+			if (arr["mute"] == "0")
 				document.getElementById('mute').setAttribute("checked", "");
 			else
 				document.getElementById('mute').removeAttribute("checked");
@@ -1585,6 +1610,7 @@ document.addEventListener("DOMContentLoaded", function () {
 		gpios(0, 0, 1);
 		wifi(0);
 		hardware(0);
+		devoptions(0);
 		checkversion();
 		setMainHeight(curtab);
 	});

@@ -781,7 +781,7 @@ static void drawSecond(unsigned timein)
 	static unsigned insec;
 	if (insec != timein)
 	{
-		char strseco[3];
+		char strseco[3 + dt->tm_sec];
 		uint16_t len;
 		sprintf(strseco, ":%02d", dt->tm_sec);
 		setfont(text);

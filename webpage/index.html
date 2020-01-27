@@ -493,10 +493,6 @@
 										<td contenteditable="true" id="P_LCD_A0"></td>
 									</tr>
 									<tr>
-										<td>LED_GPIO</td>
-										<td contenteditable="true" id="P_LED_GPIO"></td>
-									</tr>
-									<tr>
 										<td>IR_SIGNAL</td>
 										<td contenteditable="true" id="P_IR_SIGNAL"></td>
 									</tr>
@@ -681,107 +677,188 @@
 						</p>
 						<h1>ОПЦИИ
 							&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input
-								type="button" onclick="options(0)"
+								type="button" onclick="devoptions(0)"
 								value="Обновить">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input
-								type="button" onclick="options(1)" value="Сохранить"></h1>
+								type="button" onclick="devoptions(1)" value="Сохранить"></h1>
 						<p>
 							<table id="OptionsTable">
 								<tbody>
 									<tr>
 										<td>Логи CMD-Консоли</td>
-										<td>
-											<select id="O_CMD_OUT">
-												<option>Выключить</option>
-												<option>Подробно</option>
-												<option>Отладка</option>
-												<option>Информация</option>
-												<option>Предупреждения</option>
-												<option>Ошибки</option>
-											</select>
-										</td>
-									</tr>
-									<tr>
-										<td>Выключить дисплей</td>
-										<td>
-											<select id="O_LCD_OUT">
-												<option>Не выключать</option>
-												<option>через 5 мин</option>
-												<option>через 10 мин</option>
-												<option>через 15 мин</option>
-												<option>через 20 мин</option>
-												<option>через 25 мин</option>
-												<option>через 30 мин</option>
-											</select>
-										</td>
-									</tr>
-									<tr>
-										<td>Яркость дисплея</td>
-										<td>
-											<select id="O_LCD_BRG">
-												<option>Не регулировать</option>
-												<option>автоматически по времени</option>
-												<option>автоматически от освещения</option>
-												<option>вручную</option>
-											</select>
-										</td>
-									</tr>
-									<tr>
-										<td>Поворот дисплея</td>
-										<td>
-											<select id="O_LCD_ROTA">
-												<option>НЕТ</option>
-												<option>ДА</option>
-											</select>
-										</td>
+										<td colspan="3"><select id="O_CMD_OUT">
+												<option value="0">Выключить</option>
+												<option value="1">Подробно</option>
+												<option value="2">Отладка</option>
+												<option value="3">Информация</option>
+												<option value="4">Предупреждения</option>
+												<option value="5">Ошибки</option>
+											</select></td>
 									</tr>
 									<tr>
 										<td>Формат вывода даты</td>
-										<td>
-											<select id="O_DDMM_FLAG">
-												<option>ММДД</option>
-												<option>ДДММ</option>
-											</select>
-										</td>
+										<td colspan="3"><select id="O_DDMM_FLAG">
+												<option value="0">ММДД</option>
+												<option value="1">ДДММ</option>
+											</select></td>
 									</tr>
 									<tr>
 										<td>Сервер точного времени</td>
-										<td contenteditable="true" id="O_NTP">0.ru.pool.ntp.org
-										</td>
+										<td colspan="3" contenteditable="true" id="O_NTP">0.ru.pool.ntp.org</td>
 									</tr>
 									<tr>
 										<td>Смещение часового пояса</td>
-										<td>
-											<select id="O_TZONE">
-												<option>-12</option>
-												<option>-11</option>
-												<option>-10</option>
-												<option>-9</option>
-												<option>-8</option>
-												<option>-7</option>
-												<option>-6</option>
-												<option>-5</option>
-												<option>-4</option>
-												<option>-3</option>
-												<option>-2</option>
-												<option>-1</option>
-												<option>0</option>
-												<option>+1</option>
-												<option>+2</option>
-												<option>+3</option>
-												<option>+4</option>
-												<option>+5</option>
-												<option>+6</option>
-												<option>+7</option>
-												<option>+8</option>
-												<option>+9</option>
-												<option>+10</option>
-												<option>+11</option>
-												<option>+12</option>
-											</select>
+										<td colspan="3"><select id="O_TZONE">
+												<option value="-12">-12</option>
+												<option value="-11">-11</option>
+												<option value="-10">-10</option>
+												<option value="-9">-9</option>
+												<option value="-8">-8</option>
+												<option value="-7">-7</option>
+												<option value="-6">-6</option>
+												<option value="-5">-5</option>
+												<option value="-4">-4</option>
+												<option value="-3">-3</option>
+												<option value="-2">-2</option>
+												<option value="-1">-1</option>
+												<option value="0">0</option>
+												<option value="1">+1</option>
+												<option value="2">+2</option>
+												<option value="3">+3</option>
+												<option value="4">+4</option>
+												<option value="5">+5</option>
+												<option value="6">+6</option>
+												<option value="7">+7</option>
+												<option value="8">+8</option>
+												<option value="9">+9</option>
+												<option value="10">+10</option>
+												<option value="11">+11</option>
+												<option value="12">+12</option>
+											</select></td>
+									</tr>
+									<tr>
+										<td>Поворот дисплея</td>
+										<td colspan="3"><select id="O_LCD_ROTA">
+												<option value="0">НЕТ</option>
+												<option value="1">ДА</option>
+											</select></td>
+									</tr>
+									<tr>
+										<td>Выключить дисплей</td>
+										<td colspan="3"><select id="O_LCD_OUT" onclick="displaymode()">
+												<option value="0">Не выключать</option>
+												<option value="5">через 5 мин</option>
+												<option value="10">через 10 мин</option>
+												<option value="15">через 15 мин</option>
+												<option value="20">через 20 мин</option>
+												<option value="25">через 25 мин</option>
+												<option value="30">через 30 мин</option>
+											</select></td>
+									</tr>
+									<tr>
+										<td>Яркость дисплея</td>
+										<td colspan="3"><select id="O_LCD_BRG" onclick="displaybright()">
+												<option value="0">Не регулировать</option>
+												<option value="1">автоматически по времени</option>
+												<option value="2">автоматически от освещения</option>
+												<option value="3">вручную</option>
+											</select></td>
+									</tr>
+									<tr>
+										<td colspan="4">
+											<div id="brightOn">
+												<div id="by_time">
+													<div>Ночной режим</div>
+													<div>С:&nbsp; &nbsp; &nbsp;<select name="begin_h">
+															<option value="0">00</option>
+															<option value="1">01</option>
+															<option value="2">02</option>
+															<option value="3">03</option>
+															<option value="4">04</option>
+															<option value="5">05</option>
+															<option value="6">06</option>
+															<option value="7">07</option>
+															<option value="8">08</option>
+															<option value="9">09</option>
+															<option value="10">10</option>
+															<option value="11">11</option>
+															<option value="12">12</option>
+															<option value="13">13</option>
+															<option value="14">14</option>
+															<option value="15">15</option>
+															<option value="16">16</option>
+															<option value="17">17</option>
+															<option value="18">18</option>
+															<option value="19">19</option>
+															<option value="20">20</option>
+															<option value="21">21</option>
+															<option value="22">22</option>
+															<option value="23">23</option>
+														</select>&nbsp; :&nbsp;&nbsp;<select name="begin_m">
+															<option value="0">00</option>
+															<option value="15">15</option>
+															<option value="30">30</option>
+															<option value="45">45</option>
+														</select></div>
+													<div>До:&nbsp; &nbsp;<select name="end_h">
+															<option value="0">00</option>
+															<option value="1">01</option>
+															<option value="2">02</option>
+															<option value="3">03</option>
+															<option value="4">04</option>
+															<option value="5">05</option>
+															<option value="6">06</option>
+															<option value="7">07</option>
+															<option value="8">08</option>
+															<option value="9">09</option>
+															<option value="10">10</option>
+															<option value="11">11</option>
+															<option value="12">12</option>
+															<option value="13">13</option>
+															<option value="14">14</option>
+															<option value="15">15</option>
+															<option value="16">16</option>
+															<option value="17">17</option>
+															<option value="18">18</option>
+															<option value="19">19</option>
+															<option value="20">20</option>
+															<option value="21">21</option>
+															<option value="22">22</option>
+															<option value="23">23</option>
+														</select>&nbsp; :&nbsp;&nbsp;<select name="end_m">
+															<option value="0">00</option>
+															<option value="15">15</option>
+															<option value="30">30</option>
+															<option value="45">45</option>
+														</select></div>
+												</div>
+												<div id="brightness">
+													<div>Уровень яркости</div>
+													<div>Дневной&nbsp; &nbsp;<input id="day_brightness" max="254"
+															min="0" name="day_brightness" type="range" value="127">
+													</div>
+													<div>Ночной&nbsp; &nbsp;&nbsp;<input id="night_brightness" max="254"
+															min="0" name="night_brightness" type="range" value="127">
+													</div>
+												</div>
+												<div id="by_lighting">
+													<div>Порог срабатывания<br>
+														<input id="brightness_trigger" max="254" min="0"
+															name="brightness_trigger" type="range" value="127"></div>
+												</div>
+												<div id="by_hand">
+													<div>Уровень яркости</div>
+													<input id="hand_brightness" max="254" min="0" name="hand_brightness"
+														type="range" value="127">
+												</div>
+											</div>
 										</td>
 									</tr>
 								</tbody>
-							</table> <br>
+							</table>
+							<p>&nbsp;</p>
+
+
+							<br>
 							<input class="checkbox" id="consON" type="checkbox" onclick="consoleON()">
 							<label for="consON">WEB-Консоль:&emsp;&emsp;&emsp;ВЫКЛ&emsp;&emsp;&emsp;&ensp;ВКЛ</label>
 							<br>

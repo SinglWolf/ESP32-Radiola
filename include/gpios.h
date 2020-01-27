@@ -32,6 +32,11 @@
 #define PIN_I2C_SDA GPIO_NUM_21
 #define PIN_I2C_SCL GPIO_NUM_22
 //-------------------------
+// SOFTUART
+//------------------------------------------------
+#define PIN_NUM_RXD GPIO_NONE
+#define PIN_NUM_TXD GPIO_NONE
+//-------------------------
 // Must be HSPI or VSPI
 
 #define KSPI HSPI_HOST
@@ -41,12 +46,6 @@
 #define PIN_NUM_MISO GPIO_NUM_19 // Master Input, Slave Output
 #define PIN_NUM_MOSI GPIO_NUM_23 // Master Output, Slave Input   Named Data or SDA or D1 for oled
 #define PIN_NUM_CLK GPIO_NUM_18  // Master clock  Named SCL or SCK or D0 for oled
-
-// status led if any.
-//-------------------
-// Set the right one with command sys.led
-// GPIO can be changed with command sys.ledgpio("x")
-#define GPIO_LED GPIO_NUM_25 // Flashing led or Playing led
 
 // gpio of the vs1053
 //-------------------
@@ -65,8 +64,6 @@
 //---------
 #define PIN_LCD_CS GPIO_NUM_27 //CS
 #define PIN_LCD_A0 GPIO_NUM_2  //A0 or D/C
-#define PIN_LCD_RST GPIO_NONE  //Reset RES RST or not used
-// KSPI pins +
 
 // IR Signal
 //-----------
@@ -92,6 +89,8 @@ esp_err_t gpio_get_encoders(gpio_num_t *enca, gpio_num_t *encb, gpio_num_t *encb
 esp_err_t gpio_set_encoders(gpio_num_t enca, gpio_num_t encb, gpio_num_t encbtn);
 esp_err_t gpio_get_i2c(gpio_num_t *sda, gpio_num_t *scl, bool gpio_mode);
 esp_err_t gpio_set_i2c(gpio_num_t sda, gpio_num_t scl);
+esp_err_t gpio_get_uart(gpio_num_t *rxd, gpio_num_t *txd, bool gpio_mode);
+esp_err_t gpio_set_uart(gpio_num_t rxd, gpio_num_t txd);
 esp_err_t gpio_get_spi_lcd(gpio_num_t *cs, gpio_num_t *a0, bool gpio_mode);
 esp_err_t gpio_set_spi_lcd(gpio_num_t cs, gpio_num_t a0);
 esp_err_t gpio_get_ir_signal(gpio_num_t *ir, bool gpio_mode);
@@ -103,8 +102,6 @@ esp_err_t gpio_set_tachometer(gpio_num_t tach);
 bool gpio_get_ir_key(nvs_handle handle, const char *key, uint32_t *out_value1, uint32_t *out_value2);
 esp_err_t gpio_get_touch(gpio_num_t *touch, bool gpio_mode);
 esp_err_t gpio_set_touch(gpio_num_t touch);
-esp_err_t gpio_get_ledgpio(gpio_num_t *ledgpio, bool gpio_mode);
-esp_err_t gpio_set_ledgpio(gpio_num_t ledgpio);
 void option_get_lcd_rotat(uint8_t *rt);
 void option_set_lcd_rotat(uint8_t rt);
 void option_get_ddmm(uint8_t *ddmm);

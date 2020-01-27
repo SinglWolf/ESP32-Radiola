@@ -196,9 +196,8 @@ void in_welcome(const char *ip, const char *state, int y, char *Version)
 
 void lcd_welcome(const char *ip, const char *state)
 {
-
-	char text[30];
-	char *text1=strdup(state);
+	char text[20 + strlen(RELEASE) + strlen(REVISION)];
+	char *text1 = strdup(state);
 
 	removeUtf8(text1);
 	if ((strlen(ip) == 0) && (strlen(state) == 0))
@@ -209,7 +208,7 @@ void lcd_welcome(const char *ip, const char *state)
 	removeUtf8(text);
 	DrawString(GetWidth() / 4, 2, text);
 	setfont(1);
-	sprintf(text, "Версия: %s Rev: %s\n", RELEASE, REVISION);
+	sprintf(text, "Релиз: %s Rev: %s\n", RELEASE, REVISION);
 	removeUtf8(text);
 	in_welcome(ip, text1, y, text);
 }
@@ -1143,7 +1142,10 @@ void addonParse(const char *fmt, ...)
 	int rlen;
 	line = (char *)malloc(1024);
 	if (line == NULL)
+	{
+		free(line);
 		return;
+	}
 	line[0] = 0;
 	strcpy(line, "ok\n");
 
@@ -1153,7 +1155,10 @@ void addonParse(const char *fmt, ...)
 	va_end(ap);
 	line = realloc(line, rlen + 1);
 	if (line == NULL)
+	{
+		free(line);
 		return;
+	}
 	ESP_LOGV(TAG, "LINE: %s", line);
 	evt.lcmd = -1;
 	char *ici;

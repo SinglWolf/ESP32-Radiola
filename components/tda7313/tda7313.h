@@ -54,6 +54,7 @@ extern "C"
 		bool Mute;
 		bool Loud[3];
 		bool rear_on;
+		bool present;
 	} Tda_Settings;
 	extern struct tda_settings TDA;
 

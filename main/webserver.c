@@ -64,14 +64,15 @@ const char GPIOS[] = {"HTTP/1.1 200 OK\r\nContent-Type:application/json\r\nConte
 \"P_I2C_SDA\":\"%03u\",\
 \"P_LCD_CS\":\"%03u\",\
 \"P_LCD_A0\":\"%03u\",\
-\"P_LED_GPIO\":\"%03u\",\
 \"P_IR_SIGNAL\":\"%03u\",\
 \"P_BACKLIGHT\":\"%03u\",\
 \"P_TACHOMETER\":\"%03u\",\
 \"P_FAN_SPEED\":\"%03u\",\
 \"P_DS18B20\":\"%03u\",\
 \"P_TOUCH_CS\":\"%03u\",\
-\"P_BUZZER\":\"%03u\"\
+\"P_BUZZER\":\"%03u\",\
+\"P_RXD\":\"%03u\",\
+\"P_TXD\":\"%03u\"\
 }"};
 
 static int8_t clientOvol = 0;
@@ -1234,7 +1235,7 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 			esp_err_t err = ESP_OK;
 
 			uint8_t spi_no;
-			gpio_num_t miso, mosi, sclk, xcs, xdcs, dreq, ledgpio, enca, encb, encbtn, sda, scl, cs, a0, ir, lcdb, tach, fanspeed, ds18b20, touch, buzzer;
+			gpio_num_t miso, mosi, sclk, xcs, xdcs, dreq, enca, encb, encbtn, sda, scl, cs, a0, ir, lcdb, tach, fanspeed, ds18b20, touch, buzzer, rxd, txd;
 			if (getSParameterFromResponse(arg, 4, "save=", data, data_size))
 				if (strcmp(arg, "1") == 0)
 					changed = true;
@@ -1253,7 +1254,6 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 				gpio_mode = false;
 			err |= gpio_get_spi_bus(&spi_no, &miso, &mosi, &sclk, gpio_mode);
 			err |= gpio_get_vs1053(&xcs, &xdcs, &dreq, gpio_mode);
-			err |= gpio_get_ledgpio(&ledgpio, gpio_mode);
 			err |= gpio_get_encoders(&enca, &encb, &encbtn, gpio_mode);
 			err |= gpio_get_i2c(&sda, &scl, gpio_mode);
 			err |= gpio_get_spi_lcd(&cs, &a0, gpio_mode);
@@ -1264,6 +1264,7 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 			err |= gpio_get_ds18b20(&ds18b20, gpio_mode);
 			err |= gpio_get_touch(&touch, gpio_mode);
 			err |= gpio_get_buzzer(&buzzer, gpio_mode);
+			err |= gpio_get_uart(&rxd, &txd, gpio_mode);
 			if (err != ESP_OK)
 			{
 				changed = false;
@@ -1303,8 +1304,6 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 				getSParameterFromResponse(arg, 4, "P_LCD_A0=", data, data_size);
 				a0 = atoi(arg);
 				err |= gpio_set_spi_lcd(cs, a0);
-				getSParameterFromResponse(arg, 4, "P_LED_GPIO=", data, data_size);
-				err |= gpio_set_ledgpio(ledgpio);
 				getSParameterFromResponse(arg, 4, "P_IR_SIGNAL=", data, data_size);
 				ir = atoi(arg);
 				err |= gpio_set_ir_signal(ir);
@@ -1326,15 +1325,20 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 				getSParameterFromResponse(arg, 4, "P_BUZZER=", data, data_size);
 				buzzer = atoi(arg);
 				err |= gpio_set_buzzer(buzzer);
+				getSParameterFromResponse(arg, 4, "P_RXD=", data, data_size);
+				rxd = atoi(arg);
+				getSParameterFromResponse(arg, 4, "P_TXD=", data, data_size);
+				txd = atoi(arg);
+				err |= gpio_set_uart(rxd, txd);
 				if (err != ESP_OK)
 				{
 					changed = false;
 				}
 			}
 			int json_length;
-			json_length = 409;
+			json_length = 418;
 
-			char buf[479];
+			char buf[488];
 			sprintf(buf, GPIOS,
 					json_length,
 					g_device->gpio_mode,
@@ -1344,15 +1348,15 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 					enca, encb, encbtn,
 					sda, scl,
 					cs, a0,
-					ledgpio,
 					ir,
 					lcdb,
 					tach,
 					fanspeed,
 					ds18b20,
 					touch,
-					buzzer);
-			//ESP_LOGE(TAG, "Test GPIOS\nSave: %d\nERR: %X\ngpio_mode: %d\nBuf len: %u\nBuf: %s\nData: %s\nData size: %d\n\n", changed, err, gpio_mode, strlen(buf), buf, data, data_size);
+					buzzer,
+					rxd, txd);
+			ESP_LOGE(TAG, "Test GPIOS\nSave: %d\nERR: %X\ngpio_mode: %d\nBuf len: %u\nBuf: %s\nData: %s\nData size: %d\n\n", changed, err, gpio_mode, strlen(buf), buf, data, data_size);
 			write(conn, buf, strlen(buf));
 			if (changed)
 			{
@@ -1459,8 +1463,8 @@ static bool httpServerHandleConnection(int conn, char *buf, uint16_t buflen)
 				param = strstr(c, "version");
 				if (param != NULL)
 				{
-					char vr[30]; // = malloc(30);
-					sprintf(vr, "Релиз: %s, Rev: %s\n", RELEASE, REVISION);
+					char vr[20 + strlen(RELEASE) + strlen(REVISION)];
+					sprintf(vr, "Релиз: %s Rev: %s\n", RELEASE, REVISION);
 					printf("Версия: %s\n", vr);
 					respOk(conn, vr);
 					return true;

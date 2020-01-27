@@ -386,19 +386,16 @@ esp_err_t tda7313_init()
 				if (tda7313_detect(TDAaddress) == ESP_OK)
 				{
 					ESP_LOGI(TAG, "TDA7313 it's OK.");
-					return err;
 				}
 				else
 				{
 					ESP_LOGE(TAG, "TDA7313 not detected.");
-					return err;
 				}
 			}
 		}
 		else
 		{
 			ESP_LOGE(TAG, "Init I2C driver FAILED.");
-			return err;
 		}
 	}
 	else
@@ -406,6 +403,14 @@ esp_err_t tda7313_init()
 		ESP_LOGE(TAG, "TDA7313 not configured.");
 		err = ESP_FAIL;
 	}
+	if (err != ESP_OK)
+	{
+		ESP_LOGE(TAG, "TDA7313 not present.");
+		TDA.present = false;
+		err = ESP_OK;
+	}
+	else
+		TDA.present = true;
 	return err;
 }
 esp_err_t tda7313_init_nvs(bool erase)
@@ -431,8 +436,7 @@ esp_err_t tda7313_init_nvs(bool erase)
 			ESP_LOGI(TAG, "Keys for the TDA7313 in NVS not founds!");
 			if (err == ESP_ERR_NVS_NOT_FOUND)
 			{
-				err = tda7313_init();
-				if (err != ESP_OK)
+				if (!TDA.present)
 					erase = true;
 			}
 		}
@@ -514,16 +518,18 @@ esp_err_t tda7313_init_nvs(bool erase)
 		ESP_LOGV(TAG, "Returning after Forced erasing all keys or first init of the TDA7313.");
 		return ESP_OK;
 	}
-	ESP_ERROR_CHECK(tda7313_set_input(TDA.Input));
-	ESP_ERROR_CHECK(tda7313_set_volume(TDA.Volume));
-	ESP_ERROR_CHECK(tda7313_set_treble(TDA.Treble));
-	ESP_ERROR_CHECK(tda7313_set_bass(TDA.Bass));
-	ESP_ERROR_CHECK(tda7313_set_rear(TDA.rear_on));
-	ESP_ERROR_CHECK(tda7313_set_attlf(TDA.AttLF));
-	ESP_ERROR_CHECK(tda7313_set_attrf(TDA.AttRF));
-	ESP_ERROR_CHECK(tda7313_set_attlr(TDA.AttLR));
-	ESP_ERROR_CHECK(tda7313_set_attrr(TDA.AttRR));
-	return tda7313_set_mute(TDA.Mute);
+	err |= (tda7313_set_input(TDA.Input));
+	err |= (tda7313_set_volume(TDA.Volume));
+	err |= (tda7313_set_treble(TDA.Treble));
+	err |= (tda7313_set_bass(TDA.Bass));
+	err |= (tda7313_set_rear(TDA.rear_on));
+	err |= (tda7313_set_attlf(TDA.AttLF));
+	err |= (tda7313_set_attrf(TDA.AttRF));
+	err |= (tda7313_set_attlr(TDA.AttLR));
+	err |= (tda7313_set_attrr(TDA.AttRR));
+	err |= tda7313_set_mute(TDA.Mute);
+
+	return err;
 }
 esp_err_t tda7313_save_nvs()
 {
@@ -639,28 +645,32 @@ esp_err_t tda7313_save_nvs()
 }
 esp_err_t tda7313_command(uint8_t cmd)
 {
-	hnd = i2c_cmd_link_create();											   // Create a link
-	if (i2c_master_start(hnd) | i2c_master_write_byte(hnd, (addressTDA << 1) | // Add I2C address to output buffer
-															   I2C_MASTER_WRITE,
-													  ACK_CHECK_EN) |
-		i2c_master_write_byte(hnd, cmd, ACK_CHECK_EN) | i2c_master_stop(hnd) | // End of data for I2C
-		i2c_master_cmd_begin(I2C_NUM_0, hnd,								   // Send bufferd data to TDA7313
-							 10 / portTICK_PERIOD_MS))
+	if (TDA.present)
 	{
-		ESP_LOGE(TAG, "TDA7313 communication error!"); // Something went wrong (not connected)
-		return ESP_FAIL;
+		hnd = i2c_cmd_link_create();											   // Create a link
+		if (i2c_master_start(hnd) | i2c_master_write_byte(hnd, (addressTDA << 1) | // Add I2C address to output buffer
+																   I2C_MASTER_WRITE,
+														  ACK_CHECK_EN) |
+			i2c_master_write_byte(hnd, cmd, ACK_CHECK_EN) | i2c_master_stop(hnd) | // End of data for I2C
+			i2c_master_cmd_begin(I2C_NUM_0, hnd,								   // Send bufferd data to TDA7313
+								 10 / portTICK_PERIOD_MS))
+		{
+			ESP_LOGE(TAG, "TDA7313 communication error!"); // Something went wrong (not connected)
+			return ESP_FAIL;
+		}
+		i2c_cmd_link_delete(hnd); // Ссылка больше не нужна
 	}
-	i2c_cmd_link_delete(hnd); // Ссылка больше не нужна
+	else
+		ESP_LOGE(TAG, "TDA7313 not present!");
 	return ESP_OK;
 }
 esp_err_t tda7313_detect(uint8_t address)
 {
-	esp_err_t err;
 	i2c_cmd_handle_t cmd = i2c_cmd_link_create();
 	i2c_master_start(cmd);
 	i2c_master_write_byte(cmd, (address << 1) | I2C_MASTER_WRITE, ACK_CHECK_EN);
 	i2c_master_stop(cmd);
-	err = i2c_master_cmd_begin(I2C_NUM_0, cmd, 10 / portTICK_PERIOD_MS);
+	esp_err_t err = i2c_master_cmd_begin(I2C_NUM_0, cmd, 10 / portTICK_PERIOD_MS);
 	i2c_cmd_link_delete(cmd);
 	if (err == ESP_OK)
 	{

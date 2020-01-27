@@ -4,12 +4,21 @@
 
 <body>
 
-	<p><span class="label label-success">Релиз <span id="firmware_last">1.0 Rev: Beta 2</span> - Дата не определена...
+	<p><span class="label label-success">Релиз <span id="firmware_last">1.0 Rev: Beta 3</span> - Дата не определена...
 		</span>
 	</p>
 	<p>
 		Анонс:
 		<ul id="ordered">
+			<li> 1.0 Rev Beta 3:
+				<ul id="ordered">
+					<li>Проверена заливка прошивки через flash_download_tools_v3.6.8 - ОК</li>
+					<li>При отсутствии TDA7313 Радиола не перезагружается</li>
+					<li>Вырезана мигалка (GPIO_LED) в виду сомнительной надобности в пользу BT201</li>
+					<li>Написаны зачатки для работы с BT201</li>
+					<li>Продолжаются кропотливые работы...</li>
+				</ul>
+			</li>
 			<li> 1.0 Rev Beta 2:
 				<ul id="ordered">
 					<li>Работает обновление через OTA. (Прошивать на чистую FLASH!!!)</li>

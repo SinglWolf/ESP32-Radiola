@@ -30,30 +30,7 @@ static spi_device_handle_t handle; // SPI handle of the spi lcd interface.
 DRAM_ATTR static ucg_esp32_hal_t ucg_esp32_hal; // HAL state data.
 static ucg_esp32_oneByte oneByte;
 static spi_transaction_t trans_desc;
-/* to init call
-//init hal
-ucg_esp32_hal_t ucg_esp32_hal = UCG_ESP32_HAL_DEFAULT;
-			ucg_esp32_hal.clk   = PIN_NUM_CLK;
-			ucg_esp32_hal.mosi  = PIN_NUM_MOSI;
-			ucg_esp32_hal.cs    = PIN_LCD_CS;
-			ucg_esp32_hal.dc    = PIN_LCD_A0;
-			ucg_esp32_hal.reset = PIN_LCD_RST;	
-ucg_esp32_hal_init(ucg_esp32_hal);	
-		
-//init the lcd
-ucg_int_t ucg_Init(ucg_t *ucg, ucg_dev_fnptr device_cb, ucg_dev_fnptr ext_cb, ucg_com_fnptr com_cb);
-example
-//setup ucglib, see ucg.h for a list of ucg_dev and ucg_ext objects 
-ucg_Init(&ucg, ucg_dev_ssd1351_18x128x128_ilsoft, ucg_ext_ssd1351_18, ucg_com_hal);
 
-//define prefered font rendering method (no text will be visibile, if this is missing 
-ucg_SetFontMode(&ucg, UCG_FONT_MODE_TRANSPARENT); 
-
-*/
-
-/*
- * Initialze the ESP32 HAL.
- */
 void ucg_esp32_hal_init(ucg_esp32_hal_t ucg_esp32_hal_param) {
 	ucg_esp32_hal = ucg_esp32_hal_param;
 	oneByte.nb = 0;

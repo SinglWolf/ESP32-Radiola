@@ -92,7 +92,6 @@ xQueueHandle event_queue;
 
 //xSemaphoreHandle print_mux;
 static uint16_t FlashOn = 5, FlashOff = 5;
-bool ledStatus = true; // true: normal blink, false: led on when playing
 player_t *player_config;
 static input_mode_t audio_input_num;
 static uint8_t clientIvol = 0;
@@ -651,24 +650,8 @@ void start_network()
 //blinking led and timer isr
 void timerTask(void *p)
 {
-	//	struct device_settings *device;
-	uint32_t cCur;
-	bool stateLed = false;
-	gpio_num_t gpioLed;
-	//	int uxHighWaterMark;
 
 	initTimers();
-
-	gpio_get_ledgpio(&gpioLed, g_device->gpio_mode);
-	/*
-	printf("FIRST LED GPIO: %d, SSID:%d\n",gpioLed,g_device->current_ap);
-*/
-	if (gpioLed != GPIO_NONE)
-	{
-		gpio_output_conf(gpioLed);
-		gpio_set_level(gpioLed, 0);
-	}
-	cCur = FlashOff * 10;
 
 	queue_event_t evt;
 
@@ -695,29 +678,6 @@ void timerTask(void *p)
 			//					break;
 			default:
 				break;
-			}
-		}
-		if (ledStatus)
-		{
-			if (ctimeMs >= cCur)
-			{
-				gpio_get_ledgpio(&gpioLed, g_device->gpio_mode);
-
-				if (stateLed)
-				{
-					if (gpioLed != GPIO_NONE)
-						gpio_set_level(gpioLed, 0);
-					stateLed = false;
-					cCur = FlashOff * 10;
-				}
-				else
-				{
-					if (gpioLed != GPIO_NONE)
-						gpio_set_level(gpioLed, 1);
-					stateLed = true;
-					cCur = FlashOn * 10;
-				}
-				ctimeMs = 0;
 			}
 		}
 
@@ -798,22 +758,19 @@ void uartInterfaceTask(void *pvParameters)
 // Show ip on AP mode.
 void autoPlay()
 {
-	char apmode[50];
-	sprintf(apmode, "at IP %s", localIp);
+	char *apmode = "по IP %s";
+	char *confAP = "Веб-интерфейс  доступен";
+	char buf[strlen(apmode) + strlen(confAP)];
+
+	sprintf(buf, apmode, localIp);
 	if (g_device->current_ap == APMODE)
 	{
-		clientSaveOneHeader("Configure the AP with the web page", 34, METANAME);
-		clientSaveOneHeader(apmode, strlen(apmode), METAGENRE);
+		clientSaveOneHeader(confAP, strlen(confAP), METANAME);
+		clientSaveOneHeader(buf, strlen(buf), METAGENRE);
 	}
 	else
 	{
-		clientSaveOneHeader(apmode, strlen(apmode), METANAME);
-		if (getVsVersion() < 3)
-		{
-			clientSaveOneHeader("Invalid audio output. VS1053 not found", 38, METAGENRE);
-			ESP_LOGE(TAG, "Invalid audio output. VS1053 not found");
-			vTaskDelay(200);
-		}
+		clientSaveOneHeader(buf, strlen(buf), METANAME);
 
 		setCurrentStation(g_device->currentstation);
 		if ((g_device->autostart == 1) && (g_device->currentstation != 0xFFFF))
@@ -1048,10 +1005,6 @@ void app_main()
 */
 	vTaskDelay(60); // wait tasks init
 	ESP_LOGI(TAG, " Init Done");
-
-	// led mode
-	if (g_device->options & T_LED)
-		ledStatus = false;
 
 	setIvol(g_device->vol);
 	kprintf("READY. Type help for a list of commands\n");

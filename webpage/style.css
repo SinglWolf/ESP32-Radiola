@@ -329,13 +329,7 @@ ul#ordered li {float:none;text-align:left;}
 .tabs select {
 	min-width:230px;
 	background-color:#f8f8ff;
-	border:1px solid #111;
 	border:1px solid #ccc;
-	background-color:#f8f8ff;
-	background:-webkit-linear-gradient(F8F8F8,#e8e8ef);
-	background:-moz-linear-gradient(#f8f8f8,#e8e8ef);
-	background:-ms-linear-gradient(F8F8F8,#e8e8ef);
-	background:-o-linear-gradient(#f8f8f8,#e8e8ef);
 	background:linear-gradient(#f8f8f8,#e8e8ef);
 	border-radius:5px;
 }
@@ -436,6 +430,37 @@ table#stationsTable tr:nth-child(odd),table#GPIOsTable tr:nth-child(odd)
 {
 	background-color: #f0f0f0;
 }
+
+#OptionsTable,#OptionsTable th,#OptionsTable td {
+	border: solid 1px;
+	border-collapse: collapse;
+	width: auto;
+	overflow-x: hidden;
+	border-color: #6d6f6d;
+}
+
+#OptionsTable tr:nth-child(even){
+	background-color: #f8f8f8;
+}
+
+table#OptionsTable tr:nth-child(odd){
+	background-color: #f0f0f0;
+}
+#OptionsTable select {
+    min-width: 25%;
+    border: 1px solid #ccc;
+    background: linear-gradient(#f8f8f8, #e8e8ef);
+    border-radius: 5px;
+}
+#OptionsTable option {
+    min-width: 25%;
+    color: #000;
+    border: 1px solid #fff;
+    background-color: #f8f8f8;
+    border-radius: 5px;
+}
+
+
 
 a.page {
 	font-size:18pt!important;

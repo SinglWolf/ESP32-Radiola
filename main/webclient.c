@@ -26,16 +26,11 @@ extern player_t *player_config;
 #define min(a, b) (((a) < (b)) ? (a) : (b))
 
 enum clientStatus cstatus;
-//static uint32_t metacount = 0;
-//static uint16_t metasize = 0;
-
-extern bool ledStatus;
 
 xSemaphoreHandle sConnect, sConnected, sDisconnect, sHeader;
 
 static uint8_t once = 0;
 static uint8_t playing = 0;
-static gpio_num_t gpioLed;
 
 static const char *icyHeaders[] = {"icy-name:", "icy-notice1:", "icy-notice2:", "icy-url:", "icy-genre:", "icy-br:", "icy-description:", "ice-audio-info:", "icy-metaint:"};
 contentType_t contentType;
@@ -292,18 +287,39 @@ static char *stringify(char *str, int len)
 			if (j + MORE > nlen)
 			{
 				nlen += MORE;
-				new = realloc(new, nlen); // some room
+				//new = realloc(new, nlen); // some room
+				void *tmp = realloc(new, nlen);
+				if (NULL == tmp)
+				{
+					ESP_LOGV(TAG, "%s malloc fails", "new");
+					return NULL;
+				}
+				else
+				{
+					new = tmp;
+				}
 			}
 		}
 		incfree(str, "str");
 
-		new = realloc(new, j + 1); // adjust
+		//new = realloc(new, j + 1); // adjust
+		void *tmp = realloc(new, j + 1);
+		if (NULL == tmp)
+		{
+			ESP_LOGV(TAG, "%s malloc fails", "new");
+			return NULL;
+		}
+		else
+		{
+			new = tmp;
+		}
 		ESP_LOGV(TAG, "stringify: exit: len:%d  \"%s\"", j, new);
 		return new;
 	}
 	else
 	{
 		ESP_LOGV(TAG, strcMALLOC1, "stringify");
+		free(new);
 	}
 	return str;
 }
@@ -817,15 +833,7 @@ void clientDisconnect(const char *from)
 		vTaskDelay(1);
 	}
 	if ((from[0] != 'C') || (from[1] != '_'))
-		if (!ledStatus)
-		{
-			gpio_get_ledgpio(&gpioLed, g_device->gpio_mode);
-			if (gpioLed != GPIO_NONE)
-			{
-				gpio_set_level(gpioLed, 0);
-			}
-		}
-	esp_wifi_set_ps(WIFI_PS_MAX_MODEM);
+		esp_wifi_set_ps(WIFI_PS_MAX_MODEM);
 	vTaskDelay(5);
 }
 
@@ -1195,8 +1203,6 @@ void clientReceiveCallback(int sockfd, char *pdata, int len)
 
 			setVolumei(getVolume());
 			kprintf(CLIPLAY, 0x0d, 0x0a);
-			if (!ledStatus)
-				gpio_set_level(gpioLed, 1);
 		}
 	}
 }

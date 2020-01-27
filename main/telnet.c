@@ -19,12 +19,9 @@
 #include "telnet.h"
 #include "interface.h"
 
-
-
 //const char strtMALLOC1[] = {"Telnet %s malloc fails\n"};
-#define strtSOCKET	"Telnet Socket fails %s errno: %d"
-const char strtWELCOME[]  ={"ESP32Radiola telnet\n> "};
-
+#define strtSOCKET "Telnet Socket fails %s errno: %d"
+const char strtWELCOME[] = {"ESP32Radiola telnet\n> "};
 
 int telnetclients[NBCLIENTT];
 //set of socket descriptors
@@ -32,18 +29,23 @@ int telnetclients[NBCLIENTT];
 static char brec[256];
 static char iac[3];
 static bool inIac = false; // if in negociation
-static char *obrec;  //precedent received command
+static char *obrec;		   //precedent received command
 static uint16_t irec;
 static uint8_t iiac;
 xSemaphoreHandle sTELNET = NULL;
 
-static uint8_t telnet_take_semaphore() {
-	if(sTELNET) if(xSemaphoreTake(sTELNET, portMAX_DELAY)) return 1;
+static uint8_t telnet_take_semaphore()
+{
+	if (sTELNET)
+		if (xSemaphoreTake(sTELNET, portMAX_DELAY))
+			return 1;
 	return 0;
 }
 
-static void telnet_give_semaphore() {
-	if(sTELNET) xSemaphoreGive(sTELNET);
+static void telnet_give_semaphore()
+{
+	if (sTELNET)
+		xSemaphoreGive(sTELNET);
 }
 
 ///////////////////////
@@ -52,12 +54,12 @@ void telnetinit(void)
 {
 	int i;
 	vSemaphoreCreateBinary(sTELNET);
-	
-	for (i = 0;i<NBCLIENTT;i++) 
+
+	for (i = 0; i < NBCLIENTT; i++)
 	{
 		telnetclients[i] = -1;
 	}
-	memset(brec,0,sizeof(brec));
+	memset(brec, 0, sizeof(brec));
 	irec = 0;
 	iiac = 0;
 	obrec = malloc(2);
@@ -67,199 +69,239 @@ void telnetinit(void)
 // a socket with a websocket request. Note it and answer to the client
 bool telnetnewclient(int socket)
 {
-	int i ;
-//	printf("ws newclient:%d\n",socket);
-	for (i = 0;i<NBCLIENTT;i++) if (telnetclients[i] == socket) return true;
-	else
-	for (i = 0;i<NBCLIENTT;i++) if (telnetclients[i] == -1) 
-	{
-		telnetclients[i] = socket;
-		return true;
-	}	
+	int i;
+	//	printf("ws newclient:%d\n",socket);
+	for (i = 0; i < NBCLIENTT; i++)
+		if (telnetclients[i] == socket)
+			return true;
+		else
+			for (i = 0; i < NBCLIENTT; i++)
+				if (telnetclients[i] == -1)
+				{
+					telnetclients[i] = socket;
+					return true;
+				}
 	return false; // no more room
 }
 /////////////////////////////////////////////////////////////////////
 // remove the client in the list of clients
 void telnetremoveclient(int socket)
 {
-	int i ;
-//	printf("ws removeclient:%d\n",socket);
-	for (i = 0;i<NBCLIENTT;i++) 
-		if (telnetclients[i] == socket) 
+	int i;
+	//	printf("ws removeclient:%d\n",socket);
+	for (i = 0; i < NBCLIENTT; i++)
+		if (telnetclients[i] == socket)
 		{
 			telnetclients[i] = -1;
-//			printf("ws removeclient:%d removed\n",socket);
+			//			printf("ws removeclient:%d removed\n",socket);
 			close(socket);
 			return;
 		}
 }
 ////////////////////////
 // is socket a telnet one?
-bool istelnet( int socket)
+bool istelnet(int socket)
 {
-	int i ;
-	for (i = 0;i<NBCLIENTT;i++) 
-		if ((telnetclients[i]!= -1)&&(telnetclients[i] == socket)) return true;
+	int i;
+	for (i = 0; i < NBCLIENTT; i++)
+		if ((telnetclients[i] != -1) && (telnetclients[i] == socket))
+			return true;
 	return false;
 }
-
 
 bool telnetAccept(int tsocket)
 {
-	if ((!istelnet(tsocket ))&&(telnetnewclient(tsocket))) 
+	if ((!istelnet(tsocket)) && (telnetnewclient(tsocket)))
 	{
-//			printf("telnet write accept\n");
-			write(tsocket, strtWELCOME, strlen(strtWELCOME));  // reply to accept	
-			return true;
-	} else close(tsocket);
+		//			printf("telnet write accept\n");
+		write(tsocket, strtWELCOME, strlen(strtWELCOME)); // reply to accept
+		return true;
+	}
+	else
+		close(tsocket);
 	return false;
 }
 
-
 //broadcast a txt data to all clients
-void telnetWrite(uint32_t lenb,const char *fmt, ...)
+void telnetWrite(uint32_t lenb, const char *fmt, ...)
 {
-	int i ;
+	int i;
 	char *buf = NULL;
-//	char* lfmt;
+	//	char* lfmt;
 	int rlen;
-	buf = (char *)malloc(lenb+1);
-	if (buf == NULL) return;
+	buf = (char *)malloc(lenb + 1);
+	if (buf == NULL)
+	{
+		free(buf);
+		return;
+	}
 	buf[0] = 0;
-	strcpy(buf,"ok\n");
-	
+	strcpy(buf, "ok\n");
+
 	va_list ap;
-	va_start(ap, fmt);	
+	va_start(ap, fmt);
 	rlen = 0;
-	rlen = vsprintf(buf,fmt, ap);		
+	rlen = vsprintf(buf, fmt, ap);
 	va_end(ap);
-	buf = realloc(buf,rlen+1);
-	if (buf == NULL) return;
+	buf = realloc(buf, rlen + 1);
+	if (buf == NULL)
+	{
+		free(buf);
+		return;
+	}
 	// write to all clients
 	telnet_take_semaphore();
-	for (i = 0;i<NBCLIENTT;i++)	
-		if (istelnet( telnetclients[i]))
+	for (i = 0; i < NBCLIENTT; i++)
+		if (istelnet(telnetclients[i]))
 		{
-			write( telnetclients[i],  buf, strlen(buf));
-		}	
-	telnet_give_semaphore();		
-	free (buf);
-
+			write(telnetclients[i], buf, strlen(buf));
+		}
+	telnet_give_semaphore();
+	free(buf);
 }
 
 void telnetNego(int tsocket)
 {
-	const uint8_t NONEG[2] = {0xFF,0xFC}; // WON't
+	const uint8_t NONEG[2] = {0xFF, 0xFC}; // WON't
 
 	if (iiac == 2)
 	{
-	// refuse all
-		if (iac[0] == 251) { write(tsocket,NONEG,2);write(tsocket,iac+1,1);}
+		// refuse all
+		if (iac[0] == 251)
+		{
+			write(tsocket, NONEG, 2);
+			write(tsocket, iac + 1, 1);
+		}
 	}
 	else
 	{
-		if (iac[0] == 246) write(tsocket,"\n>",2);  // are you there
+		if (iac[0] == 246)
+			write(tsocket, "\n>", 2); // are you there
 	}
 }
-	
+
 void telnetCommand(int tsocket)
 {
-	if (irec == 0) return;
-	ESP_LOGV(TAG,"%sHEAPd0: %d #\n","##SYS.",xPortGetFreeHeapSize( ));	
+	if (irec == 0)
+		return;
+	ESP_LOGV(TAG, "%sHEAPd0: %d #\n", "##SYS.", xPortGetFreeHeapSize());
 	brec[irec] = 0x0;
-	write(tsocket,"\n> ",1);
-	ESP_LOGV(TAG,"brec: %s\n",brec);
-	obrec = realloc(obrec,strlen(brec)+1);
-	strcpy(obrec,brec); // save old command
+	write(tsocket, "\n> ", 1);
+	ESP_LOGV(TAG, "brec: %s\n", brec);
+	//obrec = realloc(obrec, strlen(brec) + 1);
+	void *tmp = realloc(obrec, strlen(brec) + 1);
+	if (NULL == tmp)
+	{
+		ESP_LOGV(TAG, "%s malloc fails", "obrec");
+		return;
+	}
+	else
+	{
+		obrec = tmp;
+	}
+	strcpy(obrec, brec); // save old command
 	checkCommand(irec, brec);
-	write(tsocket,"> ",2);
+	write(tsocket, "> ", 2);
 	irec = 0;
 }
 
 int telnetRead(int tsocket)
 {
-	char *buf ;
-	int32_t recbytes ;
-	int i;	
-	buf = (char *)malloc(MAXDATAT);	
+	char *buf;
+	int32_t recbytes;
+	int i;
+	buf = (char *)malloc(MAXDATAT);
 	recbytes = 0;
-    if (buf == NULL)
+	if (buf == NULL)
 	{
-		vTaskDelay(100); // wait a while and retry
-		buf = (char *)malloc(MAXDATAT);	
-	}	
-	if (buf != NULL)
+		free(buf);
+		return 0;
+	}
+	else
 	{
-		recbytes = read(tsocket , buf, MAXDATAT);
+		recbytes = read(tsocket, buf, MAXDATAT);
 
-		if (recbytes <= 0) {
-			if ((errno != EAGAIN )&& (errno != ENOTCONN) &&(errno != 0 ))
+		if (recbytes <= 0)
+		{
+			if ((errno != EAGAIN) && (errno != ENOTCONN) && (errno != 0))
 			{
-				if (errno != ECONNRESET )
+				if (errno != ECONNRESET)
 				{
-					ESP_LOGE(TAG,strtSOCKET,"read", errno);	
-				} 
-			} 
+					ESP_LOGE(TAG, strtSOCKET, "read", errno);
+				}
+			}
 			free(buf);
 			return 0; // free the socket
-		}	
+		}
 
-		buf = realloc(buf,recbytes+2);
-//		printf("%sHEAPdi1: %d #\nrecbytes: %d\n","##SYS.",xPortGetFreeHeapSize(),recbytes);	
-		if (buf != NULL)
+		//buf = realloc(buf, recbytes + 2);
+		//printf("%sHEAPdi1: %d #\nrecbytes: %d\n","##SYS.",xPortGetFreeHeapSize(),recbytes);
+		void *tmp = realloc(buf, recbytes + 2);
+		if (NULL == tmp)
 		{
-			for (i = 0;i< recbytes;i++)
+			ESP_LOGV(TAG, "%s malloc fails", "buf");
+			return 0;
+		}
+		else
+		{
+			buf = tmp;
+			for (i = 0; i < recbytes; i++)
 			{
-//				printf("%x ",buf[i]);
+				//				printf("%x ",buf[i]);
 				if (!inIac)
-				switch(buf[i]){
-				case '\r':
-				case '\n':
-					telnetCommand(tsocket);
-					break;
-				case 0x08:	//backspace
-				case 0x7F:	//delete
-					if (irec >0) --irec;
-					break;
-				case 0x1B:
-					if (i+2 <= recbytes)
+					switch (buf[i])
 					{
-						if ((buf[i+1]=='[') && (buf[i+2]=='A')) // arrow up
+					case '\r':
+					case '\n':
+						telnetCommand(tsocket);
+						break;
+					case 0x08: //backspace
+					case 0x7F: //delete
+						if (irec > 0)
+							--irec;
+						break;
+					case 0x1B:
+						if (i + 2 <= recbytes)
 						{
-							strcpy(brec,obrec); 
-							write(tsocket,"\r",1);
-							write(tsocket,brec,strlen(brec));
-							irec = strlen(brec);
-							buf = realloc(buf,2);
-							vTaskDelay(2);	
-							telnetCommand(tsocket);
-						}						
-						i =recbytes; // exit for
+							if ((buf[i + 1] == '[') && (buf[i + 2] == 'A')) // arrow up
+							{
+								strcpy(brec, obrec);
+								write(tsocket, "\r", 1);
+								write(tsocket, brec, strlen(brec));
+								irec = strlen(brec);
+								buf = realloc(buf, 2);
+								if (buf == NULL)
+								{
+									free(buf);
+									return 0;
+								}
+								vTaskDelay(2);
+								telnetCommand(tsocket);
+							}
+							i = recbytes; // exit for
+						}
+						break;
+					case 0xff: // iac
+						inIac = true;
+						break;
+					default:
+						brec[irec++] = buf[i];
+						if (irec == sizeof(brec))
+							irec = 0;
 					}
-					break;
-				case 0xff: // iac
-					inIac = true;
-				break;
-				default:
-					brec[irec++] = buf[i];
-					if (irec == sizeof(brec)) irec = 0;	
-				}
 				else // in iac
 				{
 					iac[iiac++] = buf[i];
 					if (iiac == 2)
-					{	
+					{
 						telnetNego(tsocket);
 						inIac = false;
 						iiac = 0;
 					}
 				}
-			}	
-			free(buf);	
-		}		
+			}
+			free(buf);
+		}
 	}
 	return recbytes;
 }
-
-
-

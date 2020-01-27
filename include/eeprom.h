@@ -14,8 +14,6 @@
 #define NT_THEME 0xFE
 #define T_PATCH 2
 #define NT_PATCH 0xFD
-#define T_LED 4
-#define NT_LED 0xFB
 //define for bit array options32
 #define T_DDMM 1
 #define NT_DDMM 0xFE

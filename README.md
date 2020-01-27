@@ -88,11 +88,12 @@
 |   33  |         |      |         |         |        |       |       |+BUZZER |
 | (EN)  |  RESET  | RES  |         |         |        |       |       |        |
 |       |         |      |         |         |        |       |       |        |
+
 **Прошивка**
 *адреса:*
-bootloader.bin - 0x1000
-partitions.bin - 0x8000
-ESP32Radiola.bin - 0x10000 и 0x1D0000
+  + bootloader.bin - 0x1000
+  + partitions.bin - 0x8000
+  + ESP32Radiola.bin - 0x10000 и 0x1D0000
 
 ![Image alt](https://github.com/SinglWolf/ESP32-Radiola/raw/master/pictures/flash_download_tools.png)
 

@@ -473,12 +473,12 @@ esp_err_t gpio_set_ir_signal(gpio_num_t ir)
 	return err;
 }
 
-esp_err_t gpio_get_lcd_backlightl(gpio_num_t *lcdb, bool gpio_mode)
+esp_err_t gpio_get_backlightl(gpio_num_t *led, bool gpio_mode)
 {
 	// init default
 	if (!gpio_mode)
 	{
-		*lcdb = PIN_LCD_BACKLIGHT;
+		*led = PIN_LCD_BACKLIGHT;
 		return 0;
 	}
 
@@ -492,7 +492,7 @@ esp_err_t gpio_get_lcd_backlightl(gpio_num_t *lcdb, bool gpio_mode)
 
 	uint8_t val;
 	err = nvs_get_u8(hardware_handle, "P_BACKLIGHT", &val);
-	*lcdb = val;
+	*led = val;
 	if (err != ESP_OK)
 		ESP_LOGD(TAG, "g_get_lcd_backlightl err 0x%x", err);
 
@@ -500,20 +500,20 @@ esp_err_t gpio_get_lcd_backlightl(gpio_num_t *lcdb, bool gpio_mode)
 	return err;
 }
 
-esp_err_t gpio_set_lcd_backlightl(gpio_num_t lcdb)
+esp_err_t gpio_set_backlightl(gpio_num_t led)
 {
 	nvs_handle hardware_handle;
 	esp_err_t err = open_partition(hardware, gpio_space, NVS_READWRITE, &hardware_handle);
 
 	if (err != ESP_OK)
 	{
-		ESP_LOGD(TAG, "in gpio_set_lcd_backlightl");
+		ESP_LOGD(TAG, "in gpio_set_backlightl");
 		return err;
 	}
 
-	err = nvs_set_u8(hardware_handle, "P_BACKLIGHT", (uint8_t)lcdb);
+	err = nvs_set_u8(hardware_handle, "P_BACKLIGHT", (uint8_t)led);
 	if (err != ESP_OK)
-		ESP_LOGD(TAG, "gpio_set_lcd_backlightl err 0x%x", err);
+		ESP_LOGD(TAG, "gpio_set_backlightl err 0x%x", err);
 
 	close_partition(hardware_handle, hardware);
 	return err;

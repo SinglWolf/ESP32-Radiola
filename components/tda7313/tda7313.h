@@ -32,7 +32,7 @@ extern "C"
 
 #define STORAGE_NAMESPACE "TDA7313"
 
-	typedef enum uint8_t
+	typedef enum input_mode_t
 	{
 		COMPUTER = 1,
 		RADIO,

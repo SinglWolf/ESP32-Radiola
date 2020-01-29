@@ -17,6 +17,7 @@ void tach_init();
 void init_ds18b20();
 void TachTimer(TimerHandle_t xTimer);
 float getTemperature();
-int16_t getRpmFan();
+uint16_t getRpmFan();
+void InitPWM();
 
 #endif

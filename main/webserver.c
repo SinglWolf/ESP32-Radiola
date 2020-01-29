@@ -371,15 +371,17 @@ static void rssi(int socket)
 // send the current temperature
 static void curtemp(int socket)
 {
-	char answer[20];
-	sprintf(answer, "{\"wscurtemp\":\"%.2f\"}", getTemperature());
+	float curtemp = getTemperature();
+	char *wscurtemp = "{\"wscurtemp\":\"%.2f\"}";
+	char answer[strlen(wscurtemp) + sizeof(curtemp)];
+	sprintf(answer, wscurtemp, curtemp);
 	websocketwrite(socket, answer, strlen(answer));
 }
 // send the rpm of fan
 static void rpmfan(int socket)
 {
-	char answer[20];
-	sprintf(answer, "{\"wsrpmfan\":\"%d\"}", getRpmFan() * 60);
+	char answer[23];
+	sprintf(answer, "{\"wsrpmfan\":\"%u\"}", getRpmFan() * 60);
 	websocketwrite(socket, answer, strlen(answer));
 }
 
@@ -663,7 +665,7 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 			{
 				if ((atoi(id) >= 0) && (atoi(id) < 255))
 				{
-					char ibuf[6];
+					char ibuf[10];
 					char *buf;
 					for (i = 0; i < sizeof(ibuf); i++)
 						ibuf[i] = 0;
@@ -863,9 +865,9 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 	else if (strcmp(name, "/icy") == 0)
 	{
 		ESP_LOGV(TAG, "icy vol");
-		char currentSt[5];
+		char currentSt[6];
 		sprintf(currentSt, "%u", getCurrentStation());
-		char vol[5];
+		char vol[6];
 		sprintf(vol, "%u", (getVolume()));
 		char treble[5];
 		sprintf(treble, "%d", VS1053_GetTreble());
@@ -986,7 +988,7 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 			int json_length;
 			json_length = 202;
 
-			char buf[272];
+			char buf[295];
 			sprintf(buf, HARDWARE,
 					json_length,
 					g_device->audio_input_num,
@@ -1238,7 +1240,7 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 			esp_err_t err = ESP_OK;
 
 			uint8_t spi_no;
-			gpio_num_t miso, mosi, sclk, xcs, xdcs, dreq, enca, encb, encbtn, sda, scl, cs, a0, ir, lcdb, tach, fanspeed, ds18b20, touch, buzzer, rxd, txd, ldr;
+			gpio_num_t miso, mosi, sclk, xcs, xdcs, dreq, enca, encb, encbtn, sda, scl, cs, a0, ir, led, tach, fanspeed, ds18b20, touch, buzzer, rxd, txd, ldr;
 			if (getSParameterFromResponse(arg, 4, "save=", data, data_size))
 				if (strcmp(arg, "1") == 0)
 					changed = true;
@@ -1261,7 +1263,7 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 			err |= gpio_get_i2c(&sda, &scl, gpio_mode);
 			err |= gpio_get_spi_lcd(&cs, &a0, gpio_mode);
 			err |= gpio_get_ir_signal(&ir, gpio_mode);
-			err |= gpio_get_lcd_backlightl(&lcdb, gpio_mode);
+			err |= gpio_get_backlightl(&led, gpio_mode);
 			err |= gpio_get_tachometer(&tach, gpio_mode);
 			err |= gpio_get_fanspeed(&fanspeed, gpio_mode);
 			err |= gpio_get_ds18b20(&ds18b20, gpio_mode);
@@ -1312,8 +1314,8 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 				ir = atoi(arg);
 				err |= gpio_set_ir_signal(ir);
 				getSParameterFromResponse(arg, 4, "P_BACKLIGHT=", data, data_size);
-				lcdb = atoi(arg);
-				err |= gpio_set_lcd_backlightl(lcdb);
+				led = atoi(arg);
+				err |= gpio_set_backlightl(led);
 				getSParameterFromResponse(arg, 4, "P_TACHOMETER=", data, data_size);
 				tach = atoi(arg);
 				err |= gpio_set_tachometer(tach);
@@ -1344,7 +1346,7 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 			}
 			int json_length = 459 + strlen(RELEASE) + strlen(REVISION);
 
-			char buf[529 + strlen(RELEASE) + strlen(REVISION)];
+			char buf[708 + strlen(RELEASE) + strlen(REVISION)];
 			sprintf(buf, GPIOS,
 					json_length,
 					RELEASE, REVISION,
@@ -1356,7 +1358,7 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 					sda, scl,
 					cs, a0,
 					ir,
-					lcdb,
+					led,
 					tach,
 					fanspeed,
 					ds18b20,

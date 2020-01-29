@@ -541,11 +541,12 @@ void wsVol(char *vol)
 // websocket: broadcast monitor url
 void wsMonitor()
 {
-	char answer[300];
-	memset(answer, 0, 300);
+	char *wsmonitor = "{\"monitor\":\"http://%s:%d%s\"}";
+	char answer[strlen(wsmonitor) + strlen(clientURL) + strlen(clientPath) + sizeof(clientPort)];
+	memset(answer, 0, strlen(answer));
 	if ((clientPath[0] != 0))
 	{
-		sprintf(answer, "{\"monitor\":\"http://%s:%d%s\"}", clientURL, clientPort, clientPath);
+		sprintf(answer, wsmonitor, clientURL, clientPort, clientPath);
 		websocketbroadcast(answer, strlen(answer));
 	}
 }

@@ -7,15 +7,18 @@
 *******************************************************************************/
 #include "custom.h"
 #include "main.h"
+
+#include <stdio.h>
 #include "driver/gpio.h"
 #include "driver/pcnt.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "driver/ledc.h"
 #include "freertos/event_groups.h"
 #include "freertos/queue.h"
 #include "esp_log.h"
-#include "gpios.h"
 
+#include "gpios.h"
 #include "owb.h"
 #include "owb_rmt.h"
 #include "ds18b20.h"
@@ -35,30 +38,142 @@ float cur_temp = 0;
 
 gpio_num_t tach;
 gpio_num_t ds18b20;
-gpio_num_t lcdb;
+gpio_num_t led;
+
+gpio_num_t fanspeed;
+gpio_num_t buzzer;
+
+typedef enum led_channel_t {
+	DISPLAY, // Дисплей
+	FAN,	 //Вентилятор
+	BUZZER,  //Пищалка
+} led_channel_t;
+
+led_channel_t channels;
+ledc_channel_config_t ledc_channel_display, ledc_channel_fan, ledc_channel_buzzer;
+ledc_timer_config_t ledc_timer_display, ledc_timer_fan, ledc_timer_buzzer;
+
 // LedBacklight control a gpio to switch on or off the lcd backlight
 // in addition of the sys.lcdout("x")  configuration for system with battries.
 
 void LedBacklightInit()
 {
-	gpio_get_lcd_backlightl(&lcdb, g_device->gpio_mode);
-	if (lcdb != GPIO_NONE)
+	if (led != GPIO_NONE)
 	{
-		gpio_output_conf(lcdb);
-		gpio_set_level(lcdb, 1);
+		if (g_device->backlight_mode == NOT_ADJUSTABLE)
+		{
+			// gpio_output_conf(led);
+			// gpio_set_level(led, 1);
+			ESP_ERROR_CHECK(ledc_set_duty(LEDC_LOW_SPEED_MODE, DISPLAY, 255));
+			ESP_ERROR_CHECK(ledc_update_duty(LEDC_LOW_SPEED_MODE, DISPLAY));
+		}
+		else
+		{
+			/* AdjustBrightInit(); */
+		}
 	}
 }
 
+void AdjustBrightInit()
+{
+	//Подготовка и настройка конфигурации таймера LED-контроллера
+	ledc_timer_display.duty_resolution = LEDC_TIMER_8_BIT; // разрешение ШИМ
+	ledc_timer_display.freq_hz = 5000;					   // частота сигнала ШИМ
+	ledc_timer_display.speed_mode = LEDC_LOW_SPEED_MODE;   // режим таймера
+	ledc_timer_display.timer_num = DISPLAY;				   // номер таймера
+	// Установить конфигурацию таймера DISPLAY для низкоскоростного канала
+	ledc_timer_config(&ledc_timer_display);
+
+	ledc_channel_display.channel = DISPLAY;
+	ledc_channel_display.duty = 0;
+	ledc_channel_display.gpio_num = led;
+	ledc_channel_display.speed_mode = LEDC_LOW_SPEED_MODE;
+	ledc_channel_display.hpoint = 0;
+	ledc_channel_display.timer_sel = DISPLAY;
+
+	// Установить LED-контроллер с предварительно подготовленной конфигурацией
+	ledc_channel_config(&ledc_channel_display);
+
+	// Инициализацая службы fade
+	//ledc_fade_func_install(0);
+}
+
+void FanPwmInit()
+{
+	//Подготовка и настройка конфигурации таймера LED-контроллера
+	ledc_timer_fan.duty_resolution = LEDC_TIMER_8_BIT; // разрешение ШИМ
+	ledc_timer_fan.freq_hz = 5000;					   // частота сигнала ШИМ
+	ledc_timer_fan.speed_mode = LEDC_LOW_SPEED_MODE;   // режим таймера
+	ledc_timer_fan.timer_num = FAN;					   // номер таймера
+	// Установить конфигурацию таймера FAN для низкоскоростного канала
+	ledc_timer_config(&ledc_timer_fan);
+
+	ledc_channel_fan.channel = FAN;
+	ledc_channel_fan.duty = 0;
+	ledc_channel_fan.gpio_num = fanspeed;
+	ledc_channel_fan.speed_mode = LEDC_LOW_SPEED_MODE;
+	ledc_channel_fan.hpoint = 0;
+	ledc_channel_fan.timer_sel = FAN;
+
+	// Установить LED-контроллер с предварительно подготовленной конфигурацией
+	ledc_channel_config(&ledc_channel_fan);
+
+	// Инициализацая службы fade
+	//ledc_fade_func_install(0);
+}
+
+void BuzzerInit()
+{
+	//Подготовка и настройка конфигурации таймера LED-контроллера
+	ledc_timer_buzzer.duty_resolution = LEDC_TIMER_8_BIT; // разрешение ШИМ
+	ledc_timer_buzzer.freq_hz = 2000;					  // частота сигнала ШИМ
+	ledc_timer_buzzer.speed_mode = LEDC_HIGH_SPEED_MODE;  // режим таймера
+	ledc_timer_buzzer.timer_num = BUZZER;				  // номер таймера
+	// Установить конфигурацию таймера BUZZER для низкоскоростного канала
+	ledc_timer_config(&ledc_timer_buzzer);
+
+	ledc_channel_buzzer.channel = BUZZER;
+	ledc_channel_buzzer.duty = 0;
+	ledc_channel_buzzer.gpio_num = buzzer;
+	ledc_channel_buzzer.speed_mode = LEDC_HIGH_SPEED_MODE;
+	ledc_channel_buzzer.hpoint = 0;
+	ledc_channel_buzzer.timer_sel = BUZZER;
+
+	// Установить LED-контроллер с предварительно подготовленной конфигурацией
+	ledc_channel_config(&ledc_channel_buzzer);
+
+	// Инициализацая службы fade
+	//ledc_fade_func_install(0);
+}
+void InitPWM()
+{
+	gpio_get_backlightl(&led, g_device->gpio_mode);
+	if (led != GPIO_NONE)
+		AdjustBrightInit();
+	gpio_get_fanspeed(&fanspeed, g_device->gpio_mode);
+	if (fanspeed != GPIO_NONE)
+		FanPwmInit();
+	gpio_get_buzzer(&buzzer, g_device->gpio_mode);
+	if (buzzer != GPIO_NONE)
+		BuzzerInit();
+}
 void LedBacklightOn()
 {
-	if (lcdb != GPIO_NONE)
-		gpio_set_level(lcdb, 1);
+	if (led != GPIO_NONE)
+	{
+		//gpio_set_level(led, 1);
+		ESP_ERROR_CHECK(ledc_set_duty(LEDC_LOW_SPEED_MODE, DISPLAY, 255));
+		ESP_ERROR_CHECK(ledc_update_duty(LEDC_LOW_SPEED_MODE, DISPLAY));
+	}
 }
 
 void LedBacklightOff()
 {
-	if (lcdb != GPIO_NONE)
-		gpio_set_level(lcdb, 0);
+	if (led != GPIO_NONE)
+	{ //gpio_set_level(led, 0);
+		ESP_ERROR_CHECK(ledc_set_duty(LEDC_LOW_SPEED_MODE, DISPLAY, 0));
+		ESP_ERROR_CHECK(ledc_update_duty(LEDC_LOW_SPEED_MODE, DISPLAY));
+	}
 }
 
 void ds18b20Task(void *pvParameters)
@@ -155,10 +270,11 @@ void tach_init()
 			pcnt_counter_resume(PCNT_TACHOME);
 		}
 		else
-		{
 			ESP_LOGE(TAG, "Tachometer not present.");
-		}
 	}
+	else
+		ESP_LOGE(TAG, "Tachometer init fail!.");
+	ESP_LOGD(TAG, "Tachometer init OK.");
 }
 void TachTimer(TimerHandle_t xTimer)
 {
@@ -177,9 +293,9 @@ float getTemperature()
 {
 	return cur_temp;
 }
-int16_t getRpmFan()
+uint16_t getRpmFan()
 {
-	return rpm_fan;
+	return (uint16_t)rpm_fan;
 }
 void init_ds18b20()
 {
@@ -216,6 +332,9 @@ void init_ds18b20()
 			ESP_LOGI(TAG, "%s task: %x", "ds18b20Task", (unsigned int)pxCreatedTask);
 			return;
 		}
+		else
+			ESP_LOGE(TAG, "ds18b20 not present.");
 	}
-	ESP_LOGE(TAG, "ds18b20 not present.");
+	else
+		ESP_LOGE(TAG, "ds18b20 init fail!");
 }

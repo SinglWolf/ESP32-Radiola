@@ -97,8 +97,6 @@ sys.prerelease: start an OTA of the next release in alpha stage\n\
 sys.boot: reboot.\n\
 sys.patch and sys.patch(\"x\"): Display and Change the status of the vs1053 patch at power on.\n\
  0 = Patch will not be loaded, 1 or up = Patch will be loaded (default) at power On \n\
-sys.led and sys.led(\"x\"): Display and Change the led indication:\n\
- 1 = Led is in Play mode (lighted when a station is playing), 0 = Led is in Blink mode (default)\n\
 sys.version: Display the Release and Revision numbers\n\
 sys.tzo and sys.tzo(\"xx\"): Display and Set the timezone offset of your country.\n\
 "};

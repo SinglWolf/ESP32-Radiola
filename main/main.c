@@ -101,7 +101,6 @@ static char localIp[20];
 static bool bigRam = false;
 // timeout to save volume in flash
 static uint32_t ctimeVol = 0;
-static uint32_t ctimeMs = 0;
 static bool divide = false;
 // disable 1MS timer interrupt
 IRAM_ATTR void noInterrupt1Ms() { timer_disable_intr(TIMERGROUP1MS, msTimer); }
@@ -143,8 +142,7 @@ IRAM_ATTR void msCallback(void *pArg)
 	TIMERG1.int_clr_timers.t0 = 1; //isr ack
 	if (divide)
 	{
-		ctimeMs++;  // for led
-		ctimeVol++; // to save volume
+			ctimeVol++; // to save volume
 	}
 	divide = !divide;
 	if (serviceAddon != NULL)
@@ -282,6 +280,7 @@ uint32_t checkUart(uint32_t speed)
  *******************************************************************************/
 static void init_hardware()
 {
+	InitPWM();
 	// Настройка тахометра
 	tach_init();
 	// Настройка термометра
@@ -647,7 +646,7 @@ void start_network()
 	vTaskDelay(10);
 }
 
-//blinking led and timer isr
+//timer isr
 void timerTask(void *p)
 {
 
@@ -671,7 +670,6 @@ void timerTask(void *p)
 				clientConnect(); // start the player
 				break;
 			//					case TIMER_1MS: // 1 ms
-			//					  ctimeMs++;	// for led
 			//					  ctimeVol++; // to save volume
 			//					break;
 			//					case TIMER_1mS:  //1µs
@@ -850,6 +848,8 @@ void app_main()
 			strcpy(g_device->pass1, "1234567890\0");
 			g_device->dhcpEn1 = 1;
 			g_device->lcd_out = 0;
+			g_device->backlight_mode = NOT_ADJUSTABLE; // по-умолчанию подсветка нерегулируемая
+			g_device->backlight_level = 255; // по-умолчанию подсветка максимальная
 			saveDeviceSettings(g_device);
 		}
 		else
@@ -932,7 +932,7 @@ void app_main()
 
 	// queue for events of the sleep / wake and Ms timers
 	event_queue = xQueueCreate(30, sizeof(queue_event_t));
-	// led blinks
+	//
 	xTaskCreatePinnedToCore(timerTask, "timerTask", 2100, NULL, PRIO_TIMER, &pxCreatedTask, CPU_TIMER);
 	ESP_LOGI(TAG, "%s task: %x", "t0", (unsigned int)pxCreatedTask);
 

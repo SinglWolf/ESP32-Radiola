@@ -35,6 +35,13 @@
 #define PASSLEN 64
 #define HOSTLEN 24
 
+typedef enum backlight_mode_t {
+	NOT_ADJUSTABLE, //Нерегулируемая подсветка
+	BY_TIME,		//По времени
+	BY_LIGHTING,	//По уровню освещённости в помещении
+	BY_HAND			//Ручная регулировка
+} backlight_mode_t;
+
 struct device_settings
 {
 	uint16_t cleared; // 0xAABB if initialized
@@ -62,7 +69,7 @@ struct device_settings
 	uint8_t autostart;		 // 0: stopped, 1: playing
 	uint8_t i2sspeed;		 // 0 = 48kHz, 1 = 96kHz, 2 = 128kHz
 	uint32_t uartspeed;		 // serial baud
-	uint8_t options;		 // bit0:0 theme ligth blue, 1 Dark brown, bit1: 0 patch load  1 no patch, bit2: O blink led  1 led on On play
+	uint8_t options;		 // bit0:0 theme ligth blue, 1 Dark brown, bit1: 0 patch load  1 no patch
 	char ua[39];			 // user agent
 	int8_t tzoffset;		 //timezone offset
 	uint32_t sleepValue;
@@ -77,6 +84,10 @@ struct device_settings
 	char hostname[HOSTLEN];
 	uint32_t tp_calx;
 	uint32_t tp_caly;
+	backlight_mode_t backlight_mode; //режим управления подсветкой
+	uint8_t backlight_level;		 //уровень подсветки при ручной регулировке
+	uint8_t backlight_day;			 //уровень дневной подсвеки
+	uint8_t backlight_night;		 //уровень ночной подсветки
 
 } Device_Settings;
 

@@ -115,6 +115,165 @@ Encoder_t *encoder1 = NULL;
 
 struct tm *getDt() { return dt; }
 
+static adc1_channel_t ldrchannel1 = GPIO_NONE;
+static adc2_channel_t ldrchannel2 = GPIO_NONE;
+
+void LdrInit()
+{
+	gpio_num_t ldr;
+	gpio_get_ldr(&ldr, g_device->gpio_mode);
+	if (ldr != GPIO_NONE)
+	{
+		// вычисление канала по используемому пину
+		switch (ldr)
+		{
+		case GPIO_NUM_36: //
+			ldrchannel1 = ADC1_CHANNEL_0;
+			break;
+		case GPIO_NUM_37:
+			ldrchannel1 = ADC1_CHANNEL_1;
+			break;
+		case GPIO_NUM_38:
+			ldrchannel1 = ADC1_CHANNEL_2;
+			break;
+		case GPIO_NUM_39:
+			ldrchannel1 = ADC1_CHANNEL_3;
+			break;
+		case GPIO_NUM_32:
+			ldrchannel1 = ADC1_CHANNEL_4;
+			break;
+		case GPIO_NUM_33:
+			ldrchannel1 = ADC1_CHANNEL_5;
+			break;
+		case GPIO_NUM_34:
+			ldrchannel1 = ADC1_CHANNEL_6;
+			break;
+		case GPIO_NUM_35:
+			ldrchannel1 = ADC1_CHANNEL_7;
+			break;
+		case GPIO_NUM_4: //
+			ldrchannel2 = ADC2_CHANNEL_0;
+			break;
+		case GPIO_NUM_0:
+			ldrchannel2 = ADC2_CHANNEL_1;
+			break;
+		case GPIO_NUM_2:
+			ldrchannel2 = ADC2_CHANNEL_2;
+			break;
+		case GPIO_NUM_15:
+			ldrchannel2 = ADC2_CHANNEL_3;
+			break;
+		case GPIO_NUM_13:
+			ldrchannel2 = ADC2_CHANNEL_4;
+			break;
+		case GPIO_NUM_12:
+			ldrchannel2 = ADC2_CHANNEL_5;
+			break;
+		case GPIO_NUM_14:
+			ldrchannel2 = ADC2_CHANNEL_6;
+			break;
+		case GPIO_NUM_27:
+			ldrchannel2 = ADC2_CHANNEL_7;
+			break;
+		case GPIO_NUM_25:
+			ldrchannel2 = ADC2_CHANNEL_8;
+			break;
+		case GPIO_NUM_26:
+			ldrchannel2 = ADC2_CHANNEL_9;
+			break;
+		default:
+			ESP_LOGD(TAG, "LDR Channel not defined");
+		}
+		if (ldrchannel1 != GPIO_NONE)
+		{
+			ESP_LOGD(TAG, "First channel for LDR defined, number: %i", ldrchannel1);
+			adc1_config_width(ADC_WIDTH_12Bit);
+			adc1_config_channel_atten(ldrchannel1, ADC_ATTEN_0db);
+		}
+		else if (ldrchannel2 != GPIO_NONE)
+		{
+			ESP_LOGD(TAG, "Second channel for LDR defined, number: %i", ldrchannel2);
+			adc2_config_channel_atten(ldrchannel2, ADC_ATTEN_0db);
+		}
+	}
+}
+
+void LdrLoop()
+{
+	if (g_device->backlight_mode == BY_LIGHTING)
+	{
+		uint32_t voltage = 0;
+		uint32_t voltage0 = 0;
+		uint32_t voltage1 = 0;
+		if ((ldrchannel1 == GPIO_NONE) && (ldrchannel2 == GPIO_NONE))
+			return; //пин фоторезистора не определён
+		if (ldrchannel1 != GPIO_NONE)
+		{
+			//Первое считвыание. Снимаем напряжение 4 раза и вычисляем среднее значение.
+			voltage0 = (adc1_get_raw(ldrchannel1) + adc1_get_raw(ldrchannel1) + adc1_get_raw(ldrchannel1) + adc1_get_raw(ldrchannel1)) / 4;
+			vTaskDelay(1);
+			//Второе считвыание. Снимаем напряжение 4 раза и вычисляем среднее значение.
+			voltage1 = (adc1_get_raw(ldrchannel1) + adc1_get_raw(ldrchannel1) + adc1_get_raw(ldrchannel1) + adc1_get_raw(ldrchannel1)) / 4;
+		}
+		else if (ldrchannel2 != GPIO_NONE)
+		{
+			esp_err_t err;
+			int raw = 0;
+			//Первое считвыание. Снимаем напряжение 4 раза.
+			err = adc2_get_raw(ldrchannel2, ADC_WIDTH_12Bit, &raw);
+			voltage0 = raw;
+			err |= adc2_get_raw(ldrchannel2, ADC_WIDTH_12Bit, &raw);
+			voltage0 = voltage0 + raw;
+			err |= adc2_get_raw(ldrchannel2, ADC_WIDTH_12Bit, &raw);
+			voltage0 = voltage0 + raw;
+			err |= adc2_get_raw(ldrchannel2, ADC_WIDTH_12Bit, &raw);
+			voltage0 = voltage0 + raw;
+			// и вычисляем среднее значение
+			voltage0 = voltage0 / 4;
+			vTaskDelay(1);
+			raw = 0;
+			//Второе считвыание. Снимаем напряжение 4 раза.
+			err = adc2_get_raw(ldrchannel2, ADC_WIDTH_12Bit, &raw);
+			voltage1 = raw;
+			err |= adc2_get_raw(ldrchannel2, ADC_WIDTH_12Bit, &raw);
+			voltage1 = voltage1 + raw;
+			err |= adc2_get_raw(ldrchannel2, ADC_WIDTH_12Bit, &raw);
+			voltage1 = voltage1 + raw;
+			err |= adc2_get_raw(ldrchannel2, ADC_WIDTH_12Bit, &raw);
+			voltage1 = voltage1 + raw;
+			// и вычисляем среднее значение
+			voltage1 = voltage1 / 4;
+
+			if (err == ESP_OK)
+			{
+				printf("raw: %d\n", raw);
+			}
+			else if (err == ESP_ERR_INVALID_STATE)
+			{
+				ESP_LOGD(TAG, "%s: ADC2 not initialized yet.\n", esp_err_to_name(err));
+			}
+			else if (err == ESP_ERR_TIMEOUT)
+			{
+				//This can not happen in this example. But if WiFi is in use, such error code could be returned.
+				ESP_LOGD(TAG, "%s: ADC2 is in use by Wi-Fi.\n", esp_err_to_name(err));
+			}
+			else
+			{
+				ESP_LOGD(TAG, "%s\n", esp_err_to_name(err));
+			}
+		}
+		ESP_LOGD(TAG, "LDR voltage0: %d\nLDR voltage1: %d\n", voltage0, voltage1);
+		if ((voltage0 > 3700) || (voltage1 > 3700))
+			return; // должно быть два действительных напряжения
+		//Вычисляем среднее значение для достоверности считанных значений.
+		voltage = (voltage0 + voltage1) * 105 / (819);
+		if (voltage < 40)
+			return; // фоторезистор не подключен
+
+		ESP_LOGD(TAG, "LDR voltage: %d", voltage);
+	}
+}
+
 void *getEncoder(int num)
 {
 	if (num == 0)
@@ -929,6 +1088,7 @@ void task_lcd(void *pvParams)
 
 	while (1)
 	{
+		LdrLoop();		   // Опрос фоторезистора
 		if (itLcdOut == 1) // switch off the lcd
 		{
 			sleepLcd();
@@ -1047,6 +1207,7 @@ extern void rmt_nec_rx_task();
 void task_addon(void *pvParams)
 {
 	xTaskHandle pxCreatedTask;
+	LdrInit(); // Инициализация фоторезистора
 	customKeyInit();
 	initButtonDevices();
 

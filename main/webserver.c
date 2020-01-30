@@ -41,12 +41,72 @@ const char strsMALLOC1[] = {"WebServer %s malloc fails\n"};
 const char strsSOCKET[] = {"WebServer Socket fails %s errno: %d\n"};
 const char strsID[] = {"getstation, no id or Wrong id %d\n"};
 const char strsR13[] = {"HTTP/1.1 200 OK\r\nContent-Type:application/json\r\nContent-Length:13\r\n\r\n{\"%s\":\"%c\"}"};
-const char strsICY[] = {"HTTP/1.1 200 OK\r\nContent-Type:application/json\r\nContent-Length:%d\r\n\r\n{\"curst\":\"%s\",\"descr\":\"%s\",\"name\":\"%s\",\"bitr\":\"%s\",\"url1\":\"%s\",\"not1\":\"%s\",\"not2\":\"%s\",\"genre\":\"%s\",\"meta\":\"%s\",\"vol\":\"%s\",\"treb\":\"%s\",\"bass\":\"%s\",\"tfreq\":\"%s\",\"bfreq\":\"%s\",\"spac\":\"%s\",\"auto\":\"%c\"}"};
-const char strsWIFI[] = {"HTTP/1.1 200 OK\r\nContent-Type:application/json\r\nContent-Length:%d\r\n\r\n{\"ssid\":\"%s\",\"pasw\":\"%s\",\"ssid2\":\"%s\",\"pasw2\":\"%s\",\
-\"ip\":\"%s\",\"msk\":\"%s\",\"gw\":\"%s\",\"ip2\":\"%s\",\"msk2\":\"%s\",\"gw2\":\"%s\",\"ua\":\"%s\",\"dhcp\":\"%s\",\"dhcp2\":\"%s\",\"mac\":\"%s\"\
-,\"host\":\"%s\",\"tzo\":\"%s\"}"};
-const char strsGSTAT[] = {"HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: %d\r\n\r\n{\"Name\":\"%s\",\"URL\":\"%s\",\"File\":\"%s\",\"Port\":\"%d\",\"ovol\":\"%d\"}"};
-const char HARDWARE[] = {"HTTP/1.1 200 OK\r\nContent-Type:application/json\r\nContent-Length:%d\r\n\r\n{\"inputnum\":\"%u\",\"Volume\":\"%02u\",\"Treble\":\"%02u\",\"Bass\":\"%02u\",\"rear_on\":\"%u\",\"attlf\":\"%02u\",\"attrf\":\"%02u\",\"attlr\":\"%02u\",\"attrr\":\"%02u\",\"loud1\":\"%u\",\"loud2\":\"%u\",\"loud3\":\"%u\",\"sla1\":\"%u\",\"sla2\":\"%u\",\"sla3\":\"%u\",\"mute\":\"%u\"}"};
+const char strsICY[] = {"HTTP/1.1 200 OK\r\nContent-Type:application/json\r\nContent-Length:%d\r\n\r\n{\
+\"curst\":\"%s\",\
+\"descr\":\"%s\",\
+\"name\":\"%s\",\
+\"bitr\":\"%s\",\
+\"url1\":\"%s\",\
+\"not1\":\"%s\",\
+\"not2\":\"%s\",\
+\"genre\":\"%s\",\
+\"meta\":\"%s\",\
+\"vol\":\"%s\",\
+\"treb\":\"%s\",\
+\"bass\":\"%s\",\
+\"tfreq\":\"%s\",\
+\"bfreq\":\"%s\",\
+\"spac\":\"%s\",\
+\"auto\":\"%c\"\
+}"\
+};
+const char strsWIFI[] = {"HTTP/1.1 200 OK\r\nContent-Type:application/json\r\nContent-Length:%d\r\n\r\n{\
+\"ssid\":\"%s\",\
+\"pasw\":\"%s\",\
+\"ssid2\":\"%s\",\
+\"pasw2\":\"%s\",\
+\"ip\":\"%s\",\
+\"msk\":\"%s\",\
+\"gw\":\"%s\",\
+\"ip2\":\"%s\",\
+\"msk2\":\"%s\",\
+\"gw2\":\"%s\",\
+\"ua\":\"%s\",\
+\"dhcp\":\"%s\",\
+\"dhcp2\":\"%s\",\
+\"mac\":\"%s\",\
+\"host\":\"%s\",\
+\"tzo\":\"%s\"\
+}"\
+};
+const char strsGSTAT[] = {"HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: %d\r\n\r\n{\
+\"Name\":\"%s\",\
+\"URL\":\"%s\",\
+\"File\":\"%s\",\
+\"Port\":\"%d\",\
+\"ovol\":\"%d\"\
+}"\
+};
+const char HARDWARE[] = {"HTTP/1.1 200 OK\r\nContent-Type:application/json\r\nContent-Length:%d\r\n\r\n{\
+\"present\":\"%u\",\
+\"inputnum\":\"%u\",\
+\"Volume\":\"%02u\",\
+\"Treble\":\"%02u\",\
+\"Bass\":\"%02u\",\
+\"rear_on\":\"%u\",\
+\"attlf\":\"%02u\",\
+\"attrf\":\"%02u\",\
+\"attlr\":\"%02u\",\
+\"attrr\":\"%02u\",\
+\"loud1\":\"%u\",\
+\"loud2\":\"%u\",\
+\"loud3\":\"%u\",\
+\"sla1\":\"%u\",\
+\"sla2\":\"%u\",\
+\"sla3\":\"%u\",\
+\"mute\":\"%u\"\
+}"\
+};
 const char GPIOS[] = {"HTTP/1.1 200 OK\r\nContent-Type:application/json\r\nContent-Length:%d\r\n\r\n{\
 \"RELEASE\":\"%s\",\
 \"REVISION\":\"%s\",\
@@ -76,7 +136,8 @@ const char GPIOS[] = {"HTTP/1.1 200 OK\r\nContent-Type:application/json\r\nConte
 \"P_RXD\":\"%03u\",\
 \"P_TXD\":\"%03u\",\
 \"P_LDR\":\"%03u\"\
-}"};
+}"\
+};
 
 static int8_t clientOvol = 0;
 
@@ -938,9 +999,9 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 		{
 			char save[1];
 			if (getSParameterFromResponse(save, 1, "save=", data, data_size))
-				if (strcmp(save, "0") != 0)
+				if (strcmp(save, "1") == 0)
 					changed = true;
-			if (changed)
+			if (changed && tda7313_get_present())
 			{
 				char arg[2];
 				getSParameterFromResponse(arg, 2, "inputnum=", data, data_size);
@@ -948,7 +1009,6 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 				{
 					ESP_ERROR_CHECK(tda7313_set_input(atoi(arg)));
 					g_device->audio_input_num = atoi(arg);
-					ESP_LOGD(TAG, "audio input number: %u", g_device->audio_input_num);
 				}
 				getSParameterFromResponse(arg, 2, "Volume=", data, data_size);
 				if (tda7313_get_volume() != atoi(arg))
@@ -986,11 +1046,12 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 				saveDeviceSettings(g_device);
 			}
 			int json_length;
-			json_length = 202;
+			json_length = 216;
 
 			char buf[295];
 			sprintf(buf, HARDWARE,
 					json_length,
+					tda7313_get_present(),
 					g_device->audio_input_num,
 					tda7313_get_volume(),
 					tda7313_get_treble(),

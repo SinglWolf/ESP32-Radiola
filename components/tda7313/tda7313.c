@@ -198,6 +198,11 @@ esp_err_t tda7313_set_volume(uint8_t arg)
 	return tda7313_command(VOLUME_MASK[TDA.Volume]);
 }
 
+bool tda7313_get_present()
+{
+	return TDA.present;
+}
+
 uint8_t tda7313_get_treble()
 {
 	return TDA.Treble;

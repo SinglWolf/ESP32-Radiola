@@ -2,93 +2,91 @@
 <html>
 
 <head>
-	<meta http-equiv=Content-Type content="text/html;charset=UTF-8">
-	<meta name=viewport content="width=device-width, minimum-scale=0.25" />
-	<meta name=apple-mobile-web-app-capable content=yes>
-	<meta name=apple-mobile-web-app-status-bar-style content=default>
-	<link rel=apple-touch-icon type="image/png" href=logo.png>
-	<link rel=icon type="image/png" href=favicon.png />
-	<link rel=stylesheet title=base href=style.css type="text/css" />
-	<title>Радиола</title>
-	<style></style>
-	<script src=script.js></script>
+    <meta http-equiv=Content-Type content="text/html;charset=UTF-8">
+    <meta name=viewport content="width=device-width, minimum-scale=0.25" />
+    <meta name=apple-mobile-web-app-capable content=yes>
+    <meta name=apple-mobile-web-app-status-bar-style content=default>
+    <link rel=apple-touch-icon type="image/png" href=logo.png>
+    <link rel=icon type="image/png" href=favicon.png />
+    <link rel=stylesheet title=base href=style.css type="text/css" />
+    <title>Радиола</title>
+    <style></style>
+    <script src=script.js></script>
 </head>
 
 <body>
-	<!-- The Modal Edit window-->
-	<div id=editStationDiv class=modal>
-		<div class=modal-content>
-			<div id=MODALCONTENT class=CONTENT style="top:10px;">
-				<div class=tabs>
-					<h1>Edit station</h1>
-					<div class=modal-body>
-						<p>
-							<span class=bold>Номер слота: </span>
-							<input type=text id=add_slot disabled=true name=slot>
-							<br>
-							<span class=bold>Имя: </span>
-							<input type=text style="width:350px;" id=add_name name=name>
-							<br>
-							<span class=bold>Полный URL: </span>
-							<input type=text style="width:350px;" id=add_URL name=URL onkeyup="parseEditURL()"
-								onmouseup="parseEditURL()">
-							<br>or<br>
-							<span class=bold>Url: </span>
-							<input type=text id=add_url name=url onkeyup="buildAddURL()">
-							<br>
-							<span class=bold>Порт: </span>
-							<input type=text id=add_port name=port value=80 onkeyup="buildAddURL()">
-							<br>
-							<span class=bold>Путь: </span>
-							<input type=text id=add_path name=path value="/" onkeyup="buildAddURL()">
-							<br>
-							<span class=bold>Смещение громкости: </span>
-							<input type=range id=ovol name=ovol step=2 min=-126 max=126>
-							<br>
-							<br>
-							<input type="button" onClick="saveStation()" value="сохранить">
-							&nbsp;<input type="button" onClick="eraseStation()" value="стереть">
-							&nbsp;<input type="button" onClick="abortStation()" value="выйти">
-						</p>
-					</div>
-				</div>
-			</div>
-		</div>
-	</div>
-	<div id=MAIN>
-		<div id=HEADER onclick="wtop()">
-			<div class=LEFT>
-				<img title="Нажмите на логотип, чтобы изменить тему" onClick="theme()" src=logo.png>
-			</div>
-			<div class=RIGHT>
-				<a href="https://github.com/SinglWolf/ESP32-Radiola" target=_blank>РАДИОЛА</a>
-				<br>
-				<br>
-				<div id=rssi>0 дБм</div>
-				<div id=curtemp>0 ℃</div>
-				<div id=rpmfan>0 Об/мин</div>
-				<br>
-			</div>
-			<div id=HEAD>
-				<span class=bold4>
+    <!-- The Modal Edit window-->
+    <div id=editStationDiv class=modal>
+        <div class=modal-content>
+            <div id=MODALCONTENT class=CONTENT style="top:10px;">
+                <div class=tabs>
+                    <h1>Edit station</h1>
+                    <div class=modal-body>
+                        <p>
+                            <span class=bold>Номер слота: </span>
+                            <input type=text id=add_slot disabled=true name=slot>
+                            <br>
+                            <span class=bold>Имя: </span>
+                            <input type=text style="width:350px;" id=add_name name=name>
+                            <br>
+                            <span class=bold>Полный URL: </span>
+                            <input type=text style="width:350px;" id=add_URL name=URL onkeyup="parseEditURL()" onmouseup="parseEditURL()">
+                            <br>or<br>
+                            <span class=bold>Url: </span>
+                            <input type=text id=add_url name=url onkeyup="buildAddURL()">
+                            <br>
+                            <span class=bold>Порт: </span>
+                            <input type=text id=add_port name=port value=80 onkeyup="buildAddURL()">
+                            <br>
+                            <span class=bold>Путь: </span>
+                            <input type=text id=add_path name=path value="/" onkeyup="buildAddURL()">
+                            <br>
+                            <span class=bold>Смещение громкости: </span>
+                            <input type=range id=ovol name=ovol step=2 min=-126 max=126>
+                            <br>
+                            <br>
+                            <input type="button" onClick="saveStation()" value="сохранить"> &nbsp;
+                            <input type="button" onClick="eraseStation()" value="стереть"> &nbsp;
+                            <input type="button" onClick="abortStation()" value="выйти">
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id=MAIN>
+        <div id=HEADER onclick="wtop()">
+            <div class=LEFT>
+                <img title="Нажмите на логотип, чтобы изменить тему" onClick="theme()" src=logo.png>
+            </div>
+            <div class=RIGHT>
+                <a href="https://github.com/SinglWolf/ESP32-Radiola" target=_blank>РАДИОЛА</a>
+                <br>
+                <br>
+                <div id=rssi>0 дБм</div>
+                <div id=curtemp>0 ℃</div>
+                <div id=rpmfan>0 Об/мин</div>
+                <br>
+            </div>
+            <div id=HEAD>
+                <span class=bold4>
 					<span id=meta>Радиола</span>
-				</span>
-			</div>
-		</div>
-		<div id=MAINCONTENT class=CONTENT>
-			<ul class=tabs>
-				<li>
-					<input type=radio name=tabs id=tab1 checked />
-					<label for=tab1>Радио</label>
-					<div id=tab-content1 class=tab-content>
-						<h1>
-							Управление станциями &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input
-								type=checkbox id=aplay onClick="autoplay()" />Автовоспроизведение
-						</h1>
-						<p>
-							<select id=stationsSelect onchange="Select()"></select>
-						</p>
-						<span id=np>
+                </span>
+            </div>
+        </div>
+        <div id=MAINCONTENT class=CONTENT>
+            <ul class=tabs>
+                <li>
+                    <input type=radio name=tabs id=tab1 checked />
+                    <label for=tab1>Радио</label>
+                    <div id=tab-content1 class=tab-content>
+                        <h1>
+                            Управление станциями &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type=checkbox id=aplay onClick="autoplay()" />Автовоспроизведение
+                        </h1>
+                        <p>
+                            <select id=stationsSelect onchange="Select()"></select>
+                        </p>
+                        <span id=np>
 							<p>
 								<img class="icon icons8" width=50 height=50 title="Предыдущая станция"
 									onClick="prevStation()"
@@ -105,598 +103,552 @@
 								<br>
 							</p>
 						</span>
-						<p>
-							<span class=bold2>Громкость: </span>
-							&nbsp;&nbsp;<span id=vol1_span></span>
-							<br>
-							<input type=range id=vol1_range name=vol1 onChange="onRangeVolChange(this.value,true)" min=0
-								max=254 style="height:25px;">
-						</p>
-						<h1>
-							Станция № <span id=curst></span>
-							&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type=checkbox checked id=Full
-								onclick="full()" />Подробно
-						</h1>
-						<p>
-							<span class=bold1>Имя: </span>
-							<span id=name></span>
-							&nbsp;&nbsp;<img id=icon src="" height=16px width=16px>
-						</p>
-						<p>
-							<span id=ldescr>
+                        <p>
+                            <span class=bold2>Громкость: </span> &nbsp;&nbsp;
+                            <span id=vol1_span></span>
+                            <br>
+                            <input type=range id=vol1_range name=vol1 onChange="onRangeVolChange(this.value,true)" min=0 max=254 style="height:25px;">
+                        </p>
+                        <h1>
+                            Станция № <span id=curst></span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                            <input type=checkbox checked id=Full onclick="full()" />Подробно
+                        </h1>
+                        <p>
+                            <span class=bold1>Имя: </span>
+                            <span id=name></span> &nbsp;&nbsp;
+                            <img id=icon src="" height=16px width=16px>
+                        </p>
+                        <p>
+                            <span id=ldescr>
 								<span class=bold1>Описание: </span>
-								<span id=descr></span>
-							</span>
-						</p>
-						<p>
-							<span id=lnot1>
+                            <span id=descr></span>
+                            </span>
+                        </p>
+                        <p>
+                            <span id=lnot1>
 								<span class=bold1>Заметка: </span>
-								<span id=not1></span>
-								<span id=not2></span>
-							</span>
-						</p>
-						<p>
-							<span id=lgenre>
+                            <span id=not1></span>
+                            <span id=not2></span>
+                            </span>
+                        </p>
+                        <p>
+                            <span id=lgenre>
 								<span class=bold1>Жанр: </span>
-								<span id=genre></span>
-							</span>
-						</p>
-						<p>
-							<span id=lurl>
+                            <span id=genre></span>
+                            </span>
+                        </p>
+                        <p>
+                            <span id=lurl>
 								<span class=bold1>URL: </span>
-								<a target=_blank id=url2>
-									<span id=url1></span>
-								</a>
-							</span>
-						</p>
-						<p>
-							<span id=lbitr>
+                            <a target=_blank id=url2>
+                                <span id=url1></span>
+                            </a>
+                            </span>
+                        </p>
+                        <p>
+                            <span id=lbitr>
 								<span class=bold1>Битрейт: </span>
-								<span id=bitr></span>
-							</span>
-						</p>
-						<h1>Мониторинг</h1>
-						<p>
-							<img class="icon icons8" width=40 height=40 title="Запуск мониторинга" onClick="mplay()"
-								src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAACBElEQVRoge3XPWsUQRgH8C0sLFP6AfwAfoAUqcXszG5QCw8sIljkCkGFZGd33RwJFz3FgC9JIWgTTRGMx2VeLkQOtVhOsDgF30AlRUCOaC6bEI/T87EICxGieTFhGHx+8PT/P+zOPGNZCCGEEEII7TcaTXfozrAnCBOKMFEwvpDjy9j2OBBfLNn9pWxXVDmgO9OuOL6M+8ZqkB2vtSiTLRqo+e4Bfkx3rh1zfBlnx19BQTZguFiHM6PPVwnjbScsx9TjR3Tn27aNRdKJphYgM/I0IR5vu4GaOHqRH9Kdc0ubFUnHu/8JTuQerxAmmoSJsCuqHNSd94/+VqQgG3BFLMH5u+/ADcvfqC8XbW8mozvzprYqks7IzBfou11rEiZ+OKF6081Knbqz/2a7RdIZelSH3uvVxPY4uKFSdn/xsO4OlmXtvMjGA+FU/klCmGw5obqp/ULdbZF0BiY+wvHBuVXqy0TrhbonRXIGF4mmFiCTf7ZsM/HdDcq3jPu0hot16B2trhDG2z3hrHk/+2X+FbJj6/uYE6i3Rh6/F+69h55wdo36yswL0Z+ch5NDlYQw0SSBGDRuRck9/Aynr8bLxONt91L5gXFLY760CGdvvFhbX+NV1cA1/iWcu/ManEC1KBMfjH1YEU/8pEw2jH7qEiYUZfKa9gvtXxlfACGEEEII/T9+AR8nzQFJqsL+AAAAAElFTkSuQmCC">
-							&nbsp;<img class="icon icons8" width=40 height=40 title="Остановка мониторинга"
-								onClick="mstop()"
-								src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAAiklEQVRoge3YsQmAMBBAUUfISA4gwXFEUqR3kXQWEpwnG7hB7MRAIhZeivgfXHlwv72uAwAAACQN09bnZrSrKu2MdlWlvYqnp/TsY26ejhqmrS/tVTw9pWcfjQtx2Y9r3obcd4wLhHyCEEKEEEKIEEIIEUIIIUIIIUQIIYQIaeb50Mw7CAAAAP9wAgwPdP6eVGKaAAAAAElFTkSuQmCC">
-							<!-- <input type="button" value=Play onClick="mplay()"> &nbsp; <input type="button" value="Стоп" onClick="mstop()"></p> -->
-						</p>
-						<p>
-							<span class=bold2>Громкость</span>
-							<br>
-							<input type=range id=volm_range name=volm onChange="mvol(this.value/100)" min=0 max=100
-								style="height:25px;">
-						</p>
-						<audio volume=1 id=audio src="" class=audio_sound onerror="monerror()">
+                            <span id=bitr></span>
+                            </span>
+                        </p>
+                        <h1>Мониторинг</h1>
+                        <p>
+                            <img class="icon icons8" width=40 height=40 title="Запуск мониторинга" onClick="mplay()" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAACBElEQVRoge3XPWsUQRgH8C0sLFP6AfwAfoAUqcXszG5QCw8sIljkCkGFZGd33RwJFz3FgC9JIWgTTRGMx2VeLkQOtVhOsDgF30AlRUCOaC6bEI/T87EICxGieTFhGHx+8PT/P+zOPGNZCCGEEEII7TcaTXfozrAnCBOKMFEwvpDjy9j2OBBfLNn9pWxXVDmgO9OuOL6M+8ZqkB2vtSiTLRqo+e4Bfkx3rh1zfBlnx19BQTZguFiHM6PPVwnjbScsx9TjR3Tn27aNRdKJphYgM/I0IR5vu4GaOHqRH9Kdc0ubFUnHu/8JTuQerxAmmoSJsCuqHNSd94/+VqQgG3BFLMH5u+/ADcvfqC8XbW8mozvzprYqks7IzBfou11rEiZ+OKF6081Knbqz/2a7RdIZelSH3uvVxPY4uKFSdn/xsO4OlmXtvMjGA+FU/klCmGw5obqp/ULdbZF0BiY+wvHBuVXqy0TrhbonRXIGF4mmFiCTf7ZsM/HdDcq3jPu0hot16B2trhDG2z3hrHk/+2X+FbJj6/uYE6i3Rh6/F+69h55wdo36yswL0Z+ch5NDlYQw0SSBGDRuRck9/Aynr8bLxONt91L5gXFLY760CGdvvFhbX+NV1cA1/iWcu/ManEC1KBMfjH1YEU/8pEw2jH7qEiYUZfKa9gvtXxlfACGEEEII/T9+AR8nzQFJqsL+AAAAAElFTkSuQmCC">                            &nbsp;
+                            <img class="icon icons8" width=40 height=40 title="Остановка мониторинга" onClick="mstop()" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAAiklEQVRoge3YsQmAMBBAUUfISA4gwXFEUqR3kXQWEpwnG7hB7MRAIhZeivgfXHlwv72uAwAAACQN09bnZrSrKu2MdlWlvYqnp/TsY26ejhqmrS/tVTw9pWcfjQtx2Y9r3obcd4wLhHyCEEKEEEKIEEIIEUIIIUIIIUQIIYQIaeb50Mw7CAAAAP9wAgwPdP6eVGKaAAAAAElFTkSuQmCC">
+                            <!-- <input type="button" value=Play onClick="mplay()"> &nbsp; <input type="button" value="Стоп" onClick="mstop()"></p> -->
+                        </p>
+                        <p>
+                            <span class=bold2>Громкость</span>
+                            <br>
+                            <input type=range id=volm_range name=volm onChange="mvol(this.value/100)" min=0 max=100 style="height:25px;">
+                        </p>
+                        <audio volume=1 id=audio src="" class=audio_sound onerror="monerror()">
 							Мне жаль; ваш браузер не поддерживает HTML5 <code>audio</code>.
 						</audio>
-						<h1>
-							Режим сна / Пробуждение&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span id=time>time</span>
-						</h1>
-						<p id=sw>
-							<span class=bold1 title="Режим времени: ЧЧ:ММ или Режим задержки (минуты): ММ">ВЫКЛ :
+                        <h1>
+                            Режим сна / Пробуждение&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span id=time>time</span>
+                        </h1>
+                        <p id=sw>
+                            <span class=bold1 title="Режим времени: ЧЧ:ММ или Режим задержки (минуты): ММ">ВЫКЛ :
 							</span>
-							<input type=text id=sleepdelay onkeyup="sleepup(event)">
-							&nbsp;<input type="button" value="Старт" onClick="startSleep()">
-							<input type="button" value="Стоп" onClick="stopSleep()">
-							&nbsp;&nbsp;В: <span id=sminutes>0</span>
-							Сек.
-						</p>
-						<p id=sw>
-							<span class=bold1 title="Режим времени: ЧЧ:ММ или Режим задержки (минуты): ММ">ВКЛ :
+                            <input type=text id=sleepdelay onkeyup="sleepup(event)"> &nbsp;
+                            <input type="button" value="Старт" onClick="startSleep()">
+                            <input type="button" value="Стоп" onClick="stopSleep()"> &nbsp;&nbsp;В: <span id=sminutes>0</span> Сек.
+                        </p>
+                        <p id=sw>
+                            <span class=bold1 title="Режим времени: ЧЧ:ММ или Режим задержки (минуты): ММ">ВКЛ :
 							</span>
-							<input type=text id=wakedelay onkeyup="wakeup(event)">
-							&nbsp;<input type="button" value="Старт" onClick="startWake()">
-							<input type="button" value="Стоп" onClick="stopWake()">
-							&nbsp;&nbsp;В: <span id=wminutes>0</span>
-							Сек.
-						</p>
-						<h1>
-							Быстрое воспроизведение
-							&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="button"
-								onClick="editInstantStation()" value="Добавить и править">
-						</h1>
-						<p>
-							<span class=bold1>Полный URL: </span>
-							<input type=text style="width:350px;" id=instant_URL name=URL onkeyup="parseURL()"
-								onmouseup="parseEditURL()">
-							<br>или<br>
-							<span class=bold1>Url: </span>
-							<input type=text id=instant_url name=url onkeyup="buildURL()">
-							<br>
-							<span class=bold1>Порт: </span>
-							<input type=text id=instant_port name=port value=80 onkeyup="buildURL()">
-							<br>
-							<span class=bold1>Путь: </span>
-							<input type=text id=instant_path name=path value="/" onkeyup="buildURL()">
-							<br>
-							<br>
-							<img class="icon icons8" width=40 height=40 title="Быстрое воспроизведение станции"
-								onClick="instantPlay()"
-								src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAACBElEQVRoge3XPWsUQRgH8C0sLFP6AfwAfoAUqcXszG5QCw8sIljkCkGFZGd33RwJFz3FgC9JIWgTTRGMx2VeLkQOtVhOsDgF30AlRUCOaC6bEI/T87EICxGieTFhGHx+8PT/P+zOPGNZCCGEEEII7TcaTXfozrAnCBOKMFEwvpDjy9j2OBBfLNn9pWxXVDmgO9OuOL6M+8ZqkB2vtSiTLRqo+e4Bfkx3rh1zfBlnx19BQTZguFiHM6PPVwnjbScsx9TjR3Tn27aNRdKJphYgM/I0IR5vu4GaOHqRH9Kdc0ubFUnHu/8JTuQerxAmmoSJsCuqHNSd94/+VqQgG3BFLMH5u+/ADcvfqC8XbW8mozvzprYqks7IzBfou11rEiZ+OKF6081Knbqz/2a7RdIZelSH3uvVxPY4uKFSdn/xsO4OlmXtvMjGA+FU/klCmGw5obqp/ULdbZF0BiY+wvHBuVXqy0TrhbonRXIGF4mmFiCTf7ZsM/HdDcq3jPu0hot16B2trhDG2z3hrHk/+2X+FbJj6/uYE6i3Rh6/F+69h55wdo36yswL0Z+ch5NDlYQw0SSBGDRuRck9/Aynr8bLxONt91L5gXFLY760CGdvvFhbX+NV1cA1/iWcu/ManEC1KBMfjH1YEU/8pEw2jH7qEiYUZfKa9gvtXxlfACGEEEII/T9+AR8nzQFJqsL+AAAAAElFTkSuQmCC">
-							&nbsp;<img class="icon icons8" width=40 height=40
-								title="Остановить быстрое воспроизведение станции" onClick="stopStation()"
-								src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAAiklEQVRoge3YsQmAMBBAUUfISA4gwXFEUqR3kXQWEpwnG7hB7MRAIhZeivgfXHlwv72uAwAAACQN09bnZrSrKu2MdlWlvYqnp/TsY26ejhqmrS/tVTw9pWcfjQtx2Y9r3obcd4wLhHyCEEKEEEKIEEIIEUIIIUIIIUQIIYQIaeb50Mw7CAAAAP9wAgwPdP6eVGKaAAAAAElFTkSuQmCC">
-							<!-- <input type="button" value=Play onClick="instantPlay()">&nbsp; <input type="button" value="Стоп" onClick="stopStation()"> -->
-						</p>
-					</div>
-				<li>
-					<input type=radio name=tabs id=tab2 />
-					<label for=tab2>СТАНЦИИ</label>
-					<div id=tab-content2 class=tab-content>
-						<h1>Менеджер станций</h1>
-						<p>
-							<input type="button" onclick="saveTextAsFile()" value="Сохранить станции из Радиолы">
-							<span style="display:inline-block;"> &nbsp;&nbsp;в &nbsp;&nbsp;&nbsp;<input type="text"
+                            <input type=text id=wakedelay onkeyup="wakeup(event)"> &nbsp;
+                            <input type="button" value="Старт" onClick="startWake()">
+                            <input type="button" value="Стоп" onClick="stopWake()"> &nbsp;&nbsp;В: <span id=wminutes>0</span> Сек.
+                        </p>
+                        <h1>
+                            Быстрое воспроизведение &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                            <input type="button" onClick="editInstantStation()" value="Добавить и править">
+                        </h1>
+                        <p>
+                            <span class=bold1>Полный URL: </span>
+                            <input type=text style="width:350px;" id=instant_URL name=URL onkeyup="parseURL()" onmouseup="parseEditURL()">
+                            <br>или<br>
+                            <span class=bold1>Url: </span>
+                            <input type=text id=instant_url name=url onkeyup="buildURL()">
+                            <br>
+                            <span class=bold1>Порт: </span>
+                            <input type=text id=instant_port name=port value=80 onkeyup="buildURL()">
+                            <br>
+                            <span class=bold1>Путь: </span>
+                            <input type=text id=instant_path name=path value="/" onkeyup="buildURL()">
+                            <br>
+                            <br>
+                            <img class="icon icons8" width=40 height=40 title="Быстрое воспроизведение станции" onClick="instantPlay()" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAACBElEQVRoge3XPWsUQRgH8C0sLFP6AfwAfoAUqcXszG5QCw8sIljkCkGFZGd33RwJFz3FgC9JIWgTTRGMx2VeLkQOtVhOsDgF30AlRUCOaC6bEI/T87EICxGieTFhGHx+8PT/P+zOPGNZCCGEEEII7TcaTXfozrAnCBOKMFEwvpDjy9j2OBBfLNn9pWxXVDmgO9OuOL6M+8ZqkB2vtSiTLRqo+e4Bfkx3rh1zfBlnx19BQTZguFiHM6PPVwnjbScsx9TjR3Tn27aNRdKJphYgM/I0IR5vu4GaOHqRH9Kdc0ubFUnHu/8JTuQerxAmmoSJsCuqHNSd94/+VqQgG3BFLMH5u+/ADcvfqC8XbW8mozvzprYqks7IzBfou11rEiZ+OKF6081Knbqz/2a7RdIZelSH3uvVxPY4uKFSdn/xsO4OlmXtvMjGA+FU/klCmGw5obqp/ULdbZF0BiY+wvHBuVXqy0TrhbonRXIGF4mmFiCTf7ZsM/HdDcq3jPu0hot16B2trhDG2z3hrHk/+2X+FbJj6/uYE6i3Rh6/F+69h55wdo36yswL0Z+ch5NDlYQw0SSBGDRuRck9/Aynr8bLxONt91L5gXFLY760CGdvvFhbX+NV1cA1/iWcu/ManEC1KBMfjH1YEU/8pEw2jH7qEiYUZfKa9gvtXxlfACGEEEII/T9+AR8nzQFJqsL+AAAAAElFTkSuQmCC">                            &nbsp;
+                            <img class="icon icons8" width=40 height=40 title="Остановить быстрое воспроизведение станции" onClick="stopStation()" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAYAAAAeP4ixAAAAiklEQVRoge3YsQmAMBBAUUfISA4gwXFEUqR3kXQWEpwnG7hB7MRAIhZeivgfXHlwv72uAwAAACQN09bnZrSrKu2MdlWlvYqnp/TsY26ejhqmrS/tVTw9pWcfjQtx2Y9r3obcd4wLhHyCEEKEEEKIEEIIEUIIIUIIIUQIIYQIaeb50Mw7CAAAAP9wAgwPdP6eVGKaAAAAAElFTkSuQmCC">
+                            <!-- <input type="button" value=Play onClick="instantPlay()">&nbsp; <input type="button" value="Стоп" onClick="stopStation()"> -->
+                        </p>
+                    </div>
+                    <li>
+                        <input type=radio name=tabs id=tab2 />
+                        <label for=tab2>СТАНЦИИ</label>
+                        <div id=tab-content2 class=tab-content>
+                            <h1>Менеджер станций</h1>
+                            <p>
+                                <input type="button" onclick="saveTextAsFile()" value="Сохранить станции из Радиолы">
+                                <span style="display:inline-block;"> &nbsp;&nbsp;в &nbsp;&nbsp;&nbsp;<input type="text"
 									style="width:300px;color:black;" value="WebStations.txt" id="filesave"> </span>
-							<br>
-							<br>
-							<input type="button" onclick="downloadStations()" value="Загрузить станции в Радиолу">
-							<span style="display:inline-block;"> &nbsp;&nbsp;из <input type="file"
+                                <br>
+                                <br>
+                                <input type="button" onclick="downloadStations()" value="Загрузить станции в Радиолу">
+                                <span style="display:inline-block;"> &nbsp;&nbsp;из <input type="file"
 									style="width:300px;color:black;" id="fileload"> </span> <br>
-							<input type="button" id="refresh" title="Это перезагрузит станции в Радиоле"
-								onclick="refreshList()" value="Обновить локальный список"> <input type="button"
-								id="stsave" disabled="true" style="margin:0px auto"
-								title="Это сохранит все станции в Радиоле" onclick="stChanged()"
-								value="Сохранить список"> <input type="button" style="margin:0px auto" id="clear"
-								title="Предупреждение: Это удалит все станции. Обязательно сохраните их раньше."
-								onclick="clearList()" value="Удалить всё"> <input type="button" style="margin:0px auto"
-								id="clear" title="Печать всего списка станций на принтере" onclick="printList()"
-								value="Печатать всё">
-						</p>
-						<br>
-						<span>Вы можете перетаскивать любую строку, чтобы отсортировать список</span>
-						<br>
-						<table id=stationsTable style="table-layout: fixed; width: 100%;">
-							<thead>
-								<tr>
-									<td style="width:5%;text-align: center; vertical-align: middle;">№</td>
-									<td style="width:38%; ">Имя</td>
-									<td style="width:45%; ">URL</td>
-									<td style="width:3%;text-align: center; vertical-align: middle;">Громк</td>
-									<td style="width:9%;text-align: center; vertical-align: middle;">Правка</td>
-								</tr>
-							</thead>
-							<tbody></tbody>
-						</table>
-					</div>
-				</li>
-				<li>
-					<input type="radio" name="tabs" id="tab3"> <label for="tab3">ЗВУК</label>
-					<div id="tab-content3" class="tab-content">
-						<h1>Настройка звука</h1>
-						<p> <span class="bold">Источник: </span> <span class="countin"> <input type="radio"
+                                <input type="button" id="refresh" title="Это перезагрузит станции в Радиоле" onclick="refreshList()" value="Обновить локальный список"> <input type="button" id="stsave" disabled="true" style="margin:0px auto" title="Это сохранит все станции в Радиоле"
+                                    onclick="stChanged()" value="Сохранить список"> <input type="button" style="margin:0px auto" id="clear" title="Предупреждение: Это удалит все станции. Обязательно сохраните их раньше." onclick="clearList()" value="Удалить всё">                                <input type="button" style="margin:0px auto" id="clear" title="Печать всего списка станций на принтере" onclick="printList()" value="Печатать всё">
+                            </p>
+                            <br>
+                            <span>Вы можете перетаскивать любую строку, чтобы отсортировать список</span>
+                            <br>
+                            <table id=stationsTable style="table-layout: fixed; width: 100%;">
+                                <thead>
+                                    <tr>
+                                        <td style="width:5%;text-align: center; vertical-align: middle;">№</td>
+                                        <td style="width:38%; ">Имя</td>
+                                        <td style="width:45%; ">URL</td>
+                                        <td style="width:3%;text-align: center; vertical-align: middle;">Громк</td>
+                                        <td style="width:9%;text-align: center; vertical-align: middle;">Правка</td>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </li>
+                    <li>
+                        <input type="radio" name="tabs" id="tab3"> <label for="tab3">ЗВУК</label>
+                        <div id="tab-content3" class="tab-content">
+                            <h1>Настройка звука</h1>
+                            <p> <span class="bold">Источник: </span> <span class="countin"> <input type="radio"
 									name="audioinput" id="audioinput1" onclick="hardware(1)"> <label
 									for="audioinput1">КОМПЬЮТЕР</label> <input type="radio" name="audioinput"
 									id="audioinput2" onclick="hardware(1)"> <label for="audioinput2">РАДИО</label>
 								<input type="radio" name="audioinput" id="audioinput3" onclick="hardware(1)"> <label
 									for="audioinput3">БЛЮТУЗ</label> </span>
-							<br>
-						</p>
-						<p>
-							<br>
-							<input class="checkbox" id="mute" type="checkbox" onclick="mute(1)">
-							<label
-								for="mute">ЗВУК:&emsp;&emsp;&emsp;&ensp;&ensp;&emsp;&emsp;&emsp;ВЫКЛ&emsp;&emsp;&emsp;&ensp;ВКЛ</label>
-							<br>
-							<span class="bold2">Громкость: </span> &nbsp;&nbsp;<span id="Volume_span">0 дБ</span>
-							<br>
-							<input type="range" id="Volume_range" name="Volume" onchange="onTDAchange('Volume')" min="0"
-								max="17" style="height:25px;">
-						</p>
-						<p>
-							<span class="bold2">Низкие частоты: </span> &nbsp;&nbsp;<span id="Bass_span">0 дБ</span>
-							<br>
-							<input type="range" id="Bass_range" name="Bass" onchange="onTDAchange('Bass')" min="0"
-								max="14" style="height:25px;">
-						</p>
-						<p>
-							<span class="bold2">Высокие частоты: </span> &nbsp;&nbsp;<span id="Treble_span">0
-								дБ</span>
-							<br>
-							<input type="range" id="Treble_range" name="Treble" onchange="onTDAchange('Treble')" min="0"
-								max="14" style="height:25px;">
-						</p>
-						<span style="font-weight: bold;">ПЕРЕДНИЕ ДИНАМИКИ:</span>
-						<br>
-						<br>
-						<table widh="auto" id="Front">
-							<tbody>
-								<tr>
-									<td><span class="bold">Левый канал: </span> &nbsp;&nbsp;<span id="AttLF_span">0
-											дБ</span>
-									</td>
-									<td><span class="bold">Правый канал: </span> &nbsp;&nbsp;<span id="AttRF_span">0
-											дБ</span>
-									</td>
-								</tr>
-								<tr>
-									<td><input type="range" id="AttLF_range" name="AttLF"
-											onchange="onTDAchange('AttLF')" min="0" max="13" style="height:25px;">
-									</td>
-									<td><input type="range" id="AttRF_range" name="AttRF"
-											onchange="onTDAchange('AttRF')" min="0" max="13" style="height:25px;">
-									</td>
-								</tr>
-							</tbody>
-						</table>
-						<br>
-						<br>
-						<input class="checkbox" id="rearON" type="checkbox" onclick="clickrear()">
-						<label for="rearON">Задние динамики:&ensp;ВЫКЛ&emsp;&emsp;&emsp;&ensp;ВКЛ</label>
-						<br>
-						<table widh="auto" id="Rear" style="display: none;">
-							<tbody>
-								<tr>
-									<td><span class="bold">Левый канал: </span> &nbsp;&nbsp;<span id="AttLR_span">0
-											дБ</span>
-									</td>
-									<td><span class="bold">Правый канал: </span> &nbsp;&nbsp;<span id="AttRR_span">0
-											дБ</span>
-									</td>
-								</tr>
-								<tr>
-									<td><input type="range" id="AttLR_range" name="AttLR"
-											onchange="onTDAchange('AttLR')" min="0" max="13" style="height:25px;">
-									</td>
-									<td><input type="range" id="AttRR_range" name="AttRR"
-											onchange="onTDAchange('AttRR')" min="0" max="13" style="height:25px;">
-									</td>
-								</tr>
-							</tbody>
-						</table>
-						<br>
-						<span id="Computer" style="display: none;">
+                                <br>
+                            </p>
+                            <span id="barTDA7313" style="display: none;">
+							<p>
+								<br>
+								<input class="checkbox" id="mute" type="checkbox" onclick="mute(1)">
+								<label
+									for="mute">ЗВУК:&emsp;&emsp;&emsp;&ensp;&ensp;&emsp;&emsp;&emsp;ВЫКЛ&emsp;&emsp;&emsp;&ensp;ВКЛ</label>
+								<br>
+
+								<span class="bold2">Громкость: </span> &nbsp;&nbsp;<span id="Volume_span">0 дБ</span>
+                            <br>
+                            <input type="range" id="Volume_range" name="Volume" onchange="onTDAchange('Volume')" min="0" max="17" style="height:25px;">
+                            </p>
+                            <p>
+                                <span class="bold2">Низкие частоты: </span> &nbsp;&nbsp;<span id="Bass_span">0 дБ</span>
+                                <br>
+                                <input type="range" id="Bass_range" name="Bass" onchange="onTDAchange('Bass')" min="0" max="14" style="height:25px;">
+                            </p>
+                            <p>
+                                <span class="bold2">Высокие частоты: </span> &nbsp;&nbsp;<span id="Treble_span">0
+									дБ</span>
+                                <br>
+                                <input type="range" id="Treble_range" name="Treble" onchange="onTDAchange('Treble')" min="0" max="14" style="height:25px;">
+                            </p>
+                            <span style="font-weight: bold;">ПЕРЕДНИЕ ДИНАМИКИ:</span>
+                            <br>
+                            <br>
+                            <table widh="auto" id="Front">
+                                <tbody>
+                                    <tr>
+                                        <td><span class="bold">Левый канал: </span> &nbsp;&nbsp;<span id="AttLF_span">0
+												дБ</span>
+                                        </td>
+                                        <td><span class="bold">Правый канал: </span> &nbsp;&nbsp;<span id="AttRF_span">0
+												дБ</span>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><input type="range" id="AttLF_range" name="AttLF" onchange="onTDAchange('AttLF')" min="0" max="13" style="height:25px;">
+                                        </td>
+                                        <td><input type="range" id="AttRF_range" name="AttRF" onchange="onTDAchange('AttRF')" min="0" max="13" style="height:25px;">
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <br>
+                            <br>
+                            <input class="checkbox" id="rearON" type="checkbox" onclick="clickrear()">
+                            <label for="rearON">Задние динамики:&ensp;ВЫКЛ&emsp;&emsp;&emsp;&ensp;ВКЛ</label>
+                            <br>
+                            <table widh="auto" id="Rear" style="display: none;">
+                                <tbody>
+                                    <tr>
+                                        <td><span class="bold">Левый канал: </span> &nbsp;&nbsp;<span id="AttLR_span">0
+												дБ</span>
+                                        </td>
+                                        <td><span class="bold">Правый канал: </span> &nbsp;&nbsp;<span id="AttRR_span">0
+												дБ</span>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><input type="range" id="AttLR_range" name="AttLR" onchange="onTDAchange('AttLR')" min="0" max="13" style="height:25px;">
+                                        </td>
+                                        <td><input type="range" id="AttRR_range" name="AttRR" onchange="onTDAchange('AttRR')" min="0" max="13" style="height:25px;">
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            </span>
+                            <br>
+                            <span id="Computer" style="display: none;">
 							<br>
 							<input class="checkbox" id="loud1" type="checkbox" onclick="clickloud()"> <label
 								for="loud1">Тонкомпенсация:&ensp;&ensp;ВЫКЛ&emsp;&emsp;&emsp;&ensp;ВКЛ</label>
 							<br>
-							<span class="bold">Предусиление: </span> <input type="range" id="sla1_range"
-								onchange="onTDAchange('sla1')" name="SLA1" min="0" max="3">
-							<span id="sla1_span">0 дБ</span>
-							<br>
-						</span>
-						<span id="Bluetooth" style="display: none;">
+							<span class="bold">Предусиление: </span> <input type="range" id="sla1_range" onchange="onTDAchange('sla1')" name="SLA1" min="0" max="3">
+                            <span id="sla1_span">0 дБ</span>
+                            <br>
+                            </span>
+                            <span id="Bluetooth" style="display: none;">
 							<br>
 							<input class="checkbox" id="loud3" type="checkbox" onclick="clickloud()"> <label
 								for="loud3">Тонкомпенсация:&ensp;&ensp;ВЫКЛ&emsp;&emsp;&emsp;&ensp;ВКЛ</label>
 							<br>
 							<span class="bold">Предусиление:
-							</span> <input type="range" id="sla3_range" name="SLA3" onchange="onTDAchange('sla3')"
-								min="0" max="3">
-							<span id="sla3_span">0 дБ</span>
-						</span>
-						<span id="Radio" style="display: block;">
-							<br>
-							<input class="checkbox" id="loud2" type="checkbox" onclick="clickloud()"> <label
-								for="loud2">Тонкомпенсация:&ensp;&ensp;ВЫКЛ&emsp;&emsp;&emsp;&ensp;ВКЛ</label>
-							<br>
-							<span class="bold">Предусиление:
-							</span> <input type="range" id="sla2_range" name="SLA2" onchange="onTDAchange('sla2')"
-								min="0" max="3">
-							<span id="sla2_span">0 дБ</span>
-							<br>
-							<br>
-							<span class="bold">Усиление высоких частот: </span> <input type="range" id="treble_range"
-								name="treble" onchange="onRangeChange('treble_range', 'treble_span', 1.5, false)"
-								min="-8" max="7"> <span id="treble_span">0 дБ</span>
-							<br>
-							<span class="bold">Высокие частоты: </span>
-							<input type="range" id="treblefreq_range" name="treblefreq"
-								onchange="onRangeChangeFreqTreble('treblefreq_range', 'treblefreq_span', 1, false)"
-								min="1" max="15"> <span id="treblefreq_span">От 1 кГц</span>
-							<br>
-							<span class="bold">Усиление басов: </span> <input type="range" id="bass_range" name="bass"
-								onchange="onRangeChange('bass_range', 'bass_span', 1, false)" min="0" max="15"> <span
-								id="bass_span">0 дБ</span>
-							<br>
-							<span class="bold">Низкие частоты: </span> <input type="range" id="bassfreq_range"
-								name="bassfreq"
-								onchange="onRangeChangeFreqBass('bassfreq_range', 'bassfreq_span', 10, false)" min="2"
-								max="15"> <span id="bassfreq_span">До 20 Гц</span>
-							<br>
-							<span class="bold">Объёмный звук: </span> <input type="range" id="spacial_range"
-								name="spacial" onchange="onRangeChangeSpatial('spacial_range', 'spacial_span')" min="0"
-								max="3"> <span id="spacial_span">Выкл</span> <br>
-							<span class="bold"></span> <input type="button" value="Сброс" onclick="resetEQ()">
-							<br>
-							<span class="bold">Громкость: </span> <input type="range" id="vol_range" name="vol"
-								onchange="onRangeVolChange(this.value,true)" value="100" min="0" max="254"> <span
-								id="vol_span">-19.5 дБ</span>
-							<br>
-						</span>
-						<br>
-						<p></p>
-					</div>
-				</li>
-				<li>
-					<input type=radio name=tabs id=tab4 />
-					<label for=tab4>Настройки</label>
-					<div id=tab-content4 class=tab-content>
-						<div>
-							<h1>НАЗНАЧЕНИЕ GPIO &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input
-									type="button" value="Считать значения по-умолчанию" onclick="gpios(0,0,0)">
-								&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="button"
-									value="Считать значения из NVS"
-									onclick="gpios(1,0,0)">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input
-									type="button" value="Сохранить значения в NVS" onclick="gpios(1,1,0)">
-							</h1>
-							<div>
-								СТАТУС:
-							</div>
-							<div id="GPIOsErr"></div>
-							<br>
-							<table id="GPIOsTable">
-								<tbody>
-									<tr>
-										<td>ИМЯ GPIO</td>
-										<td>ЗНАЧЕНИЕ</td>
-									</tr>
-									<tr>
-										<td>SPI</td>
-										<td contenteditable="true" id="K_SPI"></td>
-									</tr>
-									<tr>
-										<td>MISO</td>
-										<td contenteditable="true" id="P_MISO"></td>
-									</tr>
-									<tr>
-										<td>MOSI</td>
-										<td contenteditable="true" id="P_MOSI"></td>
-									</tr>
-									<tr>
-										<td>CLK</td>
-										<td contenteditable="true" id="P_CLK"></td>
-									</tr>
-									<tr>
-										<td>XCS</td>
-										<td contenteditable="true" id="P_XCS"></td>
-									</tr>
-									<tr>
-										<td>XDCS</td>
-										<td contenteditable="true" id="P_XDCS"></td>
-									</tr>
-									<tr>
-										<td>DREQ</td>
-										<td contenteditable="true" id="P_DREQ"></td>
-									</tr>
-									<tr>
-										<td>ENC0_A</td>
-										<td contenteditable="true" id="P_ENC0_A"></td>
-									</tr>
-									<tr>
-										<td>ENC0_B</td>
-										<td contenteditable="true" id="P_ENC0_B"></td>
-									</tr>
-									<tr>
-										<td>ENC0_BTN</td>
-										<td contenteditable="true" id="P_ENC0_BTN"></td>
-									</tr>
-									<tr>
-										<td>I2C_SCL</td>
-										<td contenteditable="true" id="P_I2C_SCL"></td>
-									</tr>
-									<tr>
-										<td>I2C_SDA</td>
-										<td contenteditable="true" id="P_I2C_SDA"></td>
-									</tr>
-									<tr>
-										<td>LCD_CS</td>
-										<td contenteditable="true" id="P_LCD_CS"></td>
-									</tr>
-									<tr>
-										<td>LCD_A0</td>
-										<td contenteditable="true" id="P_LCD_A0"></td>
-									</tr>
-									<tr>
-										<td>IR_SIGNAL</td>
-										<td contenteditable="true" id="P_IR_SIGNAL"></td>
-									</tr>
-									<tr>
-										<td>BACKLIGHT</td>
-										<td contenteditable="true" id="P_BACKLIGHT"></td>
-									</tr>
-									<tr>
-										<td>TACHOMETER</td>
-										<td contenteditable="true" id="P_TACHOMETER"></td>
-									</tr>
-									<tr>
-										<td>FAN_SPEED</td>
-										<td contenteditable="true" id="P_FAN_SPEED"></td>
-									</tr>
-									<tr>
-										<td>DS18B20</td>
-										<td contenteditable="true" id="P_DS18B20"></td>
-									</tr>
-									<tr>
-										<td>TOUCH_CS</td>
-										<td contenteditable="true" id="P_TOUCH_CS"></td>
-									</tr>
-									<tr>
-										<td>BUZZER</td>
-										<td contenteditable="true" id="P_BUZZER"></td>
-									</tr>
-									<tr>
-										<td>RXD</td>
-										<td contenteditable="true" id="P_RXD"></td>
-									</tr>
-									<tr>
-										<td>TXD</td>
-										<td contenteditable="true" id="P_TXD"></td>
-									</tr>
-									<tr>
-										<td>LDR</td>
-										<td contenteditable="true" id="P_LDR"></td>
-									</tr>
-								</tbody>
-							</table>
-							<p>&nbsp;</p>
-							<h1>КОДЫ ИК-ПУЛЬТА &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input
-									type="button" value="Считать значения по-умолчанию"
-									onclick="ircodes(0,0)">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input
-									type="button" value="Считать значения из NVS"
-									onclick="ircodes(1,0)">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input
-									type="button" value="Сохранить значения в NVS" onclick="ircodes(1,1)">
-							</h1>
-							<table id="IRcodesTable">
-								<tbody>
-									<tr>
-										<td>ИМЯ КНОПКИ</td>
-										<td>КОД</td>
-									</tr>
-									<tr>
-										<td>ВВЕРХ</td>
-										<td contenteditable="true" id="K_UP">&nbsp;</td>
-									</tr>
-									<tr>
-										<td>ВЛЕВО</td>
-										<td contenteditable="true" id="K_LEFT">&nbsp;</td>
-									</tr>
-									<tr>
-										<td>ОК</td>
-										<td contenteditable="true" id="K_OK">&nbsp;</td>
-									</tr>
-									<tr>
-										<td>ВПРАВО</td>
-										<td contenteditable="true" id="K_RIGHT">&nbsp;</td>
-									</tr>
-									<tr>
-										<td>ВНИЗ</td>
-										<td contenteditable="true" id="K_DOWN">&nbsp;</td>
-									</tr>
-									<tr>
-										<td>0</td>
-										<td contenteditable="true" id="K_0">&nbsp;</td>
-									</tr>
-									<tr>
-										<td>1</td>
-										<td contenteditable="true" id="K_1">&nbsp;</td>
-									</tr>
-									<tr>
-										<td>2</td>
-										<td contenteditable="true" id="K_2">&nbsp;</td>
-									</tr>
-									<tr>
-										<td>3</td>
-										<td contenteditable="true" id="K_3">&nbsp;</td>
-									</tr>
-									<tr>
-										<td>4</td>
-										<td contenteditable="true" id="K_4">&nbsp;</td>
-									</tr>
-									<tr>
-										<td>5</td>
-										<td contenteditable="true" id="K_5">&nbsp;</td>
-									</tr>
-									<tr>
-										<td>6</td>
-										<td contenteditable="true" id="K_6">&nbsp;</td>
-									</tr>
-									<tr>
-										<td>7</td>
-										<td contenteditable="true" id="K_7">&nbsp;</td>
-									</tr>
-									<tr>
-										<td>8</td>
-										<td contenteditable="true" id="K_8">&nbsp;</td>
-									</tr>
-									<tr>
-										<td>9</td>
-										<td contenteditable="true" id="K_9">&nbsp;</td>
-									</tr>
-									<tr>
-										<td>*</td>
-										<td contenteditable="true" id="K_STAR">&nbsp;</td>
-									</tr>
-									<tr>
-										<td>#</td>
-										<td contenteditable="true" id="K_DIESE">&nbsp;</td>
-									</tr>
-								</tbody>
-							</table>
-							<p>&nbsp;</p>
-							<h1>ЗАГРУЗКА\СОХРАНЕНИЕ НАСТРОЕК
-								&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="button"
-									value="Загрузить настройки из файла" onclick="loadCSV()">
-								&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="button"
-									value="Сохранить настройки в файл" onclick="saveCSV()"></h1>
-							<table id="CSVname">
-								<tbody>
-									<tr>
-										<td>ИМЯ ФАЙЛА</td>
-										<td contenteditable="true" id="L_LABEL">new_psram.csv</td>
-									</tr>
-									<tr>
-										<td>ОПИСАНИЕ</td>
-										<td contenteditable="true" id="L_COMMENT">Это стандартная
-											конфигурация для
-											ESP32-WROVER.</td>
-									</tr>
-								</tbody>
-							</table>
-						</div>
-						<p>&nbsp;</p>
+							</span> <input type="range" id="sla3_range" name="SLA3" onchange="onTDAchange('sla3')" min="0" max="3">
+                            <span id="sla3_span">0 дБ</span>
+                            </span>
+                            <span id="Radio" style="display: block;">
+							<span id="barTDA7313radio" style="display: none;">
+								<br>
+								<input class="checkbox" id="loud2" type="checkbox" onclick="clickloud()"> <label
+									for="loud2">Тонкомпенсация:&ensp;&ensp;ВЫКЛ&emsp;&emsp;&emsp;&ensp;ВКЛ</label>
+								<br>
+								<span class="bold">Предусиление:
+								</span> <input type="range" id="sla2_range" name="SLA2" onchange="onTDAchange('sla2')" min="0" max="3">
+                            <span id="sla2_span">0 дБ</span>
+                            </span>
+                            <br>
+                            <br>
+                            <span class="bold">Усиление высоких частот: </span> <input type="range" id="treble_range" name="treble" onchange="onRangeChange('treble_range', 'treble_span', 1.5, false)" min="-8" max="7"> <span id="treble_span">0 дБ</span>
+                            <br>
+                            <span class="bold">Высокие частоты: </span>
+                            <input type="range" id="treblefreq_range" name="treblefreq" onchange="onRangeChangeFreqTreble('treblefreq_range', 'treblefreq_span', 1, false)" min="1" max="15"> <span id="treblefreq_span">От 1 кГц</span>
+                            <br>
+                            <span class="bold">Усиление басов: </span> <input type="range" id="bass_range" name="bass" onchange="onRangeChange('bass_range', 'bass_span', 1, false)" min="0" max="15"> <span id="bass_span">0 дБ</span>
+                            <br>
+                            <span class="bold">Низкие частоты: </span> <input type="range" id="bassfreq_range" name="bassfreq" onchange="onRangeChangeFreqBass('bassfreq_range', 'bassfreq_span', 10, false)" min="2" max="15"> <span id="bassfreq_span">До 20 Гц</span>
+                            <br>
+                            <span class="bold">Объёмный звук: </span> <input type="range" id="spacial_range" name="spacial" onchange="onRangeChangeSpatial('spacial_range', 'spacial_span')" min="0" max="3"> <span id="spacial_span">Выкл</span> <br>
+                            <span class="bold"></span> <input type="button" value="Сброс" onclick="resetEQ()">
+                            <br>
+                            <span class="bold">Громкость: </span> <input type="range" id="vol_range" name="vol" onchange="onRangeVolChange(this.value,true)" value="100" min="0" max="254"> <span id="vol_span">-19.5 дБ</span>
+                            <br>
+                            </span>
+                            <br>
+                            <br>
+                        </div>
+                    </li>
+                    <li>
+                        <input type=radio name=tabs id=tab4 />
+                        <label for=tab4>Настройки</label>
+                        <div id=tab-content4 class=tab-content>
+                            <h1>
+                                Wifi и Сеть &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="button" value="Сохранить" onclick="valid()" />
+                            </h1>
+                            <p>
+                                <span class=bold>AP SSID:</span>
+                                <input id=ssid type=text />
+                                <input id=ssid2 type=text />
+                                <br>
+                                <span class=bold>ПАРОЛЬ AP:</span>
+                                <input id=passwd type=password />
+                                <input id=passwd2 type=password />
+                            </p>
+                            <p>
+                                <span class=bold>MAC Адрес:</span>
+                                <span id=Mac></span>
+                                <br>
+                                <span class=bold>Вкл. DHCP:</span> 1:
+                                <input id=dhcp type=checkbox onclick="clickdhcp()" /> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 2:
+                                <input id=dhcp2 type=checkbox onclick="clickdhcp()" />
+                                <br>
+                                <span class=bold>Адрес:</span>
+                                <input id=ip type=text oninput="chkip(this)" />
+                                <input id=ip2 type=text oninput="chkip(this)" />
+                                <br>
+                                <span class=bold>Маска:</span>
+                                <input id=mask type=text oninput="chkip(this)" value=255.255.255.0 />
+                                <input id=mask2 type=text oninput="chkip(this)" value=255.255.255.0 />
+                                <br>
+                                <span class=bold>Шлюз:</span>
+                                <input id=gw type=text oninput="chkip(this)" />
+                                <input id=gw2 type=text oninput="chkip(this)" />
+                                <br><br>
+                                <span class=bold>User Agent:</span>
+                                <input id=ua type=text value="" />
+                                <br>
+                                <span class=bold>Имя хоста mDNS:</span>
+                                <input id=host type=text value="" />
+                                <span class=bold>.local</span>
+                                <br>
+                                <span class=bold>Смещение времени:</span>
+                                <input id=tzo type=text value="" />
+                                <br><br>
+                            </p>
 
+                            <h1>НАЗНАЧЕНИЕ GPIO &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="button" value="Считать значения по-умолчанию" onclick="gpios(0,0,0)"> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                                <input type="button" value="Считать значения из NVS" onclick="gpios(1,0,0)">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="button" value="Сохранить значения в NVS" onclick="gpios(1,1,0)">
+                            </h1>
+                            <div>
+                                СТАТУС:
+                            </div>
+                            <div id="GPIOsErr"></div>
+                            <br>
+                            <table id="GPIOsTable">
+                                <tbody>
+                                    <tr>
+                                        <td>ИМЯ GPIO</td>
+                                        <td>ЗНАЧЕНИЕ</td>
+                                    </tr>
+                                    <tr>
+                                        <td>SPI</td>
+                                        <td contenteditable="true" id="K_SPI"></td>
+                                    </tr>
+                                    <tr>
+                                        <td>MISO</td>
+                                        <td contenteditable="true" id="P_MISO"></td>
+                                    </tr>
+                                    <tr>
+                                        <td>MOSI</td>
+                                        <td contenteditable="true" id="P_MOSI"></td>
+                                    </tr>
+                                    <tr>
+                                        <td>CLK</td>
+                                        <td contenteditable="true" id="P_CLK"></td>
+                                    </tr>
+                                    <tr>
+                                        <td>XCS</td>
+                                        <td contenteditable="true" id="P_XCS"></td>
+                                    </tr>
+                                    <tr>
+                                        <td>XDCS</td>
+                                        <td contenteditable="true" id="P_XDCS"></td>
+                                    </tr>
+                                    <tr>
+                                        <td>DREQ</td>
+                                        <td contenteditable="true" id="P_DREQ"></td>
+                                    </tr>
+                                    <tr>
+                                        <td>ENC0_A</td>
+                                        <td contenteditable="true" id="P_ENC0_A"></td>
+                                    </tr>
+                                    <tr>
+                                        <td>ENC0_B</td>
+                                        <td contenteditable="true" id="P_ENC0_B"></td>
+                                    </tr>
+                                    <tr>
+                                        <td>ENC0_BTN</td>
+                                        <td contenteditable="true" id="P_ENC0_BTN"></td>
+                                    </tr>
+                                    <tr>
+                                        <td>I2C_SCL</td>
+                                        <td contenteditable="true" id="P_I2C_SCL"></td>
+                                    </tr>
+                                    <tr>
+                                        <td>I2C_SDA</td>
+                                        <td contenteditable="true" id="P_I2C_SDA"></td>
+                                    </tr>
+                                    <tr>
+                                        <td>LCD_CS</td>
+                                        <td contenteditable="true" id="P_LCD_CS"></td>
+                                    </tr>
+                                    <tr>
+                                        <td>LCD_A0</td>
+                                        <td contenteditable="true" id="P_LCD_A0"></td>
+                                    </tr>
+                                    <tr>
+                                        <td>IR_SIGNAL</td>
+                                        <td contenteditable="true" id="P_IR_SIGNAL"></td>
+                                    </tr>
+                                    <tr>
+                                        <td>BACKLIGHT</td>
+                                        <td contenteditable="true" id="P_BACKLIGHT"></td>
+                                    </tr>
+                                    <tr>
+                                        <td>TACHOMETER</td>
+                                        <td contenteditable="true" id="P_TACHOMETER"></td>
+                                    </tr>
+                                    <tr>
+                                        <td>FAN_SPEED</td>
+                                        <td contenteditable="true" id="P_FAN_SPEED"></td>
+                                    </tr>
+                                    <tr>
+                                        <td>DS18B20</td>
+                                        <td contenteditable="true" id="P_DS18B20"></td>
+                                    </tr>
+                                    <tr>
+                                        <td>TOUCH_CS</td>
+                                        <td contenteditable="true" id="P_TOUCH_CS"></td>
+                                    </tr>
+                                    <tr>
+                                        <td>BUZZER</td>
+                                        <td contenteditable="true" id="P_BUZZER"></td>
+                                    </tr>
+                                    <tr>
+                                        <td>RXD</td>
+                                        <td contenteditable="true" id="P_RXD"></td>
+                                    </tr>
+                                    <tr>
+                                        <td>TXD</td>
+                                        <td contenteditable="true" id="P_TXD"></td>
+                                    </tr>
+                                    <tr>
+                                        <td>LDR</td>
+                                        <td contenteditable="true" id="P_LDR"></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <p></p>
+                            <h1>КОДЫ ИК-ПУЛЬТА &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="button" value="Считать значения по-умолчанию" onclick="ircodes(0,0)">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                                <input
+                                    type="button" value="Считать значения из NVS" onclick="ircodes(1,0)">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="button" value="Сохранить значения в NVS" onclick="ircodes(1,1)">
+                            </h1>
+                            <table id="IRcodesTable">
+                                <tbody>
+                                    <tr>
+                                        <td>ВВЕРХ</td>
+                                        <td contenteditable="true" id="K_UP"></td>
+                                        <td><input type="button" value="ОБУЧИТЬ" onclick="training('K_UP')"></td>
+                                    </tr>
+                                    <tr>
+                                        <td>ВЛЕВО</td>
+                                        <td contenteditable="true" id="K_LEFT"></td>
+                                        <td><input type="button" value="ОБУЧИТЬ" onclick="training('K_LEFT')"></td>
+                                    </tr>
+                                    <tr>
+                                        <td>ОК</td>
+                                        <td contenteditable="true" id="K_OK"></td>
+                                        <td><input type="button" value="ОБУЧИТЬ" onclick="training('K_OK')"></td>
+                                    </tr>
+                                    <tr>
+                                        <td>ВПРАВО</td>
+                                        <td contenteditable="true" id="K_RIGHT"></td>
+                                        <td><input type="button" value="ОБУЧИТЬ" onclick="training('K_RIGHT')"></td>
+                                    </tr>
+                                    <tr>
+                                        <td>ВНИЗ</td>
+                                        <td contenteditable="true" id="K_DOWN"></td>
+                                        <td><input type="button" value="ОБУЧИТЬ" onclick="training('K_DOWN')"></td>
+                                    </tr>
+                                    <tr>
+                                        <td>0</td>
+                                        <td contenteditable="true" id="K_0"></td>
+                                        <td><input type="button" value="ОБУЧИТЬ" onclick="training('0')"></td>
+                                    </tr>
+                                    <tr>
+                                        <td>1</td>
+                                        <td contenteditable="true" id="K_1"></td>
+                                        <td><input type="button" value="ОБУЧИТЬ" onclick="training('1')"></td>
+                                    </tr>
+                                    <tr>
+                                        <td>2</td>
+                                        <td contenteditable="true" id="K_2"></td>
+                                        <td><input type="button" value="ОБУЧИТЬ" onclick="training('2')"></td>
+                                    </tr>
+                                    <tr>
+                                        <td>3</td>
+                                        <td contenteditable="true" id="K_3"></td>
+                                        <td><input type="button" value="ОБУЧИТЬ" onclick="training('3')"></td>
+                                    </tr>
+                                    <tr>
+                                        <td>4</td>
+                                        <td contenteditable="true" id="K_4"></td>
+                                        <td><input type="button" value="ОБУЧИТЬ" onclick="training('4')"></td>
+                                    </tr>
+                                    <tr>
+                                        <td>5</td>
+                                        <td contenteditable="true" id="K_5"></td>
+                                        <td><input type="button" value="ОБУЧИТЬ" onclick="training('5')"></td>
+                                    </tr>
+                                    <tr>
+                                        <td>6</td>
+                                        <td contenteditable="true" id="K_6"></td>
+                                        <td><input type="button" value="ОБУЧИТЬ" onclick="training('6')"></td>
+                                    </tr>
+                                    <tr>
+                                        <td>7</td>
+                                        <td contenteditable="true" id="K_7"></td>
+                                        <td><input type="button" value="ОБУЧИТЬ" onclick="training('7')"></td>
+                                    </tr>
+                                    <tr>
+                                        <td>8</td>
+                                        <td contenteditable="true" id="K_8"></td>
+                                        <td><input type="button" value="ОБУЧИТЬ" onclick="training('8')"></td>
+                                    </tr>
+                                    <tr>
+                                        <td>9</td>
+                                        <td contenteditable="true" id="K_9"></td>
+                                        <td><input type="button" value="ОБУЧИТЬ" onclick="training('9')"></td>
+                                    </tr>
+                                    <tr>
+                                        <td>*</td>
+                                        <td contenteditable="true" id="K_STAR"></td>
+                                        <td><input type="button" value="ОБУЧИТЬ" onclick="training('*')"></td>
+                                    </tr>
+                                    <tr>
+                                        <td>#</td>
+                                        <td contenteditable="true" id="K_DIESE"></td>
+                                        <td><input type="button" value="ОБУЧИТЬ" onclick="training('#')"></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <p></p>
+                            <h1>ЗАГРУЗКА\СОХРАНЕНИЕ НАСТРОЕК &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                                <input type="button" value="Загрузить настройки из файла" onclick="loadCSV()"> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                                <input type="button" value="Сохранить настройки в файл" onclick="saveCSV()"></h1>
+                            <table id="CSVname">
+                                <tbody>
+                                    <tr>
+                                        <td>ИМЯ ФАЙЛА</td>
+                                        <td contenteditable="true" id="L_LABEL">new_psram.csv</td>
+                                    </tr>
+                                    <tr>
+                                        <td>ОПИСАНИЕ</td>
+                                        <td contenteditable="true" id="L_COMMENT">Это стандартная конфигурация для ESP32-WROVER.
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
 
-						<h1>
-							Wifi и Сеть &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="button"
-								value="Сохранить" onclick="valid()" />
-						</h1>
-						<p>
-							<span class=bold>AP SSID:</span>
-							<input id=ssid type=text />
-							<input id=ssid2 type=text />
-							<br>
-							<span class=bold>ПАРОЛЬ AP:</span>
-							<input id=passwd type=password />
-							<input id=passwd2 type=password />
-						</p>
-						<p>
-							<span class=bold>MAC Адрес:</span>
-							<span id=Mac></span>
-							<br>
-							<span class=bold>Вкл. DHCP:</span>
-							1:<input id=dhcp type=checkbox onclick="clickdhcp()" />
-							&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-							2:<input id=dhcp2 type=checkbox onclick="clickdhcp()" />
-							<br>
-							<span class=bold>Адрес:</span>
-							<input id=ip type=text oninput="chkip(this)" />
-							<input id=ip2 type=text oninput="chkip(this)" />
-							<br>
-							<span class=bold>Маска:</span>
-							<input id=mask type=text oninput="chkip(this)" value=255.255.255.0 />
-							<input id=mask2 type=text oninput="chkip(this)" value=255.255.255.0 />
-							<br>
-							<span class=bold>Шлюз:</span>
-							<input id=gw type=text oninput="chkip(this)" />
-							<input id=gw2 type=text oninput="chkip(this)" />
-							<br><br>
-							<span class=bold>User Agent:</span>
-							<input id=ua type=text value="" />
-							<br>
-							<span class=bold>Имя хоста mDNS:</span>
-							<input id=host type=text value="" />
-							<span class=bold>.local</span>
-							<br>
-							<span class=bold>Смещение времени:</span>
-							<input id=tzo type=text value="" />
-							<br><br>
-						</p>
-						<h1>ОПЦИИ
-							&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input
-								type="button" onclick="devoptions(0)"
-								value="Обновить">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input
-								type="button" onclick="devoptions(1)" value="Сохранить"></h1>
-						<p>
-							<table id="OptionsTable">
-								<tbody>
-									<tr>
-										<td>Логи CMD-Консоли</td>
-										<td colspan="3"><select id="O_CMD_OUT">
+                            <h1>ОПЦИИ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                                <input type="button" onclick="devoptions(0)" value="Обновить">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="button" onclick="devoptions(1)" value="Сохранить"></h1>
+                            <p>
+                                <table id="OptionsTable">
+                                    <tbody>
+                                        <tr>
+                                            <td>Логи CMD-Консоли</td>
+                                            <td colspan="3"><select id="O_CMD_OUT">
 												<option value="0">Выключить</option>
 												<option value="1">Подробно</option>
 												<option value="2">Отладка</option>
@@ -704,21 +656,21 @@
 												<option value="4">Предупреждения</option>
 												<option value="5">Ошибки</option>
 											</select></td>
-									</tr>
-									<tr>
-										<td>Формат вывода даты</td>
-										<td colspan="3"><select id="O_DDMM_FLAG">
+                                        </tr>
+                                        <tr>
+                                            <td>Формат вывода даты</td>
+                                            <td colspan="3"><select id="O_DDMM_FLAG">
 												<option value="0">ММДД</option>
 												<option value="1">ДДММ</option>
 											</select></td>
-									</tr>
-									<tr>
-										<td>Сервер точного времени</td>
-										<td colspan="3" contenteditable="true" id="O_NTP">0.ru.pool.ntp.org</td>
-									</tr>
-									<tr>
-										<td>Смещение часового пояса</td>
-										<td colspan="3"><select id="O_TZONE">
+                                        </tr>
+                                        <tr>
+                                            <td>Сервер точного времени</td>
+                                            <td colspan="3" contenteditable="true" id="O_NTP">0.ru.pool.ntp.org</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Смещение часового пояса</td>
+                                            <td colspan="3"><select id="O_TZONE">
 												<option value="-12">-12</option>
 												<option value="-11">-11</option>
 												<option value="-10">-10</option>
@@ -745,17 +697,17 @@
 												<option value="11">+11</option>
 												<option value="12">+12</option>
 											</select></td>
-									</tr>
-									<tr>
-										<td>Поворот дисплея</td>
-										<td colspan="3"><select id="O_LCD_ROTA">
+                                        </tr>
+                                        <tr>
+                                            <td>Поворот дисплея</td>
+                                            <td colspan="3"><select id="O_LCD_ROTA">
 												<option value="0">НЕТ</option>
 												<option value="1">ДА</option>
 											</select></td>
-									</tr>
-									<tr>
-										<td>Выключить дисплей</td>
-										<td colspan="3"><select id="O_LCD_OUT" onclick="displaymode()">
+                                        </tr>
+                                        <tr>
+                                            <td>Выключить дисплей</td>
+                                            <td colspan="3"><select id="O_LCD_OUT" onclick="displaymode()">
 												<option value="0">Не выключать</option>
 												<option value="5">через 5 мин</option>
 												<option value="10">через 10 мин</option>
@@ -764,22 +716,22 @@
 												<option value="25">через 25 мин</option>
 												<option value="30">через 30 мин</option>
 											</select></td>
-									</tr>
-									<tr>
-										<td>Яркость дисплея</td>
-										<td colspan="3"><select id="O_LCD_BRG" onclick="displaybright()">
+                                        </tr>
+                                        <tr>
+                                            <td>Яркость дисплея</td>
+                                            <td colspan="3"><select id="O_LCD_BRG" onclick="displaybright()">
 												<option value="0">Не регулировать</option>
 												<option value="1">автоматически по времени</option>
 												<option value="2">автоматически от освещения</option>
 												<option value="3">вручную</option>
 											</select></td>
-									</tr>
-									<tr>
-										<td colspan="4">
-											<div id="brightOn">
-												<div id="by_time">
-													<div>Ночной режим</div>
-													<div>С:&nbsp; &nbsp; &nbsp;<select name="begin_h">
+                                        </tr>
+                                        <tr>
+                                            <td colspan="4">
+                                                <div id="brightOn">
+                                                    <div id="by_time">
+                                                        <div>Ночной режим</div>
+                                                        <div>С:&nbsp; &nbsp; &nbsp;<select name="begin_h">
 															<option value="0">00</option>
 															<option value="1">01</option>
 															<option value="2">02</option>
@@ -810,7 +762,7 @@
 															<option value="30">30</option>
 															<option value="45">45</option>
 														</select></div>
-													<div>До:&nbsp; &nbsp;<select name="end_h">
+                                                        <div>До:&nbsp; &nbsp;<select name="end_h">
 															<option value="0">00</option>
 															<option value="1">01</option>
 															<option value="2">02</option>
@@ -841,71 +793,108 @@
 															<option value="30">30</option>
 															<option value="45">45</option>
 														</select></div>
-												</div>
-												<div id="brightness">
-													<div>Уровень яркости</div>
-													<div>Дневной&nbsp; &nbsp;<input id="day_brightness" max="254"
-															min="0" name="day_brightness" type="range" value="127">
-													</div>
-													<div>Ночной&nbsp; &nbsp;&nbsp;<input id="night_brightness" max="254"
-															min="0" name="night_brightness" type="range" value="127">
-													</div>
-												</div>
-												<div id="by_lighting">
-													<div>Порог срабатывания<br>
-														<input id="brightness_trigger" max="254" min="0"
-															name="brightness_trigger" type="range" value="127"></div>
-												</div>
-												<div id="by_hand">
-													<div>Уровень яркости</div>
-													<input id="hand_brightness" max="254" min="0" name="hand_brightness"
-														type="range" value="127">
-												</div>
-											</div>
-										</td>
-									</tr>
-								</tbody>
-							</table>
-							<p>&nbsp;</p>
+                                                    </div>
+                                                    <div id="brightness">
+                                                        <div>Уровень яркости</div>
+                                                        <div>Дневной&nbsp; &nbsp;<input id="day_brightness" max="254" min="0" name="day_brightness" type="range" value="127">
+                                                        </div>
+                                                        <div>Ночной&nbsp; &nbsp;&nbsp;<input id="night_brightness" max="254" min="0" name="night_brightness" type="range" value="127">
+                                                        </div>
+                                                    </div>
+                                                    <div id="by_lighting">
+                                                        <div>Порог срабатывания<br>
+                                                            <input id="brightness_trigger" max="254" min="0" name="brightness_trigger" type="range" value="127"></div>
+                                                    </div>
+                                                    <div id="by_hand">
+                                                        <div>Уровень яркости</div>
+                                                        <input id="hand_brightness" max="254" min="0" name="hand_brightness" type="range" value="127">
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                <p>
+                                    <table id="FanControlTable">
+                                        <tbody>
+                                            <tr>
+                                                <td>Регулировка оборотов</td>
+                                                <td colspan="3"><select id="FanControl" onclick="FanControl()">
+													<option value="0">Ручная</option>
+													<option value="1">Автоматическая</option>
+												</select></td>
+                                            </tr>
+                                            <tr>
+                                                <td colspan="4">
+                                                    <div id="by_auto">
+                                                        <div>Температура срабатывания</div>
+                                                        <div>Min:&nbsp; &nbsp;<select name="min_temp">
+															<option value="40">40</option>
+															<option value="45">45</option>
+															<option value="50">50</option>
+															<option value="55">55</option>
+															<option value="60">60</option>
+															<option value="65">65</option>
+															<option value="70">70</option>
+														</select>&nbsp;℃&nbsp; &nbsp;Max:&nbsp;
+                                                            <select name="max_temp">
+															<option value="75">75</option>
+															<option value="80">80</option>
+															<option value="85">85</option>
+															<option value="90">90</option>
+															<option value="95">95</option>
+															<option value="100">100</option>
+															<option value="105">105</option>
+														</select>&nbsp;℃</div>
+                                                        <div>Минимальные обороты</div>
+                                                        <div><input id="min_pwm" max="255" min="0" name="min_pwm" type="range" value="127">
+                                                        </div>
+                                                    </div>
+                                                    <div id="by_handpwm">
+                                                        <div>Уровень яркости</div>
+                                                        <input id="hand_pwm" max="255" min="0" name="hand_pwm" type="range" value="127">
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </p>
 
 
-							<br>
-							<input class="checkbox" id="consON" type="checkbox" onclick="consoleON()">
-							<label for="consON">WEB-Консоль:&emsp;&emsp;&emsp;ВЫКЛ&emsp;&emsp;&emsp;&ensp;ВКЛ</label>
-							<br>
+                                <br>
+                                <input class="checkbox" id="consON" type="checkbox" onclick="consoleON()">
+                                <label for="consON">WEB-Консоль:&emsp;&emsp;&emsp;ВЫКЛ&emsp;&emsp;&emsp;&ensp;ВКЛ</label>
+                                <br>
 
-						</p>
-						<h1>
-							Текущая версия: <span style="color: darkgreen;"
-								id=currentrelease></span>&nbsp;&nbsp;&nbsp;Обновить до: <span style="color: darkred;"
-								id=newrelease></span>
-							&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="button" value="Обновить сейчас"
-								onclick="upgrade()" />
-							&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span id=updatefb></span>
-							<br>
-						</h1>
-						<p>
-							<span class=bold4 id=Version></span>
-							<br>
-							<span class=bold4>Чтобы обновить или перезагрузить текущий релиз:</span>
-							<br>
-							<br>
-							<input type="button" value="Обновить сейчас" onclick="upgrade()" />
-							<br>
-							<span class=bold4 id=Infos></span>
-							<br>
-						</p>
-						<h1>История:</h1>
-						<br>
-						<input type="button" value="Загрузить" onclick="checkhistory()" />
-						<br>
-						<span class=bold4 id=History></span>
-						<br>
-					</div>
-				</li>
-			</ul>
-		</div>
-	</div>
+                            </p>
+                            <h1>
+                                Текущая версия: <span style="color: darkgreen;" id=currentrelease></span>&nbsp;&nbsp;&nbsp;Обновить до: <span style="color: darkred;" id=newrelease></span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                                <input type="button" value="Обновить сейчас" onclick="upgrade()" /> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                                <span id=updatefb></span>
+                                <br>
+                            </h1>
+                            <p>
+                                <span class=bold4 id=Version></span>
+                                <br>
+                                <span class=bold4>Чтобы обновить или перезагрузить текущий релиз:</span>
+                                <br>
+                                <br>
+                                <input type="button" value="Обновить сейчас" onclick="upgrade()" />
+                                <br>
+                                <span class=bold4 id=Infos></span>
+                                <br>
+                            </p>
+                            <h1>История:</h1>
+                            <br>
+                            <input type="button" value="Загрузить" onclick="checkhistory()" />
+                            <br>
+                            <span class=bold4 id=History></span>
+                            <br>
+                        </div>
+                    </li>
+            </ul>
+        </div>
+    </div>
 </body>
 
 </html>

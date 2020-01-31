@@ -324,14 +324,14 @@ void cleartitleUcg(uint8_t froml)
 void ucEraseSlashes(char *str)
 {
 	//Symbols: \" \' \\ \? \/
-	char *sym = str, *sym1;
+	char *sym = str;
 	if (str != NULL)
 	{
 		while (*sym != 0)
 		{
 			if (*sym == 0x5c)
 			{
-				sym1 = sym + 1;
+				char *sym1 = sym + 1;
 				if (*sym1 == 0x22 || *sym1 == 0x27 || *sym1 == 0x5c || *sym1 == 0x3f || *sym1 == 0x2f)
 				{
 					*sym = 0x1f; //Erase \ to non-printable symbol
@@ -536,8 +536,6 @@ void setColor(int i)
 // draw one line
 void draw(int i)
 {
-	uint16_t len, xpos, yyy;
-
 	if (mline[i])
 		mline[i] = 0;
 	if (i >= 3)
@@ -583,6 +581,7 @@ void draw(int i)
 	case TIME:
 		if ((yy > 80) || (lline[TITLE21] == NULL) || (strlen(lline[TITLE21]) == 0))
 		{
+			uint16_t len, xpos, yyy;
 			setfont(small);
 			char strsec[30];
 			if (getDdmm())
@@ -712,7 +711,6 @@ void drawStationUcg(uint8_t mTscreen, char *snum, char *ddot)
 
 	char ststr[] = {"Станция"};
 	removeUtf8(ststr);
-	int16_t len;
 	switch (mTscreen)
 	{
 	case 1:
@@ -731,7 +729,7 @@ void drawStationUcg(uint8_t mTscreen, char *snum, char *ddot)
 			removeUtf8(ddot);
 			setfont(middle);
 			ucg_DrawString(&ucg, (x / 2) - (ucg_GetStrWidth(&ucg, snum) / 2), yy / 3, 0, snum);
-			len = (x / 2) - (ucg_GetStrWidth(&ucg, ddot) / 2);
+			int16_t len = (x / 2) - (ucg_GetStrWidth(&ucg, ddot) / 2);
 			if (len < 0)
 				len = 0;
 			ucg_DrawString(&ucg, len, yy / 3 + ucg_GetFontAscent(&ucg) + y, 0, ddot);
@@ -924,10 +922,10 @@ void metaUcg(char *ici)
 //cli.icy4
 void icy4Ucg(char *ici)
 {
-	char newstation[BUFLEN];
 	//move the STATION2 to STATION1S
 	if ((station != NULL) && (lline[STATION2] != NULL))
 	{
+		char newstation[BUFLEN];
 		strcpy(newstation, lline[STATION1]);
 		strcat(newstation, " - ");
 		strcat(newstation, lline[STATION2]);

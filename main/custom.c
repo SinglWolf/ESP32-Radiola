@@ -102,7 +102,7 @@ void FanPwmInit()
 {
 	//Подготовка и настройка конфигурации таймера LED-контроллера
 	ledc_timer_fan.duty_resolution = LEDC_TIMER_8_BIT; // разрешение ШИМ
-	ledc_timer_fan.freq_hz = 5000;					   // частота сигнала ШИМ
+	ledc_timer_fan.freq_hz = 25000;					   // частота сигнала ШИМ
 	ledc_timer_fan.speed_mode = LEDC_LOW_SPEED_MODE;   // режим таймера
 	ledc_timer_fan.timer_num = FAN;					   // номер таймера
 	// Установить конфигурацию таймера FAN для низкоскоростного канала
@@ -125,19 +125,21 @@ void FanPwmInit()
 void BuzzerInit()
 {
 	//Подготовка и настройка конфигурации таймера LED-контроллера
+	ledc_timer_buzzer.speed_mode = LEDC_HIGH_SPEED_MODE;   // режим таймера
 	ledc_timer_buzzer.duty_resolution = LEDC_TIMER_8_BIT; // разрешение ШИМ
-	ledc_timer_buzzer.freq_hz = 2000;					  // частота сигнала ШИМ
-	ledc_timer_buzzer.speed_mode = LEDC_HIGH_SPEED_MODE;  // режим таймера
-	ledc_timer_buzzer.timer_num = BUZZER;				  // номер таймера
+	ledc_timer_buzzer.timer_num = BUZZER;				   // номер таймера
+	ledc_timer_buzzer.freq_hz = 2000;					   // частота сигнала ШИМ
 	// Установить конфигурацию таймера BUZZER для низкоскоростного канала
 	ledc_timer_config(&ledc_timer_buzzer);
 
-	ledc_channel_buzzer.channel = BUZZER;
-	ledc_channel_buzzer.duty = 0;
 	ledc_channel_buzzer.gpio_num = buzzer;
 	ledc_channel_buzzer.speed_mode = LEDC_HIGH_SPEED_MODE;
-	ledc_channel_buzzer.hpoint = 0;
+	ledc_channel_buzzer.channel = BUZZER;
+	ledc_channel_buzzer.intr_type = LEDC_INTR_DISABLE;
 	ledc_channel_buzzer.timer_sel = BUZZER;
+	ledc_channel_buzzer.duty = 0x0; // 50%=0x3FFF, 100%=0x7FFF for 15 Bit
+									// 50%=0x01FF, 100%=0x03FF for 10 Bit
+									// 50%=0x7F,   100%=0xFF   for 8  Bit
 
 	// Установить LED-контроллер с предварительно подготовленной конфигурацией
 	ledc_channel_config(&ledc_channel_buzzer);
@@ -157,6 +159,21 @@ void InitPWM()
 	if (buzzer != GPIO_NONE)
 		BuzzerInit();
 }
+
+void beep(uint8_t time)
+{
+	if (buzzer != GPIO_NONE)
+	{
+		// start
+		ledc_set_duty(LEDC_HIGH_SPEED_MODE, BUZZER, 0x7F); //
+		ledc_update_duty(LEDC_HIGH_SPEED_MODE, BUZZER);
+		vTaskDelay(time / portTICK_PERIOD_MS);
+		// stop
+		ledc_set_duty(LEDC_HIGH_SPEED_MODE, BUZZER, 0);
+		ledc_update_duty(LEDC_HIGH_SPEED_MODE, BUZZER);
+	}
+}
+
 void LedBacklightOn()
 {
 	if (led != GPIO_NONE)

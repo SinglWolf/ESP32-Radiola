@@ -32,7 +32,7 @@
 
 xSemaphoreHandle semfile = NULL;
 
-const char strsROK[] = {"HTTP/1.1 200 OK\r\nContent-Type: %s\r\nContent-Length: %d\r\nConnection: keep-alive\r\n\r\n%s"};
+const char strsROK[] = {"HTTP/1.1 200 OK\r\nContent-Type: %s\r\nContent-Length: %lu\r\nConnection: keep-alive\r\n\r\n%s"};
 const char tryagain[] = {"try again"};
 
 const char lowmemory[] = {"HTTP/1.1 500 Internal Server Error\r\nContent-Type: text/plain\r\nContent-Length: 11\r\n\r\nlow memory\n"};
@@ -177,7 +177,7 @@ static void respOk(int conn, const char *message)
 	if (message == NULL)
 		message = rempty;
 	char fresp[strlen(strsROK) + strlen(message) + 15]; // = inmalloc(strlen(strsROK)+strlen(message)+15);
-	sprintf(fresp, strsROK, "text/plain", strlen(message), message);
+	sprintf(fresp, strsROK, "text/plain", (unsigned long)strlen(message), message);
 	ESP_LOGV(TAG, "respOk %s", fresp);
 	write(conn, fresp, strlen(fresp));
 }
@@ -191,8 +191,8 @@ static void serveFile(char *name, int conn)
 {
 #define PART 1460
 	int length;
-	int progress, part, gpart;
-	char buf[150];
+	int gpart;
+
 	char *content;
 	if (strcmp(name, "/style.css") == 0)
 	{
@@ -208,7 +208,6 @@ static void serveFile(char *name, int conn)
 	{
 		length = f->size;
 		content = (char *)f->content;
-		progress = 0;
 	}
 	else
 		length = 0;
@@ -216,7 +215,7 @@ static void serveFile(char *name, int conn)
 	{
 		if (xSemaphoreTake(semfile, portMAX_DELAY))
 		{
-
+			char buf[150];
 			ESP_LOGV(TAG, "serveFile socket:%d,  %s. Length: %d  sliced in %d", conn, name, length, gpart);
 			sprintf(buf, "HTTP/1.1 200 OK\r\nContent-Type: %s\r\nContent-Encoding: gzip\r\nContent-Length: %d\r\nConnection: keep-alive\r\n\r\n", (f != NULL ? f->type : "text/plain"), length);
 			ESP_LOGV(TAG, "serveFile send %u bytes\n%s", strlen(buf), buf);
@@ -228,8 +227,8 @@ static void serveFile(char *name, int conn)
 				xSemaphoreGive(semfile);
 				return;
 			}
-			progress = length;
-			part = gpart;
+			int progress = length;
+			int part = gpart;
 			if (progress <= part)
 				part = progress;
 			while (progress > 0)
@@ -442,7 +441,7 @@ static void curtemp(int socket)
 static void rpmfan(int socket)
 {
 	char answer[23];
-	sprintf(answer, "{\"wsrpmfan\":\"%u\"}", getRpmFan() * 60);
+	sprintf(answer, "{\"wsrpmfan\":\"%u\"}", (uint16_t)(getRpmFan() * 60));
 	websocketwrite(socket, answer, strlen(answer));
 }
 
@@ -609,12 +608,13 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 {
 	ESP_LOGD(TAG, "HandlePost %s\n", name);
 	int i;
-	bool tst;
-	bool changed = false;
+
+	bool changed;
 	if (strcmp(name, "/instant_play") == 0)
 	{
 		if (data_size > 0)
 		{
+			bool tst;
 			char url[100];
 			tst = getSParameterFromResponse(url, 100, "url=", data, data_size);
 			char path[200];
@@ -793,11 +793,8 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 				return;
 			}
 			ESP_LOGV(TAG, "unb init:%u", unb);
-			char *url;
-			char *file;
-			char *name;
+
 			struct shoutcast_info *si = inmalloc(sizeof(struct shoutcast_info) * unb);
-			struct shoutcast_info *nsi;
 
 			if (si == NULL)
 			{
@@ -815,11 +812,14 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 			char ovol[6];
 			for (i = 0; i < unb; i++)
 			{
-				nsi = si + i;
+				char *url;
+				char *file;
+				char *Name;
+				struct shoutcast_info *nsi = si + i;
 				url = getParameterFromResponse("url=", data, data_size);
 				file = getParameterFromResponse("file=", data, data_size);
 				pathParse(file);
-				name = getParameterFromResponse("name=", data, data_size);
+				Name = getParameterFromResponse("name=", data, data_size);
 				if (getSParameterFromResponse(id, 6, "id=", data, data_size))
 				{
 					//					ESP_LOGW(TAG,"nb:%d,si:%x,nsi:%x,id:%s,url:%s,file:%s",i,(int)si,(int)nsi,id,url,file);
@@ -828,7 +828,7 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 						uid = atoi(id);
 					if ((atoi(id) >= 0) && (atoi(id) < 255))
 					{
-						if (url && file && name && getSParameterFromResponse(port, 6, "port=", data, data_size))
+						if (url && file && Name && getSParameterFromResponse(port, 6, "port=", data, data_size))
 						{
 							if (strlen(url) > sizeof(nsi->domain))
 								url[sizeof(nsi->domain) - 1] = 0; //truncate if any
@@ -836,21 +836,22 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 							if (strlen(file) > sizeof(nsi->file))
 								url[sizeof(nsi->file) - 1] = 0; //truncate if any
 							strcpy(nsi->file, file);
-							if (strlen(name) > sizeof(nsi->name))
+							if (strlen(Name) > sizeof(nsi->name))
 								url[sizeof(nsi->name) - 1] = 0; //truncate if any
-							strcpy(nsi->name, name);
+							strcpy(nsi->name, Name);
 							nsi->ovol = (getSParameterFromResponse(ovol, 6, "ovol=", data, data_size)) ? atoi(ovol) : 0;
 							nsi->port = atoi(port);
 						}
 					}
 				}
-				infree(name);
+				infree(Name);
 				infree(file);
 				infree(url);
 
 				data = strstr(data, "&&") + 2;
 				ESP_LOGV(TAG, "si:%x, nsi:%x, addr:%x", (int)si, (int)nsi, (int)data);
 			}
+
 			ESP_LOGV(TAG, "save station: %u, unb:%u, addr:%x", uid, unb, (int)si);
 			saveMultiStation(si, uid, unb);
 			ESP_LOGV(TAG, "save station return: %u, unb:%u, addr:%x", uid, unb, (int)si);
@@ -1052,7 +1053,7 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 			sprintf(buf, HARDWARE,
 					json_length,
 					tda7313_get_present(),
-					g_device->audio_input_num,
+					(uint8_t)g_device->audio_input_num,
 					tda7313_get_volume(),
 					tda7313_get_treble(),
 					tda7313_get_bass(),
@@ -1075,12 +1076,12 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 	}
 	else if (strcmp(name, "/wifi") == 0)
 	{
-		bool val = false;
-		char tmpip[16], tmpmsk[16], tmpgw[16];
-		char tmpip2[16], tmpmsk2[16], tmpgw2[16], tmptzo[10];
+
 		changed = false;
 		if (data_size > 0)
 		{
+			char tmptzo[10];
+			bool val = false;
 			char valid[5];
 			if (getSParameterFromResponse(valid, 5, "valid=", data, data_size))
 				if (strcmp(valid, "1") == 0)
@@ -1228,6 +1229,8 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 			uint8_t macaddr[10]; // = inmalloc(10*sizeof(uint8_t));
 			char macstr[20];	 // = inmalloc(20*sizeof(char));
 			char adhcp[4], adhcp2[4];
+			char tmpip[16], tmpmsk[16], tmpgw[16];
+			char tmpip2[16], tmpmsk2[16], tmpgw2[16];
 			esp_wifi_get_mac(WIFI_IF_STA, macaddr);
 			int json_length;
 			json_length = 95 + 39 + 19 +
@@ -1413,20 +1416,20 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 					RELEASE, REVISION,
 					g_device->gpio_mode,
 					err,
-					spi_no, miso, mosi, sclk,
-					xcs, xdcs, dreq,
-					enca, encb, encbtn,
-					sda, scl,
-					cs, a0,
-					ir,
-					led,
-					tach,
-					fanspeed,
-					ds18b20,
-					touch,
-					buzzer,
-					rxd, txd,
-					ldr);
+					spi_no, (uint8_t)miso, (uint8_t)mosi, (uint8_t)sclk,
+					(uint8_t)xcs, (uint8_t)xdcs, (uint8_t)dreq,
+					(uint8_t)enca, (uint8_t)encb, (uint8_t)encbtn,
+					(uint8_t)sda, (uint8_t)scl,
+					(uint8_t)cs, (uint8_t)a0,
+					(uint8_t)ir,
+					(uint8_t)led,
+					(uint8_t)tach,
+					(uint8_t)fanspeed,
+					(uint8_t)ds18b20,
+					(uint8_t)touch,
+					(uint8_t)buzzer,
+					(uint8_t)rxd, (uint8_t)txd,
+					(uint8_t)ldr);
 			ESP_LOGE(TAG, "Test GPIOS\nSave: %d\nERR: %X\ngpio_mode: %d\nBuf len: %u\nBuf: %s\nData: %s\nData size: %d\n\n", changed, err, gpio_mode, strlen(buf), buf, data, data_size);
 			write(conn, buf, strlen(buf));
 			if (changed)
@@ -1446,13 +1449,14 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 static bool httpServerHandleConnection(int conn, char *buf, uint16_t buflen)
 {
 	char *c;
-	char *d;
+
 	ESP_LOGD(TAG, "Heap size: %u", xPortGetFreeHeapSize());
 	//printf("httpServerHandleConnection  %20c \n",&buf);
 	if ((c = strstr(buf, "GET ")) != NULL)
 	{
+		char *d = strstr(buf, "Connection:"), *d1 = strstr(d, " Upgrade");
 		ESP_LOGV(TAG, "GET socket:%d len: %u, str:\n%s", conn, buflen, buf);
-		if (((d = strstr(buf, "Connection:")) != NULL) && ((d = strstr(d, " Upgrade")) != NULL))
+		if ((d != NULL) && (d1 != NULL))
 		{ // a websocket request
 			websocketAccept(conn, buf, buflen);
 			ESP_LOGD(TAG, "websocketAccept socket: %d", conn);
@@ -1597,8 +1601,8 @@ static bool httpServerHandleConnection(int conn, char *buf, uint16_t buflen)
 		if (d_start != NULL)
 		{
 			d_start += 4;
-			uint16_t len = buflen - (d_start - buf);
-			handlePOST(fname, d_start, len, conn);
+			uint16_t Len = buflen - (d_start - buf);
+			handlePOST(fname, d_start, Len, conn);
 		}
 	}
 	return true;
@@ -1612,7 +1616,7 @@ void serverclientTask(void *pvParams)
 	struct timeval timeout;
 	timeout.tv_sec = 6;
 	timeout.tv_usec = 0;
-	int recbytes, recb;
+
 	char buf[DRECLEN];
 	portBASE_TYPE uxHighWaterMark;
 	int client_sock = (int)pvParams;
@@ -1621,6 +1625,7 @@ void serverclientTask(void *pvParams)
 
 	if (buf != NULL)
 	{
+		int recbytes, recb;
 		memset(buf, 0, DRECLEN);
 		if (setsockopt(client_sock, SOL_SOCKET, SO_RCVTIMEO, (char *)&timeout, sizeof(timeout)) < 0)
 			printf(strsSOCKET, "setsockopt", errno);
@@ -1629,7 +1634,6 @@ void serverclientTask(void *pvParams)
 		{ // For now we assume max. RECLEN bytes for request
 			if (recbytes < 0)
 			{
-				break;
 				if (errno != EAGAIN)
 				{
 					printf(strsSOCKET, "client_sock", errno);
@@ -1641,6 +1645,7 @@ void serverclientTask(void *pvParams)
 					printf(strsSOCKET, tryagain, errno);
 					break;
 				}
+				break;
 			}
 			char *bend = NULL;
 			do
@@ -1714,7 +1719,7 @@ void serverclientTask(void *pvParams)
 		if (err != ERR_OK)
 		{
 			err = close(client_sock);
-			//			printf ("closeERR:%d\n",err);
+			ESP_LOGE(TAG, "closeERR:%d\n", err);
 		}
 	}
 	xSemaphoreGive(semclient);

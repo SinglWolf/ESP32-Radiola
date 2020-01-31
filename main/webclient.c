@@ -136,12 +136,6 @@ bool clientParsePlaylist(char *s)
 {
 	char *str;
 	char *ns;
-	char path[255] = "/";
-	char url[78];
-	char port[5] = "80";
-	int remove = 0;
-	int i = 0;
-	int j = 0;
 
 	ESP_LOGV(TAG, "clientParsePlaylist  %s", s);
 	// for extm3u skip line with #EXTINF
@@ -155,44 +149,47 @@ bool clientParsePlaylist(char *s)
 		s = ns;
 	}
 	str = strstr(s, "<location>http://"); //for xspf
+	int Remove = 0;
 	if (str != NULL)
-		remove = 17;
+		Remove = 17;
 
 	if (str == NULL)
 	{
 		str = strstr(s, "<REF href = \"http://"); //for asx
 		if (str != NULL)
-			remove = 20;
+			Remove = 20;
 	}
 	if (str == NULL)
 	{
 		str = strstr(s, "http://");
 		if (str != NULL)
-			remove = 7;
+			Remove = 7;
 		else
 		{
 			str = strstr(s, "HTTP://");
 			if (str != NULL)
-				remove = 7;
+				Remove = 7;
 		}
 	}
 	/*  
   if (str ==NULL) 
   {	  
 	str = strstr(s,"https://");
-	if (str != NULL) remove = 8;
+	if (str != NULL) Remove = 8;
 	else
 	{
 		str = strstr(s,"HTTPS://");
-		if (str != NULL) remove = 8;
+		if (str != NULL) Remove = 8;
 	}
   } 
  */
 	if (str != NULL)
 	{
-		str += remove; //skip http://
+		str += Remove; //skip http://
 		ESP_LOGV(TAG, "parse str %s", str);
-
+		char url[78];
+		int i = 0;
+		int j = 0;
 		while ((str[i] != '/') && (str[i] != ':') && (str[i] != 0x0a) && (str[i] != 0x0d) && (j < 78))
 		{
 			url[j] = str[i];
@@ -200,6 +197,7 @@ bool clientParsePlaylist(char *s)
 			j++;
 		}
 		url[j] = 0;
+		char port[5] = "80";
 		ESP_LOGV(TAG, "parse str url %s", url);
 		j = 0;
 		if (str[i] == ':') //port
@@ -213,6 +211,7 @@ bool clientParsePlaylist(char *s)
 			}
 		}
 		ESP_LOGV(TAG, "parse str port %s", port);
+		char path[255] = "/";
 		j = 0;
 		if (str[i] == '/') //path
 		{
@@ -344,9 +343,10 @@ static void removePartOfString(char *origine, const char *remove)
 	if (strlen(origine) == 0)
 		return;
 	char *copy = incmalloc(strlen(origine));
-	char *t_end;
+
 	if (copy != NULL)
 	{
+		char *t_end;
 		while ((t_end = strstr(origine, remove)) != NULL)
 		{
 			*t_end = 0;
@@ -531,9 +531,9 @@ void wsStationPrev()
 // websocket: broadcast volume to all client
 void wsVol(char *vol)
 {
-	char answer[21];
 	if (vol != NULL)
 	{
+		char answer[21];
 		sprintf(answer, "{\"wsvol\":\"%s\"}", vol);
 		websocketbroadcast(answer, strlen(answer));
 	}
@@ -845,15 +845,11 @@ void clientReceiveCallback(int sockfd, char *pdata, int len)
 	static IRAM_ATTR uint32_t chunked;
 	static IRAM_ATTR uint32_t cchunk;
 	static char *metadata = NULL;
-	uint16_t l = 0;
 	uint32_t lc;
 	char *inpdata;
-	char *inpchr;
 	uint32_t clen;
 	int bread;
 	char *t1;
-	char *t2;
-	bool icyfound;
 
 	//	if (cstatus != C_DATA) {printf("cstatus= %d\n",cstatus);  printf("Len=%d, Byte_list = %s\n",len,pdata);}
 	if (cstatus != C_DATA)
@@ -920,14 +916,14 @@ void clientReceiveCallback(int sockfd, char *pdata, int len)
 			ESP_LOGV(TAG, "Header1 len: %d,  Header: %s", len, pdata);
 			if ((t1 != NULL) && (t1 <= pdata + len - 4))
 			{
-				t2 = strstr(pdata, "Internal Server Error");
+				char *t2 = strstr(pdata, "Internal Server Error");
 				if (t2 != NULL)
 				{
 					ESP_LOGV(TAG, "Internal Server Error");
 					clientDisconnect("Internal Server Error");
 					cstatus = C_HEADER;
 				}
-				icyfound = clientParseHeader(pdata);
+				bool icyfound = clientParseHeader(pdata);
 				wsMonitor();
 				if (header.members.single.metaint > 0)
 					metad = header.members.single.metaint;
@@ -1022,7 +1018,7 @@ void clientReceiveCallback(int sockfd, char *pdata, int len)
 						} //security to be sure to receive the new length
 
 						//	printf("leni0:%d, inpdata:%x, chunked:%d  cchunk:%d, lc:%d, \n",len,inpdata,chunked,cchunk, lc );
-						inpchr = strchr(inpdata + cchunk, 0x0D);
+						char *inpchr = strchr(inpdata + cchunk, 0x0D);
 						if ((inpchr != NULL) && (inpchr - (inpdata + cchunk) < 16))
 							*inpchr = 0; // replace lf by a end of string
 						else
@@ -1075,7 +1071,7 @@ void clientReceiveCallback(int sockfd, char *pdata, int len)
 		{
 			if (chunked != 0)
 				cchunk -= len;
-			lc = 0;
+			//lc = 0;
 		}
 
 		// printf("CDATAOUT: chunked: %d, cchunk: %d, len: %d\n",chunked,cchunk,len);
@@ -1121,7 +1117,7 @@ void clientReceiveCallback(int sockfd, char *pdata, int len)
 			{
 				//				ESP_LOGD(TAG,"metainb len:%d, clen:%d, metad:%d, l:%d, inpdata:%x, rest:%d\n",len,clen,metad, l,(int)inpdata,rest );
 				jj++;
-				l = inpdata[metad] * 16; //new meta length
+				uint16_t l = inpdata[metad] * 16; //new meta length
 				rest = clen - metad - l - 1;
 
 				//if (l ==0){

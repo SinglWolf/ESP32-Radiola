@@ -77,7 +77,7 @@
 #define PIN_TOUCH_CS GPIO_NUM_0 //Chip select T_CS
 
 // init a gpio as output
-void gpio_output_conf(gpio_num_t gpio);
+//void gpio_output_conf(gpio_num_t gpio);
 
 // get the hardware partition infos
 esp_err_t open_partition(const char *partition_label, const char *namespace, nvs_open_mode open_mode, nvs_handle *handle);

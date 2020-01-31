@@ -19,5 +19,6 @@ void TachTimer(TimerHandle_t xTimer);
 float getTemperature();
 uint16_t getRpmFan();
 void InitPWM();
+void beep(uint8_t time);
 
 #endif

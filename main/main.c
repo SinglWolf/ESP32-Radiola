@@ -142,7 +142,7 @@ IRAM_ATTR void msCallback(void *pArg)
 	TIMERG1.int_clr_timers.t0 = 1; //isr ack
 	if (divide)
 	{
-			ctimeVol++; // to save volume
+		ctimeVol++; // to save volume
 	}
 	divide = !divide;
 	if (serviceAddon != NULL)
@@ -704,7 +704,6 @@ void uartInterfaceTask(void *pvParameters)
 	int t;
 	//	struct device_settings *device;
 	uint32_t uspeed;
-	int uxHighWaterMark;
 
 	uspeed = g_device->uartspeed;
 	uart_config_t uart_config0 = {
@@ -743,7 +742,7 @@ void uartInterfaceTask(void *pvParameters)
 		}
 		checkCommand(t, tmp);
 
-		uxHighWaterMark = uxTaskGetStackHighWaterMark(NULL);
+		int uxHighWaterMark = uxTaskGetStackHighWaterMark(NULL);
 		ESP_LOGD("uartInterfaceTask", striWATERMARK, uxHighWaterMark, xPortGetFreeHeapSize());
 
 		for (t = 0; t < sizeof(tmp); t++)
@@ -849,7 +848,7 @@ void app_main()
 			g_device->dhcpEn1 = 1;
 			g_device->lcd_out = 0;
 			g_device->backlight_mode = NOT_ADJUSTABLE; // по-умолчанию подсветка нерегулируемая
-			g_device->backlight_level = 255; // по-умолчанию подсветка максимальная
+			g_device->backlight_level = 255;		   // по-умолчанию подсветка максимальная
 			saveDeviceSettings(g_device);
 		}
 		else
@@ -867,6 +866,7 @@ void app_main()
 	//audio input number COMPUTER, RADIO, BLUETOOTH
 	ESP_LOGI(TAG, "audio input number %d\nOne of COMPUTER = 1, RADIO, BLUETOOTH", audio_input_num);
 	ESP_LOGD(TAG, "gpio_mode: %u", g_device->gpio_mode);
+	ESP_LOGD(TAG, "size g_device: %X", sizeof(g_device));
 
 	// init softwares
 	telnetinit();
@@ -1004,6 +1004,7 @@ void app_main()
 	}
 */
 	vTaskDelay(60); // wait tasks init
+	beep(30);		// бип...
 	ESP_LOGI(TAG, " Init Done");
 
 	setIvol(g_device->vol);

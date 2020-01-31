@@ -49,49 +49,49 @@ void ucg_UndoScale(ucg_t *ucg)
 const ucg_fntpgm_uint8_t ucg_scale_2x2[16] UCG_FONT_SECTION("ucg_scale_2x2") =  
 { 0x00, 0x03, 0x0c, 0x0f, 0x30, 0x33, 0x3c, 0x3f, 0xc0, 0xc3, 0xcc, 0xcf, 0xf0, 0xf3, 0xfc, 0xff };
 
- static void ucg_scale_2x2_send_next_half_byte(ucg_t *ucg, ucg_xy_t *xy, ucg_int_t msg, ucg_int_t len, ucg_int_t dir, uint8_t b)
-{
-  b &= 15;
-  len *=2;
+//  static void ucg_scale_2x2_send_next_half_byte(ucg_t *ucg, ucg_xy_t *xy, ucg_int_t msg, ucg_int_t len, ucg_int_t dir, uint8_t b)
+// {
+//   b &= 15;
+//   len *=2;
 
 
   
-  ucg->arg.pixel.pos = *xy;
-  switch(dir)
-  {
-    case 0: break;
-    case 1: break;
-    case 2: ucg->arg.pixel.pos.x++; break;
-    default: case 3: ucg->arg.pixel.pos.y++; break;
-  }
+//   ucg->arg.pixel.pos = *xy;
+//   switch(dir)
+//   {
+//     case 0: break;
+//     case 1: break;
+//     case 2: ucg->arg.pixel.pos.x++; break;
+//     default: case 3: ucg->arg.pixel.pos.y++; break;
+//   }
   
-  ucg->arg.bitmap = ucg_scale_2x2+b;
-  ucg->arg.len = len;
-  ucg->arg.dir = dir;
-  ucg->scale_chain_device_cb(ucg, msg, &(ucg->arg));  
+//   ucg->arg.bitmap = ucg_scale_2x2+b;
+//   ucg->arg.len = len;
+//   ucg->arg.dir = dir;
+//   ucg->scale_chain_device_cb(ucg, msg, &(ucg->arg));  
 
-  ucg->arg.pixel.pos = *xy;
-  switch(dir)
-  {
-    case 0: ucg->arg.pixel.pos.y++; break;
-    case 1: ucg->arg.pixel.pos.x++; break;
-    case 2: ucg->arg.pixel.pos.y++; ucg->arg.pixel.pos.x++; break;
-    default: case 3: ucg->arg.pixel.pos.x++; ucg->arg.pixel.pos.y++;  break;
-  }
-  ucg->arg.bitmap = ucg_scale_2x2+b;
-  ucg->arg.len = len;
-  ucg->arg.dir = dir;
-  ucg->scale_chain_device_cb(ucg, msg, &(ucg->arg));  
+//   ucg->arg.pixel.pos = *xy;
+//   switch(dir)
+//   {
+//     case 0: ucg->arg.pixel.pos.y++; break;
+//     case 1: ucg->arg.pixel.pos.x++; break;
+//     case 2: ucg->arg.pixel.pos.y++; ucg->arg.pixel.pos.x++; break;
+//     default: case 3: ucg->arg.pixel.pos.x++; ucg->arg.pixel.pos.y++;  break;
+//   }
+//   ucg->arg.bitmap = ucg_scale_2x2+b;
+//   ucg->arg.len = len;
+//   ucg->arg.dir = dir;
+//   ucg->scale_chain_device_cb(ucg, msg, &(ucg->arg));  
   
-  switch(dir)
-  {
-    case 0: xy->x+=len; break;
-    case 1: xy->y+=len; break;
-    case 2: xy->x-=len; break;
-    default: case 3: xy->y-=len; break;
-  }
+//   switch(dir)
+//   {
+//     case 0: xy->x+=len; break;
+//     case 1: xy->y+=len; break;
+//     case 2: xy->x-=len; break;
+//     default: case 3: xy->y-=len; break;
+//   }
   
-}
+// }
 
 ucg_int_t ucg_dev_scale2x2(ucg_t *ucg, ucg_int_t msg, void *data)
 {

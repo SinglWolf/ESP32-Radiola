@@ -20,17 +20,17 @@ const char ircodes_space[] = {"ircodes_space"};
 const char gpio_space[] = {"gpio_space"};
 
 // init a gpio as output
-void gpio_output_conf(gpio_num_t gpio)
-{
-	gpio_config_t gpio_conf;
-	gpio_conf.pin_bit_mask = ((uint64_t)(((uint64_t)1) << gpio));
-	gpio_conf.mode = GPIO_MODE_OUTPUT;
-	gpio_conf.pull_up_en = GPIO_PULLUP_DISABLE;
-	gpio_conf.pull_down_en = GPIO_PULLDOWN_DISABLE;
-	gpio_conf.intr_type = GPIO_INTR_DISABLE;
-	gpio_config(&gpio_conf);
-	gpio_set_level(gpio, 1);
-}
+// void gpio_output_conf(gpio_num_t gpio)
+// {
+// 	gpio_config_t gpio_conf;
+// 	gpio_conf.pin_bit_mask = ((uint64_t)(((uint64_t)1) << gpio));
+// 	gpio_conf.mode = GPIO_MODE_OUTPUT;
+// 	gpio_conf.pull_up_en = GPIO_PULLUP_DISABLE;
+// 	gpio_conf.pull_down_en = GPIO_PULLDOWN_DISABLE;
+// 	gpio_conf.intr_type = GPIO_INTR_DISABLE;
+// 	gpio_config(&gpio_conf);
+// 	gpio_set_level(gpio, 1);
+// }
 
 // open and read the gpio hardware setting
 //

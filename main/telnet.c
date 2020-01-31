@@ -209,7 +209,6 @@ int telnetRead(int tsocket)
 {
 	char *buf;
 	int32_t recbytes;
-	int i;
 	buf = (char *)malloc(MAXDATAT);
 	recbytes = 0;
 	if (buf == NULL)
@@ -245,7 +244,7 @@ int telnetRead(int tsocket)
 		else
 		{
 			buf = tmp;
-			for (i = 0; i < recbytes; i++)
+			for (int i = 0; i < recbytes; i++)
 			{
 				//				printf("%x ",buf[i]);
 				if (!inIac)

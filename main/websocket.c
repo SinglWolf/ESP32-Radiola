@@ -34,7 +34,7 @@ void base64_encode_local(uint8_t *data, size_t length, char *output)
 		base64_encodestate _state;
 		base64_init_encodestate(&_state);
 		int len = base64_encode_block((const char *)data, length, output, &_state);
-		len = base64_encode_blockend((output + len), &_state);
+		base64_encode_blockend((output + len), &_state);
 	}
 }
 
@@ -90,7 +90,7 @@ uint32_t decodeHttpMessage(char *inputMessage, char *outputMessage)
 	const char s[3] = "\r\n";
 	//	const char str2[5] = "\r\n\r\n";
 	char *tokens[15];
-	uint32_t index = 1;
+	uint32_t index_tokens = 1;
 	//remove	uint32_t i;
 	char key[24 + 36 + 1]; //24 bytes
 	uint32_t outputLength;
@@ -99,18 +99,18 @@ uint32_t decodeHttpMessage(char *inputMessage, char *outputMessage)
 	//ESP_LOGI(TAG, "inputMessage: %s\nSize: %d", inputMessage, strlen(inputMessage));
 	//Split the message into substrings to identify it
 	tokens[0] = strtok(inputMessage, s);
-	while ((tokens[index - 1] != NULL) && (index < 15))
+	while ((tokens[index_tokens - 1] != NULL) && (index_tokens < 15))
 	{
-		tokens[index] = strtok(NULL, s);
-		index++;
+		tokens[index_tokens] = strtok(NULL, s);
+		index_tokens++;
 	}
 	//It's a websocket request
-	for (index = 1; index < 15; index++)
+	for (index_tokens = 1; index_tokens < 15; index_tokens++)
 	{
-		if (strncmp(tokens[index], "Sec-WebSocket-Key: ", 19) == 0)
+		if (strncmp(tokens[index_tokens], "Sec-WebSocket-Key: ", 19) == 0)
 		{
 			//assuming key of fixed length (that's how it is supposed to be)
-			strncpy(key, tokens[index] + 19, 24);
+			strncpy(key, tokens[index_tokens] + 19, 24);
 			key[24] = 0;
 			break;
 		}
@@ -330,7 +330,7 @@ void websocketparsedata(int socket, char *buf, int len)
 	switch (header.opCode)
 	{
 	case WSop_text:
-		// no break here!
+	// no break here!
 	case WSop_binary:
 		websockethandle(socket, header.opCode, payload, header.payloadLen);
 		break;
@@ -383,12 +383,11 @@ void websocketlimitedbroadcast(int socket, char *buf, int len)
 
 void websocketAccept(int wsocket, char *bufin, int buflen)
 {
-	int32_t recbytes = 0;
-	char buf[150];
 	bufin[buflen] = 0;
 	if ((!iswebsocket(wsocket)) && (websocketnewclient(wsocket)))
 	{
-		recbytes = decodeHttpMessage(bufin, buf);
+		char buf[150];
+		int32_t recbytes = decodeHttpMessage(bufin, buf);
 		buf[recbytes + 1] = 0;
 		write(wsocket, buf, strlen(buf)); // reply to accept
 	}

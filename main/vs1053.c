@@ -427,12 +427,12 @@ void VS1053_SetVolumeLine(int16_t vol){
 // Get volume and convert it in log one
 uint8_t VS1053_GetVolume()
 {
-	uint8_t i, j;
+	uint8_t i;
 	uint8_t value = VS1053_ReadRegister(SPI_VOL) & 0x00FF;
 	for (i = 0; i < 255; i++)
 	{
-		j = (log10(255 / ((float)i + 1)) * 105.54571334); // magic no?
-														  //		printf("i=%d  j=%d value=%d\n",i,j,value);
+		uint8_t j = (log10(255 / ((float)i + 1)) * 105.54571334); // magic no?
+																  //		printf("i=%d  j=%d value=%d\n",i,j,value);
 		if (value == j)
 			return i;
 	}
@@ -684,7 +684,7 @@ void vsTask(void *pvParams)
 #define VSTASKBUF 1024
 	portBASE_TYPE uxHighWaterMark;
 	uint8_t b[VSTASKBUF];
-	uint16_t size, s;
+	uint16_t s;
 
 	player_t *player = pvParams;
 	ESP_LOGI(TAG, "volume: %d", g_device->vol);
@@ -709,7 +709,7 @@ void vsTask(void *pvParams)
 		}
 		//size = bufferRead(b, VSTASKBUF);
 		unsigned fsize = spiRamFifoFill();
-		size = min(VSTASKBUF, fsize);
+		uint16_t size = min(VSTASKBUF, fsize);
 		/*		if (size > 	VSTASKBUF)
 		{
 			ESP_LOGE(TAG, "Decoder vs1053 size: %d, fsize: %d, VSTASKBUF: %d .\n",size,fsize,VSTASKBUF );	

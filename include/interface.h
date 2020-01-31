@@ -18,7 +18,7 @@
 
 
 #define RELEASE "1.0"
-#define REVISION "Beta 5"
+#define REVISION "Beta 6"
 
 uint32_t checkUart(uint32_t speed);
 extern unsigned short adcdiv;	

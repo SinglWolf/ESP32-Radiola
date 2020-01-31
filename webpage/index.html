@@ -20,7 +20,7 @@
         <div class=modal-content>
             <div id=MODALCONTENT class=CONTENT style="top:10px;">
                 <div class=tabs>
-                    <h1>Edit station</h1>
+                    <h1>Редактирование станции</h1>
                     <div class=modal-body>
                         <p>
                             <span class=bold>Номер слота: </span>
@@ -31,8 +31,8 @@
                             <br>
                             <span class=bold>Полный URL: </span>
                             <input type=text style="width:350px;" id=add_URL name=URL onkeyup="parseEditURL()" onmouseup="parseEditURL()">
-                            <br>or<br>
-                            <span class=bold>Url: </span>
+                            <br>или<br>
+                            <span class=bold>URL: </span>
                             <input type=text id=add_url name=url onkeyup="buildAddURL()">
                             <br>
                             <span class=bold>Порт: </span>
@@ -48,6 +48,32 @@
                             <input type="button" onClick="saveStation()" value="сохранить"> &nbsp;
                             <input type="button" onClick="eraseStation()" value="стереть"> &nbsp;
                             <input type="button" onClick="abortStation()" value="выйти">
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="editIrKeyDiv" class="modal">
+        <div class=modal-content>
+            <div id="MODALCONTENT" class="CONTENT" style="top:10px;">
+                <div class="tabs">
+                    <h1>Обучение кнопки пульта</h1>
+                    <div class="modal-body">
+                        <p>
+                            <span class="bold">Название кнопки: </span>
+                            <input type="text" id="key_name" disabled="true" name="key">
+                            <br>
+                            <span class="bold">Текущий код: </span>
+                            <input type="text" style="width:350px;" id="current_key" name="current_key">
+                            <br>
+                            <span class="bold">Новый код: </span>
+                            <input type="text" style="width:350px;" id="new_key" name="new_key">
+                            <br>
+                            <br>
+                            <input type="button" onClick="saveIrKey()" value="сохранить"> &nbsp;
+                            <input type="button" onClick="eraseIrKey()" value="стереть"> &nbsp;
+                            <input type="button" onClick="abortIrKey()" value="выйти">
                         </p>
                     </div>
                 </div>
@@ -531,8 +557,7 @@
                             </table>
                             <p></p>
                             <h1>КОДЫ ИК-ПУЛЬТА &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="button" value="Считать значения по-умолчанию" onclick="ircodes(0,0)">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                                <input
-                                    type="button" value="Считать значения из NVS" onclick="ircodes(1,0)">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="button" value="Сохранить значения в NVS" onclick="ircodes(1,1)">
+                                <input type="button" value="Считать значения из NVS" onclick="ircodes(1,0)">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="button" value="Сохранить значения в NVS" onclick="ircodes(1,1)">
                             </h1>
                             <table id="IRcodesTable">
                                 <tbody>
@@ -624,23 +649,6 @@
                                 </tbody>
                             </table>
                             <p></p>
-                            <h1>ЗАГРУЗКА\СОХРАНЕНИЕ НАСТРОЕК &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                                <input type="button" value="Загрузить настройки из файла" onclick="loadCSV()"> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                                <input type="button" value="Сохранить настройки в файл" onclick="saveCSV()"></h1>
-                            <table id="CSVname">
-                                <tbody>
-                                    <tr>
-                                        <td>ИМЯ ФАЙЛА</td>
-                                        <td contenteditable="true" id="L_LABEL">new_psram.csv</td>
-                                    </tr>
-                                    <tr>
-                                        <td>ОПИСАНИЕ</td>
-                                        <td contenteditable="true" id="L_COMMENT">Это стандартная конфигурация для ESP32-WROVER.
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-
                             <h1>ОПЦИИ &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
                                 <input type="button" onclick="devoptions(0)" value="Обновить">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="button" onclick="devoptions(1)" value="Сохранить"></h1>
                             <p>
@@ -860,7 +868,22 @@
                                     </table>
                                 </p>
 
-
+                                <h1>ЗАГРУЗКА\СОХРАНЕНИЕ НАСТРОЕК &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                                    <input type="button" value="Загрузить настройки из файла" onclick="loadCSV()"> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                                    <input type="button" value="Сохранить настройки в файл" onclick="saveCSV()"></h1>
+                                <table id="CSVname">
+                                    <tbody>
+                                        <tr>
+                                            <td>ИМЯ ФАЙЛА</td>
+                                            <td contenteditable="true" id="L_LABEL">new_psram.csv</td>
+                                        </tr>
+                                        <tr>
+                                            <td>ОПИСАНИЕ</td>
+                                            <td contenteditable="true" id="L_COMMENT">Это стандартная конфигурация для ESP32-WROVER.
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
                                 <br>
                                 <input class="checkbox" id="consON" type="checkbox" onclick="consoleON()">
                                 <label for="consON">WEB-Консоль:&emsp;&emsp;&emsp;ВЫКЛ&emsp;&emsp;&emsp;&ensp;ВКЛ</label>

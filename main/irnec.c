@@ -232,14 +232,16 @@ void rmt_nec_rx_task()
 {
 	event_ir_t evt;
 	event_ir_t last_evt;
-	int channel = RMT_RX_CHANNEL;
+	//int channel = RMT_RX_CHANNEL;
 	if (nec_rx_init())
 	{
 		RingbufHandle_t rb = NULL;
 		bool flagFirstRepeat = false;
 		//get RMT RX ringbuffer
-		ESP_ERROR_CHECK(rmt_get_ringbuf_handle(channel, &rb));
-		ESP_ERROR_CHECK(rmt_rx_start(channel, 1));
+		ESP_ERROR_CHECK(rmt_get_ringbuf_handle(RMT_RX_CHANNEL, &rb));
+		ESP_ERROR_CHECK(rmt_rx_start(RMT_RX_CHANNEL, 1));
+		// ESP_ERROR_CHECK(rmt_get_ringbuf_handle(channel, &rb));
+		// ESP_ERROR_CHECK(rmt_rx_start(channel, 1));
 		ESP_LOGD(NEC_TAG, "RMT started");
 		while (rb)
 		{
@@ -268,7 +270,8 @@ void rmt_nec_rx_task()
 					{
 						offset += res + 1;
 						ESP_LOGD(NEC_TAG, "RMT RCV --- addr: 0x%04x cmd: 0x%04x", rmt_addr, rmt_cmd);
-						evt.channel = channel;
+						//evt.channel = channel;
+						evt.channel = RMT_RX_CHANNEL;
 						evt.addr = rmt_addr;
 						evt.cmd = rmt_cmd;
 						evt.repeat_flag = false;

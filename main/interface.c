@@ -548,7 +548,6 @@ const char strilDLIST[] = {"\n#CLI.LIST#\n"};
 
 void clientList(char *s)
 {
-	struct shoutcast_info *si;
 	uint16_t i = 0, j = 255;
 	bool onlyOne = false;
 
@@ -556,7 +555,7 @@ void clientList(char *s)
 	if (t != NULL) // a number specified
 	{
 		char *t_end = strstr(t, parquoteslash) - 2;
-		if (t_end <= (char *)0)
+		if (t_end == (char *)0)
 		{
 			kprintf(stritCMDERROR);
 			return;
@@ -573,7 +572,7 @@ void clientList(char *s)
 		for (; i < j; i++)
 		{
 			vTaskDelay(1);
-			si = getStation(i);
+			struct shoutcast_info *si = getStation(i);
 
 			if ((si == NULL) || (si->port == 0))
 			{
@@ -604,7 +603,7 @@ void clientList(char *s)
 bool parseUrl(char *src, char *url, char *path, uint16_t *port)
 {
 	char *teu, *tbu, *tbpa;
-	char *tmp = src;
+	char *tmp;
 	tmp = strstr(src, "://");
 	if (tmp)
 		tmp += 3;
@@ -776,7 +775,6 @@ void sysUart(char *s)
 {
 	bool empty = false;
 	char *t;
-	char *t_end;
 	t = NULL;
 	if (s != NULL)
 	{
@@ -787,7 +785,7 @@ void sysUart(char *s)
 		}
 		else
 		{
-			t_end = strstr(t, parquoteslash);
+			char *t_end = strstr(t, parquoteslash);
 			if (t_end == NULL)
 			{
 				empty = true;
@@ -800,9 +798,9 @@ void sysUart(char *s)
 		speed = checkUart(speed);
 		g_device->uartspeed = speed;
 		saveDeviceSettings(g_device);
-		kprintf("Speed: %d\n", speed);
+		kprintf("Speed: %u\n", speed);
 	}
-	kprintf("\n%sUART= %d# on next reset\n", msgsys, g_device->uartspeed);
+	kprintf("\n%sUART= %u# on next reset\n", msgsys, g_device->uartspeed);
 }
 
 void clientVol(char *s)
@@ -811,11 +809,11 @@ void clientVol(char *s)
 	if (t == 0)
 	{
 		// no argument, return the current volume
-		kprintf("%sVOL#: %d\n", msgcli, getVolume());
+		kprintf("%sVOL#: %u\n", msgcli, getVolume());
 		return;
 	}
 	char *t_end = strstr(t, parquoteslash) - 2;
-	if (t_end <= (char *)0)
+	if (t_end == (char *)0)
 	{
 
 		kprintf(stritCMDERROR);
@@ -949,10 +947,10 @@ void syshenc(int nenc, char *s)
 			g_device->options32 |= T_ENC1;
 	}
 	setHalfStep(encoder, value);
-	if (nenc == 0)
-		encvalue = g_device->options32 & T_ENC0;
-	else
-		encvalue = g_device->options32 & T_ENC1;
+	// if (nenc == 0)
+	// 	encvalue = g_device->options32 & T_ENC0;
+	// else
+	// 	encvalue = g_device->options32 & T_ENC1;
 	syshenc(nenc, (char *)"");
 	saveDeviceSettings(g_device);
 }
@@ -996,7 +994,7 @@ void syslcdout(char *s)
 	if (t == NULL)
 	{
 		kprintf("##LCD out is ");
-		kprintf("%d#\n", lcd_out);
+		kprintf("%u#\n", lcd_out);
 		return;
 	}
 	char *t_end = strstr(t, parquoteslash);
@@ -1179,7 +1177,7 @@ void checkCommand(int size, char *s)
 	if (startsWith("dbg.", tmp))
 	{
 		if (strcmp(tmp + 4, "fifo") == 0)
-			kprintf("Buffer fill %u%%, %d bytes, OverRun: %ld, UnderRun: %ld\n",
+			kprintf("Buffer fill %u%%, %u bytes, OverRun: %ld, UnderRun: %ld\n",
 					(spiRamFifoFill() * 100) / spiRamFifoLen(), spiRamFifoFill(), spiRamGetOverrunCt(), spiRamGetUnderrunCt());
 		else if (strcmp(tmp + 4, "clear") == 0)
 			spiRamFifoReset();

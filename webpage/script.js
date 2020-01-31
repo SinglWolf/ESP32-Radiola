@@ -22,8 +22,10 @@ function openwebsocket() {
         try {
             var arr = JSON.parse(event.data);
             console.log("onmessage:" + event.data);
-            if (arr["meta"] == "") { document.getElementById('meta').innerHTML = mediacentre;
-                setMainHeight(curtab); }
+            if (arr["meta"] == "") {
+                document.getElementById('meta').innerHTML = mediacentre;
+                setMainHeight(curtab);
+            }
             if (arr["meta"]) {
                 document.getElementById('meta').innerHTML = arr["meta"].replace(/\\/g, "");
                 setMainHeight(curtab);
@@ -34,19 +36,31 @@ function openwebsocket() {
             if (arr["wssound"]) soundResp(arr["wssound"]);
             if (arr["monitor"]) playMonitor(arr["monitor"]);
             if (arr["wsstation"]) wsplayStation(arr["wsstation"]);
-            if (arr["wsrssi"]) { document.getElementById('rssi').innerHTML = arr["wsrssi"] + ' дБм';
-                setTimeout(wsaskrssi, 5000); }
-            if (arr["wscurtemp"]) { document.getElementById('curtemp').innerHTML = arr["wscurtemp"] + ' ℃';
-                setTimeout(wsaskcurtemp, 5000); }
-            if (arr["wsrpmfan"]) { document.getElementById('rpmfan').innerHTML = arr["wsrpmfan"] + ' Об/мин';
-                setTimeout(wsaskrpmfan, 1000); }
+            if (arr["wsrssi"]) {
+                document.getElementById('rssi').innerHTML = arr["wsrssi"] + ' дБм';
+                setTimeout(wsaskrssi, 5000);
+            }
+            if (arr["wscurtemp"]) {
+                document.getElementById('curtemp').innerHTML = arr["wscurtemp"] + ' ℃';
+                setTimeout(wsaskcurtemp, 5000);
+            }
+            if (arr["wsrpmfan"]) {
+                document.getElementById('rpmfan').innerHTML = arr["wsrpmfan"] + ' Об/мин';
+                setTimeout(wsaskrpmfan, 1000);
+            }
             if (arr["upgrade"]) { document.getElementById('updatefb').innerHTML = arr["upgrade"]; }
-            if (arr["iurl"]) { document.getElementById('instant_url').value = arr["iurl"];
-                buildURL(); }
-            if (arr["ipath"]) { document.getElementById('instant_path').value = arr["ipath"];
-                buildURL(); }
-            if (arr["iport"]) { document.getElementById('instant_port').value = arr["iport"];
-                buildURL(); }
+            if (arr["iurl"]) {
+                document.getElementById('instant_url').value = arr["iurl"];
+                buildURL();
+            }
+            if (arr["ipath"]) {
+                document.getElementById('instant_path').value = arr["ipath"];
+                buildURL();
+            }
+            if (arr["iport"]) {
+                document.getElementById('instant_port').value = arr["iport"];
+                buildURL();
+            }
         } catch (e) { console.log("error" + e); }
     }
 
@@ -202,6 +216,26 @@ function valid() {
     wifi(1);
     alert("Перезагрузка Радиолы. Пожалуйста, измените адрес страницы вашего браузера на новый.");
 }
+
+function abortIrKey() {
+    document.getElementById('editIrKeyDiv').style.display = "none";
+}
+
+function eraseIrKey() {
+    document.getElementById('editIrKeyDiv').style.display = "block";
+    document.getElementById('new_key').value = "";
+}
+
+function saveIrKey() {
+    alert("Ещё не реализовано!");
+}
+
+function training(key) {
+    var arr;
+    document.getElementById('editIrKeyDiv').style.display = "block";
+    document.getElementById('key_name').value = key;
+}
+
 
 function scrollTo(to, duration) {
     if (duration < 0) return;
@@ -429,8 +463,10 @@ function icyResp(arr) {
     $url = arr["url1"].replace(/\\/g, "");
     document.getElementById('url1').innerHTML = $url;
     document.getElementById('url2').href = $url;
-    if (arr["meta"] == "") { document.getElementById('meta').innerHTML = mediacentre;
-        setMainHeight(curtab); }
+    if (arr["meta"] == "") {
+        document.getElementById('meta').innerHTML = mediacentre;
+        setMainHeight(curtab);
+    }
     if (arr["meta"]) document.getElementById('meta').innerHTML = arr["meta"].replace(/\\/g, "");
     changeTitle(document.getElementById('meta').innerHTML);
     if (typeof arr["auto"] != 'undefined') // undefined for websocket
@@ -818,10 +854,6 @@ function loadCSV() {
 
 function saveCSV() {
     alert("Ещё не реализовано...");
-}
-
-function training(key) {
-    alert("Ещё не реализовано... " + key);
 }
 
 function devoptions(save) {
@@ -1689,8 +1721,10 @@ function loadStations() {
                 xhr.open("POST", "getStation", false);
                 xhr.setRequestHeader(content, ctype);
                 xhr.send("idgp=" + id + "&");
-            } catch (e) { console.log("error" + e);
-                id--; }
+            } catch (e) {
+                console.log("error" + e);
+                id--;
+            }
     }
 
     old_tbody = document.getElementById("stationsTable").getElementsByTagName('tbody')[0];
@@ -1741,8 +1775,10 @@ function loadStationsList(max) {
                 xhr.open("POST", "getStation", false);
                 xhr.setRequestHeader(content, ctype);
                 xhr.send("idgp=" + id + "&");
-            } catch (e) { console.log("error" + e);
-                id--; }
+            } catch (e) {
+                console.log("error" + e);
+                id--;
+            }
     }
 
     promptworking("");

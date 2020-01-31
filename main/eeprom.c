@@ -50,7 +50,6 @@ bool eeSetData(int address, void *buffer, int size)
 { // address, size in BYTES !!!!
 	uint8_t *inbuf = buffer;
 	uint32_t *eebuf = malloc(4096);
-	uint16_t i = 0;
 	if (eebuf != NULL)
 	{
 		while (1)
@@ -60,6 +59,7 @@ bool eeSetData(int address, void *buffer, int size)
 			uint8_t *eebuf8 = (uint8_t *)eebuf;
 			uint16_t startaddr = address & 0xFFF;
 			uint16_t maxsize = 4096 - startaddr;
+			uint16_t i;
 			//printf("set1 startaddr: %x, size:%x, maxsize: %x, sector: %x, eebuf: %x\n",startaddr,size,maxsize,(int)sector,(int)eebuf);
 			//spi_flash_read(sector, (uint32_t *)eebuf, 4096);
 			ESP_ERROR_CHECK(esp_partition_read(STATIONS, sector, eebuf, 4096));
@@ -186,7 +186,7 @@ void saveMultiStation(struct shoutcast_info *station, uint16_t position, uint8_t
 		ESP_LOGE(TAG, "saveStation fails pos=%d", position + number - 1);
 		number--;
 	}
-	if (number <= 0)
+	if (number == 0)
 		return;
 	while (!eeSetData((position)*256, station, number * 256))
 	{

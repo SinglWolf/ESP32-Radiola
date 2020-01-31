@@ -233,7 +233,7 @@ void LdrLoop()
 			vTaskDelay(1);
 			raw = 0;
 			//Второе считвыание. Снимаем напряжение 4 раза.
-			err = adc2_get_raw(ldrchannel2, ADC_WIDTH_12Bit, &raw);
+			err |= adc2_get_raw(ldrchannel2, ADC_WIDTH_12Bit, &raw);
 			voltage1 = raw;
 			err |= adc2_get_raw(ldrchannel2, ADC_WIDTH_12Bit, &raw);
 			voltage1 = voltage1 + raw;
@@ -483,7 +483,6 @@ void drawStation()
 {
 	char sNum[4];
 	char *ddot;
-	char *ptl;
 	struct shoutcast_info *si;
 
 	//ClearBuffer();
@@ -493,7 +492,7 @@ void drawStation()
 		si = getStation(futurNum);
 		sprintf(sNum, "%d", futurNum);
 		ddot = si->name;
-		ptl = ddot;
+		char *ptl = ddot;
 		while (*ptl == 0x20)
 		{
 			ddot++;
@@ -985,7 +984,7 @@ void initButtonDevices()
 #define hardware "hardware"
 void customKeyInit()
 {
-	customKey_t index;
+	customKey_t indexKey;
 	nvs_handle handle;
 	const char *klab[] = {
 		"K_UP",
@@ -1012,11 +1011,11 @@ void customKeyInit()
 	if (open_partition(hardware, "custom_ir_space", NVS_READONLY, &handle) != ESP_OK)
 		return;
 
-	for (index = KEY_UP; index < KEY_MAX; index++)
+	for (indexKey = KEY_UP; indexKey < KEY_MAX; indexKey++)
 	{
 		// get the key in the nvs
-		isCustomKey |= gpio_get_ir_key(handle, klab[index], (uint32_t *)&(customKey[index][0]), (uint32_t *)&(customKey[index][1]));
-		ESP_LOGV(TAG, " isCustomKey is %d for %d", isCustomKey, index);
+		isCustomKey |= gpio_get_ir_key(handle, klab[indexKey], (uint32_t *)&(customKey[indexKey][0]), (uint32_t *)&(customKey[indexKey][1]));
+		ESP_LOGV(TAG, " isCustomKey is %d for %d", isCustomKey, indexKey);
 		taskYIELD();
 	}
 	close_partition(handle, hardware);
@@ -1322,82 +1321,73 @@ void addonParse(const char *fmt, ...)
 	}
 	ESP_LOGV(TAG, "LINE: %s", line);
 	evt.lcmd = -1;
-	char *ici;
-
-	////// Meta title  ##CLI.META#:
-	if ((ici = strstr(line, "META#: ")) != NULL)
-	{
+	char *ici = strstr(line, "META#: ");
+	if (ici != NULL)
+	{ ////// Meta title  ##CLI.META#:
 		evt.lcmd = lmeta;
 		evt.lline = malloc(strlen(ici) + 1);
 		//evt.lline = NULL;
 		strcpy(evt.lline, ici);
-		//		xQueueSend(event_lcd,&evt, 0);
+		//xQueueSend(event_lcd,&evt, 0);
 	}
-	else
-		////// ICY4 Description  ##CLI.ICY4#:
-		if ((ici = strstr(line, "ICY4#: ")) != NULL)
-	{
+	ici = strstr(line, "ICY4#: ");
+	if (ici != NULL)
+	{ ////// ICY4 Description  ##CLI.ICY4#:
 		evt.lcmd = licy4;
 		evt.lline = malloc(strlen(ici) + 1);
 		//evt.lline = NULL;
 		strcpy(evt.lline, ici);
-		//		xQueueSend(event_lcd,&evt, 0);
+		//xQueueSend(event_lcd,&evt, 0);
 	}
-	else
-		////// ICY0 station name   ##CLI.ICY0#:
-		if ((ici = strstr(line, "ICY0#: ")) != NULL)
-	{
+	ici = strstr(line, "ICY0#: ");
+	if (ici != NULL)
+	{ ////// ICY0 station name   ##CLI.ICY0#:
 		evt.lcmd = licy0;
 		evt.lline = malloc(strlen(ici) + 1);
 		//evt.lline = NULL;
 		strcpy(evt.lline, ici);
-		//		xQueueSend(event_lcd,&evt, 0);
+		//xQueueSend(event_lcd,&evt, 0);
 	}
-	else
-		////// STOPPED  ##CLI.STOPPED#
-		if (((ici = strstr(line, "STOPPED")) != NULL) && (strstr(line, "C_HDER") == NULL) && (strstr(line, "C_PLIST") == NULL))
-	{
+	ici = strstr(line, "STOPPED");
+	if ((ici != NULL) && (strstr(line, "C_HDER") == NULL) && (strstr(line, "C_PLIST") == NULL))
+	{ ////// STOPPED  ##CLI.STOPPED#
 		state = false;
 		evt.lcmd = lstop;
 		evt.lline = NULL;
-		//		xQueueSend(event_lcd,&evt, 0);
+		//xQueueSend(event_lcd,&evt, 0);
 	}
-	else
-		//////Nameset    ##CLI.NAMESET#:
-		if ((ici = strstr(line, "MESET#: ")) != NULL)
-	{
+	ici = strstr(line, "MESET#: ");
+	if (ici != NULL)
+	{ //////Nameset    ##CLI.NAMESET#:
 		evt.lcmd = lnameset;
 		evt.lline = malloc(strlen(ici) + 1);
 		//evt.lline = NULL;
 		strcpy(evt.lline, ici);
-		//		xQueueSend(event_lcd,&evt, 0);
+		//xQueueSend(event_lcd,&evt, 0);
 	}
-	else
-		//////Playing    ##CLI.PLAYING#
-		if ((ici = strstr(line, "YING#")) != NULL)
-	{
+	ici = strstr(line, "YING#");
+	if (ici != NULL)
+	{ //////Playing    ##CLI.PLAYING#
 		state = true;
 		itAskStime = false;
 		evt.lcmd = lplay;
 		evt.lline = NULL;
-		//		xQueueSend(event_lcd,&evt, 0);
+		//xQueueSend(event_lcd,&evt, 0);
 	}
-	else
-		//////Volume   ##CLI.VOL#:
-		if ((ici = strstr(line, "VOL#:")) != NULL)
-	{
+	ici = strstr(line, "VOL#:");
+	if (ici != NULL)
+	{						   //////Volume   ##CLI.VOL#:
 		if (*(ici + 6) != 'x') // ignore help display.
 		{
 			volume = atoi(ici + 6);
 			evt.lcmd = lvol;
 			evt.lline = NULL; //atoi(ici+6);
-							  //		xQueueSend(event_lcd,&evt, 0);
+							  //xQueueSend(event_lcd,&evt, 0);
 		}
 	}
-	else
-		//////Volume offset    ##CLI.OVOLSET#:
-		if ((ici = strstr(line, "OVOLSET#:")) != NULL)
-	{
+	ici = strstr(line, "OVOLSET#:");
+	if (ici != NULL)
+	{ //////Volume offset    ##CLI.OVOLSET#:
 		evt.lcmd = lovol;
 		evt.lline = NULL;
 		//		xQueueSend(event_lcd,&evt, 0);

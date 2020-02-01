@@ -355,7 +355,7 @@ void in_welcome(const char *ip, const char *state, int y, char *Version)
 
 void lcd_welcome(const char *ip, const char *state)
 {
-	char text[20 + strlen(RELEASE) + strlen(REVISION)];
+	char text[30 + strlen(RELEASE) + strlen(REVISION)];
 	char *text1 = strdup(state);
 
 	removeUtf8(text1);
@@ -367,7 +367,7 @@ void lcd_welcome(const char *ip, const char *state)
 	removeUtf8(text);
 	DrawString(GetWidth() / 4, 2, text);
 	setfont(1);
-	sprintf(text, "Релиз: %s Rev: %s\n", RELEASE, REVISION);
+	sprintf(text, "Версия: %s Rev: %s\n", RELEASE, REVISION);
 	removeUtf8(text);
 	in_welcome(ip, text1, y, text);
 }

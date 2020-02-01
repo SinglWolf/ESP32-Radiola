@@ -798,6 +798,10 @@ void app_main()
 
 	ESP_LOGI(TAG, "starting app_main()");
 	ESP_LOGI(TAG, "RAM left: %u", esp_get_free_heap_size());
+	// Version infos
+	ESP_LOGI(TAG, "Release %s, Revision %s", RELEASE, REVISION);
+	ESP_LOGI(TAG, "SDK %s", esp_get_idf_version());
+	ESP_LOGI(TAG, "Heap size: %d", xPortGetFreeHeapSize());
 
 	const esp_partition_t *running = esp_ota_get_running_partition();
 	ESP_LOGE(TAG, "Running partition type %d subtype %d (offset 0x%08x)",
@@ -917,11 +921,6 @@ void app_main()
 		g_device->uartspeed = uspeed;
 		saveDeviceSettings(g_device);
 	}
-
-	// Version infos
-	ESP_LOGI(TAG, "Release %s, Revision %s", RELEASE, REVISION);
-	ESP_LOGI(TAG, "SDK %s", esp_get_idf_version());
-	ESP_LOGI(TAG, "Heap size: %d", xPortGetFreeHeapSize());
 
 	lcd_welcome("", "");
 	lcd_welcome("", "ЗАПУСК");

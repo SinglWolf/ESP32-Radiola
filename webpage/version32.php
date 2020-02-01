@@ -4,12 +4,18 @@
 
 <body>
 
-	<p><span class="label label-success">Релиз <span id="firmware_last">1.0 Rev: Beta 5</span> - Дата не определена...
+	<p><span class="label label-success">Версия: <span id="firmware_last">1.0 Rev: Beta 6</span> - Дата выхода релиза не определена...
 		</span>
 	</p>
 	<p>
 		Анонс:
 		<ul id="ordered">
+			<li> 1.0 Rev Beta 6:
+				<ul id="ordered">
+					<li>Исправлен баг с определением TDA7313</li>
+					<li>До релиза ещё не близко...</li>
+				</ul>
+			</li>
 			<li> 1.0 Rev Beta 5:
 				<ul id="ordered">
 					<li>Добавлены функции: управление яркостью дисплея, управление оборотами вентилятора, бипер. НО ЕЩЁ НЕ РЕАЛИЗОВАНЫ</li>

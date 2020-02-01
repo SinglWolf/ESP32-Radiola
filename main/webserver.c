@@ -1538,9 +1538,8 @@ static bool httpServerHandleConnection(int conn, char *buf, uint16_t buflen)
 				param = strstr(c, "version");
 				if (param != NULL)
 				{
-					char vr[20 + strlen(RELEASE) + strlen(REVISION)];
-					sprintf(vr, "Релиз: %s Rev: %s\n", RELEASE, REVISION);
-					printf("Версия: %s\n", vr);
+					char vr[30 + strlen(RELEASE) + strlen(REVISION)];
+					sprintf(vr, "Версия: %s Rev: %s\n", RELEASE, REVISION);
 					respOk(conn, vr);
 					return true;
 				}

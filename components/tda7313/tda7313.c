@@ -369,6 +369,7 @@ esp_err_t tda7313_init()
 	esp_err_t err;
 	gpio_get_i2c(&sda_gpio, &scl_gpio, g_device->gpio_mode);
 	addressTDA = TDAaddress;
+	TDA.present = false;
 	if ((sda_gpio >= 0) || // TDA configured?
 		(scl_gpio >= 0))
 	{
@@ -387,35 +388,37 @@ esp_err_t tda7313_init()
 			{
 				ESP_LOGI(TAG, "Init I2C driver OK.");
 				ESP_LOGI(TAG, "Start TDA7313");
-
-				if (tda7313_detect(TDAaddress) == ESP_OK)
+				err |= tda7313_detect(TDAaddress);
+				if (err == ESP_OK)
 				{
 					ESP_LOGI(TAG, "TDA7313 it's OK.");
+					TDA.present = true;
 				}
 				else
 				{
 					ESP_LOGE(TAG, "TDA7313 not detected.");
 				}
 			}
+			else
+			{
+				ESP_LOGE(TAG, "Install I2C driver FAILED.");
+			}
 		}
 		else
 		{
-			ESP_LOGE(TAG, "Init I2C driver FAILED.");
+			ESP_LOGE(TAG, "I2C param config FAILED.");
 		}
 	}
 	else
 	{
 		ESP_LOGE(TAG, "TDA7313 not configured.");
-		err = ESP_FAIL;
 	}
-	if (err != ESP_OK)
+	if (!TDA.present)
 	{
 		ESP_LOGE(TAG, "TDA7313 not present.");
-		TDA.present = false;
+
 		err = ESP_OK;
 	}
-	else
-		TDA.present = true;
 	return err;
 }
 esp_err_t tda7313_init_nvs(bool erase)
@@ -666,7 +669,7 @@ esp_err_t tda7313_command(uint8_t cmd)
 		i2c_cmd_link_delete(hnd); // Ссылка больше не нужна
 	}
 	else
-		ESP_LOGE(TAG, "TDA7313 not present!");
+		ESP_LOGV(TAG, "TDA7313 not present!");
 	return ESP_OK;
 }
 esp_err_t tda7313_detect(uint8_t address)

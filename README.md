@@ -90,7 +90,10 @@
 
 **[flash_download_tools_v3.6.8](https://www.espressif.com/sites/default/files/tools/flash_download_tools_v3.6.8.zip)**
 
-**Прошивка**
+**!!!!Перед прошивкой обязательно проверьте контрольные суммы всех трёх бинарных файлов!!!!**
+
+Удобная программа для проверки контрольной суммы файла [#HashTab](https://hashtab.ru/).
+(После установки увидите инструкцию в картинках.)
  
  *адреса:*
   + bootloader.bin - 0x1000

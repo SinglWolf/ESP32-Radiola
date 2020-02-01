@@ -104,9 +104,13 @@
 
 **[ESP32-Radiola - если что-то пошло не так...](https://serverdoma.ru/viewtopic.php?f=70&t=1183)**
 
-**Прототип**
+**Вкладки Веб-интерфейса**
+![Image alt](https://github.com/SinglWolf/ESP32-Radiola/raw/master/pictures/радио.png)
+![Image alt](https://github.com/SinglWolf/ESP32-Radiola/raw/master/pictures/станции.png)
+![Image alt](https://github.com/SinglWolf/ESP32-Radiola/raw/master/pictures/звук.png)
+![Image alt](https://github.com/SinglWolf/ESP32-Radiola/raw/master/pictures/настройки.png)
 
-![Image alt](https://github.com/SinglWolf/ESP32-Radiola/raw/master/pictures/ESP32-Radiola.png)
+**Прототип**
 ![Image alt](https://github.com/SinglWolf/ESP32-Radiola/raw/master/pictures/amplifier.jpg)
 ![Image alt](https://github.com/SinglWolf/ESP32-Radiola/raw/master/pictures/ESP32WROVER.jpg)
 ![Image alt](https://github.com/SinglWolf/ESP32-Radiola/raw/master/pictures/display.jpg)

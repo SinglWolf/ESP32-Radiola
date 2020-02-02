@@ -441,7 +441,7 @@ ul#ordered li {
     background: #666145;
 }
 
-.tabs [id^="audioinput"]:checked+label {
+.tabs [name="audioinput"]:checked+label,.tabs [name="setting"]:checked+label {
     top: 0;
     padding: 4px 4px;
     color: #EEE;

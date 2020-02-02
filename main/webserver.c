@@ -30,6 +30,8 @@
 
 #define TAG "webserver"
 
+#define FILE_NAME CONFIG_FILE_NAME
+
 xSemaphoreHandle semfile = NULL;
 
 const char strsROK[] = {"HTTP/1.1 200 OK\r\nContent-Type: %s\r\nContent-Length: %lu\r\nConnection: keep-alive\r\n\r\n%s"};
@@ -136,6 +138,34 @@ const char GPIOS[] = {"HTTP/1.1 200 OK\r\nContent-Type:application/json\r\nConte
 \"P_RXD\":\"%03u\",\
 \"P_TXD\":\"%03u\",\
 \"P_LDR\":\"%03u\"\
+}"\
+};
+const char DEVOPTIONS[] = {"HTTP/1.1 200 OK\r\nContent-Type:application/json\r\nContent-Length:%d\r\n\r\n{\
+\"O_ESPLOG\":\"%u\",\
+\"O_NTP\":\"%u\",\
+\"custom_NTP0\":\"%s\",\
+\"custom_NTP1\":\"%s\",\
+\"custom_NTP2\":\"%s\",\
+\"custom_NTP3\":\"%s\",\
+\"O_TZONE\":\"%s\",\
+\"custom_TZ\":\"%s\",\
+\"O_TIME_FORMAT\":\"%u\",\
+\"O_LCD_ROTA\":\"%u\",\
+\"O_LCD_OUT\":\"%u\",\
+\"O_LCD_BRG\":\"%u\",\
+\"begin_h\":\"%02u\",\
+\"begin_m\":\"%02u\",\
+\"end_h\":\"%02u\",\
+\"end_m\":\"%02u\",\
+\"day_brightness\":\"%03u\",\
+\"night_brightness\":\"%03u\",\
+\"brightness_trigger\":\"%04u\",\
+\"hand_brightness\":\"%03u\",\
+\"FanControl\":\"%u\",\
+\"min_temp\":\"%02u\",\
+\"max_temp\":\"%02u\",\
+\"min_pwm\":\"%03u\",\
+\"hand_pwm\":\"%03u\",\
 }"\
 };
 
@@ -922,7 +952,7 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 	}
 	else if (strcmp(name, "/upgrade") == 0)
 	{
-		update_firmware((char *)"ESP32Radiola"); // start the OTA
+		update_firmware(FILE_NAME); // start the OTA
 	}
 	else if (strcmp(name, "/icy") == 0)
 	{

@@ -18,7 +18,7 @@ function openwebsocket() {
     console.log("url:" + "ws://" + window.location.host + "/");
 
 
-    websocket.onmessage = function(event) {
+    websocket.onmessage = function (event) {
         try {
             var arr = JSON.parse(event.data);
             console.log("onmessage:" + event.data);
@@ -64,7 +64,7 @@ function openwebsocket() {
         } catch (e) { console.log("error" + e); }
     }
 
-    websocket.onopen = function(event) {
+    websocket.onopen = function (event) {
         console.log("Open, url:" + "ws://" + window.location.host + "/");
         if (window.timerID) { /* a setInterval has been fired */
             window.clearInterval(window.timerID);
@@ -75,14 +75,14 @@ function openwebsocket() {
         setTimeout(wsaskrpmfan, 1000); // start the rpm of fan to display
         websocket.send("opencheck");
     }
-    websocket.onclose = function(event) {
+    websocket.onclose = function (event) {
         console.log("onclose code: " + event.code);
         console.log("onclose reason: " + event.reason);
         if (!window.timerID) { /* avoid firing a new setInterval, after one has been done */
-            window.timerID = setInterval(function() { checkwebsocket() }, 1500);
+            window.timerID = setInterval(function () { checkwebsocket() }, 1500);
         }
     }
-    websocket.onerror = function(event) {
+    websocket.onerror = function (event) {
         // handle error event
         console.log("onerror reason: " + event.reason);
         websocket.close();
@@ -205,9 +205,9 @@ function consoleON() {
         console = backupConsole;
     } else {
         console = {
-            log: () => {},
-            error: () => {},
-            warn: () => {}
+            log: () => { },
+            error: () => { },
+            warn: () => { }
         };
     }
 }
@@ -222,7 +222,7 @@ function abortIrKey() {
 }
 
 function eraseIrKey() {
-    document.getElementById('editIrKeyDiv').style.display = "block";
+    document.getElementById('editIrKeyDiv').style.display = "";
     document.getElementById('new_key').value = "";
 }
 
@@ -232,7 +232,7 @@ function saveIrKey() {
 
 function training(key) {
     var arr;
-    document.getElementById('editIrKeyDiv').style.display = "block";
+    document.getElementById('editIrKeyDiv').style.display = "";
     document.getElementById('key_name').value = key;
 }
 
@@ -243,7 +243,7 @@ function scrollTo(to, duration) {
     var difference = to - scrollTop;
     var perTick = difference / duration * 10;
 
-    setTimeout(function() {
+    setTimeout(function () {
         scrollTop = scrollTop + perTick;
         document.body.scrollTop = scrollTop;
         document.documentElement.scrollTop = scrollTop;
@@ -384,7 +384,7 @@ function saveTextAsFile() {
         document.body.appendChild(downloadLink);
 
         if (window.navigator.msSaveOrOpenBlob)
-            downloadLink.addEventListener("click", function() {
+            downloadLink.addEventListener("click", function () {
                 window.navigator.msSaveBlob(textFileAsBlob, fileName);
             });
         else if ('URL' in window)
@@ -494,7 +494,7 @@ function soundResp(arr) {
 
 function refresh() {
     xhr = new XMLHttpRequest();
-    xhr.onreadystatechange = function() {
+    xhr.onreadystatechange = function () {
         if (xhr.readyState == 4 && xhr.status == 200) {
             try {
                 var arr = JSON.parse(xhr.responseText);
@@ -533,21 +533,21 @@ function onRangeChange($range, $spanid, $mul, $rotate, $nosave) {
     var val = document.getElementById($range).value;
     if ($rotate) val = document.getElementById($range).max - val;
     document.getElementById($spanid).innerHTML = (val * $mul) + " дБ";
-    if (typeof($nosave) == 'undefined') saveSoundSettings();
+    if (typeof ($nosave) == 'undefined') saveSoundSettings();
 }
 
 function onRangeChangeFreqTreble($range, $spanid, $mul, $rotate, $nosave) {
     var val = document.getElementById($range).value;
     if ($rotate) val = document.getElementById($range).max - val;
     document.getElementById($spanid).innerHTML = "От " + (val * $mul) + " кГц";
-    if (typeof($nosave) == 'undefined') saveSoundSettings();
+    if (typeof ($nosave) == 'undefined') saveSoundSettings();
 }
 
 function onRangeChangeFreqBass($range, $spanid, $mul, $rotate, $nosave) {
     var val = document.getElementById($range).value;
     if ($rotate) val = document.getElementById($range).max - val;
     document.getElementById($spanid).innerHTML = "До " + (val * $mul) + " Гц";
-    if (typeof($nosave) == 'undefined') saveSoundSettings();
+    if (typeof ($nosave) == 'undefined') saveSoundSettings();
 }
 
 function onRangeChangeSpatial($range, $spanid, $nosave) {
@@ -568,7 +568,7 @@ function onRangeChangeSpatial($range, $spanid, $nosave) {
             break;
     }
     document.getElementById($spanid).innerHTML = label;
-    if (typeof($nosave) == 'undefined') saveSoundSettings();
+    if (typeof ($nosave) == 'undefined') saveSoundSettings();
 }
 
 function onTDAchange($name, $nosave) {
@@ -752,7 +752,7 @@ function onTDAchange($name, $nosave) {
             break;
     }
     document.getElementById($name + '_span').innerHTML = label + " дБ";
-    if (typeof($nosave) == 'undefined') hardware(1);
+    if (typeof ($nosave) == 'undefined') hardware(1);
 }
 
 function logValue(value) {
@@ -778,7 +778,7 @@ function onRangeVolChange($value, $local) {
 
 function wifi(valid) {
     xhr = new XMLHttpRequest();
-    xhr.onreadystatechange = function() {
+    xhr.onreadystatechange = function () {
         if (xhr.readyState == 4 && xhr.status == 200) {
             var arr = JSON.parse(xhr.responseText);
             document.getElementById('ssid').value = arr["ssid"];
@@ -834,10 +834,10 @@ function wifi(valid) {
 
 function clickrear($nosave) {
     if (document.getElementById("rearON").checked)
-        document.getElementById("Rear").style.display = "block";
+        document.getElementById("Rear").style.display = "";
     else
         document.getElementById("Rear").style.display = "none";
-    if (typeof($nosave) == 'undefined') hardware(1);
+    if (typeof ($nosave) == 'undefined') hardware(1);
 }
 
 function clickloud() {
@@ -846,6 +846,34 @@ function clickloud() {
 
 function mute() {
     hardware(1);
+}
+
+function choice_settings() {
+    if (document.getElementById("_WIFI").checked == true) {
+        document.getElementById("tab_WIFI").style.display = "block";
+    } else {
+        document.getElementById("tab_WIFI").style.display = "none";
+    }
+    if (document.getElementById("_GPIOs").checked == true) {
+        document.getElementById("tab_GPIOs").style.display = "block";
+    } else {
+        document.getElementById("tab_GPIOs").style.display = "none";
+    }
+    if (document.getElementById("_IRCODEs").checked == true) {
+        document.getElementById("tab_IRCODEs").style.display = "block";
+    } else {
+        document.getElementById("tab_IRCODEs").style.display = "none";
+    }
+    if (document.getElementById("_OPTIONS").checked == true) {
+        document.getElementById("tab_OPTIONS").style.display = "block";
+    } else {
+        document.getElementById("tab_OPTIONS").style.display = "none";
+    }
+    if (document.getElementById("_UPDATES").checked == true) {
+        document.getElementById("tab_UPDATES").style.display = "block";
+    } else {
+        document.getElementById("tab_UPDATES").style.display = "none";
+    }
 }
 
 function loadCSV() {
@@ -857,7 +885,10 @@ function saveCSV() {
 }
 
 function devoptions(save) {
+    NTPservers();
+    TimeZone();
     displaybright();
+    FanControl();
     if (save == 1)
         alert("Ещё не реализовано...");
 }
@@ -868,36 +899,59 @@ function ircodes(ircode_mode, save, load) {
 }
 
 function FanControl() {
+    if (document.getElementById('FanControl').value == 0) {
+        document.getElementById("not_control").style.display = "none";
+    } else {
+        document.getElementById("not_control").style.display = "";
+    }
     if (document.getElementById('FanControl').value == 1) {
-        document.getElementById("by_auto").style.display = "block";
+        document.getElementById("by_auto").style.display = "";
         document.getElementById("by_handpwm").style.display = "none";
 
     } else {
-        document.getElementById("by_handpwm").style.display = "block";
+        document.getElementById("by_handpwm").style.display = "";
         document.getElementById("by_auto").style.display = "none";
     }
 }
 
 
+function NTPservers() {
+    if (document.getElementById('O_NTP').value == "0") {
+        document.getElementById("custom_NTP").style.display = "none";
+    } else {
+        document.getElementById("custom_NTP").style.display = "";
+    }
+
+}
+
+function TimeZone() {
+    if (document.getElementById('O_TZONE').value != "CUSTOMTZ") {
+        document.getElementById("edit_TZ").style.display = "none";
+    } else {
+        document.getElementById("edit_TZ").style.display = "";
+    }
+
+}
+
 function displaybright() {
     if (document.getElementById('O_LCD_BRG').value == 0) {
         document.getElementById("brightOn").style.display = "none";
     } else {
-        document.getElementById("brightOn").style.display = "block";
+        document.getElementById("brightOn").style.display = "";
         if (document.getElementById('O_LCD_BRG').value == 1) {
             document.getElementById("by_hand").style.display = "none";
-            document.getElementById("by_time").style.display = "block";
-            document.getElementById("brightness").style.display = "block";
+            document.getElementById("by_time").style.display = "";
+            document.getElementById("brightness").style.display = "";
             document.getElementById("by_lighting").style.display = "none";
         }
         if (document.getElementById('O_LCD_BRG').value == 2) {
             document.getElementById("by_hand").style.display = "none";
             document.getElementById("by_time").style.display = "none";
-            document.getElementById("brightness").style.display = "block";
-            document.getElementById("by_lighting").style.display = "block";
+            document.getElementById("brightness").style.display = "";
+            document.getElementById("by_lighting").style.display = "";
         }
         if (document.getElementById('O_LCD_BRG').value == 3) {
-            document.getElementById("by_hand").style.display = "block";
+            document.getElementById("by_hand").style.display = "";
             document.getElementById("by_time").style.display = "none";
             document.getElementById("brightness").style.display = "none";
             document.getElementById("by_lighting").style.display = "none";
@@ -905,11 +959,12 @@ function displaybright() {
     }
 }
 
+
 function gpios(gpio_mode, save, load) {
     var setgpios = "",
         gpio_mode_txt, err, style_color;
     xhr = new XMLHttpRequest();
-    xhr.onreadystatechange = function() {
+    xhr.onreadystatechange = function () {
         if (xhr.readyState == 4 && xhr.status == 200) {
             var arr = JSON.parse(xhr.responseText);
             console.log(arr);
@@ -1007,25 +1062,25 @@ function hardware(save) {
         rear = 0,
         sendsave = "";
     xhr = new XMLHttpRequest();
-    xhr.onreadystatechange = function() {
+    xhr.onreadystatechange = function () {
         if (xhr.readyState == 4 && xhr.status == 200) {
             var arr = JSON.parse(xhr.responseText);
             if (arr['present'] == "1") {
-                document.getElementById("barTDA7313").style.display = "block";
-                document.getElementById("barTDA7313radio").style.display = "block";
+                document.getElementById("barTDA7313").style.display = "";
+                document.getElementById("barTDA7313radio").style.display = "";
                 document.getElementById("audioinput" + arr['inputnum']).checked = true;
                 if (arr['inputnum'] == "1") {
-                    document.getElementById("Computer").style.display = "block";
+                    document.getElementById("Computer").style.display = "";
                 } else {
                     document.getElementById("Computer").style.display = "none";
                 }
                 if (arr['inputnum'] == "2") {
-                    document.getElementById("Radio").style.display = "block";
+                    document.getElementById("Radio").style.display = "";
                 } else {
                     document.getElementById("Radio").style.display = "none";
                 }
                 if (arr['inputnum'] == "3") {
-                    document.getElementById("Bluetooth").style.display = "block";
+                    document.getElementById("Bluetooth").style.display = "";
                 } else {
                     document.getElementById("Bluetooth").style.display = "none";
                 }
@@ -1062,12 +1117,12 @@ function hardware(save) {
                 else
                     document.getElementById('mute').removeAttribute("checked");
             } else {
-                document.getElementById("Radio").style.display = "block";
+                document.getElementById("Radio").style.display = "";
                 document.getElementById("audioinput2").checked = true;
             }
         }
     }
-    if (document.getElementById("barTDA7313").style.display == "block") {
+    if (document.getElementById("barTDA7313").style.display == "") {
         for (inputnum = 1; inputnum < 4; inputnum++)
             if (document.getElementById('audioinput' + inputnum).checked) break;
         if (inputnum == 4) inputnum = 1;
@@ -1175,7 +1230,7 @@ function autoplay() {
 //ask for the state of autoplay
 function autostart() {
     xhr = new XMLHttpRequest();
-    xhr.onreadystatechange = function() {
+    xhr.onreadystatechange = function () {
         if (xhr.readyState == 4 && xhr.status == 200) {
             var arr = JSON.parse(xhr.responseText);
             if (arr["rauto"] == "1")
@@ -1193,7 +1248,7 @@ function autostart() {
 //ask for the state of the theme
 function atheme() {
     xhr = new XMLHttpRequest();
-    xhr.onreadystatechange = function() {
+    xhr.onreadystatechange = function () {
         if (xhr.readyState == 4 && xhr.status == 200) {
             var arr = JSON.parse(xhr.responseText);
             themeIn = arr["theme"];
@@ -1282,7 +1337,7 @@ function saveSoundSettings() {
 }
 
 function fixedEncodeURIComponent(str) {
-    return str.replace(/[&]/g, function(c) {
+    return str.replace(/[&]/g, function (c) {
         return '%' + c.charCodeAt(0).toString(16);
     });
 }
@@ -1314,7 +1369,7 @@ function abortStation() {
 }
 
 function eraseStation() {
-    document.getElementById('editStationDiv').style.display = "block";
+    document.getElementById('editStationDiv').style.display = "";
     document.getElementById('add_url').value = "";
     document.getElementById('add_name').value = "";
     document.getElementById('add_path').value = "";
@@ -1338,7 +1393,7 @@ function editInstantStation() {
     id--;
 
     if (id <= 254) {
-        document.getElementById('editStationDiv').style.display = "block";
+        document.getElementById('editStationDiv').style.display = "";
         document.getElementById('add_slot').value = id;
 
         document.getElementById('ovol').value = '0';
@@ -1350,7 +1405,7 @@ function editInstantStation() {
 
 function editStation(id) {
     var arr;
-    document.getElementById('editStationDiv').style.display = "block";
+    document.getElementById('editStationDiv').style.display = "";
 
     function cpedit(arr) {
 
@@ -1373,7 +1428,7 @@ function editStation(id) {
         cpedit(arr);
     } else {
         xhr = new XMLHttpRequest();
-        xhr.onreadystatechange = function() {
+        xhr.onreadystatechange = function () {
             if (xhr.readyState == 4 && xhr.status == 200) {
                 try {
                     arr = JSON.parse(xhr.responseText);
@@ -1448,13 +1503,13 @@ function checkhistory() {
     } else if (window.XMLHttpRequest) {
         xhr = new XMLHttpRequest();
     }
-    xhr.onload = function() {
+    xhr.onload = function () {
         document.getElementById('History').innerHTML = xhr.responseText;
     }
     xhr.open("GET", "https://serverdoma.ru/esp32/history132.php", false);
     try {
         xhr.send(null);
-    } catch (e) {; }
+    } catch (e) { ; }
     setMainHeight(curtab);
 }
 
@@ -1464,13 +1519,13 @@ function checkinfos() {
     } else if (window.XMLHttpRequest) {
         xhr = new XMLHttpRequest();
     }
-    xhr.onload = function() {
+    xhr.onload = function () {
         document.getElementById('Infos').innerHTML = xhr.responseText;
     }
     xhr.open("GET", "https://serverdoma.ru/esp32/infos.php", false);
     try {
         xhr.send(null);
-    } catch (e) {; }
+    } catch (e) { ; }
 }
 //load the version and history html
 function checkversion() {
@@ -1479,14 +1534,14 @@ function checkversion() {
     } else if (window.XMLHttpRequest) {
         xhr = new XMLHttpRequest();
     }
-    xhr.onload = function() {
+    xhr.onload = function () {
         document.getElementById('Version').innerHTML = xhr.responseText;
         document.getElementById('newrelease').innerHTML = document.getElementById('firmware_last').innerHTML;
     }
     xhr.open("GET", "https://serverdoma.ru/esp32/version32.php", false);
     try {
         xhr.send(null);
-    } catch (e) {; }
+    } catch (e) { ; }
     checkinfos();
     //checkhistory();
 }
@@ -1497,10 +1552,10 @@ function downloadStations() {
     if (window.File && window.FileReader && window.FileList && window.Blob) {
         reader = new FileReader();
         xhr = new XMLHttpRequest();
-        xhr.onreadystatechange = function() {
+        xhr.onreadystatechange = function () {
             promptworking(working); // some time to display promptworking
         }
-        reader.onload = function(e) {
+        reader.onload = function (e) {
             function fillInfo(ind, arri) {
                 if (!arri["ovol"]) arri["ovol"] = "0";
                 tosend = tosend + "&id=" + ind + "&url=" + arri["URL"] + "&name=" + arri["Name"] + "&file=" + fixedEncodeURIComponent(arri["File"]) + "&port=" + arri["Port"] + "&ovol=" + arri["ovol"] + "&";
@@ -1604,7 +1659,7 @@ function stChanged() {
     promptworking(working); // some time to display promptworking
     if (stchanged && confirm("Список изменен. Вы хотите сохранить измененный список?")) {
         xhr = new XMLHttpRequest();
-        xhr.onreadystatechange = function() {}
+        xhr.onreadystatechange = function () { }
         promptworking(working); // some time to display promptworking
         localStorage.clear();
         indmax = 7;
@@ -1631,8 +1686,8 @@ function stChanged() {
         }
         loadStationsList(maxStation);
     } else
-    if (stchanged)
-        loadStations();
+        if (stchanged)
+            loadStations();
     stchanged = false;
     document.getElementById("stsave").disabled = true;
     promptworking("");
@@ -1709,7 +1764,7 @@ function loadStations() {
         } else
             try {
                 xhr = new XMLHttpRequest();
-                xhr.onreadystatechange = function() {
+                xhr.onreadystatechange = function () {
                     if (xhr.readyState == 4 && xhr.status == 200) {
                         try {
                             arr = JSON.parse(xhr.responseText);
@@ -1763,7 +1818,7 @@ function loadStationsList(max) {
         } else
             try {
                 xhr = new XMLHttpRequest();
-                xhr.onreadystatechange = function() {
+                xhr.onreadystatechange = function () {
                     if (xhr.readyState == 4 && xhr.status == 200) {
                         try {
                             arr = JSON.parse(xhr.responseText);
@@ -1829,26 +1884,26 @@ function printList() {
     printWin.close();
 }
 
-document.addEventListener("DOMContentLoaded", function() {
-    document.getElementById("tab1").addEventListener("click", function() {
+document.addEventListener("DOMContentLoaded", function () {
+    document.getElementById("tab1").addEventListener("click", function () {
         if (stchanged) stChanged();
         refresh();
         curtab = "tab-content1";
         setMainHeight(curtab);
     });
-    document.getElementById("tab2").addEventListener("click", function() {
+    document.getElementById("tab2").addEventListener("click", function () {
         if (stchanged) stChanged();
-        loadStations( /*1*/ );
+        loadStations( /*1*/);
         curtab = "tab-content2";
         intervalid = window.setTimeout(setMainHeight, 5, curtab);
     });
-    document.getElementById("tab3").addEventListener("click", function() {
+    document.getElementById("tab3").addEventListener("click", function () {
         if (stchanged) stChanged();
         curtab = "tab-content3";
         hardware(0);
         setMainHeight(curtab);
     });
-    document.getElementById("tab4").addEventListener("click", function() {
+    document.getElementById("tab4").addEventListener("click", function () {
         if (stchanged) stChanged();
         curtab = "tab-content4";
         gpios(0, 0, 1);
@@ -1858,7 +1913,7 @@ document.addEventListener("DOMContentLoaded", function() {
         checkversion();
         setMainHeight(curtab);
     });
-    window.addEventListener("keydown", function(event) {
+    window.addEventListener("keydown", function (event) {
         if (event.defaultPrevented) {
             return;
         }

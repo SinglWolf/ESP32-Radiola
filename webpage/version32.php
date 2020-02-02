@@ -4,12 +4,21 @@
 
 <body>
 
-	<p><span class="label label-success">Версия: <span id="firmware_last">1.0 Rev: Beta 6</span> - Дата выхода релиза не определена...
+	<p><span class="label label-success">Версия: <span id="firmware_last">1.0 Rev: Beta 7</span> - Дата выхода релиза не определена...
 		</span>
 	</p>
 	<p>
 		Анонс:
 		<ul id="ordered">
+		<li> 1.0 Rev Beta 7:
+				<ul id="ordered">
+					<li>В проект добавлена конфигурация бинарники для ESP32-WROOM</li>
+					<li style="color: red">Обновление по OTA для разных версий ESP-32 не проверено, тестируйте!</li>
+					<li>Для WROVER и WROOM бинарники лежат в своих каталогах</li>
+					<li>В имени бинарных файлов больше не будет приставки номера версии, <span style="color: red">проверяйте контрольные суммы файлов</span>.</li>
+					<li>Страница настроек разделена на отдельные вкладки</li>
+				</ul>
+			</li>
 			<li> 1.0 Rev Beta 6:
 				<ul id="ordered">
 					<li>Исправлен баг с определением TDA7313</li>

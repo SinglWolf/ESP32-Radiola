@@ -41,6 +41,9 @@
 #define _MAIN_H_
 #include "driver/timer.h"
 
+#define RELEASE "1.0"
+#define REVISION "Beta 7"
+
 #define TIMER_DIVIDER 16                        //5000000Hz 5MHz
 #define TIMER_DIVIDER1MS TIMER_BASE_CLK / 10000 //10000Hz
 #define TIMER_DIVIDER1mS 8                      //10000000Hz 10MHz

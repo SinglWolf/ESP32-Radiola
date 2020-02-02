@@ -9,16 +9,13 @@
 #include "esp_log.h"
 #include "telnet.h"
 #include "addon.h"
-
+#include "main.h"
 // need this for ported soft to esp32
 #define ESP32_IDF
 
 #define PSTR(s) (s)
 #define MAXDATAT	 256
 
-
-#define RELEASE "1.0"
-#define REVISION "Beta 6"
 
 uint32_t checkUart(uint32_t speed);
 extern unsigned short adcdiv;	

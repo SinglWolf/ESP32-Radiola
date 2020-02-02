@@ -98,9 +98,9 @@
 
 **!!!!Перед прошивкой обязательно проверьте контрольные суммы всех трёх бинарных файлов!!!!**
 
-Удобная программа для проверки контрольной суммы файла [#HashTab](https://hashtab.ru/).
-(После установки увидите инструкцию в картинках.)
-[Бинарные файлы для прошивки ESP32-WROOM](https://github.com/SinglWolf/ESP32-Radiola/tree/master/binaries/WROOM)
+Удобная программа для проверки контрольной суммы файла [#HashTab](https://hashtab.ru/).<br>
+(После установки увидите инструкцию в картинках)<br>
+[Бинарные файлы для прошивки ESP32-WROOM](https://github.com/SinglWolf/ESP32-Radiola/tree/master/binaries/WROOM)<br>
 [Бинарные файлы для прошивки ESP32-WROVER](https://github.com/SinglWolf/ESP32-Radiola/tree/master/binaries/WROWER)
  
  *адреса:*

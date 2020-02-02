@@ -100,11 +100,13 @@
 
 Удобная программа для проверки контрольной суммы файла [#HashTab](https://hashtab.ru/).
 (После установки увидите инструкцию в картинках.)
+[Бинарные файлы для прошивки ESP32-WROOM](https://github.com/SinglWolf/ESP32-Radiola/tree/master/binaries/WROOM)
+[Бинарные файлы для прошивки ESP32-WROVER](https://github.com/SinglWolf/ESP32-Radiola/tree/master/binaries/WROWER)
  
  *адреса:*
   + bootloader.bin - 0x1000
   + partitions.bin - 0x8000
-  + ESP32Radiola.bin - 0x10000 и 0x1D0000
+  + WROWERRadiola.bin или WROOMRadiola.bin - 0x10000 и 0x1D0000
 
 ![Image alt](https://github.com/SinglWolf/ESP32-Radiola/raw/master/pictures/flash_download_tools.png)
 

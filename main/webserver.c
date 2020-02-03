@@ -30,8 +30,6 @@
 
 #define TAG "webserver"
 
-#define FILE_NAME CONFIG_FILE_NAME
-
 xSemaphoreHandle semfile = NULL;
 
 const char strsROK[] = {"HTTP/1.1 200 OK\r\nContent-Type: %s\r\nContent-Length: %lu\r\nConnection: keep-alive\r\n\r\n%s"};
@@ -952,7 +950,7 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 	}
 	else if (strcmp(name, "/upgrade") == 0)
 	{
-		update_firmware(FILE_NAME); // start the OTA
+		update_firmware("ESP32Radiola"); // start the OTA
 	}
 	else if (strcmp(name, "/icy") == 0)
 	{

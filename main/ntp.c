@@ -39,24 +39,23 @@ void ntpTask(void *pvParams) {
 // get ntp time and return an allocated tm struct (UTC)
 bool ntp_get_time(struct tm **dt)
 {
-	if (sntp_enabled())
-		sntp_stop();
-	initialize_sntp();
+	//	initialize_sntp();
 
 	// wait for time to be set
 	time_t now = 0;
 	struct tm timeinfo = {0};
-	int retry = 0;
-	const int retry_count = 10;
-	while (timeinfo.tm_year < (2016 - 1900) && ++retry < retry_count)
-	{
-		ESP_LOGI(TAG, "Waiting for system time to be set... (%d/%d)", retry, retry_count);
-		vTaskDelay(1000 / portTICK_PERIOD_MS);
-		time(&now);
-		localtime_r(&now, &timeinfo);
-	}
-	if (retry >= retry_count)
-		return false;
+	// int retry = 0;
+	// const int retry_count = 10;
+	// while (timeinfo.tm_year < (2016 - 1900) && ++retry < retry_count)
+	// {
+	// 	ESP_LOGI(TAG, "Waiting for system time to be set... (%d/%d)", retry, retry_count);
+	// 	vTaskDelay(1000 / portTICK_PERIOD_MS);
+	// 	time(&now);
+	// 	localtime_r(&now, &timeinfo);
+	// }
+	// if (retry >= retry_count)
+	// 	return false;
+	time(&now);
 	setenv("TZ", g_device->tzone, 1);
 	tzset();
 	*dt = localtime_r(&now, &timeinfo);
@@ -166,6 +165,8 @@ void ntp_print_time()
 
 void initialize_sntp(void)
 {
+	if (sntp_enabled())
+		sntp_stop();
 	ESP_LOGI(TAG, "Initializing SNTP");
 	sntp_setoperatingmode(SNTP_OPMODE_POLL);
 	sntp_setservername(0, g_device->ntp_server[0]);
@@ -173,4 +174,16 @@ void initialize_sntp(void)
 	sntp_setservername(2, g_device->ntp_server[2]);
 	sntp_setservername(3, g_device->ntp_server[3]);
 	sntp_init();
+	// wait for time to be set
+	time_t now = 0;
+	struct tm timeinfo = {0};
+	int retry = 0;
+	const int retry_count = 10;
+	while (timeinfo.tm_year < (2016 - 1900) && ++retry < retry_count)
+	{
+		ESP_LOGI(TAG, "Waiting for system time to be set... (%d/%d)", retry, retry_count);
+		vTaskDelay(1000 / portTICK_PERIOD_MS);
+		time(&now);
+		localtime_r(&now, &timeinfo);
+	}
 }

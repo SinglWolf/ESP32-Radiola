@@ -68,7 +68,7 @@ static unsigned timer1s = 0;
 static unsigned timein = 0;
 static struct tm *dt;
 time_t timestamp = 0;
-static bool syncTime = false;
+//static bool syncTime = false;
 static bool itAskTime = true;   // update time with ntp if true
 static bool itAskStime = false; // start the time display
 static uint8_t itLcdOut = 0;
@@ -387,10 +387,10 @@ IRAM_ATTR void ServiceAddon(void)
 		if (timerLcdOut > 0)
 			timerLcdOut--; //
 		timein++;
-		if ((timestamp % (10 * DTIDLE)) == 0)
-		{
-			itAskTime = true;
-		} // synchronise with ntp every x*DTIDLE
+		// if ((timestamp % (10 * DTIDLE)) == 0)
+		// {
+		// 	itAskTime = true;
+		// } // synchronise with ntp every x*DTIDLE
 
 		if (((timein % DTIDLE) == 0) && (!state))
 		{
@@ -401,8 +401,8 @@ IRAM_ATTR void ServiceAddon(void)
 		}
 		if (timerLcdOut == 1)
 			itLcdOut = 1; // ask to go to sleep
-		if (!syncTime)
-			itAskTime = true; // first synchro if not done
+		// if (!syncTime)
+		// 	itAskTime = true; // first synchro if not done
 
 		timer1s = 0;
 		// Other slow timers
@@ -1242,7 +1242,7 @@ void task_addon(void *pvParams)
 			{
 				//applyTZ(dt);
 				timestamp = mktime(dt);
-				syncTime = true;
+				//syncTime = true;
 			}
 			itAskTime = false;
 		}

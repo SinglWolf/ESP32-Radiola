@@ -632,6 +632,7 @@ void start_network()
 		}
 		saveDeviceSettings(g_device);
 		tcpip_adapter_set_hostname(TCPIP_ADAPTER_IF_STA, "ESP32Radiola");
+		initialize_sntp();
 	}
 
 	lcd_welcome(localIp, "IP найден");

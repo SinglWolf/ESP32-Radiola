@@ -133,6 +133,7 @@ typedef struct
 uint8_t getIvol();
 void setIvol(uint8_t vol);
 bool bigSram();
+bool sntpOk();
 
 void sleepCallback(void *pArg);
 void wakeCallback(void *pArg);

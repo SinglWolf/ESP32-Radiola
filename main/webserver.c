@@ -1352,8 +1352,8 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 				if (O_TZONE != g_device->tzone)
 				{
 					strcpy(g_device->tzone, O_TZONE);
-					addonDt();
-					//reboot = true;
+					//addonDt();
+					reboot = true;
 				}
 
 				if (getSParameterFromResponse(val_1, 1, "O_TIME_FORMAT=", data, data_size))

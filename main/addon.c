@@ -66,10 +66,10 @@ static unsigned timerLcdOut = 0;
 static unsigned timer1s = 0;
 
 static unsigned timein = 0;
-static struct tm *dt;
-time_t timestamp = 0;
-static bool syncTime = false;
-static bool itAskTime = true;   // update time with ntp if true
+//static struct tm *dt;
+//time_t timestamp = 0;
+//static bool syncTime = false;
+//static bool itAskTime = true;   // update time with ntp if true
 static bool itAskStime = false; // start the time display
 static uint8_t itLcdOut = 0;
 //static bool itAskSsecond = false; // start the time display
@@ -113,7 +113,7 @@ static void evtScreen(typelcmd value);
 Encoder_t *encoder0 = NULL;
 Encoder_t *encoder1 = NULL;
 
-struct tm *getDt() { return dt; }
+//struct tm *getDt() { return dt; }
 
 static adc1_channel_t ldrchannel1 = GPIO_NONE;
 static adc2_channel_t ldrchannel2 = GPIO_NONE;
@@ -383,14 +383,14 @@ IRAM_ATTR void ServiceAddon(void)
 	if (timer1s >= 1000)
 	{
 		// Time compute
-		timestamp++; // time update
+		//timestamp++; // time update
 		if (timerLcdOut > 0)
 			timerLcdOut--; //
 		timein++;
-		if ((timestamp % (10 * DTIDLE)) == 0)
-		{
-			itAskTime = true;
-		} // synchronise with ntp every x*DTIDLE
+		// if ((timestamp % (10 * DTIDLE)) == 0)
+		// {
+		// 	itAskTime = true;
+		// } // synchronise with ntp every x*DTIDLE
 
 		if (((timein % DTIDLE) == 0) && (!state))
 		{
@@ -401,8 +401,8 @@ IRAM_ATTR void ServiceAddon(void)
 		}
 		if (timerLcdOut == 1)
 			itLcdOut = 1; // ask to go to sleep
-		if (!syncTime)
-			itAskTime = true; // first synchro if not done
+		// if (!syncTime)
+		// 	itAskTime = true; // first synchro if not done
 
 		timer1s = 0;
 		// Other slow timers
@@ -459,7 +459,7 @@ void Screen(typeScreen st)
 // draw all lines
 void drawFrame()
 {
-	dt = localtime(&timestamp);
+//	dt = localtime(&timestamp);
 	drawFrameUcg(mTscreen);
 }
 
@@ -535,7 +535,7 @@ void drawVolume()
 
 void drawTime()
 {
-	dt = localtime(&timestamp);
+//	dt = localtime(&timestamp);
 	drawTimeUcg(mTscreen, timein);
 }
 
@@ -1236,16 +1236,16 @@ void task_addon(void *pvParams)
 		encoderLoop(); // compute the encoder
 		irLoop();	  // compute the ir
 		touchLoop();   // compute the touch screen
-		if (itAskTime) // time to ntp. Don't do that in interrupt.
-		{
-			if (ntp_get_time(&dt))
-			{
-				//applyTZ(dt);
-				timestamp = mktime(dt);
-				syncTime = true;
-			}
-			itAskTime = false;
-		}
+		// if (itAskTime) // time to ntp. Don't do that in interrupt.
+		// {
+		// 	if (ntp_get_time(&dt))
+		// 	{
+		// 		//applyTZ(dt);
+		// 		timestamp = mktime(dt);
+		// 		syncTime = true;
+		// 	}
+		// 	itAskTime = false;
+		// }
 
 		if (timerScreen >= 3) //  sec timeout transient screen
 		{
@@ -1290,10 +1290,10 @@ void task_addon(void *pvParams)
 }
 
 // force a new dt ntp fetch
-void addonDt()
-{
-	itAskTime = true;
-}
+// void addonDt()
+// {
+// 	itAskTime = true;
+// }
 
 ////////////////////////////////////////
 // parse the esp32media received line and do the job

@@ -1103,21 +1103,21 @@ function hardware(save) {
         if (xhr.readyState == 4 && xhr.status == 200) {
             var arr = JSON.parse(xhr.responseText);
             if (arr['present'] == "1") {
-                document.getElementById("barTDA7313").style.display = "block";
-                document.getElementById("barTDA7313radio").style.display = "block";
+                document.getElementById("barTDA7313").style.display = "";
+                document.getElementById("barTDA7313radio").style.display = "";
                 document.getElementById("audioinput" + arr['inputnum']).checked = true;
                 if (arr['inputnum'] == "1") {
-                    document.getElementById("Computer").style.display = "block";
+                    document.getElementById("Computer").style.display = "";
                 } else {
                     document.getElementById("Computer").style.display = "none";
                 }
                 if (arr['inputnum'] == "2") {
-                    document.getElementById("Radio").style.display = "block";
+                    document.getElementById("Radio").style.display = "";
                 } else {
                     document.getElementById("Radio").style.display = "none";
                 }
                 if (arr['inputnum'] == "3") {
-                    document.getElementById("Bluetooth").style.display = "block";
+                    document.getElementById("Bluetooth").style.display = "";
                 } else {
                     document.getElementById("Bluetooth").style.display = "none";
                 }
@@ -1154,7 +1154,7 @@ function hardware(save) {
                 else
                     document.getElementById('mute').removeAttribute("checked");
             } else {
-                document.getElementById("Radio").style.display = "block";
+                document.getElementById("Radio").style.display = "";
                 document.getElementById("audioinput2").checked = true;
             }
         }

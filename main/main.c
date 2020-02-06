@@ -632,6 +632,27 @@ void start_network()
 		}
 		saveDeviceSettings(g_device);
 		tcpip_adapter_set_hostname(TCPIP_ADAPTER_IF_STA, "ESP32Radiola");
+		if (sntp_enabled())
+			sntp_stop();
+		//ESP_LOGE(TAG, "sntp_enabled: %d", sntp_enabled());
+		initialize_sntp();
+
+		// wait for time to be set
+		time_t now = 0;
+		struct tm timeinfo = {0};
+		int retry = 0;
+		const int retry_count = 10;
+		while (timeinfo.tm_year < (2016 - 1900) && ++retry < retry_count)
+		{
+			ESP_LOGI(TAG, "Waiting for system time to be set... (%d/%d)", retry, retry_count);
+			vTaskDelay(2000 / portTICK_PERIOD_MS);
+			time(&now);
+			localtime_r(&now, &timeinfo);
+		}
+		//ESP_LOGE(TAG, "sntp_enabled: %d", sntp_enabled());
+		setenv("TZ", g_device->tzone, 1);
+		tzset();
+		localtime_r(&now, &timeinfo);
 	}
 
 	lcd_welcome(localIp, "IP найден");
@@ -846,11 +867,10 @@ void app_main()
 			g_device->backlight_mode = NOT_ADJUSTABLE; // по-умолчанию подсветка нерегулируемая
 			g_device->backlight_level = 255;		   // по-умолчанию подсветка максимальная
 			strcpy(g_device->tzone, "YEKT-5");		   // Часовой пояс Екатеринбурга
-			strcpy(g_device->ntp_server[0], _NTP0);		   // 0
-			strcpy(g_device->ntp_server[1], _NTP1);		   // 1
-			strcpy(g_device->ntp_server[2], _NTP2);		   // 2
-			strcpy(g_device->ntp_server[3], _NTP3);		   // 3
-
+			strcpy(g_device->ntp_server[0], _NTP0);	// 0
+			strcpy(g_device->ntp_server[1], _NTP1);	// 1
+			strcpy(g_device->ntp_server[2], _NTP2);	// 2
+			strcpy(g_device->ntp_server[3], _NTP3);	// 3
 
 			saveDeviceSettings(g_device);
 		}

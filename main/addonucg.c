@@ -15,7 +15,8 @@
 #include "addon.h"
 #include "ucg_esp32_hal.h"
 #include "main.h"
-#include <time.h>
+//#include <time.h>
+#include "ntp.h"
 #include "esp_log.h"
 #include "logo.h"
 #include "interface.h"
@@ -581,13 +582,15 @@ void draw(int i)
 	case TIME:
 		if ((yy > 80) || (lline[TITLE21] == NULL) || (strlen(lline[TITLE21]) == 0))
 		{
+			time(&now);
+			localtime_r(&now, &timeinfo);
 			uint16_t len, xpos, yyy;
 			setfont(small);
 			char strsec[30];
 			if (getDdmm())
-				sprintf(strsec, "%02d-%02d  %02d:%02d:%02d", dt->tm_mday, dt->tm_mon + 1, dt->tm_hour, dt->tm_min, dt->tm_sec);
+				sprintf(strsec, "%02d-%02d  %02d:%02d:%02d", timeinfo.tm_mday, timeinfo.tm_mon + 1, timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
 			else
-				sprintf(strsec, "%02d-%02d  %02d:%02d:%02d", dt->tm_mon + 1, dt->tm_mday, dt->tm_hour, dt->tm_min, dt->tm_sec);
+				sprintf(strsec, "%02d-%02d  %02d:%02d:%02d", timeinfo.tm_mon + 1, timeinfo.tm_mday, timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
 			len = ucg_GetStrWidth(&ucg, strsec);
 			ucg_SetColori(&ucg, 250, 250, 255);
 			ucg_SetColor(&ucg, 1, CBLACK);
@@ -637,10 +640,10 @@ void drawFrameUcg(uint8_t mTscreen)
 {
 	//printf("drawFrameUcg, mTscreen: %d\n",mTscreen);
 	int i;
-	if (dt == NULL)
-	{
-		dt = getDt();
-	}
+	// if (dt == NULL)
+	// {
+	// 	dt = getDt();
+	// }
 	switch (mTscreen)
 	{
 	case MTNEW:
@@ -779,9 +782,11 @@ static void drawSecond(unsigned timein)
 	static unsigned insec;
 	if (insec != timein)
 	{
-		char strseco[3 + dt->tm_sec];
+		time(&now);
+		localtime_r(&now, &timeinfo);
+		char strseco[3 + timeinfo.tm_sec];
 		uint16_t len;
-		sprintf(strseco, ":%02d", dt->tm_sec);
+		sprintf(strseco, ":%02d", timeinfo.tm_sec);
 		setfont(text);
 		len = ucg_GetStrWidth(&ucg, "xxx");
 
@@ -796,9 +801,11 @@ static void drawSecond(unsigned timein)
 
 void drawTimeUcg(uint8_t mTscreen, unsigned timein)
 {
+	time(&now);
+	localtime_r(&now, &timeinfo);
 	char strdate[23];
 	char strtime[20];
-	sprintf(strtime, "%02d:%02d", dt->tm_hour, dt->tm_min);
+	sprintf(strtime, "%02d:%02d", timeinfo.tm_hour, timeinfo.tm_min);
 	switch (mTscreen)
 	{
 	case 1:
@@ -815,9 +822,9 @@ void drawTimeUcg(uint8_t mTscreen, unsigned timein)
 		ucg_DrawString(&ucg, 4, yy - 18, 0, strdate);
 	case 2:
 		if (getDdmm())
-			sprintf(strdate, "%02d-%02d-%04d", dt->tm_mday, dt->tm_mon + 1, dt->tm_year + 1900);
+			sprintf(strdate, "%02d-%02d-%04d", timeinfo.tm_mday, timeinfo.tm_mon + 1, timeinfo.tm_year + 1900);
 		else
-			sprintf(strdate, "%02d-%02d-%04d", dt->tm_mon + 1, dt->tm_mday, dt->tm_year + 1900);
+			sprintf(strdate, "%02d-%02d-%04d", timeinfo.tm_mon + 1, timeinfo.tm_mday, timeinfo.tm_year + 1900);
 		drawTTitleUcg(strdate);
 		if (strcmp(TTimeStr, strtime) != 0)
 		{
@@ -1005,7 +1012,7 @@ void lcd_initUcg()
 	gpio_num_t a0;
 	//	gpio_num_t t_cs;
 	//	gpio_num_t t_irq;
-	dt = getDt();
+	//dt = getDt();
 	uint8_t rotat = getRotat();
 	ESP_LOGI(TAG, "lcd init  Rotat: %d", rotat);
 

@@ -62,9 +62,9 @@ void addonParse(const char *fmt, ...);
 void lcd_welcome(const char *ip, const char *state);
 void setFuturNum(int16_t new);
 int16_t getFuturNum();
-void addonDt();
+//void addonDt();
 void wakeLcd();
 void *getEncoder(int num);
-struct tm *getDt();
+//struct tm *getDt();
 
 #endif

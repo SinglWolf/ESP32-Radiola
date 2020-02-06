@@ -736,12 +736,8 @@
                             <table id="OptionsTable">
                                 <tbody>
                                     <tr>
-                                        <td>Тема Веб-интерфейса</td>
-                                        <td colspan="3">
-                                            <select id="O_LCD_OUT" onclick="setTheme()">
-                                                <option value="0">Светлая</option>
-                                                <option value="1">Тёмная</option>
-                                            </select>
+                                        <td colspan="4">
+                                            <input type="button" value="Сменить тему Веб-интерфейса" onclick="theme()">
                                         </td>
                                     </tr>
                                     <tr>
@@ -776,6 +772,7 @@
                                     <tr>
                                         <td>Часовой пояс</td>
                                         <td colspan="3"><select id="O_TZONE" onclick="TimeZone()">
+                                                <option value="EET-2EEST,M3.5.0/3,M10.5.0/4">Киев, София</option>
                                                 <option value="EET-2">Калинингад</option>
                                                 <option value="MSK-3">Москва</option>
                                                 <option value="SAMT-4">Самара</option>

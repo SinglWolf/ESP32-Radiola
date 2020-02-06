@@ -35,7 +35,7 @@
 #define PASSLEN 64
 #define HOSTLEN 24
 
-#define TZONELEN 20
+#define TZONELEN 30
 #define NTP_LEN 20
 
 typedef enum backlight_mode_t {

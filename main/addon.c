@@ -1240,7 +1240,7 @@ void task_addon(void *pvParams)
 		{
 			if (ntp_get_time(&dt))
 			{
-				applyTZ(dt);
+				//applyTZ(dt);
 				timestamp = mktime(dt);
 				syncTime = true;
 			}
@@ -1290,7 +1290,10 @@ void task_addon(void *pvParams)
 }
 
 // force a new dt ntp fetch
-void addonDt() { itAskTime = true; }
+void addonDt()
+{
+	itAskTime = true;
+}
 
 ////////////////////////////////////////
 // parse the esp32media received line and do the job

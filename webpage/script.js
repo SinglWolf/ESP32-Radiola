@@ -877,9 +877,6 @@ function choice_settings() {
 function loadCSV() {
     alert("Ещё не реализовано...");
 }
-function setTheme() {
-    alert("Ещё не реализовано...");
-}
 
 function saveCSV() {
     alert("Ещё не реализовано...");
@@ -908,7 +905,11 @@ function devoptions(save) {
         displaybright();
         FanControl();
     }
-    else {
+    else if ((save == 1) && (confirm("Сохранить настройки в NVS?\nДля вступления в силу некоторых настроек, Радиола может быть перезагружена."))) {
+        // if (document.getElementById('O_TZONE').value == "CUSTOMTZ") {
+        //     alert("Формат строки должен быть в стандарте POSIX!!!\nНапример,\"EET-2EEST,M3.5.0/3,M10.5.0/4\"\nЧасовой пояс - София");
+        //     document.getElementById('O_TZONE').value = document.getElementById('custom_TZ').value;
+        //}
         set_option = "&O_ESPLOG=" + document.getElementById('O_ESPLOG').value +
             "&O_NTP=" + document.getElementById('O_NTP').value +
             "&O_NTP0=" + document.getElementById('O_NTP0').value +
@@ -918,6 +919,9 @@ function devoptions(save) {
             "&O_TZONE=" + document.getElementById('O_TZONE').value +
             "&O_TIME_FORMAT=" + document.getElementById('O_TIME_FORMAT').value +
             "&O_LCD_ROTA=" + document.getElementById('O_LCD_ROTA').value;
+    } else {
+        save = 0;
+        set_option = "";
     }
     xhr.open("POST", "devoptions", false);
     xhr.setRequestHeader(content, ctype);
@@ -959,7 +963,7 @@ function NTPservers() {
 
 function TimeZone() {
     if (document.getElementById('O_TZONE').value == "CUSTOMTZ") {
-        document.getElementById("edit_TZ").style.display = "none";
+        document.getElementById("edit_TZ").style.display = "contents";
     } else {
         document.getElementById("edit_TZ").style.display = "none";
     }

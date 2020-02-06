@@ -1352,25 +1352,31 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 				if (O_TZONE != g_device->tzone)
 				{
 					strcpy(g_device->tzone, O_TZONE);
-					//addonDt();
+					addonDt();
 					//reboot = true;
 				}
 
 				if (getSParameterFromResponse(val_1, 1, "O_TIME_FORMAT=", data, data_size))
 				{
-					if (val_1 == 0)
-						g_device->options32 &= NT_DDMM;
-					else
-						g_device->options32 |= T_DDMM;
-					reboot = true;
+					if (O_TIME_FORMAT != atoi(val_1))
+					{
+						if (atoi(val_1) == 0)
+							g_device->options32 &= NT_DDMM;
+						else
+							g_device->options32 |= T_DDMM;
+						reboot = true;
+					}
 				}
 				if (getSParameterFromResponse(val_1, 1, "O_LCD_ROTA=", data, data_size))
 				{
-					if (val_1 == 0)
-						g_device->options32 &= NT_ROTAT;
-					else
-						g_device->options32 |= T_ROTAT;
-					reboot = true;
+					if (O_LCD_ROTA != atoi(val_1))
+					{
+						if (atoi(val_1) == 0)
+							g_device->options32 &= NT_ROTAT;
+						else
+							g_device->options32 |= T_ROTAT;
+						reboot = true;
+					}
 				}
 				saveDeviceSettings(g_device);
 

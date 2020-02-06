@@ -14,12 +14,13 @@
 #include <string.h>
 #include <stdlib.h>
 //#include <zlib.h>
-#include "lwip/sockets.h"
-#include "lwip/api.h"
-#include "lwip/netdb.h"
+// #include "lwip/sockets.h"
+// #include "lwip/api.h"
+// #include "lwip/netdb.h"
 
 #include "ntp.h"
 #include "interface.h"
+#include "eeprom.h"
 
 // list of major public servers http://tf.nist.gov/tf-cgi/servers.cgi
 //time.nist.gov
@@ -38,194 +39,138 @@ void ntpTask(void *pvParams) {
 // get ntp time and return an allocated tm struct (UTC)
 bool ntp_get_time(struct tm **dt)
 {
-	struct timeval timeout;
-	timeout.tv_usec = 0;
-	timeout.tv_sec = 5;
-	int sockfd = 0;
-	ntp_t *ntp;
-	char *msg;
-	int rv;
-	char service[] = {"123"};	  //ntp port
-	char node[] = {"192.168.0.1"}; // this one is universel
-	struct addrinfo hints, *servinfo = NULL, *p = NULL;
-	//	struct tm *dt;
-	time_t timestamp;
-	//	int8_t tz;
+	if (sntp_enabled())
+		sntp_stop();
+	initialize_sntp();
 
-	msg = calloc(sizeof(ntp_t), 1);
-	if (msg == NULL)
+	// wait for time to be set
+	time_t now = 0;
+	struct tm timeinfo = {0};
+	int retry = 0;
+	const int retry_count = 10;
+	while (timeinfo.tm_year < (2016 - 1900) && ++retry < retry_count)
 	{
-		ESP_LOGE(TAG, "##SYS.DATE#: ntp fails on calloc");
-		return false;
+		ESP_LOGI(TAG, "Waiting for system time to be set... (%d/%d)", retry, retry_count);
+		vTaskDelay(1000 / portTICK_PERIOD_MS);
+		time(&now);
+		localtime_r(&now, &timeinfo);
 	}
-	// build the message to send
-	ntp = (ntp_t *)msg;
-	ntp->options = 0x1B; //3 first flags set in binary: 00 001 011  LI=0 VN=3 MODE=CLIENT
-	ntp->stratum = 0;
-	ntp->poll = 6;
-	ntp->precision = 1;
-	//	ntp->ref_id = 0x4C4F434C; // LOCL
+	if (retry >= retry_count)
+		return false;
+	setenv("TZ", g_device->tzone, 1);
+	tzset();
+	*dt = localtime_r(&now, &timeinfo);
+	//*dt = gmtime(&timestamp);
 
-	memset(&hints, 0, sizeof(hints));
-	hints.ai_family = AF_UNSPEC;
-	hints.ai_socktype = SOCK_DGRAM; // Use UDP
-	if ((rv = getaddrinfo(node, service, &hints, &servinfo)) != 0)
-	{
-		//ESP_LOGE(TAG,"##SYS.DATE#: ntp fails on %s %d","getaddrinfo",rv);
-		free(msg);
-		return false;
-	}
-	// loop in result socket
-	for (p = servinfo; p != NULL; p = p->ai_next)
-	{
-		if ((sockfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1)
-		{
-			ESP_LOGE(TAG, "##SYS.DATE#: ntp fails on %s %d", "sockfd", sockfd);
-			continue;
-		}
-		break;
-	}
-	// set a timeout for recvfrom
-	if (setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, (char *)&timeout, sizeof(timeout)) < 0)
-	{
-		ESP_LOGE(TAG, "##SYS.DATE#: ntp fails on %s %d", "setsockopt", 0);
-		free(msg);
-		freeaddrinfo(servinfo);
-		close(sockfd);
-		return false;
-	}
-	//send the request
-	if ((rv = sendto(sockfd, msg, sizeof(ntp_t), 0, p->ai_addr, p->ai_addrlen)) == -1)
-	{
-		ESP_LOGE(TAG, "##SYS.DATE#: ntp fails on %s %d", "sendto", rv);
-		free(msg);
-		freeaddrinfo(servinfo);
-		close(sockfd);
-		return false;
-	}
-	freeaddrinfo(servinfo);
-	if ((rv = recvfrom(sockfd, msg, sizeof(ntp_t), 0, NULL, NULL)) <= 0)
-	{
-		ESP_LOGE(TAG, "##SYS.DATE#: ntp fails on %s %d", "recvfrom", rv);
-		free(msg);
-		close(sockfd);
-		return false;
-	}
-
-	//extract time
-	ntp = (ntp_t *)msg;
-	timestamp = ntp->trans_time[0] << 24 | ntp->trans_time[1] << 16 | ntp->trans_time[2] << 8 | ntp->trans_time[3];
-	// convert to unix time
-	timestamp -= 2208988800UL;
-	// create tm struct
-	*dt = gmtime(&timestamp);
-	free(msg);
-	close(sockfd);
 	return true;
+	// // struct timeval timeout;
+	// // timeout.tv_usec = 0;
+	// // timeout.tv_sec = 5;
+	// // int sockfd = 0;
+	// // ntp_t *ntp;
+	// // char *msg;
+	// // int rv;
+	// // char service[] = {"123"};	  //ntp port
+	// // char node[] = {"192.168.0.1"}; // this one is universel
+	// // struct addrinfo hints, *servinfo = NULL, *p = NULL;
+	// //	struct tm *dt;
+
+	// //	int8_t tz;
+
+	// msg = calloc(sizeof(ntp_t), 1);
+	// if (msg == NULL)
+	// {
+	// 	ESP_LOGE(TAG, "##SYS.DATE#: ntp fails on calloc");
+	// 	return false;
+	// }
+	// // build the message to send
+	// ntp = (ntp_t *)msg;
+	// ntp->options = 0x1B; //3 first flags set in binary: 00 001 011  LI=0 VN=3 MODE=CLIENT
+	// ntp->stratum = 0;
+	// ntp->poll = 6;
+	// ntp->precision = 1;
+	// //	ntp->ref_id = 0x4C4F434C; // LOCL
+
+	// memset(&hints, 0, sizeof(hints));
+	// hints.ai_family = AF_UNSPEC;
+	// hints.ai_socktype = SOCK_DGRAM; // Use UDP
+	// if ((rv = getaddrinfo(node, service, &hints, &servinfo)) != 0)
+	// {
+	// 	//ESP_LOGE(TAG,"##SYS.DATE#: ntp fails on %s %d","getaddrinfo",rv);
+	// 	free(msg);
+	// 	return false;
+	// }
+	// // loop in result socket
+	// for (p = servinfo; p != NULL; p = p->ai_next)
+	// {
+	// 	if ((sockfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1)
+	// 	{
+	// 		ESP_LOGE(TAG, "##SYS.DATE#: ntp fails on %s %d", "sockfd", sockfd);
+	// 		continue;
+	// 	}
+	// 	break;
+	// }
+	// // set a timeout for recvfrom
+	// if (setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, (char *)&timeout, sizeof(timeout)) < 0)
+	// {
+	// 	ESP_LOGE(TAG, "##SYS.DATE#: ntp fails on %s %d", "setsockopt", 0);
+	// 	free(msg);
+	// 	freeaddrinfo(servinfo);
+	// 	close(sockfd);
+	// 	return false;
+	// }
+	// //send the request
+	// if ((rv = sendto(sockfd, msg, sizeof(ntp_t), 0, p->ai_addr, p->ai_addrlen)) == -1)
+	// {
+	// 	ESP_LOGE(TAG, "##SYS.DATE#: ntp fails on %s %d", "sendto", rv);
+	// 	free(msg);
+	// 	freeaddrinfo(servinfo);
+	// 	close(sockfd);
+	// 	return false;
+	// }
+	// freeaddrinfo(servinfo);
+	// if ((rv = recvfrom(sockfd, msg, sizeof(ntp_t), 0, NULL, NULL)) <= 0)
+	// {
+	// 	ESP_LOGE(TAG, "##SYS.DATE#: ntp fails on %s %d", "recvfrom", rv);
+	// 	free(msg);
+	// 	close(sockfd);
+	// 	return false;
+	// }
+
+	// //extract time
+	// ntp = (ntp_t *)msg;
+	// timestamp = ntp->trans_time[0] << 24 | ntp->trans_time[1] << 16 | ntp->trans_time[2] << 8 | ntp->trans_time[3];
+	// // convert to unix time
+	// timestamp -= 2208988800UL;
+	// // create tm struct
+
+	// free(msg);
+	// close(sockfd);
 }
 
 // print  date time in ISO-8601 local time format
 void ntp_print_time()
 {
 	struct tm *dt;
-
 	if (ntp_get_time(&dt))
 	{
 		char msg[30];
-		int8_t tz = applyTZ(dt);
 		//	os_printf("##Time: isdst: %d %02d:%02d:%02d\n",dt->tm_isdst, dt->tm_hour, dt->tm_min, dt->tm_sec);
 		//	os_printf("##Date: %02d-%02d-%04d\n", dt->tm_mday, dt->tm_mon+1, dt->tm_year+1900);
 		strftime(msg, 48, "%Y-%m-%dT%H:%M:%S", dt);
 		//	ISO-8601 local time   https://www.w3.org/TR/NOTE-datetime
 		//  YYYY-MM-DDThh:mm:ssTZD (eg 1997-07-16T19:20:30+01:00)
-		if (tz >= 0)
-			kprintf("##SYS.DATE#: %s+%02d:00\n", msg, tz);
-		else
-			kprintf("##SYS.DATE#: %s%03d:00\n", msg, tz);
+		kprintf("##SYS.DATE#: %s\n", msg);
 	}
 }
-int8_t applyTZ(struct tm *time)
+
+void initialize_sntp(void)
 {
-
-	bool dst = false;
-	int8_t tzo = 5;
-
-	// apply base timezone offset
-	//	time->tm_hour += 1; // e.g. central europe
-	time->tm_hour += tzo;
-
-	// call mktime to fix up (needed if applying offset has rolled the date back/forward a day)
-	// also sets yday and fixes wday (if it was wrong from the rtc)
-	mktime(time);
-
-	// work out if we should apply dst, modify according to your local rules
-	if (time->tm_mon < 2 || time->tm_mon > 9)
-	{
-		// these months are completely out of DST
-	}
-	else if (time->tm_mon > 2 && time->tm_mon < 9)
-	{
-		// these months are completely in DST
-		dst = true;
-	}
-	else
-	{
-		// else we must be in one of the change months
-		// work out when the last sunday was (could be today)
-		int previousSunday = time->tm_mday - time->tm_wday;
-		if (time->tm_mon == 2)
-		{ // march
-			// was last sunday (which could be today) the last sunday in march
-			if (previousSunday >= 25)
-			{
-				// are we actually on the last sunday today
-				if (time->tm_wday == 0)
-				{
-					// if so are we at/past 2am gmt
-					int s = (time->tm_hour * 3600) + (time->tm_min * 60) + time->tm_sec;
-					if (s >= 7200)
-						dst = true;
-				}
-				else
-				{
-					dst = true;
-				}
-			}
-		}
-		else if (time->tm_mon == 9)
-		{
-			// was last sunday (which could be today) the last sunday in october
-			if (previousSunday >= 25)
-			{
-				// we have reached/passed it, so is it today?
-				if (time->tm_wday == 0)
-				{
-					// change day, so are we before 1am gmt (2am localtime)
-					int s = (time->tm_hour * 3600) + (time->tm_min * 60) + time->tm_sec;
-					if (s < 3600)
-						dst = true;
-				}
-			}
-			else
-			{
-				// not reached the last sunday yet
-				dst = true;
-			}
-		}
-	}
-
-	if (dst)
-	{
-		// add the dst hour
-		time->tm_hour += 1;
-		// mktime will fix up the time/date if adding an hour has taken us to the next day
-		mktime(time);
-		// don't rely on isdst returned by mktime, it doesn't know about timezones and tends to reset this to 0
-		time->tm_isdst = 1;
-	}
-	else
-	{
-		time->tm_isdst = 0;
-	}
-	return tzo;
+	ESP_LOGI(TAG, "Initializing SNTP");
+	sntp_setoperatingmode(SNTP_OPMODE_POLL);
+	sntp_setservername(0, g_device->ntp_server[0]);
+	sntp_setservername(1, g_device->ntp_server[1]);
+	sntp_setservername(2, g_device->ntp_server[2]);
+	sntp_setservername(3, g_device->ntp_server[3]);
+	sntp_init();
 }

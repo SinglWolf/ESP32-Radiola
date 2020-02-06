@@ -9,6 +9,8 @@
 #ifndef __NTP_H__
 #define __NTP_H__
 #include <time.h>
+#include <sys/time.h>
+#include "lwip/apps/sntp.h"
 
 typedef struct {
 	uint8_t options;
@@ -35,5 +37,6 @@ typedef struct {
 bool ntp_get_time(struct tm **dt);
 void ntp_print_time();
 int8_t  applyTZ(struct tm *time);
+void initialize_sntp(void);
 
 #endif

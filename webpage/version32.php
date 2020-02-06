@@ -4,13 +4,13 @@
 
 <body>
 
-	<p><span class="label label-success">Версия: <span id="firmware_last">1.0 Rev: Beta 9</span> - Дата выхода релиза не определена...
+	<p><span class="label label-success">Версия: <span id="firmware_last">1.0 Rev: Beta 9a</span> - Дата выхода релиза не определена...
 		</span>
 	</p>
 	<p>
 		Анонс:
 		<ul id="ordered">
-		<li> 1.0 Rev Beta 9:
+		<li> 1.0 Rev Beta 9a:
 				<ul id="ordered">
 					<li style="color: red">Основные настройки в веб-интерфейсе работают, тестируйте (ЗАЛИВАТЬ НА ЧИСТУЮ FLASH)!</li>
 					<li>Серверов точного времени (NTP) теперь целых 4! Системное время Радиолы синхронизируется с NTP каждый час.</li>					

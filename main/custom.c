@@ -125,10 +125,10 @@ void FanPwmInit()
 void BuzzerInit()
 {
 	//Подготовка и настройка конфигурации таймера LED-контроллера
-	ledc_timer_buzzer.speed_mode = LEDC_HIGH_SPEED_MODE;   // режим таймера
+	ledc_timer_buzzer.speed_mode = LEDC_HIGH_SPEED_MODE;  // режим таймера
 	ledc_timer_buzzer.duty_resolution = LEDC_TIMER_8_BIT; // разрешение ШИМ
-	ledc_timer_buzzer.timer_num = BUZZER;				   // номер таймера
-	ledc_timer_buzzer.freq_hz = 2000;					   // частота сигнала ШИМ
+	ledc_timer_buzzer.timer_num = BUZZER;				  // номер таймера
+	ledc_timer_buzzer.freq_hz = 2000;					  // частота сигнала ШИМ
 	// Установить конфигурацию таймера BUZZER для низкоскоростного канала
 	ledc_timer_config(&ledc_timer_buzzer);
 

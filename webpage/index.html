@@ -18,7 +18,7 @@
     <!-- The Modal Edit window-->
     <div id=editStationDiv class=modal>
         <div class=modal-content>
-            <div id=MODALCONTENT class=CONTENT style="top:10px;">
+            <div class=CONTENT style="top:10px;">
                 <div class=tabs>
                     <h1>Редактирование станции</h1>
                     <div class=modal-body>
@@ -57,7 +57,7 @@
     </div>
     <div id="editIrKeyDiv" class="modal">
         <div class=modal-content>
-            <div id="MODALCONTENT" class="CONTENT" style="top:10px;">
+            <div class="CONTENT" style="top:10px;">
                 <div class="tabs">
                     <h1>Обучение кнопки пульта</h1>
                     <div class="modal-body">
@@ -201,7 +201,7 @@
                         <h1>
                             Режим сна / Пробуждение&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span id=time>time</span>
                         </h1>
-                        <p id=sw>
+                        <p id=sw1>
                             <span class=bold1 title="Режим времени: ЧЧ:ММ или Режим задержки (минуты): ММ">ВЫКЛ :
                             </span>
                             <input type=text id=sleepdelay onkeyup="sleepup(event)"> &nbsp;
@@ -209,7 +209,7 @@
                             <input type="button" value="Стоп" onClick="stopSleep()"> &nbsp;&nbsp;В: <span
                                 id=sminutes>0</span> Сек.
                         </p>
-                        <p id=sw>
+                        <p id=sw2>
                             <span class=bold1 title="Режим времени: ЧЧ:ММ или Режим задержки (минуты): ММ">ВКЛ :
                             </span>
                             <input type=text id=wakedelay onkeyup="wakeup(event)"> &nbsp;
@@ -246,6 +246,7 @@
                             <!-- <input type="button" value=Play onClick="instantPlay()">&nbsp; <input type="button" value="Стоп" onClick="stopStation()"> -->
                         </p>
                     </div>
+                </li>
                 <li>
                     <input type=radio name=tabs id=tab2 />
                     <label for=tab2>СТАНЦИИ</label>
@@ -267,7 +268,7 @@
                                 value="Сохранить список"> <input type="button" style="margin:0px auto" id="clear"
                                 title="Предупреждение: Это удалит все станции. Обязательно сохраните их раньше."
                                 onclick="clearList()" value="Удалить всё"> <input type="button" style="margin:0px auto"
-                                id="clear" title="Печать всего списка станций на принтере" onclick="printList()"
+                                id="print" title="Печать всего списка станций на принтере" onclick="printList()"
                                 value="Печатать всё">
                         </p>
                         <br>
@@ -504,9 +505,6 @@
                                 <span class=bold>Имя хоста mDNS:</span>
                                 <input id=host type=text value="" />
                                 <span class=bold>.local</span>
-                                <br>
-                                <span class=bold>Смещение времени:</span>
-                                <input id=tzo type=text value="" />
                                 <br><br>
                             </p>
                         </span>
@@ -734,262 +732,259 @@
                                 <input type="button" onclick="devoptions(0)"
                                     value="Обновить">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input
                                     type="button" onclick="devoptions(1)" value="Сохранить"></h1>
-                            <p>
-                                <table id="OptionsTable">
-                                    <tbody>
-                                        <tr>
-                                            <td>Логи CMD-Консоли</td>
-                                            <td colspan="3"><select id="O_ESPLOG">
-                                                    <option value="0">Выключить</option>
-                                                    <option value="1">Подробно</option>
-                                                    <option value="2">Отладка</option>
-                                                    <option value="3">Информация</option>
-                                                    <option value="4">Предупреждения</option>
-                                                    <option value="5">Ошибки</option>
-                                                </select></td>
-                                        </tr>
-                                        <tr>
-                                            <td>Сервера точного времени</td>
-                                            <td colspan="3"><select id="O_NTP" onclick="NTPservers()">
-                                                    <option value="0">по-умолчанию</option>
-                                                    <option value="1">свои</option>
-                                                </select></td>
-                                        </tr>
-                                        <tr id="custom_NTP">
-                                            <td>Сервера пользователя</td>
-                                            <td colspan="3">
-                                                <p><b>0:</b> <input id="custom_NTP0" type="text"></p>
-                                                <p><b>1:</b> <input id="custom_NTP1" type="text"></p>
-                                                <p><b>2:</b> <input id="custom_NTP2" type="text"></p>
-                                                <p><b>3:</b> <input id="custom_NTP3" type="text"></p>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td>Часовой пояс</td>
-                                            <td colspan="3"><select id="O_TZONE" onclick="TimeZone()">
-                                                    <option value="EET-2">Калинингад</option>
-                                                    <option value="MSK-3">Москва</option>
-                                                    <option value="SAMT-4">Самара</option>
-                                                    <option value="YEKT-5">Екатеринбург</option>
-                                                    <option value="OMST-6">Омск</option>
-                                                    <option value="KRAT-7">Красноярск</option>
-                                                    <option value="IRKT-8">Иркутск</option>
-                                                    <option value="YAKT-9">Чита</option>
-                                                    <option value="VLAT-10">Владивосток</option>
-                                                    <option value="SAKT-11">Южно-Сахалинск</option>
-                                                    <option value="PETT-12">Петропавловск-Камчатский</option>
-                                                    <option value="CUSTOMTZ">Своя зона</option>
-                                                </select></td>
-                                        </tr>
-                                        <tr id="edit_TZ">
-                                            <td colspan="4">Зона пользователя<input type="text" id="custom_TZ"
-                                                    style="margin-left: 67px;"></td>
-                                        </tr>
-                                        <tr>
-                                            <td>Формат вывода даты</td>
-                                            <td colspan="3"><select id="O_TIME_FORMAT">
-                                                    <option value="0">ММ:ДД</option>
-                                                    <option value="1">ДД:ММ</option>
-                                                </select></td>
-                                        </tr>
-                                        <tr>
-                                            <td>Поворот дисплея</td>
-                                            <td colspan="3"><select id="O_LCD_ROTA">
-                                                    <option value="0">НЕТ</option>
-                                                    <option value="1">ДА</option>
-                                                </select></td>
-                                        </tr>
-                                        <tr>
-                                            <td>Выключить дисплей</td>
-                                            <td colspan="3"><select id="O_LCD_OUT" onclick="displaymode()">
-                                                    <option value="0">Не выключать</option>
-                                                    <option value="5">через 5 мин</option>
-                                                    <option value="10">через 10 мин</option>
-                                                    <option value="15">через 15 мин</option>
-                                                    <option value="20">через 20 мин</option>
-                                                    <option value="25">через 25 мин</option>
-                                                    <option value="30">через 30 мин</option>
-                                                </select></td>
-                                        </tr>
-                                        <tr>
-                                            <td>Яркость дисплея</td>
-                                            <td colspan="3"><select id="O_LCD_BRG" onclick="displaybright()">
-                                                    <option value="0">Не регулировать</option>
-                                                    <option value="1">автоматически по времени</option>
-                                                    <option value="2">автоматически от освещения</option>
-                                                    <option value="3">вручную</option>
-                                                </select></td>
-                                        </tr>
-                                        <tr>
-                                            <td colspan="4">
-                                                <div id="brightOn">
-                                                    <div id="by_time">
-                                                        <div>Ночной режим</div>
-                                                        <div>С:&nbsp; &nbsp; &nbsp;<select name="begin_h">
-                                                                <option value="0">00</option>
-                                                                <option value="1">01</option>
-                                                                <option value="2">02</option>
-                                                                <option value="3">03</option>
-                                                                <option value="4">04</option>
-                                                                <option value="5">05</option>
-                                                                <option value="6">06</option>
-                                                                <option value="7">07</option>
-                                                                <option value="8">08</option>
-                                                                <option value="9">09</option>
-                                                                <option value="10">10</option>
-                                                                <option value="11">11</option>
-                                                                <option value="12">12</option>
-                                                                <option value="13">13</option>
-                                                                <option value="14">14</option>
-                                                                <option value="15">15</option>
-                                                                <option value="16">16</option>
-                                                                <option value="17">17</option>
-                                                                <option value="18">18</option>
-                                                                <option value="19">19</option>
-                                                                <option value="20">20</option>
-                                                                <option value="21">21</option>
-                                                                <option value="22">22</option>
-                                                                <option value="23">23</option>
-                                                            </select>&nbsp; :&nbsp;&nbsp;<select name="begin_m">
-                                                                <option value="0">00</option>
-                                                                <option value="15">15</option>
-                                                                <option value="30">30</option>
-                                                                <option value="45">45</option>
-                                                            </select></div>
-                                                        <div>До:&nbsp; &nbsp;<select name="end_h">
-                                                                <option value="0">00</option>
-                                                                <option value="1">01</option>
-                                                                <option value="2">02</option>
-                                                                <option value="3">03</option>
-                                                                <option value="4">04</option>
-                                                                <option value="5">05</option>
-                                                                <option value="6">06</option>
-                                                                <option value="7">07</option>
-                                                                <option value="8">08</option>
-                                                                <option value="9">09</option>
-                                                                <option value="10">10</option>
-                                                                <option value="11">11</option>
-                                                                <option value="12">12</option>
-                                                                <option value="13">13</option>
-                                                                <option value="14">14</option>
-                                                                <option value="15">15</option>
-                                                                <option value="16">16</option>
-                                                                <option value="17">17</option>
-                                                                <option value="18">18</option>
-                                                                <option value="19">19</option>
-                                                                <option value="20">20</option>
-                                                                <option value="21">21</option>
-                                                                <option value="22">22</option>
-                                                                <option value="23">23</option>
-                                                            </select>&nbsp; :&nbsp;&nbsp;<select name="end_m">
-                                                                <option value="0">00</option>
-                                                                <option value="15">15</option>
-                                                                <option value="30">30</option>
-                                                                <option value="45">45</option>
-                                                            </select></div>
+                            <p>&nbsp;</p>
+                            <table id="OptionsTable">
+                                <tbody>
+                                    <tr>
+                                        <td>Тема Веб-интерфейса</td>
+                                        <td colspan="3">
+                                            <select id="O_LCD_OUT" onclick="setTheme()">
+                                                <option value="0">Светлая</option>
+                                                <option value="1">Тёмная</option>
+                                            </select>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>Логи CMD-Консоли</td>
+                                        <td colspan="3">
+                                            <select id="O_ESPLOG">
+                                                <option value="0">Выключить</option>
+                                                <option value="1">Ошибки</option>
+                                                <option value="2">Предупреждения</option>
+                                                <option value="3">Информация</option>
+                                                <option value="4">Отладка</option>
+                                                <option value="5">Подробно</option>
+                                            </select>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>Сервера точного времени</td>
+                                        <td colspan="3"><select id="O_NTP" onclick="NTPservers()">
+                                                <option value="0">по-умолчанию</option>
+                                                <option value="1">свои</option>
+                                            </select></td>
+                                    </tr>
+                                    <tr id="custom_NTP">
+                                        <td>Сервера пользователя</td>
+                                        <td colspan="3">
+                                            <p><b>0:</b> <input id="O_NTP0" type="text"></p>
+                                            <p><b>1:</b> <input id="O_NTP1" type="text"></p>
+                                            <p><b>2:</b> <input id="O_NTP2" type="text"></p>
+                                            <p><b>3:</b> <input id="O_NTP3" type="text"></p>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>Часовой пояс</td>
+                                        <td colspan="3"><select id="O_TZONE" onclick="TimeZone()">
+                                                <option value="EET-2">Калинингад</option>
+                                                <option value="MSK-3">Москва</option>
+                                                <option value="SAMT-4">Самара</option>
+                                                <option value="YEKT-5">Екатеринбург</option>
+                                                <option value="OMST-6">Омск</option>
+                                                <option value="KRAT-7">Красноярск</option>
+                                                <option value="IRKT-8">Иркутск</option>
+                                                <option value="YAKT-9">Чита</option>
+                                                <option value="VLAT-10">Владивосток</option>
+                                                <option value="SAKT-11">Южно-Сахалинск</option>
+                                                <option value="PETT-12">Петропавловск-Камчатский</option>
+                                                <!-- <option value="CUSTOMTZ">Своя зона</option> -->
+                                            </select></td>
+                                    </tr>
+                                    <tr id="edit_TZ">
+                                        <td colspan="4">Зона пользователя<input type="text" id="custom_TZ"
+                                                style="margin-left: 67px;"></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Формат вывода даты</td>
+                                        <td colspan="3"><select id="O_TIME_FORMAT">
+                                                <option value="0">ММ:ДД</option>
+                                                <option value="1">ДД:ММ</option>
+                                            </select></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Поворот дисплея</td>
+                                        <td colspan="3"><select id="O_LCD_ROTA">
+                                                <option value="0">НЕТ</option>
+                                                <option value="1">ДА</option>
+                                            </select></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Яркость дисплея</td>
+                                        <td colspan="3"><select id="O_LCD_BRG" onclick="displaybright()">
+                                                <option value="0">Не регулировать</option>
+                                                <option value="1">автоматически по времени</option>
+                                                <option value="2">автоматически от освещения</option>
+                                                <option value="3">вручную</option>
+                                            </select></td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="4">
+                                            <div id="brightOn">
+                                                <div id="by_time">
+                                                    <div>Ночной режим</div>
+                                                    <div>С:&nbsp; &nbsp; &nbsp;<select name="begin_h">
+                                                            <option value="0">00</option>
+                                                            <option value="1">01</option>
+                                                            <option value="2">02</option>
+                                                            <option value="3">03</option>
+                                                            <option value="4">04</option>
+                                                            <option value="5">05</option>
+                                                            <option value="6">06</option>
+                                                            <option value="7">07</option>
+                                                            <option value="8">08</option>
+                                                            <option value="9">09</option>
+                                                            <option value="10">10</option>
+                                                            <option value="11">11</option>
+                                                            <option value="12">12</option>
+                                                            <option value="13">13</option>
+                                                            <option value="14">14</option>
+                                                            <option value="15">15</option>
+                                                            <option value="16">16</option>
+                                                            <option value="17">17</option>
+                                                            <option value="18">18</option>
+                                                            <option value="19">19</option>
+                                                            <option value="20">20</option>
+                                                            <option value="21">21</option>
+                                                            <option value="22">22</option>
+                                                            <option value="23">23</option>
+                                                        </select>&nbsp; :&nbsp;&nbsp;<select name="begin_m">
+                                                            <option value="0">00</option>
+                                                            <option value="15">15</option>
+                                                            <option value="30">30</option>
+                                                            <option value="45">45</option>
+                                                        </select></div>
+                                                    <div>До:&nbsp; &nbsp;<select name="end_h">
+                                                            <option value="0">00</option>
+                                                            <option value="1">01</option>
+                                                            <option value="2">02</option>
+                                                            <option value="3">03</option>
+                                                            <option value="4">04</option>
+                                                            <option value="5">05</option>
+                                                            <option value="6">06</option>
+                                                            <option value="7">07</option>
+                                                            <option value="8">08</option>
+                                                            <option value="9">09</option>
+                                                            <option value="10">10</option>
+                                                            <option value="11">11</option>
+                                                            <option value="12">12</option>
+                                                            <option value="13">13</option>
+                                                            <option value="14">14</option>
+                                                            <option value="15">15</option>
+                                                            <option value="16">16</option>
+                                                            <option value="17">17</option>
+                                                            <option value="18">18</option>
+                                                            <option value="19">19</option>
+                                                            <option value="20">20</option>
+                                                            <option value="21">21</option>
+                                                            <option value="22">22</option>
+                                                            <option value="23">23</option>
+                                                        </select>&nbsp; :&nbsp;&nbsp;<select name="end_m">
+                                                            <option value="0">00</option>
+                                                            <option value="15">15</option>
+                                                            <option value="30">30</option>
+                                                            <option value="45">45</option>
+                                                        </select></div>
+                                                </div>
+                                                <div id="brightness">
+                                                    <div>Уровень яркости</div>
+                                                    <div>Дневной&nbsp; &nbsp;<input id="day_brightness" max="254"
+                                                            min="0" name="day_brightness" type="range" value="127">
                                                     </div>
-                                                    <div id="brightness">
-                                                        <div>Уровень яркости</div>
-                                                        <div>Дневной&nbsp; &nbsp;<input id="day_brightness" max="254"
-                                                                min="0" name="day_brightness" type="range" value="127">
-                                                        </div>
-                                                        <div>Ночной&nbsp; &nbsp;&nbsp;<input id="night_brightness"
-                                                                max="254" min="0" name="night_brightness" type="range"
-                                                                value="127"></div>
-                                                    </div>
-                                                    <div id="by_lighting">
-                                                        <div>Порог срабатывания<br>
-                                                            <input id="brightness_trigger" max="1023" min="0"
-                                                                name="brightness_trigger" type="range" value="127">
-                                                        </div>
-                                                    </div>
-                                                    <div id="by_hand">
-                                                        <div>Уровень яркости</div>
-                                                        <input id="hand_brightness" max="254" min="0"
-                                                            name="hand_brightness" type="range" value="127">
+                                                    <div>Ночной&nbsp; &nbsp;&nbsp;<input id="night_brightness" max="254"
+                                                            min="0" name="night_brightness" type="range" value="127">
                                                     </div>
                                                 </div>
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                                <p>&nbsp;</p>
-
-                                <p>
-                                    <table id="FanControlTable">
-                                        <tbody>
-                                            <tr>
-                                                <td>Регулировка оборотов</td>
-                                                <td colspan="3"><select id="FanControl" onclick="FanControl()">
-                                                        <option value="0">Не регулировать</option>
-                                                        <option value="1">Автоматическая</option>
-                                                        <option value="2">Ручная</option>
-                                                    </select></td>
-                                            </tr>
-                                            <tr id="not_control">
-                                                <td colspan="4">
-                                                    <div id="by_auto">
-                                                        <div>Температура срабатывания</div>
-                                                        <div>Min:&nbsp; &nbsp;<select name="min_temp">
-                                                                <option value="40">40</option>
-                                                                <option value="45">45</option>
-                                                                <option value="50">50</option>
-                                                                <option value="55">55</option>
-                                                                <option value="60">60</option>
-                                                                <option value="65">65</option>
-                                                                <option value="70">70</option>
-                                                            </select>&nbsp;℃&nbsp; &nbsp;Max:&nbsp;
-                                                            <select name="max_temp">
-                                                                <option value="75">75</option>
-                                                                <option value="80">80</option>
-                                                                <option value="85">85</option>
-                                                                <option value="90">90</option>
-                                                                <option value="95">95</option>
-                                                                <option value="100">100</option>
-                                                                <option value="105">105</option>
-                                                            </select>&nbsp;℃</div>
-                                                        <div>Минимальные обороты</div>
-                                                        <div><input id="min_pwm" max="255" min="0" name="min_pwm"
-                                                                type="range" value="127">
-                                                        </div>
+                                                <div id="by_lighting">
+                                                    <div>Порог срабатывания<br>
+                                                        <input id="brightness_trigger" max="1023" min="0"
+                                                            name="brightness_trigger" type="range" value="127">
                                                     </div>
-                                                    <div id="by_handpwm">
-                                                        <div>Обороты</div>
-                                                        <input id="hand_pwm" max="255" min="0" name="hand_pwm"
-                                                            type="range" value="127">
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </p>
+                                                </div>
+                                                <div id="by_hand">
+                                                    <div>Уровень яркости</div>
+                                                    <input id="hand_brightness" max="254" min="0" name="hand_brightness"
+                                                        type="range" value="127">
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <p>&nbsp;</p>
 
-                                <h1>ЗАГРУЗКА\СОХРАНЕНИЕ НАСТРОЕК
-                                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                                    <input type="button" value="Загрузить настройки из файла" onclick="loadCSV()">
-                                    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                                    <input type="button" value="Сохранить настройки в файл" onclick="saveCSV()"></h1>
-                                <table id="CSVname">
-                                    <tbody>
-                                        <tr>
-                                            <td>ИМЯ ФАЙЛА</td>
-                                            <td contenteditable="true" id="L_LABEL">new_psram.csv</td>
-                                        </tr>
-                                        <tr>
-                                            <td>ОПИСАНИЕ</td>
-                                            <td contenteditable="true" id="L_COMMENT">Это стандартная конфигурация для
-                                                ESP32-WROVER.
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                                <br>
-                                <input class="checkbox" id="consON" type="checkbox" onclick="consoleON()">
-                                <label
-                                    for="consON">WEB-Консоль:&emsp;&emsp;&emsp;ВЫКЛ&emsp;&emsp;&emsp;&ensp;ВКЛ</label>
-                                <br>
+                            <table id="FanControlTable">
+                                <tbody>
+                                    <tr>
+                                        <td>Регулировка оборотов</td>
+                                        <td colspan="3"><select id="FanControl" onclick="FanControl()">
+                                                <option value="0">Не регулировать</option>
+                                                <option value="1">Автоматическая</option>
+                                                <option value="2">Ручная</option>
+                                            </select></td>
+                                    </tr>
+                                    <tr id="not_control">
+                                        <td colspan="4">
+                                            <div id="by_auto">
+                                                <div>Температура срабатывания</div>
+                                                <div>Min:&nbsp; &nbsp;<select name="min_temp">
+                                                        <option value="40">40</option>
+                                                        <option value="45">45</option>
+                                                        <option value="50">50</option>
+                                                        <option value="55">55</option>
+                                                        <option value="60">60</option>
+                                                        <option value="65">65</option>
+                                                        <option value="70">70</option>
+                                                    </select>&nbsp;℃&nbsp; &nbsp;Max:&nbsp;
+                                                    <select name="max_temp">
+                                                        <option value="75">75</option>
+                                                        <option value="80">80</option>
+                                                        <option value="85">85</option>
+                                                        <option value="90">90</option>
+                                                        <option value="95">95</option>
+                                                        <option value="100">100</option>
+                                                        <option value="105">105</option>
+                                                    </select>&nbsp;℃</div>
+                                                <div>Минимальные обороты</div>
+                                                <div><input id="min_pwm" max="255" min="0" name="min_pwm" type="range"
+                                                        value="127">
+                                                </div>
+                                            </div>
+                                            <div id="by_handpwm">
+                                                <div>Обороты</div>
+                                                <input id="hand_pwm" max="255" min="0" name="hand_pwm" type="range"
+                                                    value="127">
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <p>&nbsp;</p>
 
-                            </p>
+                            <h1>ЗАГРУЗКА\СОХРАНЕНИЕ НАСТРОЕК
+                                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                                <input type="button" value="Загрузить настройки из файла" onclick="loadCSV()">
+                                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                                <input type="button" value="Сохранить настройки в файл" onclick="saveCSV()"></h1>
+                            <table id="CSVname">
+                                <tbody>
+                                    <tr>
+                                        <td>ИМЯ ФАЙЛА</td>
+                                        <td contenteditable="true" id="L_LABEL">new_psram.csv</td>
+                                    </tr>
+                                    <tr>
+                                        <td>ОПИСАНИЕ</td>
+                                        <td contenteditable="true" id="L_COMMENT">Это стандартная конфигурация для
+                                            ESP32-WROVER.
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <br>
+                            <input class="checkbox" id="consON" type="checkbox" onclick="consoleON()">
+                            <label for="consON">WEB-Консоль:&emsp;&emsp;&emsp;ВЫКЛ&emsp;&emsp;&emsp;&ensp;ВКЛ</label>
+                            <br>
+
+                            <p>&nbsp;</p>
                         </span>
                         <span id="tab_UPDATES" style="display: none;">
                             <h1>
@@ -1020,11 +1015,11 @@
                             <br>
                         </span>
                     </div>
+                </li>
+            </ul>
         </div>
-        </li>
-        </ul>
     </div>
-    </div>
+    <div>ТЕСТ:Край страницы</div>
 </body>
 
 </html>

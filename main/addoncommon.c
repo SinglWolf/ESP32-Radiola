@@ -3,6 +3,7 @@
 // Modified for ESP32-Radiola 2019 SinglWolf (https://serverdoma.ru)
 #include "addoncommon.h"
 #include "stdlib.h"
+#include "time.h"
 
   uint16_t y ;		//Height of a line
   uint16_t yy;		//Height of screen

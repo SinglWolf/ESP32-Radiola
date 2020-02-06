@@ -222,7 +222,7 @@ function abortIrKey() {
 }
 
 function eraseIrKey() {
-    document.getElementById('editIrKeyDiv').style.display = "";
+    document.getElementById('editIrKeyDiv').style.display = "block";
     document.getElementById('new_key').value = "";
 }
 
@@ -232,7 +232,7 @@ function saveIrKey() {
 
 function training(key) {
     var arr;
-    document.getElementById('editIrKeyDiv').style.display = "";
+    document.getElementById('editIrKeyDiv').style.display = "block";
     document.getElementById('key_name').value = key;
 }
 
@@ -799,7 +799,6 @@ function wifi(valid) {
             chkip(document.getElementById('gw2'));
             document.getElementById('ua').value = arr["ua"];
             document.getElementById('host').value = arr["host"];
-            document.getElementById('tzo').value = arr["tzo"];
             if (arr["dhcp"] == "1")
                 document.getElementById("dhcp").setAttribute("checked", "");
             else
@@ -827,14 +826,13 @@ function wifi(valid) {
         "&gw2=" + document.getElementById('gw2').value +
         "&ua=" + encodeURIComponent(document.getElementById('ua').value) +
         "&host=" + encodeURIComponent(document.getElementById('host').value) +
-        "&tzo=" + encodeURIComponent(document.getElementById('tzo').value) +
         "&dhcp=" + document.getElementById('dhcp').checked +
         "&dhcp2=" + document.getElementById('dhcp2').checked + "&");
 }
 
 function clickrear($nosave) {
     if (document.getElementById("rearON").checked)
-        document.getElementById("Rear").style.display = "";
+        document.getElementById("Rear").style.display = "block";
     else
         document.getElementById("Rear").style.display = "none";
     if (typeof ($nosave) == 'undefined') hardware(1);
@@ -879,18 +877,53 @@ function choice_settings() {
 function loadCSV() {
     alert("Ещё не реализовано...");
 }
+function setTheme() {
+    alert("Ещё не реализовано...");
+}
 
 function saveCSV() {
     alert("Ещё не реализовано...");
 }
 
 function devoptions(save) {
-    NTPservers();
-    TimeZone();
-    displaybright();
-    FanControl();
-    if (save == 1)
-        alert("Ещё не реализовано...");
+    set_option = "";
+    xhr = new XMLHttpRequest();
+    xhr.onreadystatechange = function () {
+        if (xhr.readyState == 4 && xhr.status == 200) {
+            var arr = JSON.parse(xhr.responseText);
+            document.getElementById('O_ESPLOG').value = arr["O_ESPLOG"];
+            document.getElementById('O_NTP').value = arr["O_NTP"];
+            document.getElementById('O_NTP0').value = arr["O_NTP0"];
+            document.getElementById('O_NTP1').value = arr["O_NTP1"];
+            document.getElementById('O_NTP2').value = arr["O_NTP2"];
+            document.getElementById('O_NTP3').value = arr["O_NTP3"];
+            document.getElementById('O_TZONE').value = arr["O_TZONE"];
+            document.getElementById('O_TIME_FORMAT').value = arr["O_TIME_FORMAT"];
+            document.getElementById('O_LCD_ROTA').value = arr["O_LCD_ROTA"];
+        }
+    }
+    if (save == 0) {
+        NTPservers();
+        TimeZone();
+        displaybright();
+        FanControl();
+    }
+    else {
+        set_option = "&O_ESPLOG=" + document.getElementById('O_ESPLOG').value +
+            "&O_NTP=" + document.getElementById('O_NTP').value +
+            "&O_NTP0=" + document.getElementById('O_NTP0').value +
+            "&O_NTP1=" + document.getElementById('O_NTP1').value +
+            "&O_NTP2=" + document.getElementById('O_NTP2').value +
+            "&O_NTP3=" + document.getElementById('O_NTP3').value +
+            "&O_TZONE=" + document.getElementById('O_TZONE').value +
+            "&O_TIME_FORMAT=" + document.getElementById('O_TIME_FORMAT').value +
+            "&O_LCD_ROTA=" + document.getElementById('O_LCD_ROTA').value;
+    }
+    xhr.open("POST", "devoptions", false);
+    xhr.setRequestHeader(content, ctype);
+    xhr.send("save=" + save +
+        set_option +
+        "&");
 }
 
 function ircodes(ircode_mode, save, load) {
@@ -902,14 +935,14 @@ function FanControl() {
     if (document.getElementById('FanControl').value == 0) {
         document.getElementById("not_control").style.display = "none";
     } else {
-        document.getElementById("not_control").style.display = "";
+        document.getElementById("not_control").style.display = "contents";
     }
     if (document.getElementById('FanControl').value == 1) {
-        document.getElementById("by_auto").style.display = "";
+        document.getElementById("by_auto").style.display = "contents";
         document.getElementById("by_handpwm").style.display = "none";
 
     } else {
-        document.getElementById("by_handpwm").style.display = "";
+        document.getElementById("by_handpwm").style.display = "contents";
         document.getElementById("by_auto").style.display = "none";
     }
 }
@@ -919,16 +952,16 @@ function NTPservers() {
     if (document.getElementById('O_NTP').value == "0") {
         document.getElementById("custom_NTP").style.display = "none";
     } else {
-        document.getElementById("custom_NTP").style.display = "";
+        document.getElementById("custom_NTP").style.display = "contents";
     }
 
 }
 
 function TimeZone() {
-    if (document.getElementById('O_TZONE').value != "CUSTOMTZ") {
+    if (document.getElementById('O_TZONE').value == "CUSTOMTZ") {
         document.getElementById("edit_TZ").style.display = "none";
     } else {
-        document.getElementById("edit_TZ").style.display = "";
+        document.getElementById("edit_TZ").style.display = "none";
     }
 
 }
@@ -937,21 +970,21 @@ function displaybright() {
     if (document.getElementById('O_LCD_BRG').value == 0) {
         document.getElementById("brightOn").style.display = "none";
     } else {
-        document.getElementById("brightOn").style.display = "";
+        document.getElementById("brightOn").style.display = "contents";
         if (document.getElementById('O_LCD_BRG').value == 1) {
             document.getElementById("by_hand").style.display = "none";
-            document.getElementById("by_time").style.display = "";
-            document.getElementById("brightness").style.display = "";
+            document.getElementById("by_time").style.display = "contents";
+            document.getElementById("brightness").style.display = "contents";
             document.getElementById("by_lighting").style.display = "none";
         }
         if (document.getElementById('O_LCD_BRG').value == 2) {
             document.getElementById("by_hand").style.display = "none";
             document.getElementById("by_time").style.display = "none";
-            document.getElementById("brightness").style.display = "";
-            document.getElementById("by_lighting").style.display = "";
+            document.getElementById("brightness").style.display = "contents";
+            document.getElementById("by_lighting").style.display = "contents";
         }
         if (document.getElementById('O_LCD_BRG').value == 3) {
-            document.getElementById("by_hand").style.display = "";
+            document.getElementById("by_hand").style.display = "contents";
             document.getElementById("by_time").style.display = "none";
             document.getElementById("brightness").style.display = "none";
             document.getElementById("by_lighting").style.display = "none";
@@ -1044,9 +1077,9 @@ function gpios(gpio_mode, save, load) {
             "&P_DS18B20=" + P_DS18B20.innerHTML +
             "&P_TOUCH_CS=" + P_TOUCH_CS.innerHTML +
             "&P_BUZZER=" + P_BUZZER.innerHTML +
-            "&P_RXD=" + P_BUZZER.innerHTML +
-            "&P_TXD=" + P_BUZZER.innerHTML +
-            "&P_LDR=" + P_BUZZER.innerHTML;
+            "&P_RXD=" + P_RXD.innerHTML +
+            "&P_TXD=" + P_TXD.innerHTML +
+            "&P_LDR=" + P_LDR.innerHTML;
     } else save = 0;
 
     xhr.open("POST", "gpios", false);
@@ -1066,21 +1099,21 @@ function hardware(save) {
         if (xhr.readyState == 4 && xhr.status == 200) {
             var arr = JSON.parse(xhr.responseText);
             if (arr['present'] == "1") {
-                document.getElementById("barTDA7313").style.display = "";
-                document.getElementById("barTDA7313radio").style.display = "";
+                document.getElementById("barTDA7313").style.display = "block";
+                document.getElementById("barTDA7313radio").style.display = "block";
                 document.getElementById("audioinput" + arr['inputnum']).checked = true;
                 if (arr['inputnum'] == "1") {
-                    document.getElementById("Computer").style.display = "";
+                    document.getElementById("Computer").style.display = "block";
                 } else {
                     document.getElementById("Computer").style.display = "none";
                 }
                 if (arr['inputnum'] == "2") {
-                    document.getElementById("Radio").style.display = "";
+                    document.getElementById("Radio").style.display = "block";
                 } else {
                     document.getElementById("Radio").style.display = "none";
                 }
                 if (arr['inputnum'] == "3") {
-                    document.getElementById("Bluetooth").style.display = "";
+                    document.getElementById("Bluetooth").style.display = "block";
                 } else {
                     document.getElementById("Bluetooth").style.display = "none";
                 }
@@ -1117,7 +1150,7 @@ function hardware(save) {
                 else
                     document.getElementById('mute').removeAttribute("checked");
             } else {
-                document.getElementById("Radio").style.display = "";
+                document.getElementById("Radio").style.display = "block";
                 document.getElementById("audioinput2").checked = true;
             }
         }
@@ -1369,7 +1402,7 @@ function abortStation() {
 }
 
 function eraseStation() {
-    document.getElementById('editStationDiv').style.display = "";
+    document.getElementById('editStationDiv').style.display = "block";
     document.getElementById('add_url').value = "";
     document.getElementById('add_name').value = "";
     document.getElementById('add_path').value = "";
@@ -1393,7 +1426,7 @@ function editInstantStation() {
     id--;
 
     if (id <= 254) {
-        document.getElementById('editStationDiv').style.display = "";
+        document.getElementById('editStationDiv').style.display = "block";
         document.getElementById('add_slot').value = id;
 
         document.getElementById('ovol').value = '0';
@@ -1405,7 +1438,7 @@ function editInstantStation() {
 
 function editStation(id) {
     var arr;
-    document.getElementById('editStationDiv').style.display = "";
+    document.getElementById('editStationDiv').style.display = "block";
 
     function cpedit(arr) {
 

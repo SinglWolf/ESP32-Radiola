@@ -24,6 +24,11 @@ typedef struct {
 	uint8_t trans_time[8];
 } ntp_t;
 
+#define _NTP0 "0.ru.pool.ntp.org"
+#define _NTP1 "1.ru.pool.ntp.org"
+#define _NTP2 "2.ru.pool.ntp.org"
+#define _NTP3 "3.ru.pool.ntp.org"
+
 //void ntpTask(void *pvParams);
 
 // print locale date time in ISO-8601 local time

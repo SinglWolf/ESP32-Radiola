@@ -93,7 +93,6 @@ sys.i2s(\"x\"): Change and record the I2S clock speed of the vs1053 GPIO5 MCLK o
 sys.erase: erase all recorded configuration and stations.\n\
 sys.heap: show the ram heap size\n\
 sys.update: start an OTA (On The Air) update of the software\n\
-sys.prerelease: start an OTA of the next release in alpha stage\n\
 sys.boot: reboot.\n\
 sys.patch and sys.patch(\"x\"): Display and Change the status of the vs1053 patch at power on.\n\
  0 = Patch will not be loaded, 1 or up = Patch will be loaded (default) at power On \n\
@@ -1025,28 +1024,6 @@ uint32_t getLcdOut()
 	return lcd_out + increm;
 }
 
-// display or change the tzo for ntp
-void tzoffset(char *s)
-{
-	char *t = strstr(s, parslashquote);
-	if (t == NULL)
-	{
-		kprintf("##SYS.TZO#: %d\n", g_device->tzoffset);
-		return;
-	}
-	char *t_end = strstr(t, parquoteslash);
-	if (t_end == NULL)
-	{
-		kprintf(stritCMDERROR);
-		return;
-	}
-	uint8_t value = atoi(t + 2);
-	g_device->tzoffset = value;
-	saveDeviceSettings(g_device);
-	tzoffset((char *)"");
-	addonDt(); // for addon, force the dt fetch
-}
-
 // print the heapsize
 void heapSize()
 {
@@ -1273,16 +1250,12 @@ void checkCommand(int size, char *s)
 		}
 		else if (strcmp(tmp + 4, "update") == 0)
 			update_firmware((char *)"ESP32Radiola");
-		else if (strcmp(tmp + 4, "prerelease") == 0)
-			update_firmware((char *)"ESP32Radiolaprv");
 		else if (startsWith("patch", tmp + 4))
 			syspatch(tmp);
 		else if (strcmp(tmp + 4, "date") == 0)
 			ntp_print_time();
 		else if (strncmp(tmp + 4, "vers", 4) == 0)
 			kprintf("Release: %s, Revision: %s, ESP32Radiola\n", RELEASE, REVISION);
-		else if (startsWith("tzo", tmp + 4))
-			tzoffset(tmp);
 		else if (strcmp(tmp + 4, "logn") == 0)
 			setLogLevel(ESP_LOG_NONE);
 		else if (strcmp(tmp + 4, "loge") == 0)

@@ -22,6 +22,7 @@
 #include "addon.h"
 #include "custom.h"
 #include "gpios.h"
+#include "ntp.h"
 
 #include "lwip/opt.h"
 #include "lwip/arch.h"
@@ -75,8 +76,7 @@ const char strsWIFI[] = {"HTTP/1.1 200 OK\r\nContent-Type:application/json\r\nCo
 \"dhcp\":\"%s\",\
 \"dhcp2\":\"%s\",\
 \"mac\":\"%s\",\
-\"host\":\"%s\",\
-\"tzo\":\"%s\"\
+\"host\":\"%s\"\
 }"\
 };
 const char strsGSTAT[] = {"HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: %d\r\n\r\n{\
@@ -141,15 +141,21 @@ const char GPIOS[] = {"HTTP/1.1 200 OK\r\nContent-Type:application/json\r\nConte
 const char DEVOPTIONS[] = {"HTTP/1.1 200 OK\r\nContent-Type:application/json\r\nContent-Length:%d\r\n\r\n{\
 \"O_ESPLOG\":\"%u\",\
 \"O_NTP\":\"%u\",\
+\"O_NTP0\":\"%s\",\
+\"O_NTP1\":\"%s\",\
+\"O_NTP2\":\"%s\",\
+\"O_NTP3\":\"%s\",\
+\"O_TZONE\":\"%s\",\
+\"O_TIME_FORMAT\":\"%u\",\
+\"O_LCD_ROTA\":\"%u\"\
+}"};
+/* ,\
+
 \"custom_NTP0\":\"%s\",\
 \"custom_NTP1\":\"%s\",\
 \"custom_NTP2\":\"%s\",\
 \"custom_NTP3\":\"%s\",\
-\"O_TZONE\":\"%s\",\
 \"custom_TZ\":\"%s\",\
-\"O_TIME_FORMAT\":\"%u\",\
-\"O_LCD_ROTA\":\"%u\",\
-\"O_LCD_OUT\":\"%u\",\
 \"O_LCD_BRG\":\"%u\",\
 \"begin_h\":\"%02u\",\
 \"begin_m\":\"%02u\",\
@@ -163,10 +169,7 @@ const char DEVOPTIONS[] = {"HTTP/1.1 200 OK\r\nContent-Type:application/json\r\n
 \"min_temp\":\"%02u\",\
 \"max_temp\":\"%02u\",\
 \"min_pwm\":\"%03u\",\
-\"hand_pwm\":\"%03u\",\
-}"\
-};
-
+\"hand_pwm\":\"%03u\",\ */
 static int8_t clientOvol = 0;
 
 void *inmalloc(size_t n)
@@ -1104,11 +1107,9 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 	}
 	else if (strcmp(name, "/wifi") == 0)
 	{
-
 		changed = false;
 		if (data_size > 0)
 		{
-			char tmptzo[10];
 			bool val = false;
 			char valid[5];
 			if (getSParameterFromResponse(valid, 5, "valid=", data, data_size))
@@ -1118,8 +1119,6 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 			pathParse(aua);
 			char *host = getParameterFromResponse("host=", data, data_size);
 			pathParse(host);
-			char *tzo = getParameterFromResponse("tzo=", data, data_size);
-			pathParse(tzo);
 
 			//			ESP_LOGV(TAG,"wifi received  valid:%s,val:%d, ssid:%s, pasw:%s, aip:%s, amsk:%s, agw:%s, adhcp:%s, aua:%s",valid,val,ssid,pasw,aip,amsk,agw,adhcp,aua);
 			if (val)
@@ -1226,30 +1225,6 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 				infree(host);
 			}
 
-			if (tzo == NULL)
-			{
-				tzo = inmalloc(10);
-				sprintf(tmptzo, "%d", g_device->tzoffset);
-				strcpy(tzo, tmptzo);
-			}
-			else if (strlen(tzo) == 0)
-			{
-				free(tzo);
-				tzo = inmalloc(10);
-				strcpy(tzo, "0");
-			}
-
-			if (strlen(tzo) > 0)
-			{
-				if (strcmp(tzo, "undefined") != 0)
-				{
-					g_device->tzoffset = atoi(tzo);
-					addonDt();
-					changed = true;
-				}
-			}
-			infree(tzo);
-
 			if (changed)
 			{
 				saveDeviceSettings(g_device);
@@ -1261,14 +1236,13 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 			char tmpip2[16], tmpmsk2[16], tmpgw2[16];
 			esp_wifi_get_mac(WIFI_IF_STA, macaddr);
 			int json_length;
-			json_length = 95 + 39 + 19 +
+			json_length = 95 + 39 + 10 +
 						  strlen(g_device->ssid1) +
 						  strlen(g_device->pass1) +
 						  strlen(g_device->ssid2) +
 						  strlen(g_device->pass2) +
 						  strlen(g_device->ua) +
 						  strlen(g_device->hostname) +
-						  sprintf(tmptzo, "%d", g_device->tzoffset) +
 						  sprintf(tmpip, "%u.%u.%u.%u", g_device->ipAddr1[0], g_device->ipAddr1[1], g_device->ipAddr1[2], g_device->ipAddr1[3]) +
 						  sprintf(tmpmsk, "%u.%u.%u.%u", g_device->mask1[0], g_device->mask1[1], g_device->mask1[2], g_device->mask1[3]) +
 						  sprintf(tmpgw, "%u.%u.%u.%u", g_device->gate1[0], g_device->gate1[1], g_device->gate1[2], g_device->gate1[3]) +
@@ -1290,8 +1264,8 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 			{
 				sprintf(buf, strsWIFI,
 						json_length,
-						g_device->ssid1, g_device->pass1, g_device->ssid2, g_device->pass2, tmpip, tmpmsk, tmpgw, tmpip2, tmpmsk2, tmpgw2, g_device->ua, adhcp, adhcp2, macstr, g_device->hostname, tmptzo);
-				ESP_LOGV(TAG, "wifi Buf len:%u\n%s", strlen(buf), buf);
+						g_device->ssid1, g_device->pass1, g_device->ssid2, g_device->pass2, tmpip, tmpmsk, tmpgw, tmpip2, tmpmsk2, tmpgw2, g_device->ua, adhcp, adhcp2, macstr, g_device->hostname);
+				ESP_LOGD(TAG, "TEST WIFI:\nContent-Length: %d\nBuf len:%u\n%s", json_length, strlen(buf), buf);
 				write(conn, buf, strlen(buf));
 				infree(buf);
 			}
@@ -1309,6 +1283,146 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 					saveDeviceSettings(g_device);
 				}
 				ESP_LOGD(TAG, "currentAP: %u", g_device->current_ap);
+				copyDeviceSettings(); // save the current one
+				fflush(stdout);
+				vTaskDelay(100);
+				esp_restart();
+			}
+			return;
+		}
+	}
+	else if (strcmp(name, "/devoptions") == 0)
+	{
+		changed = false;
+		if (data_size > 0)
+		{
+			esp_log_level_t log_level = g_device->trace_level;
+			uint8_t O_NTP = g_device->ntp_mode;
+			uint8_t O_TIME_FORMAT;
+			uint8_t O_LCD_ROTA;
+			//uint8_t begin_h, begin_m, end_h, end_m;
+			option_get_lcd_rotat(&O_LCD_ROTA);
+			option_get_ddmm(&O_TIME_FORMAT);
+			char *O_NTP0 = _NTP0, *O_NTP1 = _NTP1, *O_NTP2 = _NTP2, *O_NTP3 = _NTP3;
+			if (O_NTP == 1)
+			{
+				O_NTP0 = g_device->ntp_server[0];
+				O_NTP1 = g_device->ntp_server[1];
+				O_NTP2 = g_device->ntp_server[2];
+				O_NTP3 = g_device->ntp_server[3];
+			}
+			char *O_TZONE = g_device->tzone;
+			bool reboot = false;
+			char val_1[1];
+			if (getSParameterFromResponse(val_1, 1, "save=", data, data_size))
+				if (strcmp(val_1, "1") == 0)
+					changed = true;
+			if (changed)
+			{
+				if (getSParameterFromResponse(val_1, 1, "O_ESPLOG=", data, data_size))
+				{
+					log_level = atoi(val_1);
+					if (g_device->trace_level != log_level)
+						setLogLevel(log_level);
+				}
+				if (getSParameterFromResponse(val_1, 1, "O_NTP=", data, data_size))
+				{
+					O_NTP = atoi(val_1);
+					if (g_device->ntp_mode != O_NTP)
+						g_device->ntp_mode = O_NTP;
+				}
+				if (O_NTP == 1)
+				{
+					O_NTP0 = getParameterFromResponse("O_NTP0=", data, data_size);
+					pathParse(O_NTP0);
+					strcpy(g_device->ntp_server[0], O_NTP0);
+					O_NTP1 = getParameterFromResponse("O_NTP1=", data, data_size);
+					pathParse(O_NTP1);
+					strcpy(g_device->ntp_server[1], O_NTP1);
+					O_NTP2 = getParameterFromResponse("O_NTP2=", data, data_size);
+					pathParse(O_NTP2);
+					strcpy(g_device->ntp_server[2], O_NTP2);
+					O_NTP3 = getParameterFromResponse("O_NTP3=", data, data_size);
+					pathParse(O_NTP3);
+					strcpy(g_device->ntp_server[3], O_NTP3);
+					reboot = true;
+				}
+				O_TZONE = getParameterFromResponse("O_TZONE=", data, data_size);
+				pathParse(O_TZONE);
+				if (O_TZONE != g_device->tzone)
+				{
+					strcpy(g_device->tzone, O_TZONE);
+					//addonDt();
+					//reboot = true;
+				}
+
+				if (getSParameterFromResponse(val_1, 1, "O_TIME_FORMAT=", data, data_size))
+				{
+					if (val_1 == 0)
+						g_device->options32 &= NT_DDMM;
+					else
+						g_device->options32 |= T_DDMM;
+					reboot = true;
+				}
+				if (getSParameterFromResponse(val_1, 1, "O_LCD_ROTA=", data, data_size))
+				{
+					if (val_1 == 0)
+						g_device->options32 &= NT_ROTAT;
+					else
+						g_device->options32 |= T_ROTAT;
+					reboot = true;
+				}
+				saveDeviceSettings(g_device);
+
+				// infree(ssid);
+				// infree(pasw);
+				// infree(ssid2);
+				// infree(pasw2);
+				// infree(aip);
+				// infree(amsk);
+				// infree(agw);
+				// infree(aip2);
+				// infree(amsk2);
+				// infree(agw2);
+			}
+			int json_length = 122 +
+							  1 + //log_level
+							  1 + //   O_NTP
+							  strlen(O_NTP0) +
+							  strlen(O_NTP1) +
+							  strlen(O_NTP2) +
+							  strlen(O_NTP3) +
+							  strlen(O_TZONE) +
+							  1 + //O_TIME_FORMAT
+							  1;  //O_LCD_ROTA
+
+			char *buf = inmalloc(json_length + 95 + 39 + 10);
+			if (buf == NULL)
+			{
+				ESP_LOGE(TAG, " %s malloc fails", "post devoptions");
+				respKo(conn);
+				//return;
+			}
+			else
+			{
+				sprintf(buf, DEVOPTIONS,
+						json_length,
+						log_level,
+						O_NTP,
+						O_NTP0,
+						O_NTP1,
+						O_NTP2,
+						O_NTP3,
+						O_TZONE,
+						O_TIME_FORMAT,
+						O_LCD_ROTA);
+				ESP_LOGD(TAG, "TEST devoptions\nBuf len:%u\n%s", strlen(buf), buf);
+				write(conn, buf, strlen(buf));
+				infree(buf);
+			}
+
+			if (reboot)
+			{
 				copyDeviceSettings(); // save the current one
 				fflush(stdout);
 				vTaskDelay(100);
@@ -1458,7 +1572,7 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 					(uint8_t)buzzer,
 					(uint8_t)rxd, (uint8_t)txd,
 					(uint8_t)ldr);
-			ESP_LOGE(TAG, "Test GPIOS\nSave: %d\nERR: %X\ngpio_mode: %d\nBuf len: %u\nBuf: %s\nData: %s\nData size: %d\n\n", changed, err, gpio_mode, strlen(buf), buf, data, data_size);
+			// ESP_LOGE(TAG, "Test GPIOS\nSave: %d\nERR: %X\ngpio_mode: %d\nBuf len: %u\nBuf: %s\nData: %s\nData size: %d\n\n", changed, err, gpio_mode, strlen(buf), buf, data, data_size);
 			write(conn, buf, strlen(buf));
 			if (changed)
 			{

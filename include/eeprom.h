@@ -35,6 +35,9 @@
 #define PASSLEN 64
 #define HOSTLEN 24
 
+#define TZONELEN 20
+#define NTP_LEN 20
+
 typedef enum backlight_mode_t {
 	NOT_ADJUSTABLE, //Нерегулируемая подсветка
 	BY_TIME,		//По времени
@@ -71,7 +74,7 @@ struct device_settings
 	uint32_t uartspeed;		 // serial baud
 	uint8_t options;		 // bit0:0 theme ligth blue, 1 Dark brown, bit1: 0 patch load  1 no patch
 	char ua[39];			 // user agent
-	int8_t tzoffset;		 //timezone offset
+	uint8_t ntp_mode;		 // ntp_mode
 	uint32_t sleepValue;
 	uint32_t wakeValue;
 	// esp32
@@ -85,9 +88,21 @@ struct device_settings
 	uint32_t tp_calx;
 	uint32_t tp_caly;
 	backlight_mode_t backlight_mode; //режим управления подсветкой
-	uint8_t backlight_level;		 //уровень подсветки при ручной регулировке
-	uint8_t backlight_day;			 //уровень дневной подсвеки
-	uint8_t backlight_night;		 //уровень ночной подсветки
+	uint8_t backlight_level,		 //общий уровень подсветки
+		day_brightness,				 //уровень дневной подсвеки
+		night_brightness,			 //уровень ночной подсветки
+		begin_h,					 //Время ночной подсветки начало, часы
+		begin_m,					 //Время ночной подсветки начало, минуты
+		end_h,						 //Время ночной подсветки конец, часы
+		end_m,						 //Время ночной подсветки конец, минуты
+		FanControl,					 //Режим управления оборотами вентилятора
+		min_temp,					 //Минимальная температура срабатывания автоматики управления оборотами
+		max_temp,					 //Максимальная температура срабатывания выключения звука
+		min_pwm,					 //Минимальный уровень оборотов вентилятора при включении питания
+		hand_pwm;					 //Уровень оборотов при ручной регулировке
+
+	char tzone[TZONELEN];
+	char ntp_server[4][NTP_LEN];
 
 } Device_Settings;
 

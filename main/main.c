@@ -66,6 +66,7 @@
 #include "addon.h"
 #include "tda7313.h"
 #include "custom.h"
+#include "ntp.h"
 
 #include "sdkconfig.h"
 
@@ -91,9 +92,7 @@ static EventGroupHandle_t wifi_event_group;
 xQueueHandle event_queue;
 
 //xSemaphoreHandle print_mux;
-static uint16_t FlashOn = 5, FlashOff = 5;
 player_t *player_config;
-static input_mode_t audio_input_num;
 static uint8_t clientIvol = 0;
 //ip
 static char localIp[20];
@@ -137,7 +136,7 @@ IRAM_ATTR void msCallback(void *pArg)
 {
 	int timer_idx = (int)pArg;
 
-	//	queue_event_t evt;
+	// queue_event_t evt;
 	TIMERG1.hw_timer[timer_idx].update = 1;
 	TIMERG1.int_clr_timers.t0 = 1; //isr ack
 	if (divide)
@@ -280,7 +279,6 @@ uint32_t checkUart(uint32_t speed)
  *******************************************************************************/
 static void init_hardware()
 {
-	InitPWM();
 	// Настройка тахометра
 	tach_init();
 	// Настройка термометра
@@ -289,7 +287,7 @@ static void init_hardware()
 	if (tda7313_init() == ESP_OK)
 	{
 		ESP_ERROR_CHECK(tda7313_init_nvs(false));
-		ESP_ERROR_CHECK(tda7313_set_input(audio_input_num));
+		ESP_ERROR_CHECK(tda7313_set_input(g_device->audio_input_num));
 	}
 	if (VS1053_HW_init()) // init spi
 	{
@@ -306,7 +304,6 @@ static esp_err_t event_handler(void *ctx, system_event_t *event)
 	switch (event->event_id)
 	{
 	case SYSTEM_EVENT_STA_START:
-		FlashOn = FlashOff = 100;
 		esp_wifi_connect();
 		break;
 
@@ -324,15 +321,12 @@ static esp_err_t event_handler(void *ctx, system_event_t *event)
 		break;
 
 	case SYSTEM_EVENT_STA_GOT_IP:
-		FlashOn = 5;
-		FlashOff = 395;
 		xEventGroupSetBits(wifi_event, CONNECTED_BIT);
 		break;
 
 	case SYSTEM_EVENT_STA_DISCONNECTED:
 		/* This is a workaround as ESP32 WiFi libs don't currently
            auto-reassociate. */
-		FlashOn = FlashOff = 100;
 		xEventGroupClearBits(wifi_event, CONNECTED_AP);
 		xEventGroupClearBits(wifi_event, CONNECTED_BIT);
 		ESP_LOGE(TAG, "Wifi Disconnected.");
@@ -349,7 +343,7 @@ static esp_err_t event_handler(void *ctx, system_event_t *event)
 			if (wifiInitDone) // a completed init done
 			{
 				ESP_LOGE(TAG, "Connection tried again");
-				//				clientDisconnect("Wifi Disconnected.");
+				// clientDisconnect("Wifi Disconnected.");
 				clientSilentDisconnect();
 				vTaskDelay(100);
 				clientSaveOneHeader("Wifi Disconnected.", 18, METANAME);
@@ -366,8 +360,6 @@ static esp_err_t event_handler(void *ctx, system_event_t *event)
 		break;
 
 	case SYSTEM_EVENT_AP_START:
-		FlashOn = 5;
-		FlashOff = 395;
 		xEventGroupSetBits(wifi_event, CONNECTED_AP);
 		xEventGroupSetBits(wifi_event, CONNECTED_BIT);
 		wifiInitDone = true;
@@ -403,7 +395,7 @@ static void start_wifi()
 {
 	ESP_LOGI(TAG, "starting wifi");
 	setAutoWifi();
-	//	wifi_mode_t mode;
+	// wifi_mode_t mode;
 	char ssid[SSIDLEN];
 	char pass[PASSLEN];
 
@@ -474,7 +466,7 @@ static void start_wifi()
 			vTaskDelay(1);
 			ESP_ERROR_CHECK(esp_wifi_start());
 
-			audio_input_num = COMPUTER;
+			g_device->audio_input_num = COMPUTER;
 		}
 		else
 		{
@@ -492,10 +484,10 @@ static void start_wifi()
 			{
 				esp_wifi_disconnect();
 				ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_config));
-				//				ESP_LOGI(TAG, "connecting %s, %d, %s, %d",ssid,strlen((char*)(wifi_config.sta.ssid)),pass,strlen((char*)(wifi_config.sta.password)));
+				// ESP_LOGI(TAG, "connecting %s, %d, %s, %d",ssid,strlen((char*)(wifi_config.sta.ssid)),pass,strlen((char*)(wifi_config.sta.password)));
 				ESP_LOGI(TAG, "connecting %s", ssid);
 				ESP_ERROR_CHECK(esp_wifi_start());
-				//			esp_wifi_connect();
+				// 	esp_wifi_connect();
 			}
 			else
 			{
@@ -531,7 +523,7 @@ static void start_wifi()
 
 void start_network()
 {
-	//	struct device_settings *g_device;
+	// struct device_settings *g_device;
 	tcpip_adapter_ip_info_t info;
 	wifi_mode_t mode;
 	ip4_addr_t ipAddr;
@@ -570,10 +562,10 @@ void start_network()
 		xEventGroupWaitBits(wifi_event_group, CONNECTED_BIT, false, true, 3000);
 		IPADDR2_COPY(&info.ip, &ipAddr);
 		tcpip_adapter_set_ip_info(TCPIP_ADAPTER_IF_AP, &info);
-		//			g_device->dhcpEn1 = g_device->dhcpEn2 = 1;
-		//			IPADDR2_COPY(&g_device->mask1, &mask);
-		//			IPADDR2_COPY(&g_device->mask2, &mask);
-		//			saveDeviceSettings(g_device);
+		// 	g_device->dhcpEn1 = g_device->dhcpEn2 = 1;
+		// 	IPADDR2_COPY(&g_device->mask1, &mask);
+		// 	IPADDR2_COPY(&g_device->mask2, &mask);
+		// 	saveDeviceSettings(g_device);
 		strcpy(localIp, ip4addr_ntoa(&info.ip));
 		printf("IP: %s\n\n", ip4addr_ntoa(&info.ip));
 	}
@@ -616,7 +608,7 @@ void start_network()
 				tcpip_adapter_get_ip_info(TCPIP_ADAPTER_IF_STA, &ip_info);
 		}
 		ip_addr_t ipdns0 = dns_getserver(0);
-		//		ip_addr_t ipdns1 = dns_getserver(1);
+		// ip_addr_t ipdns1 = dns_getserver(1);
 		printf("\nDNS: %s  \n", ip4addr_ntoa((struct ip4_addr *)&ipdns0));
 		strcpy(localIp, ip4addr_ntoa(&ip_info.ip));
 		printf("IP: %s\n\n", ip4addr_ntoa(&ip_info.ip));
@@ -657,8 +649,8 @@ void timerTask(void *p)
 	while (1)
 	{
 		// read and treat the timer queue events
-		//		int nb = uxQueueMessagesWaiting(event_queue);
-		//		if (nb >29) printf(" %d\n",nb);
+		// int nb = uxQueueMessagesWaiting(event_queue);
+		// if (nb >29) printf(" %d\n",nb);
 		while (xQueueReceive(event_queue, &evt, 0))
 		{
 			switch (evt.type)
@@ -669,11 +661,11 @@ void timerTask(void *p)
 			case TIMER_WAKE:
 				clientConnect(); // start the player
 				break;
-			//					case TIMER_1MS: // 1 ms
-			//					  ctimeVol++; // to save volume
-			//					break;
-			//					case TIMER_1mS:  //1µs
-			//					break;
+			// case TIMER_1MS: // 1 ms
+			// ctimeVol++; // to save volume
+			// break;
+			// case TIMER_1mS:  //1µs
+			// break;
 			default:
 				break;
 			}
@@ -685,13 +677,13 @@ void timerTask(void *p)
 			{
 				g_device->vol = getIvol();
 				saveDeviceSettingsVolume(g_device);
-				//				ESP_LOGD("timerTask",striWATERMARK,uxTaskGetStackHighWaterMark( NULL ),xPortGetFreeHeapSize( ));
+				// ESP_LOGD("timerTask",striWATERMARK,uxTaskGetStackHighWaterMark( NULL ),xPortGetFreeHeapSize( ));
 			}
 			ctimeVol = 0;
 		}
 		vTaskDelay(1);
 	}
-	//	printf("t0 end\n");
+	// printf("t0 end\n");
 
 	vTaskDelete(NULL); // stop the task (never reached)
 }
@@ -702,7 +694,7 @@ void uartInterfaceTask(void *pvParameters)
 	int d;
 	uint8_t c;
 	int t;
-	//	struct device_settings *device;
+	// struct device_settings *device;
 	uint32_t uspeed;
 
 	uspeed = g_device->uartspeed;
@@ -711,7 +703,7 @@ void uartInterfaceTask(void *pvParameters)
 		.data_bits = UART_DATA_8_BITS,
 		.parity = UART_PARITY_DISABLE,
 		.stop_bits = UART_STOP_BITS_1,
-		.flow_ctrl = UART_HW_FLOWCTRL_DISABLE, //UART_HW_FLOWCTRL_CTS_RTS,
+		.flow_ctrl = UART_HW_FLOWCTRL_DISABLE, // UART_HW_FLOWCTRL_CTS_RTS,
 		.rx_flow_ctrl_thresh = 0,
 	};
 	uart_param_config(UART_NUM_0, &uart_config0);
@@ -737,8 +729,8 @@ void uartInterfaceTask(void *pvParameters)
 				if (t == sizeof(tmp) - 1)
 					t = 0;
 			}
-			//else printf("uart d: %d, T= %d\n",d,t);
-			//switchCommand() ;  // hardware panel of command
+			// else printf("uart d: %d, T= %d\n",d,t);
+			// switchCommand() ;  // hardware panel of command
 		}
 		checkCommand(t, tmp);
 
@@ -787,7 +779,7 @@ void autoPlay()
 
 void app_main()
 {
-	//Затычка для вентилятора
+	// Затычка для вентилятора
 	gpio_pad_select_gpio(PIN_NUM_PWM);
 	gpio_set_direction(PIN_NUM_PWM, GPIO_MODE_OUTPUT);
 	gpio_set_level(PIN_NUM_PWM, LOW);
@@ -836,23 +828,30 @@ void app_main()
 			free(g_device);
 			eeEraseAll();
 			g_device = getDeviceSettings();
-			g_device->cleared = 0xAABB;				 //marker init done
+			g_device->cleared = 0xAABB;				 // marker init done
 			g_device->gpio_mode = 0;				 // Режим считывания GPIO 0 - по-умолчанию, 1 - из NVS
 			g_device->uartspeed = 115200;			 // default
 			g_device->audio_input_num = COMPUTER;	// default
 			g_device->options |= T_PATCH;			 // 0 = load patch
-			g_device->trace_level = ESP_LOG_VERBOSE; //default
-			g_device->vol = 100;					 //default
-			g_device->tzoffset = 5;
+			g_device->trace_level = ESP_LOG_VERBOSE; // default
+			g_device->vol = 100;					 // default
+			g_device->ntp_mode = 0;					 // Режим  использования серверов NTP 0 - по-умолчанию, 1 - пользовательские
 			g_device->options32 |= T_ROTAT;
 			g_device->options32 |= T_DDMM;
 			g_device->current_ap = STA1;
-			strcpy(g_device->ssid1, "OpenWrt\0");
-			strcpy(g_device->pass1, "1234567890\0");
+			strcpy(g_device->ssid1, "OpenWrt");
+			strcpy(g_device->pass1, "1234567890");
 			g_device->dhcpEn1 = 1;
 			g_device->lcd_out = 0;
 			g_device->backlight_mode = NOT_ADJUSTABLE; // по-умолчанию подсветка нерегулируемая
 			g_device->backlight_level = 255;		   // по-умолчанию подсветка максимальная
+			strcpy(g_device->tzone, "YEKT-5");		   // Часовой пояс Екатеринбурга
+			strcpy(g_device->ntp_server[0], _NTP0);		   // 0
+			strcpy(g_device->ntp_server[1], _NTP1);		   // 1
+			strcpy(g_device->ntp_server[2], _NTP2);		   // 2
+			strcpy(g_device->ntp_server[3], _NTP3);		   // 3
+
+
 			saveDeviceSettings(g_device);
 		}
 		else
@@ -860,17 +859,16 @@ void app_main()
 	}
 	copyDeviceSettings(); // copy in the safe partion
 
-	//	g_device->gpio_mode = 0;
-
+	// g_device->gpio_mode = 0;
+	//
+	InitPWM();
 	//SPI init for the vs1053 and lcd if spi.
 	VS1053_spi_init();
 	//
 	g_device->audio_input_num = COMPUTER;
-	audio_input_num = g_device->audio_input_num;
+
 	//audio input number COMPUTER, RADIO, BLUETOOTH
-	ESP_LOGI(TAG, "audio input number %d\nOne of COMPUTER = 1, RADIO, BLUETOOTH", audio_input_num);
-	ESP_LOGD(TAG, "gpio_mode: %u", g_device->gpio_mode);
-	ESP_LOGD(TAG, "size g_device: %X", sizeof(g_device));
+	ESP_LOGI(TAG, "audio input number %d\nOne of COMPUTER = 1, RADIO, BLUETOOTH", g_device->audio_input_num);
 
 	// init softwares
 	telnetinit();

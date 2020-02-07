@@ -21,6 +21,7 @@ struct servFile
 #include "../../webpage/.style"
 #include "../../webpage/.style1"
 #include "../../webpage/.script"
+#include "../../webpage/.tabbis"
 #include "../../webpage/.logo"
 #include "../../webpage/.favicon"
 
@@ -46,13 +47,20 @@ const struct servFile scriptFile = {
 	(const char*)script_js,
 	(struct servFile*)&logoFile
 };
+const struct servFile scriptTabbis = {
+	"/tabbis.js",
+	"text/javascript",
+	sizeof(tabbis_js),
+	(const char*)tabbis_js,
+	(struct servFile*)&scriptFile
+};
 
 const struct servFile styleFile = {
 	"/style.css",
 	"text/css",
 	sizeof(style_css),
 	(const char*)style_css,
-	(struct servFile*)&scriptFile
+	(struct servFile*)&scriptTabbis
 };
 
 const struct servFile styleFile1 = {

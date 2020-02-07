@@ -24,11 +24,9 @@ function openwebsocket() {
             console.log("onmessage:" + event.data);
             if (arr["meta"] == "") {
                 document.getElementById('meta').innerHTML = mediacentre;
-                setMainHeight(curtab);
             }
             if (arr["meta"]) {
                 document.getElementById('meta').innerHTML = arr["meta"].replace(/\\/g, "");
-                setMainHeight(curtab);
             }
             changeTitle(document.getElementById('meta').innerHTML);
             if (arr["wsvol"]) onRangeVolChange(arr['wsvol'], false);
@@ -419,7 +417,6 @@ function full() {
         document.getElementById('ldescr').style.display = "none";
         document.getElementById('lgenre').style.display = "none";
     }
-    setMainHeight("tab-content1");
 }
 
 function icyResp(arr) {
@@ -465,7 +462,6 @@ function icyResp(arr) {
     document.getElementById('url2').href = $url;
     if (arr["meta"] == "") {
         document.getElementById('meta').innerHTML = mediacentre;
-        setMainHeight(curtab);
     }
     if (arr["meta"]) document.getElementById('meta').innerHTML = arr["meta"].replace(/\\/g, "");
     changeTitle(document.getElementById('meta').innerHTML);
@@ -474,7 +470,6 @@ function icyResp(arr) {
             document.getElementById("aplay").setAttribute("checked", "");
         else
             document.getElementById("aplay").removeAttribute("checked");
-    setMainHeight(curtab);
 }
 
 function soundResp(arr) {
@@ -761,6 +756,7 @@ function logValue(value) {
     var val = Math.round((Math.log10(255 / log) * 105.54571334));
     return val;
 }
+
 
 function onRangeVolChange($value, $local) {
     var value = logValue($value);
@@ -1105,22 +1101,7 @@ function hardware(save) {
             if (arr['present'] == "1") {
                 document.getElementById("barTDA7313").style.display = "";
                 document.getElementById("barTDA7313radio").style.display = "";
-                document.getElementById("audioinput" + arr['inputnum']).checked = true;
-                if (arr['inputnum'] == "1") {
-                    document.getElementById("Computer").style.display = "";
-                } else {
-                    document.getElementById("Computer").style.display = "none";
-                }
-                if (arr['inputnum'] == "2") {
-                    document.getElementById("Radio").style.display = "";
-                } else {
-                    document.getElementById("Radio").style.display = "none";
-                }
-                if (arr['inputnum'] == "3") {
-                    document.getElementById("Bluetooth").style.display = "";
-                } else {
-                    document.getElementById("Bluetooth").style.display = "none";
-                }
+                tabbis.onClick(1, parseInt(arr['inputnum']) - 1);
                 document.getElementById('Volume_range').value = arr["Volume"].replace(/\\/g, "");
                 onTDAchange('Volume', false);
                 document.getElementById('Treble_range').value = arr["Treble"].replace(/\\/g, "");
@@ -1155,13 +1136,13 @@ function hardware(save) {
                     document.getElementById('mute').removeAttribute("checked");
             } else {
                 document.getElementById("Radio").style.display = "";
-                document.getElementById("audioinput2").checked = true;
+                tabbis.onClick(1, 1);
             }
         }
     }
     if (document.getElementById("barTDA7313").style.display == "") {
         for (inputnum = 1; inputnum < 4; inputnum++)
-            if (document.getElementById('audioinput' + inputnum).checked) break;
+            if (document.getElementById('audioinput' + inputnum).className == "active") break;
         if (inputnum == 4) inputnum = 1;
 
         if (document.getElementById('rearON').checked) rear = 1;
@@ -1402,7 +1383,6 @@ function saveStation() {
 
 function abortStation() {
     document.getElementById('editStationDiv').style.display = "none";
-    //	setMainHeight("tab-content2");
 }
 
 function eraseStation() {
@@ -1453,7 +1433,6 @@ function editStation(id) {
         document.getElementById('add_port').value = arr["Port"];
         document.getElementById('ovol').value = arr["ovol"];
         document.getElementById('add_URL').value = "http://" + document.getElementById('add_url').value + ":" + document.getElementById('add_port').value + document.getElementById('add_path').value;
-        //			setMainHeight("tab-content2");
     }
     document.getElementById('add_slot').value = id;
     idstr = id.toString();
@@ -1547,7 +1526,6 @@ function checkhistory() {
     try {
         xhr.send(null);
     } catch (e) { ; }
-    setMainHeight(curtab);
 }
 
 function checkinfos() {
@@ -1728,7 +1706,6 @@ function stChanged() {
     stchanged = false;
     document.getElementById("stsave").disabled = true;
     promptworking("");
-    setMainHeight(curtab);
 }
 //Load the Stations table
 function loadStations() {
@@ -1821,7 +1798,6 @@ function loadStations() {
 
     old_tbody = document.getElementById("stationsTable").getElementsByTagName('tbody')[0];
     old_tbody.parentNode.replaceChild(new_tbody, old_tbody);
-    setMainHeight("tab-content2");
 }
 
 //Load the selection with all stations
@@ -1878,25 +1854,6 @@ function loadStationsList(max) {
     select.options.selectedIndex = parseInt(localStorage.getItem('selindexstore'));
 }
 
-function setMainHeight(name) {
-    intervalid = window.setTimeout(setMainHeightd, 10, name);
-}
-
-function setMainHeightd(name) {
-    var minh = window.innerHeight,
-        h = document.getElementById(name).scrollHeight + 2 * document.getElementById("HEADER").offsetHeight + 50;
-    if (h < minh) h = minh;
-    document.getElementById("MAIN").style.height = h + "px";
-    document.getElementById("MAINCONTENT").style.top = document.getElementById('HEADER').clientHeight + "px";
-}
-
-function resizeContent() {
-    if (document.getElementById("MAINCONTENT") != null) {
-        setMainHeight(curtab);
-    }
-}
-window.onresize = resizeContent;
-
 function printList() {
     var html = "<html>";
     id = 0;
@@ -1922,33 +1879,29 @@ function printList() {
 }
 
 document.addEventListener("DOMContentLoaded", function () {
-    document.getElementById("tab1").addEventListener("click", function () {
+    document.getElementById("PLAYER").addEventListener("click", function () {
         if (stchanged) stChanged();
         refresh();
-        curtab = "tab-content1";
-        setMainHeight(curtab);
+        curtab = "PLAYER";
     });
-    document.getElementById("tab2").addEventListener("click", function () {
+    document.getElementById("STATIONS").addEventListener("click", function () {
         if (stchanged) stChanged();
         loadStations( /*1*/);
-        curtab = "tab-content2";
-        intervalid = window.setTimeout(setMainHeight, 5, curtab);
+        curtab = "STATIONS";
     });
-    document.getElementById("tab3").addEventListener("click", function () {
+    document.getElementById("SOUND").addEventListener("click", function () {
         if (stchanged) stChanged();
-        curtab = "tab-content3";
+        curtab = "SOUND";
         hardware(0);
-        setMainHeight(curtab);
     });
-    document.getElementById("tab4").addEventListener("click", function () {
+    document.getElementById("SETTINGS").addEventListener("click", function () {
         if (stchanged) stChanged();
-        curtab = "tab-content4";
+        curtab = "SETTINGS";
         gpios(0, 0, 1);
         wifi(0);
         hardware(0);
         devoptions(0);
         checkversion();
-        setMainHeight(curtab);
     });
     window.addEventListener("keydown", function (event) {
         if (event.defaultPrevented) {
@@ -1983,7 +1936,7 @@ document.addEventListener("DOMContentLoaded", function () {
             }
             event.preventDefault();
         }
-        if (curtab == "tab-content2") {
+        if (curtab == "STATIONS") {
             ed = editPlaying;
             loadStations();
             editPlaying = ed;
@@ -1996,7 +1949,9 @@ document.addEventListener("DOMContentLoaded", function () {
     timeid = window.setInterval(dtime, 1000);
     if (window.location.hostname != "192.168.4.1")
         loadStationsList(maxStation);
-    else document.getElementById("tab3").click();
+    else document.getElementById("SOUND").click();
+    localStorage.removeItem("tabbis");
+    tabbis.init();
     checkwebsocket();
     promptworking("");
     refresh();
@@ -2005,6 +1960,13 @@ document.addEventListener("DOMContentLoaded", function () {
     autostart();
     atheme();
     checkversion();
-    setMainHeight(curtab);
     consoleON();
 });
+//ScrollUp
+function ScrollUp() {
+    var t, s;
+    s = document.body.scrollTop || window.pageYOffset;
+    t = setInterval(function () { if (s > 0) window.scroll(0, s -= 5); else clearInterval(t) }, 5);
+}
+//
+//

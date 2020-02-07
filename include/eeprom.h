@@ -35,6 +35,11 @@
 #define PASSLEN 64
 #define HOSTLEN 24
 
+#define _NTP0 "0.ru.pool.ntp.org"
+#define _NTP1 "1.ru.pool.ntp.org"
+#define _NTP2 "2.ru.pool.ntp.org"
+#define _NTP3 "3.ru.pool.ntp.org"
+
 #define TZONELEN 30
 #define NTP_LEN 20
 
@@ -44,6 +49,12 @@ typedef enum backlight_mode_t {
 	BY_LIGHTING,	//По уровню освещённости в помещении
 	BY_HAND			//Ручная регулировка
 } backlight_mode_t;
+
+typedef enum ir_mode_t {
+	IR_DEFAULD, // Опрос кодов по-умолчанию
+	IR_CUSTOM,		//Опрос пользовательских кодов
+	IR_TRAINING,	//Режим обучения пульта
+} ir_mode_t;
 
 struct device_settings
 {
@@ -79,6 +90,7 @@ struct device_settings
 	uint32_t wakeValue;
 	// esp32
 	input_mode_t audio_input_num; //
+	ir_mode_t ir_mode; // Режим работы ИК-пульта
 	uint8_t trace_level;
 	uint32_t lcd_out;  // timeout in seconds to switch off the lcd. 0 = no timeout
 	uint8_t options32; // bit0:0 = MMDD, 1 = DDMM  in the time display, bit1: 0= lcd without rotation  1 = lcd rotated 180

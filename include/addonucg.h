@@ -7,7 +7,14 @@
 #ifndef ADDONUCG_H_
 #define ADDONUCG_H_
 
-void setfont(int size);
+typedef enum sizefont {
+	small,
+	text,
+	middle,
+	large
+} sizefont;
+
+void setfont(sizefont size);
 void playingUcg();
 void namesetUcg(char* ici);
 void statusUcg(const char* label);
@@ -22,7 +29,7 @@ void drawNumberUcg(uint8_t mTscreen,char* irStr);
 void drawStationUcg(uint8_t mTscreen,char* snum,char* ddot);
 //void drawVolumeUcg(uint8_t mTscreen,char* aVolume);
 void drawVolumeUcg(uint8_t mTscreen);
-void drawTimeUcg(uint8_t mTscreen,unsigned timein);
+void drawTimeUcg(uint8_t mTscreen);
 void lcd_initUcg();
 void setVolumeUcg(uint16_t vol);
 void drawLinesUcg();

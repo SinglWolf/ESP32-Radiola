@@ -15,17 +15,44 @@
 #include "addon.h"
 #include "ucg_esp32_hal.h"
 #include "main.h"
-//#include <time.h>
-#include "ntp.h"
+#include <time.h>
+
 #include "esp_log.h"
 #include "logo.h"
 #include "interface.h"
 #include "eeprom.h"
-#include "addoncommon.h"
+#include "addonucg.h"
 #include "xpt2046.h"
 #include "ucg_esp32media_fonts.h"
 
 #define TAG "addonucg"
+
+#define BUFLEN 256
+#define LINES 9
+
+uint16_t y;  //Height of a line
+uint16_t yy; //Height of screen
+uint16_t x;  //Width
+uint16_t z;  // an internal offset for y
+
+//struct tm *dt;
+time_t now;
+struct tm timeinfo;
+uint16_t volume;
+
+char station[BUFLEN]; //received station
+char title[BUFLEN];   // received title
+char nameset[BUFLEN]; // the local name of the station
+
+char *lline[LINES];   // array of ptr of n lines
+uint8_t iline[LINES]; //array of index for scrolling
+uint8_t tline[LINES];
+uint8_t mline[LINES]; // mark to display
+
+char nameNum[5];		// the number of the current station
+char genre[BUFLEN / 2]; // the local name of the station
+
+int oldsec = 0;
 
 #define ucg_SetColori(a, b, c, d) ucg_SetColor(a, 0, b, c, d)
 
@@ -65,12 +92,7 @@ typedef enum Lang {
 static LANG charset = Cyrillic; // latin or other
 
 ////////////////////////////////////////
-typedef enum sizefont {
-	small,
-	text,
-	middle,
-	large
-} sizefont;
+
 void setfont(sizefont size)
 {
 	int inX = x;
@@ -584,28 +606,32 @@ void draw(int i)
 		{
 			time(&now);
 			localtime_r(&now, &timeinfo);
-			uint16_t len, xpos, yyy;
-			setfont(small);
-			char strsec[30];
-			if (getDdmm())
-				sprintf(strsec, "%02d-%02d  %02d:%02d:%02d", timeinfo.tm_mday, timeinfo.tm_mon + 1, timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
-			else
-				sprintf(strsec, "%02d-%02d  %02d:%02d:%02d", timeinfo.tm_mon + 1, timeinfo.tm_mday, timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
-			len = ucg_GetStrWidth(&ucg, strsec);
-			ucg_SetColori(&ucg, 250, 250, 255);
-			ucg_SetColor(&ucg, 1, CBLACK);
-			ucg_SetFontMode(&ucg, UCG_FONT_MODE_SOLID);
-			if (yy <= 80)
+			if (oldsec != timeinfo.tm_sec)
 			{
-				xpos = (5 * x / 8) - (len / 2);
-				yyy = yy - 10;
-				ucg_DrawString(&ucg, xpos, yyy, 0, strsec);
-			}
-			else
-			{
-				xpos = (3 * x / 4) - (len / 2);
-				yyy = yy - 10;
-				ucg_DrawString(&ucg, xpos, yyy, 0, strsec);
+				uint16_t len, xpos, yyy;
+				setfont(small);
+				char strsec[30];
+				if (getDdmm())
+					sprintf(strsec, "%02d-%02d  %02d:%02d:%02d", timeinfo.tm_mday, timeinfo.tm_mon + 1, timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
+				else
+					sprintf(strsec, "%02d-%02d  %02d:%02d:%02d", timeinfo.tm_mon + 1, timeinfo.tm_mday, timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
+				len = ucg_GetStrWidth(&ucg, strsec);
+				ucg_SetColori(&ucg, 250, 250, 255);
+				ucg_SetColor(&ucg, 1, CBLACK);
+				ucg_SetFontMode(&ucg, UCG_FONT_MODE_SOLID);
+				if (yy <= 80)
+				{
+					xpos = (5 * x / 8) - (len / 2);
+					yyy = yy - 10;
+					ucg_DrawString(&ucg, xpos, yyy, 0, strsec);
+				}
+				else
+				{
+					xpos = (3 * x / 4) - (len / 2);
+					yyy = yy - 10;
+					ucg_DrawString(&ucg, xpos, yyy, 0, strsec);
+				}
+				oldsec = timeinfo.tm_sec;
 			}
 			ucg_SetFontMode(&ucg, UCG_FONT_MODE_TRANSPARENT);
 		}
@@ -777,29 +803,29 @@ void drawVolumeUcg(uint8_t mTscreen)
 	//  screenBottomUcg();
 }
 
-static void drawSecond(unsigned timein)
+static void drawSecond()
 {
-	static unsigned insec;
-	if (insec != timein)
+	time(&now);
+	localtime_r(&now, &timeinfo);
+	if (oldsec != timeinfo.tm_sec)
 	{
-		time(&now);
-		localtime_r(&now, &timeinfo);
 		char strseco[3 + timeinfo.tm_sec];
 		uint16_t len;
 		sprintf(strseco, ":%02d", timeinfo.tm_sec);
 		setfont(text);
 		len = ucg_GetStrWidth(&ucg, "xxx");
-
+		ucg_SetColor(&ucg, 0, CBLACK);
+		ucg_DrawBox(&ucg, x - len - 8, yy - 18, x, ucg_GetFontAscent(&ucg) + 2);
 		ucg_SetColor(&ucg, 1, CBLACK);
 		ucg_SetFontMode(&ucg, UCG_FONT_MODE_SOLID);
 		ucg_SetColor(&ucg, 0, CBODY);
 		ucg_DrawString(&ucg, x - len - 8, yy - 18, 0, strseco);
 		ucg_SetFontMode(&ucg, UCG_FONT_MODE_TRANSPARENT);
-		insec = timein; //to avoid redisplay
+		oldsec = timeinfo.tm_sec;
 	}
 }
 
-void drawTimeUcg(uint8_t mTscreen, unsigned timein)
+void drawTimeUcg(uint8_t mTscreen)
 {
 	time(&now);
 	localtime_r(&now, &timeinfo);
@@ -840,7 +866,7 @@ void drawTimeUcg(uint8_t mTscreen, unsigned timein)
 		break;
 	default:;
 	}
-	drawSecond(timein);
+	drawSecond();
 	;
 }
 

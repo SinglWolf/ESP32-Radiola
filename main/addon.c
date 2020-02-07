@@ -22,7 +22,6 @@
 #include "custom.h"
 #include "ucg_esp32_hal.h"
 #include <time.h>
-#include "ntp.h"
 
 #include "eeprom.h"
 #include "addonucg.h"
@@ -61,7 +60,6 @@ static uint16_t volume;
 static int16_t futurNum = 0; // the number of the wanted station
 
 static unsigned timerScreen = 0;
-static unsigned timerScroll = 0;
 static unsigned timerLcdOut = 0;
 static unsigned timer1s = 0;
 
@@ -73,6 +71,7 @@ static bool state = false; // start stop on Ok key
 
 static int16_t currentValue = 0;
 static bool dvolume = true; // display volume screen
+static uint32_t ircode;
 
 // custom ir code init from hardware nvs
 typedef enum {
@@ -93,9 +92,30 @@ typedef enum {
 	KEY_9,
 	KEY_STAR,
 	KEY_DIESE,
-	KEY_INFO,
 	KEY_MAX
 } customKey_t;
+
+// default ir codes
+typedef enum {
+	DK_UP = 0xFF0018,
+	DK_LEFT = 0xFF0008,
+	DK_OK = 0xFF001C,
+	DK_RIGHT = 0xFF005A,
+	DK_DOWN = 0xFF0052,
+	DK_0 = 0xFF0019,
+	DK_1 = 0xFF0045,
+	DK_2 = 0xFF0046,
+	DK_3 = 0xFF0047,
+	DK_4 = 0xFF0044,
+	DK_5 = 0xFF0040,
+	DK_6 = 0xFF0043,
+	DK_7 = 0xFF0007,
+	DK_8 = 0xFF0015,
+	DK_9 = 0xFF0009,
+	DK_STAR = 0xFF0016,
+	DK_DIESE = 0xFF000D,
+	DKEY_MAX = 17
+} defaultKey_t;
 
 static uint32_t customKey[KEY_MAX][2];
 static bool isCustomKey = false;
@@ -372,7 +392,6 @@ void (*serviceAddon)() = NULL;
 IRAM_ATTR void ServiceAddon(void)
 {
 	timer1s++;
-	timerScroll++;
 	if (timer1s >= 1000)
 	{
 		// Time compute
@@ -521,7 +540,7 @@ void drawVolume()
 
 void drawTime()
 {
-	drawTimeUcg(mTscreen, timein);
+	drawTimeUcg(mTscreen);
 }
 
 ////////////////////
@@ -732,6 +751,7 @@ bool irCustom(uint32_t evtir, bool repeat)
 		case KEY_OK:
 			if (!repeat)
 				stationOk();
+			// stopStation();
 			break;
 		case KEY_RIGHT:
 			setRelVolume(+5);
@@ -785,10 +805,7 @@ bool irCustom(uint32_t evtir, bool repeat)
 			break;
 		case KEY_DIESE:
 			if (!repeat)
-				stopStation();
-			break;
-		case KEY_INFO:
-			if (!repeat)
+				// stopStation();
 				toggletime();
 			break;
 		default:;
@@ -799,6 +816,10 @@ bool irCustom(uint32_t evtir, bool repeat)
 	return false;
 }
 
+uint32_t get_ir_code()
+{
+	return ircode;
+}
 //-----------------------
 // Compute the ir code
 //----------------------
@@ -811,143 +832,113 @@ void irLoop()
 	{
 		wakeLcd();
 		uint32_t evtir = ((evt.addr) << 8) | (evt.cmd & 0xFF);
-		ESP_LOGI(TAG, "IR event: Channel: %x, ADDR: %x, CMD: %x = %X, REPEAT: %d", evt.channel, evt.addr, evt.cmd, evtir, evt.repeat_flag);
 
-		if (isCustomKey)
+		if (isCustomKey && (g_device->ir_mode == IR_CUSTOM))
 		{
 			if (irCustom(evtir, evt.repeat_flag))
 				continue;
 		}
-		else
+		else if (g_device->ir_mode == IR_DEFAULD)
 		{ // no predefined keys
 			switch (evtir)
 			{
-			case 0xFB0400:
-			case 0xDF2047:
-			case 0xDF2002:
-			case 0xFF0046:
-			case 0xF70812: /*(" UP");*/
+			/*("UP");*/
+			case DK_UP:
 				evtStation(+1);
 				break;
-			case 0xFB0403:
-			case 0xDF2049:
-			case 0xDF2041:
-			case 0xFF0044:
-			case 0xF70842:
-			case 0xF70815: /*(" LEFT");*/
+			/*("LEFT");*/
+			case DK_LEFT:
 				setRelVolume(-5);
 				break;
-			case 0xFB0444:
-			case 0xDF204A:
-			case 0xFF0040:
-			case 0xF7081E: /*(" OK");*/
+			/*("OK");*/
+			case DK_OK:
 				if (!evt.repeat_flag)
+					// stopStation();
 					stationOk();
+
 				break;
-			case 0xFB0402:
-			case 0xDF204B:
-			case 0xDF2003:
-			case 0xFF0043:
-			case 0xF70841:
-			case 0xF70814: /*(" RIGHT");*/
+			/*("RIGHT");*/
+			case DK_RIGHT:
 				setRelVolume(+5);
 				break;
-			case 0xFB0401:
-			case 0xDF204D:
-			case 0xDF2009:
-			case 0xFF0015:
-			case 0xF70813: /*(" DOWN");*/
+			/*("DOWN");*/
+			case DK_DOWN:
 				evtStation(-1);
 				break;
-			case 0xFB0411:
-			case 0xDF2000:
-			case 0xFF0016:
-			case 0xF70801: /*(" 1");*/
+			/*("1");*/
+			case DK_1:
 				if (!evt.repeat_flag)
 					nbStation('1');
 				break;
-			case 0xFB0412:
-			case 0xDF2010:
-			case 0xFF0019:
-			case 0xF70802: /*(" 2");*/
+			/*("2");*/
+			case DK_2:
 				if (!evt.repeat_flag)
 					nbStation('2');
 				break;
-			case 0xFB0413:
-			case 0xDF2011:
-			case 0xFF000D:
-			case 0xF70803: /*(" 3");*/
+			/*("3");*/
+			case DK_3:
 				if (!evt.repeat_flag)
 					nbStation('3');
 				break;
-			case 0xFB0414:
-			case 0xDF2013:
-			case 0xFF000C:
-			case 0xF70804: /*(" 4");*/
+			/*("4");*/
+			case DK_4:
 				if (!evt.repeat_flag)
 					nbStation('4');
 				break;
-			case 0xFB0415:
-			case 0xDF2014:
-			case 0xFF0018:
-			case 0xF70805: /*(" 5");*/
+			/*("5");*/
+			case DK_5:
 				if (!evt.repeat_flag)
 					nbStation('5');
 				break;
-			case 0xFB0416:
-			case 0xDF2015:
-			case 0xFF005E:
-			case 0xF70806: /*(" 6");*/
+			/*("6");*/
+			case DK_6:
 				if (!evt.repeat_flag)
 					nbStation('6');
 				break;
-			case 0xFB0417:
-			case 0xDF2017:
-			case 0xFF0008:
-			case 0xF70807: /*(" 7");*/
+			/*("7");*/
+			case DK_7:
 				if (!evt.repeat_flag)
 					nbStation('7');
 				break;
-			case 0xFB0418:
-			case 0xDF2018:
-			case 0xFF001C:
-			case 0xF70808: /*(" 8");*/
+			/*("8");*/
+			case DK_8:
 				if (!evt.repeat_flag)
 					nbStation('8');
 				break;
-			case 0xFB0419:
-			case 0xDF2019:
-			case 0xFF005A:
-			case 0xF70809: /*(" 9");*/
+			/*("9");*/
+			case DK_9:
 				if (!evt.repeat_flag)
 					nbStation('9');
 				break;
-			case 0xDF2045:
-			case 0xFF0042:
-			case 0xF70817: /*(" *");*/
+			/*("*");*/
+			case DK_STAR:
 				if (!evt.repeat_flag)
 					playStationInt(futurNum);
 				break;
-			case 0xFB0410:
-			case 0xDF201B:
-			case 0xFF0052:
-			case 0xF70800: /*(" 0");*/
+			/*("0");*/
+			case DK_0:
 				if (!evt.repeat_flag)
 					nbStation('0');
 				break;
-			case 0xDF205B:
-			case 0xFF004A:
-			case 0xF7081D: /*(" #");*/
+			/*("#");*/
+			case DK_DIESE:
 				if (!evt.repeat_flag)
-					stopStation();
-				break;
-			case 0xDF2007: /*(" Info")*/
-				if (!evt.repeat_flag)
+					// stopStation();
 					toggletime();
 				break;
 			default:;
 				/*SERIALX.println(F(" other button   "));*/
 			} // End Case
+		}
+		else if (g_device->ir_mode == IR_TRAINING)
+		{
+			beep(30);
+			ESP_LOGI(TAG, "IR training: Channel: %x, ADDR: %x, CMD: %x = %X, REPEAT: %d", evt.channel, evt.addr, evt.cmd, evtir, evt.repeat_flag);
+			ircode = evtir;
+		}
+		else
+		{
+			ircode = 0;
 		}
 	}
 }
@@ -989,7 +980,6 @@ void customKeyInit()
 		"K_9",
 		"K_STAR",
 		"K_DIESE",
-		"K_INFO",
 	};
 
 	memset(&customKey, 0, sizeof(uint32_t) * 2 * KEY_MAX); // clear custom
@@ -1078,21 +1068,16 @@ void task_lcd(void *pvParams)
 			sleepLcd();
 		}
 
-		if (timerScroll >= 500) //500 ms
+		if (stateScreen == smain)
 		{
-
-			if (stateScreen == smain)
-			{
-				scroll();
-			}
-			if ((stateScreen == stime) || (stateScreen == smain))
-			{
-				mTscreen = MTREFRESH;
-			} // display time
-
-			drawScreen();
-			timerScroll = 0;
+			scroll();
 		}
+		if ((stateScreen == stime) || (stateScreen == smain))
+		{
+			mTscreen = MTREFRESH;
+		} // display time
+
+		drawScreen();
 		if (event_lcd != NULL)
 			while (xQueueReceive(event_lcd, &evt, 0))
 			{
@@ -1218,9 +1203,9 @@ void task_addon(void *pvParams)
 
 	while (1)
 	{
-		encoderLoop(); // compute the encoder
-		irLoop();	  // compute the ir
-		touchLoop();   // compute the touch screen
+		encoderLoop();		  // compute the encoder
+		irLoop();			  // compute the ir
+		touchLoop();		  // compute the touch screen
 		if (timerScreen >= 3) //  sec timeout transient screen
 		{
 			//			if ((stateScreen != smain)&&(stateScreen != stime)&&(stateScreen != snull))

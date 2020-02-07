@@ -29,6 +29,16 @@ REM sed.exe -i 's/\[\]/\[\]/g' script
 sed.exe -i 's/unsigned/const/g' .script
 MOVE script.ori script.js
 
+ECHO tabbis
+COPY tabbis.js tabbis.ori
+python ./css-html-js-minify.py tabbis.js 
+gzip.exe  tabbis.js 
+MOVE tabbis.js.gz tabbis.js
+xxd.exe -i tabbis.js > .tabbis
+REM sed.exe -i 's/\[\]/\[\]/g' script
+sed.exe -i 's/unsigned/const/g' .tabbis
+MOVE tabbis.ori tabbis.js
+
 ECHO index
 COPY index.html index.htm
 python ./css-html-js-minify.py index.htm

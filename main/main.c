@@ -24,6 +24,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include <time.h>
+#include <sys/time.h>
 #include <nvs.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -43,6 +45,7 @@
 #include "lwip/api.h"
 #include "lwip/tcp.h"
 #include "lwip/dns.h"
+#include "lwip/apps/sntp.h"
 #include "mdns.h"
 
 #include "main.h"
@@ -66,7 +69,6 @@
 #include "addon.h"
 #include "tda7313.h"
 #include "custom.h"
-#include "ntp.h"
 
 #include "sdkconfig.h"
 
@@ -521,6 +523,17 @@ static void start_wifi()
 	}
 }
 
+void initialize_sntp(void)
+{
+	ESP_LOGI(TAG, "Initializing SNTP");
+	sntp_setoperatingmode(SNTP_OPMODE_POLL);
+	sntp_setservername(0, g_device->ntp_server[0]);
+	sntp_setservername(1, g_device->ntp_server[1]);
+	sntp_setservername(2, g_device->ntp_server[2]);
+	sntp_setservername(3, g_device->ntp_server[3]);
+	sntp_init();
+}
+
 void start_network()
 {
 	// struct device_settings *g_device;
@@ -852,6 +865,7 @@ void app_main()
 			g_device->cleared = 0xAABB;				 // marker init done
 			g_device->gpio_mode = 0;				 // Режим считывания GPIO 0 - по-умолчанию, 1 - из NVS
 			g_device->uartspeed = 115200;			 // default
+			g_device->ir_mode = IR_DEFAULD;			 // Опрос кодов по-умолчанию
 			g_device->audio_input_num = COMPUTER;	// default
 			g_device->options |= T_PATCH;			 // 0 = load patch
 			g_device->trace_level = ESP_LOG_VERBOSE; // default

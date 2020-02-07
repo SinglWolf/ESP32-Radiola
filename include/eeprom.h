@@ -35,6 +35,11 @@
 #define PASSLEN 64
 #define HOSTLEN 24
 
+#define _NTP0 "0.ru.pool.ntp.org"
+#define _NTP1 "1.ru.pool.ntp.org"
+#define _NTP2 "2.ru.pool.ntp.org"
+#define _NTP3 "3.ru.pool.ntp.org"
+
 #define TZONELEN 30
 #define NTP_LEN 20
 

@@ -22,7 +22,6 @@
 #include "custom.h"
 #include "ucg_esp32_hal.h"
 #include <time.h>
-#include "ntp.h"
 
 #include "eeprom.h"
 #include "addonucg.h"
@@ -61,7 +60,6 @@ static uint16_t volume;
 static int16_t futurNum = 0; // the number of the wanted station
 
 static unsigned timerScreen = 0;
-static unsigned timerScroll = 0;
 static unsigned timerLcdOut = 0;
 static unsigned timer1s = 0;
 
@@ -372,7 +370,6 @@ void (*serviceAddon)() = NULL;
 IRAM_ATTR void ServiceAddon(void)
 {
 	timer1s++;
-	timerScroll++;
 	if (timer1s >= 1000)
 	{
 		// Time compute
@@ -521,7 +518,7 @@ void drawVolume()
 
 void drawTime()
 {
-	drawTimeUcg(mTscreen, timein);
+	drawTimeUcg(mTscreen);
 }
 
 ////////////////////
@@ -1078,21 +1075,16 @@ void task_lcd(void *pvParams)
 			sleepLcd();
 		}
 
-		if (timerScroll >= 500) //500 ms
+		if (stateScreen == smain)
 		{
-
-			if (stateScreen == smain)
-			{
-				scroll();
-			}
-			if ((stateScreen == stime) || (stateScreen == smain))
-			{
-				mTscreen = MTREFRESH;
-			} // display time
-
-			drawScreen();
-			timerScroll = 0;
+			scroll();
 		}
+		if ((stateScreen == stime) || (stateScreen == smain))
+		{
+			mTscreen = MTREFRESH;
+		} // display time
+
+		drawScreen();
 		if (event_lcd != NULL)
 			while (xQueueReceive(event_lcd, &evt, 0))
 			{
@@ -1218,9 +1210,9 @@ void task_addon(void *pvParams)
 
 	while (1)
 	{
-		encoderLoop(); // compute the encoder
-		irLoop();	  // compute the ir
-		touchLoop();   // compute the touch screen
+		encoderLoop();		  // compute the encoder
+		irLoop();			  // compute the ir
+		touchLoop();		  // compute the touch screen
 		if (timerScreen >= 3) //  sec timeout transient screen
 		{
 			//			if ((stateScreen != smain)&&(stateScreen != stime)&&(stateScreen != snull))

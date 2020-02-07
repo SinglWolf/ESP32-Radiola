@@ -12,7 +12,7 @@
 #include "string.h"
 #include "stdlib.h"
 #include "eeprom.h"
-#include "ntp.h"
+
 #include "webclient.h"
 #include "webserver.h"
 #include "vs1053.h"
@@ -1120,18 +1120,21 @@ void setLogLevel(esp_log_level_t level)
 	displayLogLevel();
 }
 
-/*
-void fmSeekUp()
-{seekUp();seekingComplete(); kprintf("##FM.FREQ#: %3.2f MHz\n",getFrequency());}
-void fmSeekDown()
-{seekDown();seekingComplete(); kprintf("##FM.FREQ#: %3.2f MHz\n",getFrequency());}
-void fmVol(char* tmp)
-{clientVol(tmp);}
-void fmMute()
-{RDA5807M_unmute(RDA5807M_FALSE); }
-void fmUnmute()
-{RDA5807M_unmute(RDA5807M_TRUE);}
-*/
+// print  date time in ISO-8601 local time format
+void ntp_print_time()
+{
+	time_t now;
+	struct tm timeinfo;
+	time(&now);
+	localtime_r(&now, &timeinfo);
+
+	char msg[30];
+
+	strftime(msg, 48, "%Y-%m-%dT%H:%M:%S", &timeinfo);
+	//	ISO-8601 local time   https://www.w3.org/TR/NOTE-datetime
+	//  YYYY-MM-DDThh:mm:ssTZD (eg 1997-07-16T19:20:30+01:00)
+	kprintf("##SYS.DATE#: %s\n", msg);
+}
 
 void checkCommand(int size, char *s)
 {

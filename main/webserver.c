@@ -22,7 +22,7 @@
 #include "addon.h"
 #include "custom.h"
 #include "gpios.h"
-#include "ntp.h"
+
 
 #include "lwip/opt.h"
 #include "lwip/arch.h"
@@ -1352,7 +1352,6 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 				if (O_TZONE != g_device->tzone)
 				{
 					strcpy(g_device->tzone, O_TZONE);
-					//addonDt();
 					reboot = true;
 				}
 

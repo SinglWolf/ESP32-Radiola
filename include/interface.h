@@ -42,6 +42,7 @@ uint8_t getDdmm();
 void setRotat(uint8_t dm);
 uint8_t getRotat();
 void setHostname(char* s);
+void ntp_print_time();
 
 #define kprintf(fmt, ...) do {    \
         printf(fmt, ##__VA_ARGS__);   \

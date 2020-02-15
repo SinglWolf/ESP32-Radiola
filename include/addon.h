@@ -31,7 +31,6 @@ typedef enum typelcmd
     licy4,
     lnameset,
     lvol,
-    lovol,
     estation,
     eclrs,
     edraw,

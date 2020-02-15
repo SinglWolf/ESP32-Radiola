@@ -38,7 +38,7 @@ uint16_t z;  // an internal offset for y
 //struct tm *dt;
 time_t now;
 struct tm timeinfo;
-uint16_t volume;
+uint8_t volume;
 
 char station[BUFLEN]; //received station
 char title[BUFLEN];   // received title
@@ -313,7 +313,7 @@ char *getNameNumUcg()
 	return nameNum;
 }
 
-void setVolumeUcg(uint16_t vol) { volume = vol; }
+void setVolumeUcg(uint8_t vol) { volume = vol; }
 
 ////////////////////////////////////////
 // Clear all buffers and indexes

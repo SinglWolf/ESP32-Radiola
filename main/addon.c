@@ -70,7 +70,7 @@ static uint8_t itLcdOut = 0;
 static bool state = false; // start stop on Ok key
 
 static int16_t currentValue = 0;
-static bool dvolume = true; // display volume screen
+static bool dvolume = false; // display volume screen
 static uint32_t ircode;
 
 // custom ir code init from hardware nvs
@@ -439,7 +439,7 @@ void scroll()
 ////////////////////////////
 void Screen(typeScreen st)
 {
-	//printf("Screen: st: %d, stateScreen: %d, mTscreen: %d, default: %d\n",st,stateScreen,mTscreen,defaultStateScreen);
+	// printf("Screen: st: %d, stateScreen: %d, mTscreen: %d, default: %d\n", st, stateScreen, mTscreen, defaultStateScreen);
 	if (stateScreen != st)
 	{
 		mTscreen = MTNEW;
@@ -1125,9 +1125,6 @@ void task_lcd(void *pvParams)
 					}
 					dvolume = true;
 					break;
-				case lovol:
-					dvolume = false; // don't show volume on start station
-					break;
 				case estation:
 					wakeLcd();
 					if (xQueuePeek(event_lcd, &evt1, 0))
@@ -1340,13 +1337,6 @@ void addonParse(const char *fmt, ...)
 			evt.lline = NULL; //atoi(ici+6);
 							  //xQueueSend(event_lcd,&evt, 0);
 		}
-	}
-	ici = strstr(line, "OVOLSET#:");
-	if (ici != NULL)
-	{ //////Volume offset    ##CLI.OVOLSET#:
-		evt.lcmd = lovol;
-		evt.lline = NULL;
-		//		xQueueSend(event_lcd,&evt, 0);
 	}
 	if (evt.lcmd != -1)
 		xQueueSend(event_lcd, &evt, 0);

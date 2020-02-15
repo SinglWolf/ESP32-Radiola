@@ -83,8 +83,7 @@ const char strsGSTAT[] = {"HTTP/1.1 200 OK\r\nContent-Type: application/json\r\n
 \"Name\":\"%s\",\
 \"URL\":\"%s\",\
 \"File\":\"%s\",\
-\"Port\":\"%d\",\
-\"ovol\":\"%d\"\
+\"Port\":\"%d\"\
 }"\
 };
 const char HARDWARE[] = {"HTTP/1.1 200 OK\r\nContent-Type:application/json\r\nContent-Length:%d\r\n\r\n{\
@@ -170,7 +169,7 @@ const char DEVOPTIONS[] = {"HTTP/1.1 200 OK\r\nContent-Type:application/json\r\n
 \"max_temp\":\"%02u\",\
 \"min_pwm\":\"%03u\",\
 \"hand_pwm\":\"%03u\",\ */
-static int8_t clientOvol = 0;
+
 
 void *inmalloc(size_t n)
 {
@@ -377,51 +376,23 @@ static char *getParameterFromComment(const char *param, char *data, uint16_t dat
 	return getParameter("\"", param, data, data_length);
 }
 
-// volume offset
-static void clientSetOvol(int8_t ovol)
+// set the volume with vol
+void setVolumei(int8_t vol)
 {
-	clientOvol = ovol;
-	kprintf("##CLI.OVOLSET#: %d\n", ovol);
-	vTaskDelay(10);
-}
-
-// set the volume with vol,  add offset
-void setVolumei(int16_t vol)
-{
-	vol += clientOvol;
-	if (vol > 254)
-		vol = 254;
 	if (vol < 0)
-		vol = 1;
+		vol = 0;
 	VS1053_SetVolume(vol);
 }
+
 void setVolume(char *vol)
 {
-	int16_t uvol = atoi(vol);
+	int8_t uvol = atoi(vol);
 	setIvol(uvol);
-	uvol += clientOvol;
-	if (uvol > 254)
-		uvol = 254;
-	if (uvol < 0)
-		uvol = 1;
 	if (vol != NULL)
 	{
 		VS1053_SetVolume(uvol);
 		kprintf("##CLI.VOL#: %u\n", getIvol());
 	}
-}
-// set the current volume with its offset
-static void setOffsetVolume(void)
-{
-	int16_t uvol = getIvol();
-	uvol += clientOvol;
-	if (uvol > 254)
-		uvol = 254;
-	if (uvol <= 0)
-		uvol = 1;
-	ESP_LOGV(TAG, "setOffsetVol: %d", clientOvol);
-	kprintf("##CLI.VOL#: %u\n", getIvol());
-	setVolumei(uvol);
 }
 
 uint16_t getVolume()
@@ -566,12 +537,10 @@ void playStationInt(int sid)
 		clientSetURL(si->domain);
 		clientSetPath(si->file);
 		clientSetPort(si->port);
-		clientSetOvol(si->ovol);
 
 		//printf("Name: %s, url: %s, path: %s\n",	si->name,	si->domain, si->file);
 
 		clientConnect();
-		setOffsetVolume();
 		for (i = 0; i < 100; i++)
 		{
 			if (clientIsConnected())
@@ -665,9 +634,7 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 				clientSetURL(url);
 				clientSetPath(path);
 				clientSetPort(atoi(port));
-				clientSetOvol(0);
 				clientConnectOnce();
-				setOffsetVolume();
 				for (i = 0; i < 100; i++)
 				{
 					if (clientIsConnected())
@@ -769,8 +736,8 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 						si->file[sizeof(si->file) - 1] = 0; //truncate if any (rom crash)
 					if (strlen(si->name) > sizeof(si->name))
 						si->name[sizeof(si->name) - 1] = 0; //truncate if any (rom crash)
-					sprintf(ibuf, "%d%u", si->ovol, si->port);
-					int json_length = strlen(si->domain) + strlen(si->file) + strlen(si->name) + strlen(ibuf) + 50;
+					sprintf(ibuf, "%u", si->port);
+					int json_length = strlen(si->domain) + strlen(si->file) + strlen(si->name) + strlen(ibuf) + 40;
 					buf = inmalloc(json_length + 75);
 
 					if (buf == NULL)
@@ -785,7 +752,7 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 						for (i = 0; i < sizeof(buf); i++)
 							buf[i] = 0;
 						sprintf(buf, strsGSTAT,
-								json_length, si->name, si->domain, si->file, si->port, si->ovol);
+								json_length, si->name, si->domain, si->file, si->port);
 						ESP_LOGV(TAG, "getStation Buf len:%u : %s", strlen(buf), buf);
 						write(conn, buf, strlen(buf));
 						infree(buf);
@@ -840,7 +807,6 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 
 			char id[6];
 			char port[6];
-			char ovol[6];
 			for (i = 0; i < unb; i++)
 			{
 				char *url;
@@ -870,7 +836,6 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 							if (strlen(Name) > sizeof(nsi->name))
 								url[sizeof(nsi->name) - 1] = 0; //truncate if any
 							strcpy(nsi->name, Name);
-							nsi->ovol = (getSParameterFromResponse(ovol, 6, "ovol=", data, data_size)) ? atoi(ovol) : 0;
 							nsi->port = atoi(port);
 						}
 					}

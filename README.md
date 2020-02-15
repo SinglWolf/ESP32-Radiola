@@ -27,12 +27,13 @@
 
 Проект делаю для себя. Никаких хроник изменений не веду. Как только реализую основные задачи, напишу развёрнутый мануал.
 
-Проект на стадии Beta 9 **(Прошивать на чистую FLASH!!!)**
+Проект на стадии Beta 10 **(Прошивать на чистую FLASH!!!)**
 
-**Для ускорения выхода Радиолы в релизную версию, проекту требуются Бетатестеры.**
+**[демо веб-интерфейса](https://serverdoma.ru/esp32/newWeb/index.html)**
+
 
 **Реализовано сейчас:**
-  + Основные настройки в веб-интерфейсе работают, тестируйте (ЗАЛИВАТЬ НА ЧИСТУЮ FLASH)!
+  + НОВЫЙ ВЕБ-ИНТЕРФЕЙС. (ЗАЛИВАТЬ НА ЧИСТУЮ FLASH)!
   + Серверов точного времени (NTP) теперь целых 4! Системное время Радиолы синхронизируется с NTP каждый час.
   + Можно прописать свои сервера NTP. Все поля должны быть заполнены. Сервер с номером **0:** имеет высший приоритет.
   + Часовые пояса настроены с учётом наличия летнего времени в регионе. Переход на летнее время происходит автоматически.
@@ -118,10 +119,10 @@
 **[ESP32-Radiola - если что-то пошло не так...](https://serverdoma.ru/viewtopic.php?f=70&t=1183)**
 
 **Вкладки Веб-интерфейса**
-![Image alt](https://github.com/SinglWolf/ESP32-Radiola/raw/master/pictures/радио.png)
-![Image alt](https://github.com/SinglWolf/ESP32-Radiola/raw/master/pictures/станции.png)
-![Image alt](https://github.com/SinglWolf/ESP32-Radiola/raw/master/pictures/звук.png)
-![Image alt](https://github.com/SinglWolf/ESP32-Radiola/raw/master/pictures/настройки.png)
+![Image alt](https://github.com/SinglWolf/ESP32-Radiola/raw/master/pictures/radio.png)
+![Image alt](https://github.com/SinglWolf/ESP32-Radiola/raw/master/pictures/stantions.png)
+![Image alt](https://github.com/SinglWolf/ESP32-Radiola/raw/master/pictures/sound.png)
+![Image alt](https://github.com/SinglWolf/ESP32-Radiola/raw/master/pictures/settings.png)
 
 **Прототип**
 ![Image alt](https://github.com/SinglWolf/ESP32-Radiola/raw/master/pictures/amplifier.jpg)

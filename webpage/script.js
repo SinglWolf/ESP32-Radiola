@@ -970,27 +970,29 @@ function displaybright() {
     if (document.getElementById('O_LCD_BRG').value == 0) {
         document.getElementById("brightOn").style.display = "none";
     } else {
-        document.getElementById("brightOn").style.display = "contents";
+        document.getElementById("brightOn").style.display = "";
         if (document.getElementById('O_LCD_BRG').value == 1) {
-            document.getElementById("by_hand").style.display = "none";
-            document.getElementById("by_time").style.display = "contents";
-            document.getElementById("brightness").style.display = "contents";
-            document.getElementById("by_lighting").style.display = "none";
+            document.getElementById("by_hand").style.visibility = "collapse";
+            document.getElementById("by_time").style.visibility = "visible";
+            document.getElementById("brightness").style.visibility = "visible";
+            document.getElementById("by_lighting").style.visibility = "collapse";
         }
         if (document.getElementById('O_LCD_BRG').value == 2) {
-            document.getElementById("by_hand").style.display = "none";
-            document.getElementById("by_time").style.display = "none";
-            document.getElementById("brightness").style.display = "contents";
-            document.getElementById("by_lighting").style.display = "contents";
+            document.getElementById("by_hand").style.visibility = "collapse";
+            document.getElementById("by_time").style.visibility = "collapse";
+            document.getElementById("brightness").style.visibility = "visible";
+            document.getElementById("by_lighting").style.visibility = "visible";
         }
         if (document.getElementById('O_LCD_BRG').value == 3) {
-            document.getElementById("by_hand").style.display = "contents";
-            document.getElementById("by_time").style.display = "none";
-            document.getElementById("brightness").style.display = "none";
-            document.getElementById("by_lighting").style.display = "none";
+			document.getElementById("bright").style.width = "32%";
+            document.getElementById("by_hand").style.visibility = "visible";
+            document.getElementById("by_time").style.visibility = "collapse";
+            document.getElementById("brightness").style.visibility = "collapse";
+            document.getElementById("by_lighting").style.visibility = "collapse";
         }
     }
 }
+
 
 
 function gpios(gpio_mode, save, load) {
@@ -1373,8 +1375,8 @@ function saveStation() {
         xhr = new XMLHttpRequest();
         xhr.open("POST", "setStation", false);
         xhr.setRequestHeader(content, ctype);
-        xhr.send("nb=" + 1 + "&id=" + document.getElementById('add_slot').value + "&url=" + url + "&name=" + document.getElementById('add_name').value + "&file=" + jfile + "&ovol=" + document.getElementById('ovol').value + "&port=" + document.getElementById('add_port').value + "&&");
-        localStorage.setItem(document.getElementById('add_slot').value, "{\"Name\":\"" + document.getElementById('add_name').value + "\",\"URL\":\"" + url + "\",\"File\":\"" + file + "\",\"Port\":\"" + document.getElementById('add_port').value + "\",\"ovol\":\"" + document.getElementById('ovol').value + "\"}");
+        xhr.send("nb=" + 1 + "&id=" + document.getElementById('add_slot').value + "&url=" + url + "&name=" + document.getElementById('add_name').value + "&file=" + jfile + "&port=" + document.getElementById('add_port').value + "&&");
+        localStorage.setItem(document.getElementById('add_slot').value, "{\"Name\":\"" + document.getElementById('add_name').value + "\",\"URL\":\"" + url + "\",\"File\":\"" + file + "\",\"Port\":\"" + document.getElementById('add_port').value + "\"}");
     } catch (e) { console.log("error save " + e); }
     abortStation(); // to erase the edit field
     loadStations();
@@ -1391,7 +1393,6 @@ function eraseStation() {
     document.getElementById('add_name').value = "";
     document.getElementById('add_path').value = "";
     document.getElementById('add_port').value = "80";
-    document.getElementById('ovol').value = 0;
     document.getElementById('add_URL').value = ""
 }
 
@@ -1413,7 +1414,6 @@ function editInstantStation() {
         document.getElementById('editStationDiv').style.display = "block";
         document.getElementById('add_slot').value = id;
 
-        document.getElementById('ovol').value = '0';
         document.getElementById('add_URL').value = "http://" + document.getElementById('instant_url').value + ":" + document.getElementById('instant_port').value + document.getElementById('instant_path').value;
         parseEditURL();
     } else alert("Нет свободного слота.");
@@ -1431,7 +1431,6 @@ function editStation(id) {
         document.getElementById('add_path').value = arr["File"];
         if (arr["Port"] == "0") arr["Port"] = "80";
         document.getElementById('add_port').value = arr["Port"];
-        document.getElementById('ovol').value = arr["ovol"];
         document.getElementById('add_URL').value = "http://" + document.getElementById('add_url').value + ":" + document.getElementById('add_port').value + document.getElementById('add_path').value;
     }
     document.getElementById('add_slot').value = id;
@@ -1572,9 +1571,8 @@ function downloadStations() {
         }
         reader.onload = function (e) {
             function fillInfo(ind, arri) {
-                if (!arri["ovol"]) arri["ovol"] = "0";
-                tosend = tosend + "&id=" + ind + "&url=" + arri["URL"] + "&name=" + arri["Name"] + "&file=" + fixedEncodeURIComponent(arri["File"]) + "&port=" + arri["Port"] + "&ovol=" + arri["ovol"] + "&";
-                localStorage.setItem(ind, "{\"Name\":\"" + arri["Name"] + "\",\"URL\":\"" + arri["URL"] + "\",\"File\":\"" + arri["File"] + "\",\"Port\":\"" + arri["Port"] + "\",\"ovol\":\"" + arri["ovol"] + "\"}");
+                tosend = tosend + "&id=" + ind + "&url=" + arri["URL"] + "&name=" + arri["Name"] + "&file=" + fixedEncodeURIComponent(arri["File"]) + "&port=" + arri["Port"] + "&";
+                localStorage.setItem(ind, "{\"Name\":\"" + arri["Name"] + "\",\"URL\":\"" + arri["URL"] + "\",\"File\":\"" + arri["File"] + "\",\"Port\":\"" + arri["Port"] + "\"}");
             }
             // Entire file
             //console.log(this.result);
@@ -1667,9 +1665,8 @@ function stChanged() {
         if (!port) port = 80;
         /*				file=tbody.rows[ind].cells[3].innerText;
         				port= tbody.rows[ind].cells[4].innerText;*/
-        ovol = tbody.rows[ind].cells[3].innerText;
-        localStorage.setItem(id, "{\"Name\":\"" + name + "\",\"URL\":\"" + url + "\",\"File\":\"" + file + "\",\"Port\":\"" + port + "\",\"ovol\":\"" + ovol + "\"}");
-        tosend = tosend + "&id=" + id + "&url=" + url + "&name=" + name + "&file=" + file + "&port=" + port + "&ovol=" + ovol + "&";
+        localStorage.setItem(id, "{\"Name\":\"" + name + "\",\"URL\":\"" + url + "\",\"File\":\"" + file + "\",\"Port\":\"" + port + "\"}");
+        tosend = tosend + "&id=" + id + "&url=" + url + "&name=" + name + "&file=" + file + "&port=" + port + "&";
     }
     promptworking(working); // some time to display promptworking
     if (stchanged && confirm("Список изменен. Вы хотите сохранить измененный список?")) {
@@ -1742,13 +1739,6 @@ function loadStations() {
             td.appendChild(document.createTextNode(arr["URL"] + ":" + arr["Port"] + arr["File"]));
         } else
             td.appendChild(document.createTextNode(""));
-        tr.appendChild(td);
-        // Ovol
-        td = document.createElement('TD');
-        td.style = "word-break: break-all;overflow-wrap: break-word; word-wrap: break-word;";
-        td.setAttribute('onclick', 'playEditStation(this.parentNode);');
-        if (arr["ovol"].length > 116) arr["ovol"] = "Error";
-        td.appendChild(document.createTextNode(arr["ovol"]));
         tr.appendChild(td);
 
         // edit button			

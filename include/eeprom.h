@@ -123,7 +123,6 @@ struct shoutcast_info
 	char domain[73]; //url
 	char file[116];  //path
 	char name[64];
-	int8_t ovol;   // offset volume
 	uint16_t port; //port
 };
 

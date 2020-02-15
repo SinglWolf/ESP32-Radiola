@@ -97,7 +97,6 @@ sys.boot: reboot.\n\
 sys.patch and sys.patch(\"x\"): Display and Change the status of the vs1053 patch at power on.\n\
  0 = Patch will not be loaded, 1 or up = Patch will be loaded (default) at power On \n\
 sys.version: Display the Release and Revision numbers\n\
-sys.tzo and sys.tzo(\"xx\"): Display and Set the timezone offset of your country.\n\
 "};
 
 const char stritHELP3[] = {"\
@@ -541,8 +540,8 @@ void clientPlay(char *s)
 }
 
 const char strilLIST[] = {"##CLI.LIST#\n"};
-const char strilINFO[] = {"#CLI.LISTINFO#: %3d: %s, %s:%d%s%%%d\n"};
-const char strilNUM[] = {"#CLI.LISTNUM#: %3d: %s, %s:%d%s%%%d\n"};
+const char strilINFO[] = {"#CLI.LISTINFO#: %3d: %s, %s:%d%s%%d\n"};
+const char strilNUM[] = {"#CLI.LISTNUM#: %3d: %s, %s:%d%s%%d\n"};
 const char strilDLIST[] = {"\n#CLI.LIST#\n"};
 
 void clientList(char *s)
@@ -587,9 +586,9 @@ void clientList(char *s)
 				if (si->port != 0)
 				{
 					if (onlyOne)
-						kprintf(strilINFO, i, si->name, si->domain, si->port, si->file, si->ovol);
+						kprintf(strilINFO, i, si->name, si->domain, si->port, si->file);
 					else
-						kprintf(strilNUM, i, si->name, si->domain, si->port, si->file, si->ovol);
+						kprintf(strilNUM, i, si->name, si->domain, si->port, si->file);
 				}
 				free(si);
 			}
@@ -653,7 +652,6 @@ void clientEdit(char *s)
 	memset(si->name, 0, sizeof(si->name));
 	memset(url, 0, 200);
 	si->port = 80;
-	si->ovol = 0;
 	//	printf("##CLI.EDIT: %s",s);
 	ESP_LOGI(TAG, "%s", s);
 	tmp = s + 10;
@@ -676,10 +674,6 @@ void clientEdit(char *s)
 	} //*tmpend = 0; }
 	else
 		url[0] = 0;
-	tmp = ++tmpend; //%
-	tmpend = strchr(tmp, '"');
-	if ((tmpend != NULL) && (tmpend - tmp))
-		si->ovol = atoi(tmp);
 
 	//printf("==> id: %d, name: %s, url: %s\n",id,si->name,url);
 
@@ -828,7 +822,6 @@ void clientVol(char *s)
 		if ((atoi(vol) >= 0) && (atoi(vol) <= 254))
 		{
 			setVolumew(vol);
-			//			if (RDA5807M_detection()) RDA5807M_setVolume(atoi(vol)/16);
 		}
 		free(vol);
 	}
@@ -1144,16 +1137,6 @@ void checkCommand(int size, char *s)
 		tmp[i] = s[i];
 	tmp[size] = 0;
 	//	kprintf("size: %d, cmd=%s\n",size,tmp);
-	/*	if(startsWith ("fm.", tmp))
-	{
-		if(strcmp(tmp+3, "up") == 0) 	fmSeekUp();
-		else if(strcmp(tmp+3, "down") == 0) 	fmSeekDown();
-		else if(strcmp(tmp+3, "stop") == 0) 	fmMute(); 
-		else if(strcmp(tmp+3, "start") == 0) 	fmUnmute(); 
-		else if(startsWith (  "vol",tmp+3)) 	clientVol(tmp);	
-		else printInfo(tmp);
-	} else
-*/
 	if (startsWith("dbg.", tmp))
 	{
 		if (strcmp(tmp + 4, "fifo") == 0)

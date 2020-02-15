@@ -31,7 +31,7 @@ void drawStationUcg(uint8_t mTscreen,char* snum,char* ddot);
 void drawVolumeUcg(uint8_t mTscreen);
 void drawTimeUcg(uint8_t mTscreen);
 void lcd_initUcg();
-void setVolumeUcg(uint16_t vol);
+void setVolumeUcg(uint8_t vol);
 void drawLinesUcg();
 void removeUtf8(char *characters);
 

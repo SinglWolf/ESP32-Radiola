@@ -4,16 +4,17 @@
 
 <body>
 
-	<p><span class="label label-success">Версия: <span id="firmware_last">1.0 Rev: Beta 10</span> - Дата выхода релиза не определена...
+	<p><span class="label label-success">Версия: <span id="firmware_last">1.0 Rev: Beta 11</span> - Дата выхода релиза не определена...
 		</span>
 	</p>
 	<p>
 		Анонс:
 		<ul id="ordered">
-		<li> 1.0 Rev Beta 10:
+		<li> 1.0 Rev Beta 11:
 				<ul id="ordered">
-					<li style="color: red">НОВЫЙ ВЕБ-ИНТЕРФЕЙС! ЗАЛИВАТЬ НА ЧИСТУЮ FLASH!</li>
-					<li style="color: red">Из плейлиста вырезано "СМЕЩЕНИЕ ВРЕМЕНИ"!</li>
+					<li style="color: red">Глобально переделана функция переопределения GIOS! ЗАЛИВАТЬ НА ЧИСТУЮ FLASH!!!!</li>
+					<li>Исправлен баг с "кряканьем" звука при запуске воспроизведения радио.</li>
+					<li>Реализован обучаемый ИК-пульт.</li>
 				</ul>
 			</li>
 		</ul>

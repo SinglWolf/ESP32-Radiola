@@ -149,13 +149,13 @@ void BuzzerInit()
 }
 void InitPWM()
 {
-	gpio_get_backlightl(&led, g_device->gpio_mode);
+	gpio_get_backlightl(&led);
 	if (led != GPIO_NONE)
 		AdjustBrightInit();
-	gpio_get_fanspeed(&fanspeed, g_device->gpio_mode);
+	gpio_get_fanspeed(&fanspeed);
 	if (fanspeed != GPIO_NONE)
 		FanPwmInit();
-	gpio_get_buzzer(&buzzer, g_device->gpio_mode);
+	gpio_get_buzzer(&buzzer);
 	if (buzzer != GPIO_NONE)
 		BuzzerInit();
 }
@@ -246,7 +246,7 @@ void ds18b20Task(void *pvParameters)
 /* Initialize tachometer */
 void tach_init()
 {
-	if (gpio_get_tachometer(&tach, g_device->gpio_mode) == ESP_OK)
+	if (gpio_get_tachometer(&tach) == ESP_OK)
 	{
 		if (tach != GPIO_NONE)
 		{
@@ -316,7 +316,7 @@ uint16_t getRpmFan()
 }
 void init_ds18b20()
 {
-	if (gpio_get_ds18b20(&ds18b20, g_device->gpio_mode) == ESP_OK)
+	if (gpio_get_ds18b20(&ds18b20) == ESP_OK)
 	{
 		if (ds18b20 != GPIO_NONE)
 		{

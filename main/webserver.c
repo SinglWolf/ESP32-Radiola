@@ -23,7 +23,6 @@
 #include "custom.h"
 #include "gpios.h"
 
-
 #include "lwip/opt.h"
 #include "lwip/arch.h"
 #include "lwip/api.h"
@@ -149,7 +148,6 @@ const char DEVOPTIONS[] = {"HTTP/1.1 200 OK\r\nContent-Type:application/json\r\n
 \"O_LCD_ROTA\":\"%u\"\
 }"};
 /* ,\
-
 \"custom_NTP0\":\"%s\",\
 \"custom_NTP1\":\"%s\",\
 \"custom_NTP2\":\"%s\",\
@@ -170,7 +168,112 @@ const char DEVOPTIONS[] = {"HTTP/1.1 200 OK\r\nContent-Type:application/json\r\n
 \"min_pwm\":\"%03u\",\
 \"hand_pwm\":\"%03u\",\ */
 
+const char IRCODES[] = {"HTTP/1.1 200 OK\r\nContent-Type:application/json\r\nContent-Length:%d\r\n\r\n{\
+\"IR_MODE\":\"%u\",\
+\"ERROR\":\"%04X\",\
+\"K_0\":\"%s\",\
+\"K_1\":\"%s\",\
+\"K_2\":\"%s\",\
+\"K_3\":\"%s\",\
+\"K_4\":\"%s\",\
+\"K_5\":\"%s\",\
+\"K_6\":\"%s\",\
+\"K_7\":\"%s\",\
+\"K_8\":\"%s\",\
+\"K_9\":\"%s\",\
+\"K_10\":\"%s\",\
+\"K_11\":\"%s\",\
+\"K_12\":\"%s\",\
+\"K_13\":\"%s\",\
+\"K_14\":\"%s\",\
+\"K_15\":\"%s\",\
+\"K_16\":\"%s\"\
+}"};
 
+static uint32_t IR_Key[KEY_MAX][2];
+esp_err_t get_ir_key(bool ir_mode)
+{
+	ir_key_t indexKey;
+	nvs_handle handle;
+	const char *klab[] = {
+		"K_UP",
+		"K_LEFT",
+		"K_OK",
+		"K_RIGHT",
+		"K_DOWN",
+		"K_0",
+		"K_1",
+		"K_2",
+		"K_3",
+		"K_4",
+		"K_5",
+		"K_6",
+		"K_7",
+		"K_8",
+		"K_9",
+		"K_STAR",
+		"K_DIESE",
+	};
+	const uint32_t keydef[] = {
+		0xFF0018, /* KEY_UP */
+		0xFF0008, /* KEY_LEFT */
+		0xFF001C, /* KEY_OK */
+		0xFF005A, /* KEY_RIGHT */
+		0xFF0052, /* KEY_DOWN */
+		0xFF0019, /* KEY_0 */
+		0xFF0045, /* KEY_1 */
+		0xFF0046, /* KEY_2 */
+		0xFF0047, /* KEY_3 */
+		0xFF0044, /* KEY_4 */
+		0xFF0040, /* KEY_5 */
+		0xFF0043, /* KEY_6 */
+		0xFF0007, /* KEY_7 */
+		0xFF0015, /* KEY_8 */
+		0xFF0009, /* KEY_9 */
+		0xFF0016, /* KEY_STAR */
+		0xFF000D, /* KEY_DIESE */
+	};
+	esp_err_t err = ESP_OK;
+	memset(&IR_Key, 0, sizeof(uint32_t) * 2 * KEY_MAX); // clear custom
+	if (ir_mode == IR_DEFAULD)
+	{
+		for (indexKey = KEY_UP; indexKey < KEY_MAX; indexKey++)
+		{
+			// get the key default
+			IR_Key[indexKey][0] = keydef[indexKey];
+			ESP_LOGD(TAG, " IrDefaultKey is %s for set0: %X", klab[indexKey], IR_Key[indexKey][0]);
+			taskYIELD();
+		}
+	}
+	else
+	{
+		err = open_partition("hardware", "gpio_space", NVS_READONLY, &handle);
+		if (err != ESP_OK)
+		{
+			close_partition(handle, "hardware");
+			return err;
+		}
+		for (indexKey = KEY_UP; indexKey < KEY_MAX; indexKey++)
+		{
+			// get the key in the nvs
+			err |= gpio_get_ir_key(handle, klab[indexKey], (uint32_t *)&(IR_Key[indexKey][0]), (uint32_t *)&(IR_Key[indexKey][1]));
+			taskYIELD();
+		}
+		close_partition(handle, "hardware");
+	}
+	return err;
+}
+//
+//
+uint8_t get_code(char *buf, uint32_t arg1, uint32_t arg2)
+{
+	if (arg2 > 0)
+		sprintf(buf, "%X %X", arg1, arg2);
+	else
+		sprintf(buf, "%X", arg1);
+	return strlen(buf);
+}
+//
 void *inmalloc(size_t n)
 {
 	void *ret;
@@ -180,6 +283,7 @@ void *inmalloc(size_t n)
 	//	if (n <4) printf("Server: incmalloc size:%d\n",n);
 	return ret;
 }
+
 void infree(void *p)
 {
 	ESP_LOGV(TAG, "server free of   %x,            Heap size: %u", (int)p, xPortGetFreeHeapSize());
@@ -224,12 +328,6 @@ static void serveFile(char *name, int conn)
 	int gpart;
 
 	char *content;
-	if (strcmp(name, "/style.css") == 0)
-	{
-		if (g_device->options & T_THEME)
-			strcpy(name, "/style1.css");
-		//			printf("name: %s, theme:%d\n",name,g_device->options&T_THEME);
-	}
 	struct servFile *f = findFile(name);
 	ESP_LOGV(TAG, "find %s at %x", name, (int)f);
 	ESP_LOGV(TAG, "Heap size: %u", xPortGetFreeHeapSize());
@@ -447,17 +545,6 @@ static void rpmfan(int socket)
 	websocketwrite(socket, answer, strlen(answer));
 }
 
-// flip flop the theme indicator
-static void theme()
-{
-	if ((g_device->options & T_THEME) != 0)
-		g_device->options &= NT_THEME;
-	else
-		g_device->options |= T_THEME;
-	saveDeviceSettings(g_device);
-	ESP_LOGV(TAG, "theme:%u", g_device->options & T_THEME);
-}
-
 // treat the received message of the websocket
 void websockethandle(int socket, wsopcode_t opcode, uint8_t *payload, size_t length)
 {
@@ -502,10 +589,6 @@ void websockethandle(int socket, wsopcode_t opcode, uint8_t *payload, size_t len
 	else if (strstr((char *)payload, "monitor") != NULL)
 	{
 		wsMonitor();
-	}
-	else if (strstr((char *)payload, "theme") != NULL)
-	{
-		theme();
 	}
 	else if (strstr((char *)payload, "wsrssi") != NULL)
 	{
@@ -896,13 +979,6 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 		write(conn, buf, strlen(buf));
 		return;
 	}
-	else if (strcmp(name, "/theme") == 0)
-	{
-		char buf[strlen(strsR13) + 16]; // = inmalloc( strlen(strsRAUTO)+16);
-		sprintf(buf, strsR13, "theme", (g_device->options & T_THEME) ? '1' : '0');
-		write(conn, buf, strlen(buf));
-		return;
-	}
 	else if (strcmp(name, "/stop") == 0)
 	{
 		if (clientIsConnected())
@@ -919,6 +995,20 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 	else if (strcmp(name, "/upgrade") == 0)
 	{
 		update_firmware("ESP32Radiola"); // start the OTA
+	}
+	else if (strcmp(name, "/ircode") == 0) // start the IR TRAINING
+	{
+		if (data_size > 0)
+		{
+			char mode[1];
+			if (getSParameterFromResponse(mode, 1, "mode=", data, data_size))
+			{
+				if (strcmp(mode, "1") == 0)
+					set_ir_training(true);
+				else
+					set_ir_training(false); //возвращаем режим работы пульта
+			}
+		}
 	}
 	else if (strcmp(name, "/icy") == 0)
 	{
@@ -1325,9 +1415,9 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 					if (O_TIME_FORMAT != atoi(val_1))
 					{
 						if (atoi(val_1) == 0)
-							g_device->options32 &= NT_DDMM;
+							g_device->options &= NT_DDMM;
 						else
-							g_device->options32 |= T_DDMM;
+							g_device->options |= T_DDMM;
 						reboot = true;
 					}
 				}
@@ -1336,9 +1426,9 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 					if (O_LCD_ROTA != atoi(val_1))
 					{
 						if (atoi(val_1) == 0)
-							g_device->options32 &= NT_ROTAT;
+							g_device->options &= NT_ROTAT;
 						else
-							g_device->options32 |= T_ROTAT;
+							g_device->options |= T_ROTAT;
 						reboot = true;
 					}
 				}
@@ -1422,34 +1512,58 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 					changed = true;
 			if (getSParameterFromResponse(arg, 4, "gpio_mode=", data, data_size))
 				if ((strcmp(arg, "1") == 0))
+				{
 					gpio_mode = true;
+					g_device->options |= T_GPIOMODE;
+				}
+
 			if (gpio_mode)
 			{
 				err = open_partition("hardware", "gpio_space", (changed == false ? NVS_READONLY : NVS_READWRITE), &hardware_handle);
 				if (err != ESP_OK)
-					gpio_mode = false;
+				{
+					g_device->options &= NT_GPIOMODE;
+				}
 				else
 					close_partition(hardware_handle, "hardware");
 			}
 			if (changed)
-				gpio_mode = false;
-			err |= gpio_get_spi_bus(&spi_no, &miso, &mosi, &sclk, gpio_mode);
-			err |= gpio_get_vs1053(&xcs, &xdcs, &dreq, gpio_mode);
-			err |= gpio_get_encoders(&enca, &encb, &encbtn, gpio_mode);
-			err |= gpio_get_i2c(&sda, &scl, gpio_mode);
-			err |= gpio_get_spi_lcd(&cs, &a0, gpio_mode);
-			err |= gpio_get_ir_signal(&ir, gpio_mode);
-			err |= gpio_get_backlightl(&led, gpio_mode);
-			err |= gpio_get_tachometer(&tach, gpio_mode);
-			err |= gpio_get_fanspeed(&fanspeed, gpio_mode);
-			err |= gpio_get_ds18b20(&ds18b20, gpio_mode);
-			err |= gpio_get_touch(&touch, gpio_mode);
-			err |= gpio_get_buzzer(&buzzer, gpio_mode);
-			err |= gpio_get_uart(&rxd, &txd, gpio_mode);
-			err |= gpio_get_ldr(&ldr, gpio_mode);
-			if (err != ESP_OK)
+			{
+				g_device->options &= NT_GPIOMODE;
+			}
+			err |= gpio_get_spi_bus(&spi_no, &miso, &mosi, &sclk);
+			err |= gpio_get_vs1053(&xcs, &xdcs, &dreq);
+			err |= gpio_get_encoders(&enca, &encb, &encbtn);
+			err |= gpio_get_i2c(&sda, &scl);
+			err |= gpio_get_spi_lcd(&cs, &a0);
+			err |= gpio_get_ir_signal(&ir);
+			err |= gpio_get_backlightl(&led);
+			err |= gpio_get_tachometer(&tach);
+			err |= gpio_get_fanspeed(&fanspeed);
+			err |= gpio_get_ds18b20(&ds18b20);
+			err |= gpio_get_touch(&touch);
+			err |= gpio_get_buzzer(&buzzer);
+			err |= gpio_get_uart(&rxd, &txd);
+			err |= gpio_get_ldr(&ldr);
+			if (err == 0x1102)
 			{
 				changed = false;
+				g_device->options &= NT_GPIOMODE;
+
+				err |= gpio_get_spi_bus(&spi_no, &miso, &mosi, &sclk);
+				err |= gpio_get_vs1053(&xcs, &xdcs, &dreq);
+				err |= gpio_get_encoders(&enca, &encb, &encbtn);
+				err |= gpio_get_i2c(&sda, &scl);
+				err |= gpio_get_spi_lcd(&cs, &a0);
+				err |= gpio_get_ir_signal(&ir);
+				err |= gpio_get_backlightl(&led);
+				err |= gpio_get_tachometer(&tach);
+				err |= gpio_get_fanspeed(&fanspeed);
+				err |= gpio_get_ds18b20(&ds18b20);
+				err |= gpio_get_touch(&touch);
+				err |= gpio_get_buzzer(&buzzer);
+				err |= gpio_get_uart(&rxd, &txd);
+				err |= gpio_get_ldr(&ldr);
 			}
 			if (changed)
 			{
@@ -1521,12 +1635,11 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 				}
 			}
 			int json_length = 459 + strlen(RELEASE) + strlen(REVISION);
-
 			char buf[708 + strlen(RELEASE) + strlen(REVISION)];
 			sprintf(buf, GPIOS,
 					json_length,
 					RELEASE, REVISION,
-					g_device->gpio_mode,
+					option_get_gpio_mode(),
 					err,
 					spi_no, (uint8_t)miso, (uint8_t)mosi, (uint8_t)sclk,
 					(uint8_t)xcs, (uint8_t)xdcs, (uint8_t)dreq,
@@ -1542,11 +1655,136 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 					(uint8_t)buzzer,
 					(uint8_t)rxd, (uint8_t)txd,
 					(uint8_t)ldr);
-			// ESP_LOGE(TAG, "Test GPIOS\nSave: %d\nERR: %X\ngpio_mode: %d\nBuf len: %u\nBuf: %s\nData: %s\nData size: %d\n\n", changed, err, gpio_mode, strlen(buf), buf, data, data_size);
+			// ESP_LOGE(TAG, "Test GPIOS\nSave: %d\nERR: %X\ng_device->options: %X\nBuf len: %u\nBuf: %s\nData: %s\nData size: %d\n\n", changed, err, g_device->options, strlen(buf), buf, data, data_size);
 			write(conn, buf, strlen(buf));
 			if (changed)
 			{
-				g_device->gpio_mode = 1;
+				option_set_gpio_mode(true);
+				fflush(stdout);
+				vTaskDelay(100);
+				esp_restart();
+			}
+			return;
+		}
+	}
+	else if (strcmp(name, "/ircodes") == 0)
+	{
+		if (data_size > 0)
+		{
+			changed = false;
+			char buf_code[14];
+			bool ir_mode = false;
+			nvs_handle hardware_handle;
+			esp_err_t err = ESP_OK;
+			if (getSParameterFromResponse(buf_code, 14, "save=", data, data_size))
+				if (strcmp(buf_code, "1") == 0)
+					changed = true;
+			if (getSParameterFromResponse(buf_code, 14, "ir_mode=", data, data_size))
+				if ((strcmp(buf_code, "1") == 0))
+				{
+					ir_mode = true;
+				}
+
+			if (ir_mode)
+			{
+				err = open_partition("hardware", "gpio_space", (changed == false ? NVS_READONLY : NVS_READWRITE), &hardware_handle);
+				if (err != ESP_OK)
+				{
+					ir_mode = false;
+				}
+				else
+					close_partition(hardware_handle, "hardware");
+			}
+			if (changed)
+			{
+				ir_mode = false;
+			}
+			err |= get_ir_key(ir_mode);
+			if (err == 0x1102)
+			{
+				err |= get_ir_key(false);
+				changed = false;
+			}
+			if (changed)
+			{
+				getSParameterFromResponse(buf_code, 14, "K_0=", data, data_size);
+				gpio_set_ir_key("K_UP", buf_code);
+				getSParameterFromResponse(buf_code, 14, "K_1=", data, data_size);
+				gpio_set_ir_key("K_LEFT", buf_code);
+				getSParameterFromResponse(buf_code, 14, "K_2=", data, data_size);
+				gpio_set_ir_key("K_OK", buf_code);
+				getSParameterFromResponse(buf_code, 14, "K_3=", data, data_size);
+				gpio_set_ir_key("K_RIGHT", buf_code);
+				getSParameterFromResponse(buf_code, 14, "K_4=", data, data_size);
+				gpio_set_ir_key("K_DOWN", buf_code);
+				getSParameterFromResponse(buf_code, 14, "K_5=", data, data_size);
+				gpio_set_ir_key("K_0", buf_code);
+				getSParameterFromResponse(buf_code, 14, "K_6=", data, data_size);
+				gpio_set_ir_key("K_1", buf_code);
+				getSParameterFromResponse(buf_code, 14, "K_7=", data, data_size);
+				gpio_set_ir_key("K_2", buf_code);
+				getSParameterFromResponse(buf_code, 14, "K_8=", data, data_size);
+				gpio_set_ir_key("K_3", buf_code);
+				getSParameterFromResponse(buf_code, 14, "K_9=", data, data_size);
+				gpio_set_ir_key("K_4", buf_code);
+				getSParameterFromResponse(buf_code, 14, "K_10=", data, data_size);
+				gpio_set_ir_key("K_5", buf_code);
+				getSParameterFromResponse(buf_code, 14, "K_11=", data, data_size);
+				gpio_set_ir_key("K_6", buf_code);
+				getSParameterFromResponse(buf_code, 14, "K_12=", data, data_size);
+				gpio_set_ir_key("K_7", buf_code);
+				getSParameterFromResponse(buf_code, 14, "K_13=", data, data_size);
+				gpio_set_ir_key("K_8", buf_code);
+				getSParameterFromResponse(buf_code, 14, "K_14=", data, data_size);
+				gpio_set_ir_key("K_9", buf_code);
+				getSParameterFromResponse(buf_code, 14, "K_15=", data, data_size);
+				gpio_set_ir_key("K_STAR", buf_code);
+				getSParameterFromResponse(buf_code, 14, "K_16=", data, data_size);
+				gpio_set_ir_key("K_DIESE", buf_code);
+				err |= get_ir_key(ir_mode);
+				if (err != ESP_OK)
+				{
+					changed = false;
+				}
+			}
+			char str_sodes[KEY_MAX][14];
+			uint8_t len_codes = 0;
+			for (uint8_t indexKey = KEY_UP; indexKey < KEY_MAX; indexKey++)
+			{
+				len_codes += get_code(buf_code, IR_Key[indexKey][0], IR_Key[indexKey][1]);
+				strcpy(str_sodes[indexKey], buf_code);
+				ESP_LOGD(TAG, " IrKey for set0: %X, for set1: %X str_sodes: %s", IR_Key[indexKey][0], IR_Key[indexKey][1], str_sodes[indexKey]);
+			}
+			ir_mode = g_device->ir_mode;
+			int json_length = 190 + len_codes;
+			char buf[190 + len_codes];
+			sprintf(buf, IRCODES,
+					json_length,
+					ir_mode,
+					err,
+					str_sodes[KEY_UP],
+					str_sodes[KEY_LEFT],
+					str_sodes[KEY_OK],
+					str_sodes[KEY_RIGHT],
+					str_sodes[KEY_DOWN],
+					str_sodes[KEY_0],
+					str_sodes[KEY_1],
+					str_sodes[KEY_2],
+					str_sodes[KEY_3],
+					str_sodes[KEY_4],
+					str_sodes[KEY_5],
+					str_sodes[KEY_6],
+					str_sodes[KEY_7],
+					str_sodes[KEY_8],
+					str_sodes[KEY_9],
+					str_sodes[KEY_STAR],
+					str_sodes[KEY_DIESE]);
+
+			//ESP_LOGE(TAG, "Test IRCODE\nSave: %d\nERR: %X\nir_mode: %d\nBuf len: %u\nBuf: %s\nData: %s\nlen_codes size: %d\n\n", changed, err, ir_mode, strlen(buf), buf, data, len_codes);
+			write(conn, buf, strlen(buf));
+			if (changed)
+			{
+				g_device->ir_mode = IR_CUSTOM;
 				saveDeviceSettings(g_device);
 				fflush(stdout);
 				vTaskDelay(100);

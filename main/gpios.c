@@ -16,7 +16,6 @@
 
 static xSemaphoreHandle muxnvs = NULL;
 const char hardware[] = {"hardware"};
-const char ircodes_space[] = {"ircodes_space"};
 const char gpio_space[] = {"gpio_space"};
 
 // init a gpio as output
@@ -86,10 +85,10 @@ esp_err_t gpio_set_spi_bus(uint8_t spi_no, gpio_num_t miso, gpio_num_t mosi, gpi
 	return err;
 }
 
-esp_err_t gpio_get_spi_bus(uint8_t *spi_no, gpio_num_t *miso, gpio_num_t *mosi, gpio_num_t *sclk, bool gpio_mode)
+esp_err_t gpio_get_spi_bus(uint8_t *spi_no, gpio_num_t *miso, gpio_num_t *mosi, gpio_num_t *sclk)
 {
 	// init default
-	if (!gpio_mode)
+	if (!option_get_gpio_mode())
 	{
 		if (miso != NULL)
 			*miso = PIN_NUM_MISO;
@@ -132,15 +131,15 @@ esp_err_t gpio_get_spi_bus(uint8_t *spi_no, gpio_num_t *miso, gpio_num_t *mosi, 
 		*sclk = val;
 	}
 	if (err != ESP_OK)
-		ESP_LOGE(TAG, "g_get_spi_bus err 0x%x", err);
+		ESP_LOGD(TAG, "g_get_spi_bus err 0x%x", err);
 	close_partition(hardware_handle, hardware);
 	return err;
 }
 
-esp_err_t gpio_get_vs1053(gpio_num_t *xcs, gpio_num_t *xdcs, gpio_num_t *dreq, bool gpio_mode)
+esp_err_t gpio_get_vs1053(gpio_num_t *xcs, gpio_num_t *xdcs, gpio_num_t *dreq)
 {
 	// init default
-	if (!gpio_mode)
+	if (!option_get_gpio_mode())
 	{
 		*xcs = PIN_NUM_XCS;
 		*xdcs = PIN_NUM_XDCS;
@@ -189,29 +188,46 @@ esp_err_t gpio_set_vs1053(gpio_num_t xcs, gpio_num_t xdcs, gpio_num_t dreq)
 
 void option_get_lcd_rotat(uint8_t *rt)
 {
-	*rt = ((g_device->options32) & T_ROTAT) ? 1 : 0;
+	*rt = ((g_device->options) & T_ROTAT) ? 1 : 0;
 }
 
 void option_set_lcd_rotat(uint8_t rt)
 {
 	if (rt == 0)
-		g_device->options32 &= NT_ROTAT;
+		g_device->options &= NT_ROTAT;
 	else
-		g_device->options32 |= T_ROTAT;
+		g_device->options |= T_ROTAT;
 	saveDeviceSettings(g_device);
 }
 
 void option_get_ddmm(uint8_t *ddmm)
 {
-	*ddmm = ((g_device->options32) & T_DDMM) ? 1 : 0;
+	*ddmm = ((g_device->options) & T_DDMM) ? 1 : 0;
 }
 
 void option_set_ddmm(uint8_t ddmm)
 {
 	if (ddmm == 0)
-		g_device->options32 &= NT_DDMM;
+		g_device->options &= NT_DDMM;
 	else
-		g_device->options32 |= T_DDMM;
+		g_device->options |= T_DDMM;
+	saveDeviceSettings(g_device);
+}
+
+bool option_get_gpio_mode()
+{
+	if (g_device->options & T_GPIOMODE)
+		return true;
+	else
+		return false;
+}
+
+void option_set_gpio_mode(uint8_t gpio_mode)
+{
+	if (gpio_mode == 0)
+		g_device->options &= NT_GPIOMODE;
+	else
+		g_device->options |= T_GPIOMODE;
 	saveDeviceSettings(g_device);
 }
 
@@ -225,10 +241,10 @@ void option_set_lcd_out(uint32_t lcd_out)
 	saveDeviceSettings(g_device);
 }
 
-esp_err_t gpio_get_encoders(gpio_num_t *enca, gpio_num_t *encb, gpio_num_t *encbtn, bool gpio_mode)
+esp_err_t gpio_get_encoders(gpio_num_t *enca, gpio_num_t *encb, gpio_num_t *encbtn)
 {
 	// init default
-	if (!gpio_mode)
+	if (!option_get_gpio_mode())
 	{
 		*enca = PIN_ENC0_A;
 		*encb = PIN_ENC0_B;
@@ -278,10 +294,10 @@ esp_err_t gpio_set_encoders(gpio_num_t enca, gpio_num_t encb, gpio_num_t encbtn)
 	return err;
 }
 
-esp_err_t gpio_get_i2c(gpio_num_t *sda, gpio_num_t *scl, bool gpio_mode)
+esp_err_t gpio_get_i2c(gpio_num_t *sda, gpio_num_t *scl)
 {
 	// init default
-	if (!gpio_mode)
+	if (!option_get_gpio_mode())
 	{
 		*scl = PIN_I2C_SCL;
 		*sda = PIN_I2C_SDA;
@@ -327,10 +343,10 @@ esp_err_t gpio_set_i2c(gpio_num_t sda, gpio_num_t scl)
 	close_partition(hardware_handle, hardware);
 	return err;
 }
-esp_err_t gpio_get_uart(gpio_num_t *rxd, gpio_num_t *txd, bool gpio_mode)
+esp_err_t gpio_get_uart(gpio_num_t *rxd, gpio_num_t *txd)
 {
 	// init default
-	if (!gpio_mode)
+	if (!option_get_gpio_mode())
 	{
 		*rxd = PIN_NUM_RXD;
 		*txd = PIN_NUM_TXD;
@@ -377,10 +393,10 @@ esp_err_t gpio_set_uart(gpio_num_t rxd, gpio_num_t txd)
 	return err;
 }
 
-esp_err_t gpio_get_spi_lcd(gpio_num_t *cs, gpio_num_t *a0, bool gpio_mode)
+esp_err_t gpio_get_spi_lcd(gpio_num_t *cs, gpio_num_t *a0)
 {
 	// init default
-	if (!gpio_mode)
+	if (!option_get_gpio_mode())
 	{
 		*cs = PIN_LCD_CS;
 		*a0 = PIN_LCD_A0;
@@ -427,10 +443,10 @@ esp_err_t gpio_set_spi_lcd(gpio_num_t cs, gpio_num_t a0)
 	return err;
 }
 
-esp_err_t gpio_get_ir_signal(gpio_num_t *ir, bool gpio_mode)
+esp_err_t gpio_get_ir_signal(gpio_num_t *ir)
 {
 	// init default
-	if (!gpio_mode)
+	if (!option_get_gpio_mode())
 	{
 		*ir = PIN_IR_SIGNAL;
 		return 0;
@@ -473,10 +489,10 @@ esp_err_t gpio_set_ir_signal(gpio_num_t ir)
 	return err;
 }
 
-esp_err_t gpio_get_backlightl(gpio_num_t *led, bool gpio_mode)
+esp_err_t gpio_get_backlightl(gpio_num_t *led)
 {
 	// init default
-	if (!gpio_mode)
+	if (!option_get_gpio_mode())
 	{
 		*led = PIN_LCD_BACKLIGHT;
 		return 0;
@@ -519,10 +535,10 @@ esp_err_t gpio_set_backlightl(gpio_num_t led)
 	return err;
 }
 
-esp_err_t gpio_get_tachometer(gpio_num_t *tach, bool gpio_mode)
+esp_err_t gpio_get_tachometer(gpio_num_t *tach)
 {
 	// init default
-	if (!gpio_mode)
+	if (!option_get_gpio_mode())
 	{
 		*tach = PIN_NUM_TACH;
 		return 0;
@@ -565,10 +581,10 @@ esp_err_t gpio_set_tachometer(gpio_num_t tach)
 	return err;
 }
 
-esp_err_t gpio_get_ds18b20(gpio_num_t *ds18b20, bool gpio_mode)
+esp_err_t gpio_get_ds18b20(gpio_num_t *ds18b20)
 {
 	// init default
-	if (!gpio_mode)
+	if (!option_get_gpio_mode())
 	{
 		*ds18b20 = PIN_NUM_DS18B20;
 		return 0;
@@ -611,10 +627,10 @@ esp_err_t gpio_set_ds18b20(gpio_num_t ds18b20)
 	return err;
 }
 
-esp_err_t gpio_get_touch(gpio_num_t *touch, bool gpio_mode)
+esp_err_t gpio_get_touch(gpio_num_t *touch)
 {
 	// init default
-	if (!gpio_mode)
+	if (!option_get_gpio_mode())
 	{
 		*touch = PIN_TOUCH_CS;
 		return 0;
@@ -657,10 +673,10 @@ esp_err_t gpio_set_touch(gpio_num_t touch)
 	return err;
 }
 
-esp_err_t gpio_get_fanspeed(gpio_num_t *fanspeed, bool gpio_mode)
+esp_err_t gpio_get_fanspeed(gpio_num_t *fanspeed)
 {
 	// init default
-	if (!gpio_mode)
+	if (!option_get_gpio_mode())
 	{
 		*fanspeed = PIN_NUM_PWM;
 		return 0;
@@ -703,10 +719,10 @@ esp_err_t gpio_set_fanspeed(gpio_num_t fanspeed)
 	return err;
 }
 
-esp_err_t gpio_get_ldr(gpio_num_t *ldr, bool gpio_mode)
+esp_err_t gpio_get_ldr(gpio_num_t *ldr)
 {
 	// init default
-	if (!gpio_mode)
+	if (!option_get_gpio_mode())
 	{
 		*ldr = PIN_NUM_LDR;
 		return 0;
@@ -748,10 +764,10 @@ esp_err_t gpio_set_ldr(gpio_num_t ldr)
 	close_partition(hardware_handle, hardware);
 	return err;
 }
-esp_err_t gpio_get_buzzer(gpio_num_t *buzzer, bool gpio_mode)
+esp_err_t gpio_get_buzzer(gpio_num_t *buzzer)
 {
 	// init default
-	if (!gpio_mode)
+	if (!option_get_gpio_mode())
 	{
 		*buzzer = PIN_NUM_BUZZ;
 		return 0;
@@ -794,24 +810,39 @@ esp_err_t gpio_set_buzzer(gpio_num_t buzzer)
 	return err;
 }
 
-bool gpio_get_ir_key(nvs_handle handle, const char *key, uint32_t *out_value1, uint32_t *out_value2)
+esp_err_t gpio_get_ir_key(nvs_handle handle, const char *key, uint32_t *out_set1, uint32_t *out_set2)
 {
 	// init default
-	bool ret = false;
-	*out_value1 = 0;
-	*out_value2 = 0;
+	esp_err_t err = ESP_OK;
+	*out_set1 = 0;
+	*out_set2 = 0;
 	size_t required_size;
-	nvs_get_str(handle, key, NULL, &required_size);
+	err |= nvs_get_str(handle, key, NULL, &required_size);
 	if (required_size > 1)
 	{
 		char *string = malloc(required_size);
-		nvs_get_str(handle, key, string, &required_size);
-		sscanf(string, "%x %x", out_value1, out_value2);
-		//		ESP_LOGV(TAG,"String \"%s\"\n Required size: %d",string,required_size);
+		err |= nvs_get_str(handle, key, string, &required_size);
+		sscanf(string, "%x %x", out_set1, out_set2);
 		free(string);
-		ret = true;
 	}
-	ESP_LOGV(TAG, "Key: %s, value1: %x, value2: %x, ret: %d", key, *out_value1, *out_value2, ret);
+	ESP_LOGD(TAG, "Load from NVS Key: %s, set1: %x, set2: %x, err: %d", key, *out_set1, *out_set2, err);
 
-	return ret;
+	return err;
+}
+
+esp_err_t gpio_set_ir_key(const char *key, char *ir_keys)
+{
+	nvs_handle hardware_handle;
+	esp_err_t err = open_partition(hardware, gpio_space, NVS_READWRITE, &hardware_handle);
+
+	if (err != ESP_OK)
+	{
+		ESP_LOGD(TAG, "in gpio_set_buzzer");
+		return err;
+	}
+
+	err = nvs_set_str(hardware_handle, key, ir_keys);
+	ESP_LOGD(TAG, "Save Key: %s, ir_keys: %s, err: %d", key, ir_keys, err);
+	close_partition(hardware_handle, hardware);
+	return err;
 }

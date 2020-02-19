@@ -24,9 +24,9 @@
       <br>
       <br>
       <br>
-      <div id="rssi">0 дБм</div>
-      <div id="curtemp">0 ℃</div>
-      <div id="rpmfan">0 Об/мин</div>
+      <div id="rssi"></div>
+      <div id="curtemp"></div>
+      <div id="rpmfan"></div>
       <br>
     </div>
     <div id="HEAD">
@@ -70,37 +70,46 @@
         </div>
       </div>
     </div>
-    <div id="editIrKeyDiv" class="modal">
+    <div class="modal" id="editIrKeyDiv">
       <div class="modal-content">
         <h1>Обучение кнопки пульта</h1>
         <div class="section modal-body">
-          <p>
-            <span class="bold">Название кнопки: </span>
-            <input type="text" id="key_name" disabled="" name="key">
-            <br>
-            <span class="bold">Текущий код: </span>
-            <input type="text" style="width:350px;" id="current_key" name="current_key">
-            <br>
-            <span class="bold">Новый код: </span>
-            <input type="text" style="width:350px;" id="new_key" name="new_key">
-            <br>
-            <br>
-            <input type="button" onclick="saveIrKey()" value="сохранить"> &nbsp;
-            <input type="button" onclick="eraseIrKey()" value="стереть"> &nbsp;
-            <input type="button" onclick="abortIrKey()" value="выйти">
-          </p>
-          <br>
+          <p>Нажмите кнопку пульта для получения кода.</p>
+          <input id="key_num" name="key_num" type="hidden">
+          <table>
+            <tbody>
+              <tr>
+                <td>Название кнопки:</td>
+                <td colspan="2" id="key_name" rowspan="1"></td>
+              </tr>
+              <tr>
+                <td>Текущий код:</td>
+                <td id="current_key"></td>
+                <td><input onclick="eraseIrKey()" type="button" value="Стереть код"></td>
+              </tr>
+              <tr>
+                <td>Новый код:</td>
+                <td id="new_key"></td>
+                <td><input onclick="saveIrKey(document.getElementById('key_num').value)" type="button"
+                    value="Применить"></td>
+              </tr>
+              <tr>
+                <td colspan="2" rowspan="1"><input onclick="clearAllKey()" type="button" value="Стереть все коды"></td>
+                <td><input onclick="abortIrKey()" type="button" value="Выйти"></td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
     <!-- The END Modal Edit window-->
-    <div data-tabs="">
+    <div data-tabs>
       <div id="PLAYER" class="active">РАДИО</div>
-      <div id="STATIONS" class="">СТАНЦИИ</div>
+      <div id="STATIONS">СТАНЦИИ</div>
       <div id="SOUND">ЗВУК</div>
-      <div id="SETTINGS" class="">НАСТРОЙКИ</div>
+      <div id="SETTINGS">НАСТРОЙКИ</div>
     </div>
-    <div data-panes="">
+    <div data-panes>
       <div class="active">
         <!-- PLAY РАДИО -->
         <h1>Управление станциями</h1>
@@ -273,14 +282,14 @@
 
       </div>
       <!-- END PLAY РАДИО -->
-      <div class="">
+      <div>
         <!-- СТАНЦИИ -->
         <h1>Менеджер станций</h1>
         <div class="section">
           <p>
             <input type="button" onclick="saveTextAsFile()" value="Сохранить станции из Радиолы">
             <span style="display:inline-block;"> &nbsp;&nbsp;в &nbsp;&nbsp;&nbsp;<input type="text"
-                style="width:300px;color:black;" value="WebStations.txt" id="filesave"> </span>
+                style="width:300px;color:black;" value="RadiolaStations.txt" id="filesave"> </span>
             <br>
             <br>
             <input type="button" onclick="downloadStations()" value="Загрузить станции в Радиолу">
@@ -311,10 +320,10 @@
       <!-- END СТАНЦИИ -->
       <div>
         <!-- ЗВУК -->
-        <div data-tabs="">
+        <div data-tabs>
           <div onclick="tabbis.onClick(1,0);hardware(1)" class="active">КОМП</div>
-          <div onclick="tabbis.onClick(1,1);hardware(1)" class="">РАДИО</div>
-          <div onclick="tabbis.onClick(1,2);hardware(1)" class="">БЛЮТУЗ</div>
+          <div onclick="tabbis.onClick(1,1);hardware(1)">РАДИО</div>
+          <div onclick="tabbis.onClick(1,2);hardware(1)">БЛЮТУЗ</div>
         </div>
         <br>
         <div id="barTDA7313" style="display: block;">
@@ -399,7 +408,7 @@
           </div>
         </div>
 
-        <div data-panes="">
+        <div data-panes>
           <div id="audioinput1" style="border: none;" class="active">
             <!-- КОМП -->
             <h1>ТОНКОМПЕНСАЦИЯ</h1>
@@ -428,7 +437,7 @@
             </div>
           </div>
           <!-- END КОМП -->
-          <div id="audioinput2" style="border: none;" class="">
+          <div id="audioinput2" style="border: none;">
             <!-- РАДИО -->
             <div id="barTDA7313radio" style="display: block;">
               <h1>ТОНКОМПЕНСАЦИЯ</h1>
@@ -461,60 +470,66 @@
               <table id="VS1053">
                 <tbody>
                   <tr>
-                    <td>Громкость:<span class="bold1" id="vol_span">-19.5 дБ</span></td>
+                    <td>Громкость:</td>
+                    <td id="vol_span"></td>
                   </tr>
                   <tr>
-                    <td style="text-align: center"><input type="range" id="vol_range" name="vol"
-                        oninput="onRangeVolChange(this.value,true)" value="100" min="0" max="254"></td>
+                    <td colspan="2" style="text-align: center"><input id="vol_range" max="254" min="0" name="vol"
+                        oninput="onRangeVolChange(this.value,true)" type="range" value="100"></td>
                   </tr>
                   <tr>
-                    <td>Уровень ВЧ: <span class="bold1" id="treble_span">0 дБ</span></td>
+                    <td>Уровень ВЧ:</td>
+                    <td id="treble_span"></td>
                   </tr>
                   <tr>
-                    <td style="text-align: center"><input type="range" id="treble_range" name="treble"
-                        oninput="onRangeChange('treble_range', 'treble_span', 1.5, false)" min="-8" max="7"></td>
+                    <td colspan="2" style="text-align: center"><input id="treble_range" max="7" min="-8" name="treble"
+                        oninput="onRangeChange('treble_range', 'treble_span', 1.5, false)" type="range"></td>
                   </tr>
                   <tr>
-                    <td>Частота ВЧ:<span class="bold1" id="treblefreq_span">От 1 кГц</span></td>
+                    <td>Частота ВЧ:</td>
+                    <td id="treblefreq_span"></td>
                   </tr>
                   <tr>
-                    <td style="text-align: center"><input type="range" id="treblefreq_range" name="treblefreq"
-                        oninput="onRangeChangeFreqTreble('treblefreq_range', 'treblefreq_span', 1, false)" min="1"
-                        max="15"></td>
-                  </tr>
-                  <tr>
-                    <td>Уровень НЧ:<span class="bold1" id="bass_span">0 дБ</span></td>
-                  </tr>
-                  <tr>
-                    <td style="text-align: center"><input type="range" id="bass_range" name="bass"
-                        oninput="onRangeChange('bass_range', 'bass_span', 1, false)" min="0" max="15"></td>
-                  </tr>
-                  <tr>
-                    <td>Частота НЧ:<span class="bold1" id="bassfreq_span">До 20 Гц</span></td>
-                  </tr>
-                  <tr>
-                    <td style="text-align: center"><input type="range" id="bassfreq_range" name="bassfreq"
-                        oninput="onRangeChangeFreqBass('bassfreq_range', 'bassfreq_span', 10, false)" min="2" max="15">
+                    <td colspan="2" style="text-align: center"><input id="treblefreq_range" max="15" min="1"
+                        name="treblefreq"
+                        oninput="onRangeChangeFreqTreble('treblefreq_range', 'treblefreq_span', 1, false)" type="range">
                     </td>
                   </tr>
                   <tr>
-                    <td>Объёмный звук:<span class="bold1" id="spacial_span">Выкл</span></td>
+                    <td>Уровень НЧ:</td>
+                    <td id="bass_span"></td>
                   </tr>
                   <tr>
-                    <td style="text-align: center"><input type="range" id="spacial_range" name="spacial"
-                        oninput="onRangeChangeSpatial('spacial_range', 'spacial_span')" min="0" max="3"></td>
+                    <td colspan="2" style="text-align: center"><input id="bass_range" max="15" min="0" name="bass"
+                        oninput="onRangeChange('bass_range', 'bass_span', 1, false)" type="range"></td>
                   </tr>
                   <tr>
-                    <td style="text-align: center" class="bold"><input type="button" value="Сброс" onclick="resetEQ()">
-                    </td>
+                    <td>Частота НЧ:</td>
+                    <td id="bassfreq_span"></td>
+                  </tr>
+                  <tr>
+                    <td colspan="2" style="text-align: center"><input id="bassfreq_range" max="15" min="2"
+                        name="bassfreq" oninput="onRangeChangeFreqBass('bassfreq_range', 'bassfreq_span', 10, false)"
+                        type="range"></td>
+                  </tr>
+                  <tr>
+                    <td>Объёмный звук:</td>
+                    <td id="spacial_span"></td>
+                  </tr>
+                  <tr>
+                    <td colspan="2" style="text-align: center"><input id="spacial_range" max="3" min="0" name="spacial"
+                        oninput="onRangeChangeSpatial('spacial_range', 'spacial_span')" type="range"></td>
+                  </tr>
+                  <tr>
+                    <td class="bold" colspan="2" style="text-align: center"><input onclick="resetEQ()" type="button"
+                        value="Сброс"></td>
                   </tr>
                 </tbody>
               </table>
-              <br>
             </div>
           </div>
           <!-- END РАДИО -->
-          <div id="audioinput3" style="border: none;" class="">
+          <div id="audioinput3" style="border: none;">
             <!-- БЛЮТУЗ -->
             <h1>ТОНКОМПЕНСАЦИЯ</h1>
             <div class="section">
@@ -545,16 +560,16 @@
         </div>
       </div>
       <!-- END ЗВУК -->
-      <div class="">
+      <div>
         <!-- НАСТРОЙКИ -->
-        <div data-tabs="">
-          <div class="active">WIFI</div>
-          <div>GPIOS</div>
-          <div>ПУЛЬТ</div>
-          <div>ОПЦИИ</div>
-          <div>UPDATE</div>
+        <div data-tabs>
+          <div id="WIFI" class="active">WIFI</div>
+          <div id="GPIOS">GPIOS</div>
+          <div id="REMOTE">ПУЛЬТ</div>
+          <div id="OPTIONS">ОПЦИИ</div>
+          <div id="UPDATE">UPDATE</div>
         </div>
-        <div data-panes="">
+        <div data-panes>
           <div class="active">
             <!-- СЕТЬ WI-FI -->
             <h1>
@@ -629,17 +644,22 @@
               <input type="button" value="Сохранить значения в NVS" onclick="gpios(1,1,0)">
             </h1>
             <div class="section">
-              <div class="bold2">
-                СТАТУС:
-              </div>
-              <div id="GPIOsErr"></div>
-              <br>
-              <table id="GPIOsTable">
+              <table id="GPIOsState">
                 <tbody>
+                  <tr>
+                    <td colspan="2" rowspan="1">СТАТУС</td>
+                    <td id="GPIOsErr"></td>
+                  </tr>
+                </tbody>
+              </table>
+              <table id="GPIOsTable">
+                <thead>
                   <tr>
                     <td>ИМЯ GPIO</td>
                     <td>ЗНАЧЕНИЕ</td>
                   </tr>
+                </thead>
+                <tbody>
                   <tr>
                     <td>SPI</td>
                     <td contenteditable="true" id="K_SPI"></td>
@@ -743,121 +763,133 @@
           <!-- END GPIOS -->
           <div>
             <!-- ИК-ПУЛЬТ -->
-            <h1>КОДЫ ИК-ПУЛЬТА <input type="button" value="Считать значения по-умолчанию" onclick="ircodes(0,0)">
-              <input type="button" value="Считать значения из NVS" onclick="ircodes(1,0)"><input type="button"
-                value="Сохранить значения в NVS" onclick="ircodes(1,1)">
+            <h1>КОДЫ ИК-ПУЛЬТА <input type="button" value="Считать значения по-умолчанию" onclick="ircodes(0,0,0)">
+              <input type="button" value="Считать значения из NVS" onclick="ircodes(1,0,0)"><input type="button"
+                value="Сохранить значения в NVS" onclick="ircodes(1,1,0)">
             </h1>
             <div class="section">
-              <table id="IRcodesTable">
+              <table id="IRcodesState">
                 <tbody>
+                  <tr>
+                    <td colspan="2" rowspan="1">СТАТУС</td>
+                    <td id="IrErr"></td>
+                  </tr>
+                </tbody>
+              </table>
+              <table id="IRcodesTable">
+                <thead>
                   <tr>
                     <td>КОМАНДА</td>
                     <td>КНОПКА</td>
                     <td>КОД</td>
                     <td>ОБУЧЕНИЕ</td>
                   </tr>
+                </thead>
+                <tbody>
                   <tr>
                     <td>Станция +</td>
-                    <td id="CALL_UP">ВВЕРХ</td>
-                    <td id="K_UP">&nbsp;</td>
-                    <td><input onclick="training('UP')" type="button" value="ОБУЧИТЬ"></td>
+                    <td id="CALL_0">ВВЕРХ</td>
+                    <td id="K_0"></td>
+                    <td><input onclick="training('UP',0)" type="button" value="ОБУЧИТЬ"></td>
                   </tr>
                   <tr>
                     <td>Громкость -</td>
-                    <td id="CALL_LEFT">ВЛЕВО</td>
-                    <td id="K_LEFT">&nbsp;</td>
-                    <td><input onclick="training('LEFT')" type="button" value="ОБУЧИТЬ"></td>
+                    <td id="CALL_1">ВЛЕВО</td>
+                    <td id="K_1"></td>
+                    <td><input onclick="training('LEFT',1)" type="button" value="ОБУЧИТЬ"></td>
                   </tr>
                   <tr>
                     <td>Старт/Стоп</td>
-                    <td id="CALL_OK">ОК</td>
-                    <td id="K_OK">&nbsp;</td>
-                    <td><input onclick="training('OK')" type="button" value="ОБУЧИТЬ"></td>
+                    <td id="CALL_2">ОК</td>
+                    <td id="K_2"></td>
+                    <td><input onclick="training('OK',2)" type="button" value="ОБУЧИТЬ"></td>
                   </tr>
                   <tr>
                     <td>Громкость +</td>
-                    <td id="CALL_RIGHT">ВПРАВО</td>
-                    <td id="K_RIGHT">&nbsp;</td>
-                    <td><input onclick="training('RIGHT')" type="button" value="ОБУЧИТЬ"></td>
+                    <td id="CALL_3">ВПРАВО</td>
+                    <td id="K_3"></td>
+                    <td><input onclick="training('RIGHT',3)" type="button" value="ОБУЧИТЬ"></td>
                   </tr>
                   <tr>
                     <td>Станция -</td>
-                    <td id="CALL_DOWN">ВНИЗ</td>
-                    <td id="K_DOWN">&nbsp;</td>
-                    <td><input onclick="training('DOWN')" type="button" value="ОБУЧИТЬ"></td>
+                    <td id="CALL_4">ВНИЗ</td>
+                    <td id="K_4"></td>
+                    <td><input onclick="training('DOWN',4)" type="button" value="ОБУЧИТЬ"></td>
                   </tr>
                   <tr>
                     <td>Станция № 0</td>
-                    <td id="CALL_0">0</td>
-                    <td id="K_0">&nbsp;</td>
-                    <td><input onclick="training('0')" type="button" value="ОБУЧИТЬ"></td>
+                    <td id="CALL_5">0</td>
+                    <td id="K_5"></td>
+                    <td><input onclick="training('0',5)" type="button" value="ОБУЧИТЬ"></td>
                   </tr>
                   <tr>
                     <td>Станция № 1</td>
-                    <td id="CALL_1">1</td>
-                    <td id="K_1">&nbsp;</td>
-                    <td><input onclick="training('1')" type="button" value="ОБУЧИТЬ"></td>
+                    <td id="CALL_6">1</td>
+                    <td id="K_6"></td>
+                    <td><input onclick="training('1',6)" type="button" value="ОБУЧИТЬ"></td>
                   </tr>
                   <tr>
                     <td>Станция № 2</td>
-                    <td id="CALL_2">2</td>
-                    <td id="K_2">&nbsp;</td>
-                    <td><input onclick="training('2')" type="button" value="ОБУЧИТЬ"></td>
+                    <td id="CALL_7">2</td>
+                    <td id="K_7"></td>
+                    <td><input onclick="training('2',7)" type="button" value="ОБУЧИТЬ"></td>
                   </tr>
                   <tr>
                     <td>Станция № 3</td>
-                    <td id="CALL_3">3</td>
-                    <td id="K_3">&nbsp;</td>
-                    <td><input onclick="training('3')" type="button" value="ОБУЧИТЬ"></td>
+                    <td id="CALL_8">3</td>
+                    <td id="K_8"></td>
+                    <td><input onclick="training('3',8)" type="button" value="ОБУЧИТЬ"></td>
                   </tr>
                   <tr>
                     <td>Станция № 4</td>
-                    <td id="CALL_4">4</td>
-                    <td id="K_4">&nbsp;</td>
-                    <td><input onclick="training('4')" type="button" value="ОБУЧИТЬ"></td>
+                    <td id="CALL_9">4</td>
+                    <td id="K_9"></td>
+                    <td><input onclick="training('4',9)" type="button" value="ОБУЧИТЬ"></td>
                   </tr>
                   <tr>
                     <td>Станция № 5</td>
-                    <td id="CALL_5">5</td>
-                    <td id="K_5">&nbsp;</td>
-                    <td><input onclick="training('5')" type="button" value="ОБУЧИТЬ"></td>
+                    <td id="CALL_10">5</td>
+                    <td id="K_10"></td>
+                    <td><input onclick="training('5',10)" type="button" value="ОБУЧИТЬ"></td>
                   </tr>
                   <tr>
                     <td>Станция № 6</td>
-                    <td id="CALL_6">6</td>
-                    <td id="K_6">&nbsp;</td>
-                    <td><input onclick="training('6')" type="button" value="ОБУЧИТЬ"></td>
+                    <td id="CALL_11">6</td>
+                    <td id="K_11"></td>
+                    <td><input onclick="training('6',11)" type="button" value="ОБУЧИТЬ"></td>
                   </tr>
                   <tr>
                     <td>Станция № 7</td>
-                    <td id="CALL_7">7</td>
-                    <td id="K_7">&nbsp;</td>
-                    <td><input onclick="training('7')" type="button" value="ОБУЧИТЬ"></td>
+                    <td id="CALL_12">7</td>
+                    <td id="K_12"></td>
+                    <td><input onclick="training('7',12)" type="button" value="ОБУЧИТЬ"></td>
                   </tr>
                   <tr>
                     <td>Станция № 8</td>
-                    <td id="CALL_8">8</td>
-                    <td id="K_8">&nbsp;</td>
-                    <td><input onclick="training('8')" type="button" value="ОБУЧИТЬ"></td>
+                    <td id="CALL_13">8</td>
+                    <td id="K_13"></td>
+                    <td><input onclick="training('8',13)" type="button" value="ОБУЧИТЬ"></td>
                   </tr>
                   <tr>
                     <td>Станция № 9</td>
-                    <td id="CALL_9">9</td>
-                    <td id="K_9">&nbsp;</td>
-                    <td><input onclick="training('9')" type="button" value="ОБУЧИТЬ"></td>
+                    <td id="CALL_14">9</td>
+                    <td id="K_14"></td>
+                    <td><input onclick="training('9',14)" type="button" value="ОБУЧИТЬ"></td>
                   </tr>
                   <tr>
                     <td>Источник звука</td>
-                    <td id="CALL_STAR">*</td>
-                    <td id="K_STAR">&nbsp;</td>
-                    <td><input onclick="training('STAR')" type="button" value="ОБУЧИТЬ"></td>
+                    <td id="CALL_15">*</td>
+                    <td id="K_15"></td>
+                    <td><input onclick="training('STAR',15)" type="button" value="ОБУЧИТЬ"></td>
                   </tr>
                   <tr>
                     <td>Часы</td>
-                    <td id="CALL_DIESE">#</td>
-                    <td id="K_DIESE">&nbsp;</td>
-                    <td><input onclick="training('DIESE')" type="button" value="ОБУЧИТЬ"></td>
+                    <td id="CALL_16">#</td>
+                    <td id="K_16"></td>
+                    <td><input onclick="training('DIESE',16)" type="button" value="ОБУЧИТЬ"></td>
                   </tr>
+                </tbody>
+                <tbody>
                 </tbody>
               </table>
             </div>
@@ -945,8 +977,7 @@
                 </tbody>
               </table>
               <div id="brightOn">
-                <table id="bright" style="table-layout: fixed; width: auto;
-">
+                <table id="bright">
                   <tbody>
                     <tr id="by_time">
                       <td>ЗАТЕМНЕНИЕ</td>

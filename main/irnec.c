@@ -202,7 +202,7 @@ static bool nec_rx_init()
 {
 	esp_err_t err = ESP_OK;
 	gpio_num_t ir;
-	gpio_get_ir_signal(&ir, g_device->gpio_mode);
+	gpio_get_ir_signal(&ir);
 	if (ir == GPIO_NONE)
 		return false; //no IR needed
 	rmt_config_t rmt_rx;

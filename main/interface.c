@@ -336,7 +336,7 @@ bool getAutoWifi(void)
 }
 void setAutoWifi()
 {
-	autoWifi = (g_device->options32 & T_WIFIAUTO) ? true : false;
+	autoWifi = (g_device->options & T_WIFIAUTO) ? true : false;
 }
 
 void wifiAuto(char *cmd)
@@ -356,9 +356,9 @@ void wifiAuto(char *cmd)
 	uint8_t value = atoi(t + 2);
 
 	if (value == 0)
-		g_device->options32 &= NT_WIFIAUTO;
+		g_device->options &= NT_WIFIAUTO;
 	else
-		g_device->options32 |= T_WIFIAUTO;
+		g_device->options |= T_WIFIAUTO;
 	autoWifi = value;
 	saveDeviceSettings(g_device);
 
@@ -879,9 +879,9 @@ void sysddmm(char *s)
 	}
 	uint8_t value = atoi(t + 2);
 	if (value == 0)
-		g_device->options32 &= NT_DDMM;
+		g_device->options &= NT_DDMM;
 	else
-		g_device->options32 |= T_DDMM;
+		g_device->options |= T_DDMM;
 	ddmm = (value) ? 1 : 0;
 	saveDeviceSettings(g_device);
 	option_set_ddmm(ddmm);
@@ -900,11 +900,11 @@ void syshenc(int nenc, char *s)
 		kprintf("Encoder not defined#\n");
 		return;
 	}
-	uint8_t options32 = g_device->options32;
+	uint8_t options = g_device->options;
 	if (nenc == 0)
-		encvalue = options32 & T_ENC0;
+		encvalue = options & T_ENC0;
 	else
-		encvalue = options32 & T_ENC1;
+		encvalue = options & T_ENC1;
 
 	if (t == NULL)
 	{
@@ -927,22 +927,22 @@ void syshenc(int nenc, char *s)
 	if (value == 0)
 	{
 		if (nenc == 0)
-			g_device->options32 &= NT_ENC0;
+			g_device->options &= NT_ENC0;
 		else
-			g_device->options32 &= NT_ENC1;
+			g_device->options &= NT_ENC1;
 	}
 	else
 	{
 		if (nenc == 0)
-			g_device->options32 |= T_ENC0;
+			g_device->options |= T_ENC0;
 		else
-			g_device->options32 |= T_ENC1;
+			g_device->options |= T_ENC1;
 	}
 	setHalfStep(encoder, value);
 	// if (nenc == 0)
-	// 	encvalue = g_device->options32 & T_ENC0;
+	// 	encvalue = g_device->options & T_ENC0;
 	// else
-	// 	encvalue = g_device->options32 & T_ENC1;
+	// 	encvalue = g_device->options & T_ENC1;
 	syshenc(nenc, (char *)"");
 	saveDeviceSettings(g_device);
 }
@@ -969,9 +969,9 @@ void sysrotat(char *s)
 	}
 	uint8_t value = atoi(t + 2);
 	if (value == 0)
-		g_device->options32 &= NT_ROTAT;
+		g_device->options &= NT_ROTAT;
 	else
-		g_device->options32 |= T_ROTAT;
+		g_device->options |= T_ROTAT;
 	rotat = value;
 	option_set_lcd_rotat(rotat);
 	saveDeviceSettings(g_device);

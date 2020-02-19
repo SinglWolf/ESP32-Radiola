@@ -367,7 +367,7 @@ esp_err_t tda7313_init()
 	gpio_num_t sda_gpio;
 	gpio_num_t scl_gpio;
 	esp_err_t err;
-	gpio_get_i2c(&sda_gpio, &scl_gpio, g_device->gpio_mode);
+	gpio_get_i2c(&sda_gpio, &scl_gpio);
 	addressTDA = TDAaddress;
 	TDA.present = false;
 	if ((sda_gpio >= 0) || // TDA configured?

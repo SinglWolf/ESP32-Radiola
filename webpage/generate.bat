@@ -9,16 +9,6 @@ REM sed.exe -i 's/\[\]/\[\]/g' style
 sed.exe -i 's/unsigned/const/g' .style
 MOVE style.ori style.css
 
-ECHO style1
-COPY style1.css style1.ori
-python ./css-html-js-minify.py style1.css
-gzip.exe  style1.min.css 
-MOVE style1.min.css.gz style1.css
-xxd.exe -i style1.css > .style1
-REM sed.exe -i 's/\[\]/\[\]/g' style1
-sed.exe -i 's/unsigned/const/g' .style1
-MOVE style1.ori style1.css
-
 ECHO script
 COPY script.js script.ori
 REM python ./css-html-js-minify.py script.js 

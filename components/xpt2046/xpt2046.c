@@ -67,8 +67,8 @@ void getTaskLcd(xTaskHandle *hdt) { handleTaskLcd = *hdt; }
 
 void xpt_init()
 {
-	gpio_get_touch(&csPin, g_device->gpio_mode);
-	gpio_get_spi_bus((uint8_t *)&spiNo, NULL, NULL, NULL, g_device->gpio_mode);
+	gpio_get_touch(&csPin);
+	gpio_get_spi_bus((uint8_t *)&spiNo, NULL, NULL, NULL);
 	if ((csPin != GPIO_NONE))
 	{
 		haveTouchOn = true;

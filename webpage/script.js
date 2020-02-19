@@ -4,12 +4,12 @@ var content = "Content-type",
 var auto, intervalid, intervalrssi, timeid, websocket, urlmonitor, e, moniPlaying = false,
     editPlaying = false,
     editIndex = 0,
-    curtab = "tab-content1",
+    curtab = "PLAYER",
     stchanged = false,
-    maxStation = 255,
-    themeIn = "0";
+    maxStation = 255;
 const mediacentre = "Радиола";
 const working = "Работаю... Пожалуйста, подождите.";
+const _ERR = "ОШИБКА ", _default = "ПО УМОЛЧАНИЮ", _loadNVS = "СЧИТАНО ИЗ NVS", _saveNVS = "ЗАПИСАНО В NVS", _noNVS = "Записей в NVS ещё нет!!!";
 const backupConsole = console;
 
 function openwebsocket() {
@@ -34,18 +34,7 @@ function openwebsocket() {
             if (arr["wssound"]) soundResp(arr["wssound"]);
             if (arr["monitor"]) playMonitor(arr["monitor"]);
             if (arr["wsstation"]) wsplayStation(arr["wsstation"]);
-            if (arr["wsrssi"]) {
-                document.getElementById('rssi').innerHTML = arr["wsrssi"] + ' дБм';
-                setTimeout(wsaskrssi, 5000);
-            }
-            if (arr["wscurtemp"]) {
-                document.getElementById('curtemp').innerHTML = arr["wscurtemp"] + ' ℃';
-                setTimeout(wsaskcurtemp, 5000);
-            }
-            if (arr["wsrpmfan"]) {
-                document.getElementById('rpmfan').innerHTML = arr["wsrpmfan"] + ' Об/мин';
-                setTimeout(wsaskrpmfan, 1000);
-            }
+            if (arr["ircode"]) { code = document.getElementById('new_key').innerHTML = arr["ircode"]; }
             if (arr["upgrade"]) { document.getElementById('updatefb').innerHTML = arr["upgrade"]; }
             if (arr["iurl"]) {
                 document.getElementById('instant_url').value = arr["iurl"];
@@ -58,6 +47,18 @@ function openwebsocket() {
             if (arr["iport"]) {
                 document.getElementById('instant_port').value = arr["iport"];
                 buildURL();
+            }
+            if (arr["wsrssi"]) {
+                document.getElementById('rssi').innerHTML = arr["wsrssi"] + ' дБм';
+                setTimeout(wsaskrssi, 5000);
+            }
+            if (arr["wscurtemp"]) {
+                document.getElementById('curtemp').innerHTML = arr["wscurtemp"] + ' ℃';
+                setTimeout(wsaskcurtemp, 5000);
+            }
+            if (arr["wsrpmfan"]) {
+                document.getElementById('rpmfan').innerHTML = arr["wsrpmfan"] + ' Об/мин';
+                setTimeout(wsaskrpmfan, 1000);
             }
         } catch (e) { console.log("error" + e); }
     }
@@ -217,21 +218,106 @@ function valid() {
 
 function abortIrKey() {
     document.getElementById('editIrKeyDiv').style.display = "none";
+    ircode(0);
 }
 
 function eraseIrKey() {
-    document.getElementById('editIrKeyDiv').style.display = "block";
-    document.getElementById('new_key').value = "";
+    document.getElementById('current_key').innerHTML = "";
+    document.getElementById('K_' + document.getElementById('key_num').value).innerHTML = "";
+}
+function saveIrKey(num) {
+    val = document.getElementById('new_key').innerHTML;
+    if (val == "") {
+        alert("Сначала нажмите кнопку пульта!");
+    } else {
+        checkIR = 0;
+        checkir = false;
+
+        for (i = 0; i < 17; i++) {
+            if (document.getElementById('K_' + i).innerHTML == val) checkIR++;
+        }
+
+        if (checkIR >= 1) checkir = true;
+        console.log(checkir);
+        if (document.getElementById('current_key').innerHTML == val) {
+            checkir = true;
+        }
+        if (window.checkir == true) {
+            alert("Такой код уже назначен!");
+            document.getElementById('new_key').innerHTML = "";
+        }
+        else {
+            document.getElementById('K_' + num).innerHTML = val;
+            document.getElementById('K_' + num).style = "color:red;";
+            abortIrKey();
+        }
+    }
 }
 
-function saveIrKey() {
-    alert("Ещё не реализовано!");
+function clearAllKey() {
+    if (confirm("Стереть все текущие коды пульта?")) {
+        for (i = 0; i < 17; i++) {
+            document.getElementById('K_' + i).innerHTML = "";
+        }
+    }
 }
 
-function training(key) {
-    var arr;
+function training(key, num) {
     document.getElementById('editIrKeyDiv').style.display = "block";
-    document.getElementById('key_name').value = key;
+    document.getElementById('key_name').innerHTML = key;
+    document.getElementById('current_key').innerHTML = document.getElementById('K_' + num).innerHTML;
+    document.getElementById('key_num').value = num;
+    document.getElementById('new_key').innerHTML = "";
+    ircode(1);
+}
+
+function ircodes(ir_mode, save, load) {
+    var setircodes = "", ir_mode_txt, err, style_color;
+    xhr = new XMLHttpRequest();
+    xhr.onreadystatechange = function () {
+        if (xhr.readyState == 4 && xhr.status == 200) {
+            var arr = JSON.parse(xhr.responseText);
+            if (load == 1) {
+                ir_mode = parseInt(arr["IR_MODE"].replace(/\\/g, ""));
+            }
+            err = arr["ERROR"].replace(/\\/g, "");
+            if (err != "0000") {
+                ir_mode_txt = _ERR + err + "<br>";
+                if (err == "1102")
+                    ir_mode_txt = ir_mode_txt + _noNVS;
+                style_color = "red";
+            } else {
+                if (ir_mode == 0) {
+                    ir_mode_txt = _default;
+                    style_color = "blue";
+                } else {
+                    if (save == 0) {
+                        ir_mode_txt = _loadNVS;
+                    } else {
+                        ir_mode_txt = _saveNVS;
+                    }
+                    style_color = "green";
+                }
+            }
+            document.getElementById("IrErr").style.color = style_color;
+            IrErr.innerHTML = ir_mode_txt;
+            for (i = 0; i < 17; i++) {
+                document.getElementById('K_' + i).innerHTML = arr["K_" + i];
+            }
+        }
+    }
+    if ((save == 1) && (confirm("Записать коды пульта в NVS?"))) {
+        for (i = 0; i < 17; i++) {
+            setircodes += "&K_" + i + "=" + document.getElementById('K_' + i).innerHTML;
+        }
+    } else save = 0;
+
+    xhr.open("POST", "ircodes", false);
+    xhr.setRequestHeader(content, ctype);
+    xhr.send("ir_mode=" + ir_mode +
+        "&save=" + save +
+        setircodes +
+        "&");
 }
 
 
@@ -504,11 +590,6 @@ function refresh() {
         xhr.send();
         websocket.send("monitor");
     } catch (e) { console.log("error" + e); }
-}
-// change the theme
-function theme() {
-    websocket.send("theme");
-    window.location.reload(true); // force reload from the server
 }
 
 function resetEQ() {
@@ -842,34 +923,6 @@ function mute() {
     hardware(1);
 }
 
-function choice_settings() {
-    if (document.getElementById("_WIFI").checked == true) {
-        document.getElementById("tab_WIFI").style.display = "block";
-    } else {
-        document.getElementById("tab_WIFI").style.display = "none";
-    }
-    if (document.getElementById("_GPIOs").checked == true) {
-        document.getElementById("tab_GPIOs").style.display = "block";
-    } else {
-        document.getElementById("tab_GPIOs").style.display = "none";
-    }
-    if (document.getElementById("_IRCODEs").checked == true) {
-        document.getElementById("tab_IRCODEs").style.display = "block";
-    } else {
-        document.getElementById("tab_IRCODEs").style.display = "none";
-    }
-    if (document.getElementById("_OPTIONS").checked == true) {
-        document.getElementById("tab_OPTIONS").style.display = "block";
-    } else {
-        document.getElementById("tab_OPTIONS").style.display = "none";
-    }
-    if (document.getElementById("_UPDATES").checked == true) {
-        document.getElementById("tab_UPDATES").style.display = "block";
-    } else {
-        document.getElementById("tab_UPDATES").style.display = "none";
-    }
-}
-
 function loadCSV() {
     alert("Ещё не реализовано...");
 }
@@ -926,11 +979,6 @@ function devoptions(save) {
         "&");
 }
 
-function ircodes(ircode_mode, save, load) {
-    alert("Ещё не реализовано...");
-
-}
-
 function FanControl() {
     if (document.getElementById('FanControl').value == 0) {
         document.getElementById("not_control").style.display = "none";
@@ -984,7 +1032,6 @@ function displaybright() {
             document.getElementById("by_lighting").style.visibility = "visible";
         }
         if (document.getElementById('O_LCD_BRG').value == 3) {
-			document.getElementById("bright").style.width = "32%";
             document.getElementById("by_hand").style.visibility = "visible";
             document.getElementById("by_time").style.visibility = "collapse";
             document.getElementById("brightness").style.visibility = "collapse";
@@ -993,8 +1040,6 @@ function displaybright() {
     }
 }
 
-
-
 function gpios(gpio_mode, save, load) {
     var setgpios = "",
         gpio_mode_txt, err, style_color;
@@ -1002,25 +1047,24 @@ function gpios(gpio_mode, save, load) {
     xhr.onreadystatechange = function () {
         if (xhr.readyState == 4 && xhr.status == 200) {
             var arr = JSON.parse(xhr.responseText);
-            console.log(arr);
             if (load == 1) {
                 gpio_mode = parseInt(arr["GPIO_MODE"].replace(/\\/g, ""));
             }
             err = arr["ERROR"].replace(/\\/g, "");
             if (err != "0000") {
-                gpio_mode_txt = "ОШИБКА " + err + "<br>";
+                gpio_mode_txt = _ERR + err + "<br>";
                 if (err == "1102")
-                    gpio_mode_txt = gpio_mode_txt + "Записей в NVS ещё нет!!!";
+                    gpio_mode_txt = gpio_mode_txt + _noNVS;
                 style_color = "red";
             } else {
                 if (gpio_mode == 0) {
-                    gpio_mode_txt = "ПО УМОЛЧАНИЮ<br>";
+                    gpio_mode_txt = _default;
                     style_color = "blue";
                 } else {
                     if (save == 0) {
-                        gpio_mode_txt = "СЧИТАНО ИЗ NVS<br>";
+                        gpio_mode_txt = _loadNVS;
                     } else {
-                        gpio_mode_txt = "ЗАПИСАНО В NVS<br>";
+                        gpio_mode_txt = _saveNVS;
                     }
                     style_color = "green";
                 }
@@ -1265,21 +1309,6 @@ function autostart() {
         xhr.send("&");
     } catch (e) { console.log("error" + e); }
 }
-//ask for the state of the theme
-function atheme() {
-    xhr = new XMLHttpRequest();
-    xhr.onreadystatechange = function () {
-        if (xhr.readyState == 4 && xhr.status == 200) {
-            var arr = JSON.parse(xhr.responseText);
-            themeIn = arr["theme"];
-        }
-    }
-    try {
-        xhr.open("POST", "theme", false); // request auto state
-        xhr.setRequestHeader(content, ctype);
-        xhr.send("&");
-    } catch (e) { console.log("error" + e); }
-}
 
 function Select() {
     if (document.getElementById('aplay').checked)
@@ -1287,10 +1316,8 @@ function Select() {
 }
 
 function setEditBackground(tr) {
-    if (themeIn == '1')
-        tr.style.background = "#1a3c56";
-    else
-        tr.style.background = "rgb(185, 213, 236)";
+    tr.style.background = "darkblue";
+    tr.style.color = "greenyellow";
 }
 
 function playEditStation(tr) {
@@ -1299,14 +1326,17 @@ function playEditStation(tr) {
     if ((editPlaying) && (editIndex == tr)) {
         stopStation();
         tr.style.background = "initial";
+        tr.style.color = "initial";
         //		editPlaying = false;
         editIndex = 0;
     } else {
-        if (editIndex != 0) editIndex.style.background = "initial";
+        if (editIndex != 0) {
+            editIndex.style.background = "initial";
+            editIndex.style.color = "initial";
+        }
         wsplayStation(id); // select the station in the list
         //		editPlaying = true;
         editIndex = tr;
-        //		getComputedStyle(element).getPropertyValue('--color-font-general');
         setEditBackground(tr);
         playStation(); //play it 
     }
@@ -1499,6 +1529,16 @@ function clearList() {
         refreshList();
         window.setTimeout(loadStations, 10);
     } else promptworking("");
+}
+
+function ircode(mode) {
+    try {
+        xhr = new XMLHttpRequest();
+        xhr.open("POST", "ircode", false);
+        xhr.setRequestHeader(content, ctype);
+        xhr.send("mode=" + mode + "&");
+    } catch (e) { console.log("error" + e); }
+
 }
 
 function upgrade() {
@@ -1869,6 +1909,8 @@ function printList() {
 }
 
 document.addEventListener("DOMContentLoaded", function () {
+    localStorage.removeItem("tabbis");
+    tabbis.init();
     document.getElementById("PLAYER").addEventListener("click", function () {
         if (stchanged) stChanged();
         refresh();
@@ -1876,7 +1918,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
     document.getElementById("STATIONS").addEventListener("click", function () {
         if (stchanged) stChanged();
-        loadStations( /*1*/);
+        loadStations();
         curtab = "STATIONS";
     });
     document.getElementById("SOUND").addEventListener("click", function () {
@@ -1887,11 +1929,21 @@ document.addEventListener("DOMContentLoaded", function () {
     document.getElementById("SETTINGS").addEventListener("click", function () {
         if (stchanged) stChanged();
         curtab = "SETTINGS";
-        gpios(0, 0, 1);
-        wifi(0);
-        hardware(0);
-        devoptions(0);
-        checkversion();
+        document.getElementById("GPIOS").addEventListener("click", function () {
+            gpios(0, 0, 1);
+        });
+        document.getElementById("REMOTE").addEventListener("click", function () {
+            ircodes(0, 0, 1);
+        });
+        document.getElementById("WIFI").addEventListener("click", function () {
+            wifi(0);
+        });
+        document.getElementById("OPTIONS").addEventListener("click", function () {
+            devoptions(0);
+        });
+        document.getElementById("UPDATE").addEventListener("click", function () {
+            checkversion();
+        });
     });
     window.addEventListener("keydown", function (event) {
         if (event.defaultPrevented) {
@@ -1937,18 +1989,20 @@ document.addEventListener("DOMContentLoaded", function () {
     intervalid = 0;
     if (timeid != 0) window.clearInterval(timeid);
     timeid = window.setInterval(dtime, 1000);
-    if (window.location.hostname != "192.168.4.1")
+    if (window.location.hostname != "192.168.4.1") {
         loadStationsList(maxStation);
-    else document.getElementById("SOUND").click();
-    localStorage.removeItem("tabbis");
-    tabbis.init();
+    }
+    else {
+        document.getElementById("WIFI").click();
+        tabbis.onClick(0,3);
+        tabbis.onClick(2,0);
+    }
     checkwebsocket();
     promptworking("");
     refresh();
     wifi(0);
     hardware(0);
     autostart();
-    atheme();
     checkversion();
     consoleON();
 });

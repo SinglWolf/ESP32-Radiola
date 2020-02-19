@@ -14,6 +14,28 @@
 #include "freertos/queue.h"
 #include "ucg.h"
 
+// custom ir code init from hardware nvs
+typedef enum {
+	KEY_UP,
+	KEY_LEFT,
+	KEY_OK,
+	KEY_RIGHT,
+	KEY_DOWN,
+	KEY_0,
+	KEY_1,
+	KEY_2,
+	KEY_3,
+	KEY_4,
+	KEY_5,
+	KEY_6,
+	KEY_7,
+	KEY_8,
+	KEY_9,
+	KEY_STAR,
+	KEY_DIESE,
+	KEY_MAX
+} ir_key_t;
+
 typedef struct
 {
     int channel;   /*!< event type */
@@ -38,6 +60,7 @@ typedef enum typelcmd
     escreen,
     erefresh
 } typelcmd;
+
 typedef struct
 {
     typelcmd lcmd; /*!< For what ?*/
@@ -64,4 +87,5 @@ int16_t getFuturNum();
 void wakeLcd();
 void *getEncoder(int num);
 uint32_t get_ir_code();
+void set_ir_training(bool training);
 #endif

@@ -9,24 +9,31 @@
 
 #include "esp_system.h"
 #include "tda7313.h"
-//define for bit array options
-#define T_THEME 1
-#define NT_THEME 0xFE
-#define T_PATCH 2
-#define NT_PATCH 0xFD
-//define for bit array options32
-#define T_DDMM 1
+
+// константы для флагов опций
+#define T_DDMM 0x01
 #define NT_DDMM 0xFE
-#define T_ROTAT 2
+
+#define T_ROTAT 0x02
 #define NT_ROTAT 0xFD
-#define T_ENC0 4
-#define T_ENC1 8
+
+#define T_ENC0 0x04
 #define NT_ENC0 0xFB
+
+#define T_ENC1 0x08
 #define NT_ENC1 0xF7
+
 #define T_WIFIAUTO 0x10
 #define NT_WIFIAUTO 0xEF
+
 #define T_TOGGLETIME 0x20
 #define NT_TOGGLETIME 0xDF
+
+#define T_PATCH 0x40
+#define NT_PATCH 0xBF
+
+#define T_GPIOMODE 0x80
+#define NT_GPIOMODE 0x7F
 
 #define APMODE 0
 #define STA1 1
@@ -51,15 +58,13 @@ typedef enum backlight_mode_t {
 } backlight_mode_t;
 
 typedef enum ir_mode_t {
-	IR_DEFAULD, // Опрос кодов по-умолчанию
-	IR_CUSTOM,		//Опрос пользовательских кодов
-	IR_TRAINING,	//Режим обучения пульта
+	IR_DEFAULD,  // Опрос кодов по-умолчанию
+	IR_CUSTOM,   //Опрос пользовательских кодов
 } ir_mode_t;
 
 struct device_settings
 {
 	uint16_t cleared; // 0xAABB if initialized
-	uint8_t gpio_mode;
 	uint8_t dhcpEn1;
 	uint8_t ipAddr1[4];
 	uint8_t mask1[4];
@@ -83,19 +88,23 @@ struct device_settings
 	uint8_t autostart;		 // 0: stopped, 1: playing
 	uint8_t i2sspeed;		 // 0 = 48kHz, 1 = 96kHz, 2 = 128kHz
 	uint32_t uartspeed;		 // serial baud
-	uint8_t options;		 // bit0:0 theme ligth blue, 1 Dark brown, bit1: 0 patch load  1 no patch
 	char ua[39];			 // user agent
 	uint8_t ntp_mode;		 // ntp_mode
 	uint32_t sleepValue;
 	uint32_t wakeValue;
 	// esp32
 	input_mode_t audio_input_num; //
-	ir_mode_t ir_mode; // Режим работы ИК-пульта
+	ir_mode_t ir_mode;			  // Режим работы ИК-пульта
 	uint8_t trace_level;
 	uint32_t lcd_out;  // timeout in seconds to switch off the lcd. 0 = no timeout
-	uint8_t options32; // bit0:0 = MMDD, 1 = DDMM  in the time display, bit1: 0= lcd without rotation  1 = lcd rotated 180
-					   // bit 2: Half step of encoder0, bit3: Half step of encoder1, bit4: wifi auto reconnect
-					   // bit5: TOGGLE time or main sreen
+	uint8_t options; // bit 0:0 = MMDD, 1 = DDMM  in the time display 
+					   // bit 1: 0 = lcd without rotation  1 = lcd rotated 180
+					   // bit 2: Half step of encoder0 
+					   // bit 3: Half step of encoder1
+					   // bit 4: wifi auto reconnect
+					   // bit 5: TOGGLE time or main sreen
+					   // bit 6: 0 patch load  1 no patch
+					   // bit 7: 0 = gpio default 1 = gpio NVS
 	char hostname[HOSTLEN];
 	uint32_t tp_calx;
 	uint32_t tp_caly;

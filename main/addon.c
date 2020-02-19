@@ -56,6 +56,7 @@ static typeScreen defaultStateScreen = smain;
 static uint8_t mTscreen = MTNEW; // 0 dont display, 1 display full, 2 display variable part
 
 static bool playable = true;
+bool ir_training = false;
 static uint16_t volume;
 static int16_t futurNum = 0; // the number of the wanted station
 
@@ -73,52 +74,7 @@ static int16_t currentValue = 0;
 static bool dvolume = false; // display volume screen
 static uint32_t ircode;
 
-// custom ir code init from hardware nvs
-typedef enum {
-	KEY_UP,
-	KEY_LEFT,
-	KEY_OK,
-	KEY_RIGHT,
-	KEY_DOWN,
-	KEY_0,
-	KEY_1,
-	KEY_2,
-	KEY_3,
-	KEY_4,
-	KEY_5,
-	KEY_6,
-	KEY_7,
-	KEY_8,
-	KEY_9,
-	KEY_STAR,
-	KEY_DIESE,
-	KEY_MAX
-} customKey_t;
-
-// default ir codes
-typedef enum {
-	DK_UP = 0xFF0018,
-	DK_LEFT = 0xFF0008,
-	DK_OK = 0xFF001C,
-	DK_RIGHT = 0xFF005A,
-	DK_DOWN = 0xFF0052,
-	DK_0 = 0xFF0019,
-	DK_1 = 0xFF0045,
-	DK_2 = 0xFF0046,
-	DK_3 = 0xFF0047,
-	DK_4 = 0xFF0044,
-	DK_5 = 0xFF0040,
-	DK_6 = 0xFF0043,
-	DK_7 = 0xFF0007,
-	DK_8 = 0xFF0015,
-	DK_9 = 0xFF0009,
-	DK_STAR = 0xFF0016,
-	DK_DIESE = 0xFF000D,
-	DKEY_MAX = 17
-} defaultKey_t;
-
-static uint32_t customKey[KEY_MAX][2];
-static bool isCustomKey = false;
+static uint32_t IR_Key[KEY_MAX][2];
 
 static bool isEncoder = true;
 
@@ -135,7 +91,7 @@ static adc2_channel_t ldrchannel2 = GPIO_NONE;
 void LdrInit()
 {
 	gpio_num_t ldr;
-	gpio_get_ldr(&ldr, g_device->gpio_mode);
+	gpio_get_ldr(&ldr);
 	if (ldr != GPIO_NONE)
 	{
 		// вычисление канала по используемому пину
@@ -729,91 +685,9 @@ void encoderLoop()
 		encoderCompute(encoder0, VCTRL);
 }
 
-// compute custom IR
-bool irCustom(uint32_t evtir, bool repeat)
+void set_ir_training(bool training)
 {
-	int i;
-	for (i = KEY_UP; i < KEY_MAX; i++)
-	{
-		if ((evtir == customKey[i][0]) || (evtir == customKey[i][1]))
-			break;
-	}
-	if (i < KEY_MAX)
-	{
-		switch (i)
-		{
-		case KEY_UP:
-			evtStation(+1);
-			break;
-		case KEY_LEFT:
-			setRelVolume(-5);
-			break;
-		case KEY_OK:
-			if (!repeat)
-				stationOk();
-			// stopStation();
-			break;
-		case KEY_RIGHT:
-			setRelVolume(+5);
-			break;
-		case KEY_DOWN:
-			evtStation(-1);
-			break;
-		case KEY_0:
-			if (!repeat)
-				nbStation('0');
-			break;
-		case KEY_1:
-			if (!repeat)
-				nbStation('1');
-			break;
-		case KEY_2:
-			if (!repeat)
-				nbStation('2');
-			break;
-		case KEY_3:
-			if (!repeat)
-				nbStation('3');
-			break;
-		case KEY_4:
-			if (!repeat)
-				nbStation('4');
-			break;
-		case KEY_5:
-			if (!repeat)
-				nbStation('5');
-			break;
-		case KEY_6:
-			if (!repeat)
-				nbStation('6');
-			break;
-		case KEY_7:
-			if (!repeat)
-				nbStation('7');
-			break;
-		case KEY_8:
-			if (!repeat)
-				nbStation('8');
-			break;
-		case KEY_9:
-			if (!repeat)
-				nbStation('9');
-			break;
-		case KEY_STAR:
-			if (!repeat)
-				playStationInt(futurNum);
-			break;
-		case KEY_DIESE:
-			if (!repeat)
-				// stopStation();
-				toggletime();
-			break;
-		default:;
-		}
-		ESP_LOGV(TAG, "irCustom success, evtir %x, i: %d", evtir, i);
-		return true;
-	}
-	return false;
+	ir_training = training;
 }
 
 uint32_t get_ir_code()
@@ -832,114 +706,99 @@ void irLoop()
 	{
 		wakeLcd();
 		uint32_t evtir = ((evt.addr) << 8) | (evt.cmd & 0xFF);
-
-		if (isCustomKey && (g_device->ir_mode == IR_CUSTOM))
-		{
-			if (irCustom(evtir, evt.repeat_flag))
-				continue;
-		}
-		else if (g_device->ir_mode == IR_DEFAULD)
-		{ // no predefined keys
-			switch (evtir)
+		if (!ir_training)
+		{ //
+			int i;
+			for (i = KEY_UP; i < KEY_MAX; i++)
 			{
-			/*("UP");*/
-			case DK_UP:
-				evtStation(+1);
-				break;
-			/*("LEFT");*/
-			case DK_LEFT:
-				setRelVolume(-5);
-				break;
-			/*("OK");*/
-			case DK_OK:
-				if (!evt.repeat_flag)
+				if ((evtir == IR_Key[i][0]) || (evtir == IR_Key[i][1]))
+					break;
+			}
+			if (i < KEY_MAX)
+			{
+				switch (i)
+				{
+				case KEY_UP:
+					evtStation(+1);
+					break;
+				case KEY_LEFT:
+					setRelVolume(-5);
+					break;
+				case KEY_OK:
+					if (!evt.repeat_flag)
+						stationOk();
 					// stopStation();
-					stationOk();
-
-				break;
-			/*("RIGHT");*/
-			case DK_RIGHT:
-				setRelVolume(+5);
-				break;
-			/*("DOWN");*/
-			case DK_DOWN:
-				evtStation(-1);
-				break;
-			/*("1");*/
-			case DK_1:
-				if (!evt.repeat_flag)
-					nbStation('1');
-				break;
-			/*("2");*/
-			case DK_2:
-				if (!evt.repeat_flag)
-					nbStation('2');
-				break;
-			/*("3");*/
-			case DK_3:
-				if (!evt.repeat_flag)
-					nbStation('3');
-				break;
-			/*("4");*/
-			case DK_4:
-				if (!evt.repeat_flag)
-					nbStation('4');
-				break;
-			/*("5");*/
-			case DK_5:
-				if (!evt.repeat_flag)
-					nbStation('5');
-				break;
-			/*("6");*/
-			case DK_6:
-				if (!evt.repeat_flag)
-					nbStation('6');
-				break;
-			/*("7");*/
-			case DK_7:
-				if (!evt.repeat_flag)
-					nbStation('7');
-				break;
-			/*("8");*/
-			case DK_8:
-				if (!evt.repeat_flag)
-					nbStation('8');
-				break;
-			/*("9");*/
-			case DK_9:
-				if (!evt.repeat_flag)
-					nbStation('9');
-				break;
-			/*("*");*/
-			case DK_STAR:
-				if (!evt.repeat_flag)
-					playStationInt(futurNum);
-				break;
-			/*("0");*/
-			case DK_0:
-				if (!evt.repeat_flag)
-					nbStation('0');
-				break;
-			/*("#");*/
-			case DK_DIESE:
-				if (!evt.repeat_flag)
-					// stopStation();
-					toggletime();
-				break;
-			default:;
-				/*SERIALX.println(F(" other button   "));*/
-			} // End Case
+					break;
+				case KEY_RIGHT:
+					setRelVolume(+5);
+					break;
+				case KEY_DOWN:
+					evtStation(-1);
+					break;
+				case KEY_0:
+					if (!evt.repeat_flag)
+						nbStation('0');
+					break;
+				case KEY_1:
+					if (!evt.repeat_flag)
+						nbStation('1');
+					break;
+				case KEY_2:
+					if (!evt.repeat_flag)
+						nbStation('2');
+					break;
+				case KEY_3:
+					if (!evt.repeat_flag)
+						nbStation('3');
+					break;
+				case KEY_4:
+					if (!evt.repeat_flag)
+						nbStation('4');
+					break;
+				case KEY_5:
+					if (!evt.repeat_flag)
+						nbStation('5');
+					break;
+				case KEY_6:
+					if (!evt.repeat_flag)
+						nbStation('6');
+					break;
+				case KEY_7:
+					if (!evt.repeat_flag)
+						nbStation('7');
+					break;
+				case KEY_8:
+					if (!evt.repeat_flag)
+						nbStation('8');
+					break;
+				case KEY_9:
+					if (!evt.repeat_flag)
+						nbStation('9');
+					break;
+				case KEY_STAR:
+					if (!evt.repeat_flag)
+						playStationInt(futurNum);
+					break;
+				case KEY_DIESE:
+					if (!evt.repeat_flag)
+						// stopStation();
+						toggletime();
+					break;
+				default:;
+				}
+				ESP_LOGV(TAG, "irCode success, evtir %x, i: %d", evtir, i);
+			}
 		}
-		else if (g_device->ir_mode == IR_TRAINING)
+		else
 		{
 			beep(30);
 			ESP_LOGI(TAG, "IR training: Channel: %x, ADDR: %x, CMD: %x = %X, REPEAT: %d", evt.channel, evt.addr, evt.cmd, evtir, evt.repeat_flag);
 			ircode = evtir;
+			char IRcode[20];
+			sprintf(IRcode, "{\"ircode\":\"%X\"}", ircode);
+			websocketbroadcast(IRcode, strlen(IRcode));
 		}
-		else
-		{
-			ircode = 0;
-		}
+		ircode = 0;
 	}
 }
 
@@ -949,18 +808,17 @@ void initButtonDevices()
 	gpio_num_t enca0;
 	gpio_num_t encb0;
 	gpio_num_t encbtn0;
-	gpio_get_encoders(&enca0, &encb0, &encbtn0, g_device->gpio_mode);
+	gpio_get_encoders(&enca0, &encb0, &encbtn0);
 	if (enca0 == GPIO_NONE)
 		isEncoder = false; //no encoder
 	if (isEncoder)
-		encoder0 = ClickEncoderInit(enca0, encb0, encbtn0, ((g_device->options32 & T_ENC0) == 0) ? false : true);
+		encoder0 = ClickEncoderInit(enca0, encb0, encbtn0, ((g_device->options & T_ENC0) == 0) ? false : true);
 }
 
 // custom ir code init from hardware nvs partition
-#define hardware "hardware"
-void customKeyInit()
+esp_err_t ir_key_init()
 {
-	customKey_t indexKey;
+	ir_key_t indexKey;
 	nvs_handle handle;
 	const char *klab[] = {
 		"K_UP",
@@ -981,19 +839,56 @@ void customKeyInit()
 		"K_STAR",
 		"K_DIESE",
 	};
-
-	memset(&customKey, 0, sizeof(uint32_t) * 2 * KEY_MAX); // clear custom
-	if (open_partition(hardware, "custom_ir_space", NVS_READONLY, &handle) != ESP_OK)
-		return;
-
-	for (indexKey = KEY_UP; indexKey < KEY_MAX; indexKey++)
+	const uint32_t keydef[] = {
+		0xFF0018, /* KEY_UP */
+		0xFF0008, /* KEY_LEFT */
+		0xFF001C, /* KEY_OK */
+		0xFF005A, /* KEY_RIGHT */
+		0xFF0052, /* KEY_DOWN */
+		0xFF0019, /* KEY_0 */
+		0xFF0045, /* KEY_1 */
+		0xFF0046, /* KEY_2 */
+		0xFF0047, /* KEY_3 */
+		0xFF0044, /* KEY_4 */
+		0xFF0040, /* KEY_5 */
+		0xFF0043, /* KEY_6 */
+		0xFF0007, /* KEY_7 */
+		0xFF0015, /* KEY_8 */
+		0xFF0009, /* KEY_9 */
+		0xFF0016, /* KEY_STAR */
+		0xFF000D, /* KEY_DIESE */
+	};
+	esp_err_t err = ESP_OK;
+	memset(&IR_Key, 0, sizeof(uint32_t) * 2 * KEY_MAX); // clear custom
+	if (g_device->ir_mode == IR_DEFAULD)
 	{
-		// get the key in the nvs
-		isCustomKey |= gpio_get_ir_key(handle, klab[indexKey], (uint32_t *)&(customKey[indexKey][0]), (uint32_t *)&(customKey[indexKey][1]));
-		ESP_LOGV(TAG, " isCustomKey is %d for %d", isCustomKey, indexKey);
-		taskYIELD();
+		for (indexKey = KEY_UP; indexKey < KEY_MAX; indexKey++)
+		{
+			// get the key default
+			IR_Key[indexKey][0] = keydef[indexKey];
+			ESP_LOGD(TAG, " IrDefaultKey is %s for set0: %X", klab[indexKey], IR_Key[indexKey][0]);
+			taskYIELD();
+		}
 	}
-	close_partition(handle, hardware);
+	else
+	{
+		err = open_partition("hardware", "gpio_space", NVS_READONLY, &handle);
+		if (err != ESP_OK)
+		{
+			close_partition(handle, "hardware");
+			g_device->ir_mode = IR_DEFAULD;
+			saveDeviceSettings(g_device);
+			return err;
+		}		
+		for (indexKey = KEY_UP; indexKey < KEY_MAX; indexKey++)
+		{
+			// get the key in the nvs
+			err |= gpio_get_ir_key(handle, klab[indexKey], (uint32_t *)&(IR_Key[indexKey][0]), (uint32_t *)&(IR_Key[indexKey][1]));
+			taskYIELD();
+		}
+		close_partition(handle, "hardware");
+	}
+	return err;
 }
 
 // touch loop
@@ -1057,7 +952,7 @@ void task_lcd(void *pvParams)
 	event_lcd_t evt;  // lcd event
 	event_lcd_t evt1; // lcd event
 	ESP_LOGD(TAG, "task_lcd Started, LCD Type");
-	defaultStateScreen = (g_device->options32 & T_TOGGLETIME) ? stime : smain;
+	defaultStateScreen = (g_device->options & T_TOGGLETIME) ? stime : smain;
 	drawFrame();
 
 	while (1)
@@ -1149,7 +1044,7 @@ void task_lcd(void *pvParams)
 				case etoggle:
 					defaultStateScreen = (stateScreen == smain) ? stime : smain;
 					(stateScreen == smain) ? Screen(stime) : Screen(smain);
-					g_device->options32 = (defaultStateScreen == smain) ? g_device->options32 & NT_TOGGLETIME : g_device->options32 | T_TOGGLETIME;
+					g_device->options = (defaultStateScreen == smain) ? g_device->options & NT_TOGGLETIME : g_device->options | T_TOGGLETIME;
 					saveDeviceSettings(g_device);
 					break;
 				default:;
@@ -1174,7 +1069,7 @@ void task_addon(void *pvParams)
 {
 	xTaskHandle pxCreatedTask;
 	LdrInit(); // Инициализация фоторезистора
-	customKeyInit();
+	ir_key_init();
 	initButtonDevices();
 
 	serviceAddon = &multiService;

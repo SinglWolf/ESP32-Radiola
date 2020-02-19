@@ -658,7 +658,7 @@ void start_network()
 		while (timeinfo.tm_year < (2016 - 1900) && ++retry < retry_count)
 		{
 			ESP_LOGI(TAG, "Waiting for system time to be set... (%d/%d)", retry, retry_count);
-			vTaskDelay(2000 / portTICK_PERIOD_MS);
+			vTaskDelay(3000 / portTICK_PERIOD_MS);
 			time(&now);
 			localtime_r(&now, &timeinfo);
 		}
@@ -862,17 +862,17 @@ void app_main()
 			free(g_device);
 			eeEraseAll();
 			g_device = getDeviceSettings();
-			g_device->cleared = 0xAABB;				 // marker init done
-			g_device->gpio_mode = 0;				 // Режим считывания GPIO 0 - по-умолчанию, 1 - из NVS
-			g_device->uartspeed = 115200;			 // default
-			g_device->ir_mode = IR_DEFAULD;			 // Опрос кодов по-умолчанию
-			g_device->audio_input_num = COMPUTER;	// default
-			g_device->options |= T_PATCH;			 // 0 = load patch
-			g_device->trace_level = ESP_LOG_VERBOSE; // default
-			g_device->vol = 100;					 // default
-			g_device->ntp_mode = 0;					 // Режим  использования серверов NTP 0 - по-умолчанию, 1 - пользовательские
-			g_device->options32 |= T_ROTAT;
-			g_device->options32 |= T_DDMM;
+			g_device->cleared = 0xAABB;			   // marker init done
+			g_device->options &= NT_GPIOMODE;	  // Режим считывания GPIO 0 - по-умолчанию, 1 - из NVS
+			g_device->uartspeed = 115200;		   // default
+			g_device->ir_mode = IR_DEFAULD;		   // Опрос кодов по-умолчанию
+			g_device->audio_input_num = COMPUTER;  // default
+			g_device->options |= T_PATCH;		   // load patch
+			g_device->trace_level = ESP_LOG_ERROR; // default
+			g_device->vol = 100;				   // default
+			g_device->ntp_mode = 0;				   // Режим  использования серверов NTP 0 - по-умолчанию, 1 - пользовательские
+			g_device->options |= T_ROTAT;
+			g_device->options |= T_DDMM;
 			g_device->current_ap = STA1;
 			strcpy(g_device->ssid1, "OpenWrt");
 			strcpy(g_device->pass1, "1234567890");
@@ -892,15 +892,13 @@ void app_main()
 			ESP_LOGE(TAG, "Device config restored");
 	}
 	copyDeviceSettings(); // copy in the safe partion
-
-	// g_device->gpio_mode = 0;
 	//
 	InitPWM();
 	//SPI init for the vs1053 and lcd if spi.
 	VS1053_spi_init();
 	//
 	g_device->audio_input_num = COMPUTER;
-
+	//ESP_LOGI(TAG, "CHECK GPIO_MODE: %d", option_get_gpio_mode());
 	//audio input number COMPUTER, RADIO, BLUETOOTH
 	ESP_LOGI(TAG, "audio input number %d\nOne of COMPUTER = 1, RADIO, BLUETOOTH", g_device->audio_input_num);
 

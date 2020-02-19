@@ -41,7 +41,7 @@ With this android app you can select the WebRadio station you want to play, set 
   <!-- My playlist: <a href="https://serverdoma.ru/esp32/WebStations.txt" download> WebStations.txt</a> updated on 2018/12/28<BR/> -->
   <BR />
   <A HREF="mailto:singlwolf@serverdoma.ru">Пожалуйста, пришлите мне свой плейлист, чтобы добавить его сюда.</A> <br /> <br /></div>
-  <h1>Прототипы:</h1><BR />
+  <h1>Прототипы:</h1>
   <div class="section">
   Здесь будет ссылка :-)
   <!-- <a href="https://serverdoma.ru/esp32/yours/"  target="_blank"><font color="#14A692">Нажмите здесь, чтобы увидеть прототипы</font></a><BR/> -->

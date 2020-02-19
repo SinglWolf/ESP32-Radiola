@@ -73,7 +73,7 @@ void VS1053_spi_init()
 		vsSPI = xSemaphoreCreateMutex();
 	if (!hsSPI)
 		hsSPI = xSemaphoreCreateMutex();
-	gpio_get_spi_bus(&spi_no, &miso, &mosi, &sclk, g_device->gpio_mode);
+	gpio_get_spi_bus(&spi_no, &miso, &mosi, &sclk);
 	if (spi_no > 2)
 		return; //Only VSPI and HSPI are valid spi modules.
 
@@ -103,8 +103,8 @@ bool VS1053_HW_init()
 
 	uint8_t spi_no; // the spi bus to use
 
-	gpio_get_spi_bus(&spi_no, &miso, &mosi, &sclk, g_device->gpio_mode);
-	gpio_get_vs1053(&xcs, &xdcs, &dreq, g_device->gpio_mode);
+	gpio_get_spi_bus(&spi_no, &miso, &mosi, &sclk);
+	gpio_get_vs1053(&xcs, &xdcs, &dreq);
 
 	// if xcs = 0 the vs1053 is not used
 	if (xcs == GPIO_NONE)
@@ -373,11 +373,12 @@ void VS1053_Start()
 		VS1053_I2SRate(g_device->i2sspeed);
 
 		// plugin patch
-		if ((g_device->options & T_PATCH) == 0)
+		if (g_device->options & T_PATCH)
 		{
 			LoadUserCodes(); // vs1053b patch and admix
 							 //			VS1053_SetVolumeLine(-31);
 							 //			VS1053_Admix(false);
+			ESP_LOGD(TAG, "vs1053b plugin patch loaded.");							 
 		}
 	}
 }

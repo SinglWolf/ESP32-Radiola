@@ -320,13 +320,13 @@
       <!-- END СТАНЦИИ -->
       <div>
         <!-- ЗВУК -->
-        <div data-tabs>
+        <div id="soudBar" data-tabs>
           <div onclick="tabbis.onClick(1,0);hardware(1)" class="active">КОМП</div>
           <div onclick="tabbis.onClick(1,1);hardware(1)">РАДИО</div>
           <div onclick="tabbis.onClick(1,2);hardware(1)">БЛЮТУЗ</div>
         </div>
         <br>
-        <div id="barTDA7313" style="display: block;">
+        <div id="barTDA7313">
           <h1>TDA7313</h1>
           <div class="section">
             <div class="bold2">ЗВУК
@@ -371,14 +371,18 @@
                 <tr>
                   <td>Левый канал:</td>
                   <td id="AttLF_span">0 дБ</td>
+                </tr>
+                <tr>
+                  <td colspan="2" rowspan="1" style="text-align: center"><input id="AttLF_range" max="13" min="0"
+                      name="AttLF" oninput="onTDAchange('AttLF')" type="range"></td>
+                </tr>
+                <tr>
                   <td>Правый канал:</td>
                   <td id="AttRF_span">0 дБ</td>
                 </tr>
                 <tr>
-                  <td colspan="2" rowspan="1" style="text-align: center"><input type="range" id="AttLF_range" max="13"
-                      min="0" name="AttLF" oninput="onTDAchange('AttLF')"></td>
-                  <td colspan="2" rowspan="1" style="text-align: center"><input id="AttRF_range" type="range" max="13"
-                      min="0" name="AttRF" oninput="onTDAchange('AttRF')"></td>
+                  <td colspan="2" rowspan="1" style="text-align: center"><input id="AttRF_range" max="13" min="0"
+                      name="AttRF" oninput="onTDAchange('AttRF')" type="range"></td>
                 </tr>
               </tbody>
             </table>
@@ -394,14 +398,18 @@
                 <tr>
                   <td>Левый канал:</td>
                   <td id="AttLR_span">0 дБ</td>
+                </tr>
+                <tr>
+                  <td colspan="2" rowspan="1" style="text-align: center"><input id="AttLR_range" max="13" min="0"
+                      name="AttLR" oninput="onTDAchange('AttLR')" type="range"></td>
+                </tr>
+                <tr>
                   <td>Правый канал:</td>
                   <td id="AttRR_span">0 дБ</td>
                 </tr>
                 <tr>
-                  <td colspan="2" rowspan="1" style="text-align: center"><input type="range" id="AttLR_range" max="13"
-                      min="0" name="AttLR" oninput="onTDAchange('AttLR')"></td>
-                  <td colspan="2" rowspan="1" style="text-align: center"><input type="range" id="AttRR_range" max="13"
-                      min="0" name="AttRR" oninput="onTDAchange('AttRR')"></td>
+                  <td colspan="2" rowspan="1" style="text-align: center"><input id="AttRR_range" max="13" min="0"
+                      name="AttRR" oninput="onTDAchange('AttRR')" type="range"></td>
                 </tr>
               </tbody>
             </table>
@@ -439,7 +447,7 @@
           <!-- END КОМП -->
           <div id="audioinput2" style="border: none;">
             <!-- РАДИО -->
-            <div id="barTDA7313radio" style="display: block;">
+            <div id="barTDA7313radio">
               <h1>ТОНКОМПЕНСАЦИЯ</h1>
               <div class="section">
                 <div class="bold2">ТОНКОМПЕНСАЦИЯ

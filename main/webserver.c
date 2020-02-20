@@ -105,9 +105,12 @@ const char HARDWARE[] = {"HTTP/1.1 200 OK\r\nContent-Type:application/json\r\nCo
 \"mute\":\"%u\"\
 }"\
 };
-const char GPIOS[] = {"HTTP/1.1 200 OK\r\nContent-Type:application/json\r\nContent-Length:%d\r\n\r\n{\
+const char VERSION[] = {"HTTP/1.1 200 OK\r\nContent-Type:application/json\r\nContent-Length:%d\r\n\r\n{\
 \"RELEASE\":\"%s\",\
-\"REVISION\":\"%s\",\
+\"REVISION\":\"%s\"\
+}"\
+};
+const char GPIOS[] = {"HTTP/1.1 200 OK\r\nContent-Type:application/json\r\nContent-Length:%d\r\n\r\n{\
 \"GPIO_MODE\":\"%u\",\
 \"ERROR\":\"%04X\",\
 \"K_SPI\":\"%u\",\
@@ -996,6 +999,17 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 	{
 		update_firmware("ESP32Radiola"); // start the OTA
 	}
+	else if (strcmp(name, "/version") == 0)
+	{
+		int json_length = 28 + strlen(RELEASE) + strlen(REVISION);
+		char buf[70 + json_length];
+		sprintf(buf, VERSION,
+				json_length,
+				RELEASE, REVISION);
+		ESP_LOGD(TAG, "Test RELEASE and REVISION\nBuf len: %u\n\nBuf:\n%s", strlen(buf), buf);
+		write(conn, buf, strlen(buf));
+		return;
+	}
 	else if (strcmp(name, "/ircode") == 0) // start the IR TRAINING
 	{
 		if (data_size > 0)
@@ -1634,11 +1648,10 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 					changed = false;
 				}
 			}
-			int json_length = 459 + strlen(RELEASE) + strlen(REVISION);
-			char buf[708 + strlen(RELEASE) + strlen(REVISION)];
+			int json_length = 432;
+			char buf[71 + json_length];
 			sprintf(buf, GPIOS,
 					json_length,
-					RELEASE, REVISION,
 					option_get_gpio_mode(),
 					err,
 					spi_no, (uint8_t)miso, (uint8_t)mosi, (uint8_t)sclk,
@@ -1655,7 +1668,7 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 					(uint8_t)buzzer,
 					(uint8_t)rxd, (uint8_t)txd,
 					(uint8_t)ldr);
-			// ESP_LOGE(TAG, "Test GPIOS\nSave: %d\nERR: %X\ng_device->options: %X\nBuf len: %u\nBuf: %s\nData: %s\nData size: %d\n\n", changed, err, g_device->options, strlen(buf), buf, data, data_size);
+			ESP_LOGE(TAG, "Test GPIOS\nSave: %d\nERR: %X\nBuf len: %u\nBuf: %s\nData: %s\nData size: %d\n\n", changed, err, strlen(buf), buf, data, data_size);
 			write(conn, buf, strlen(buf));
 			if (changed)
 			{

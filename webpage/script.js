@@ -1095,7 +1095,6 @@ function gpios(gpio_mode, save, load) {
             P_RXD.innerHTML = parseInt(arr["P_RXD"].replace(/\\/g, ""));
             P_TXD.innerHTML = parseInt(arr["P_TXD"].replace(/\\/g, ""));
             P_LDR.innerHTML = parseInt(arr["P_LDR"].replace(/\\/g, ""));
-            document.getElementById('currentrelease').innerHTML = arr["RELEASE"].replace(/\\/g, "") + " Rev: " + arr["REVISION"].replace(/\\/g, "");
         }
     }
     if ((save == 1) && (confirm("Записать зачения GPIO в NVS?"))) {
@@ -1145,8 +1144,6 @@ function hardware(save) {
         if (xhr.readyState == 4 && xhr.status == 200) {
             var arr = JSON.parse(xhr.responseText);
             if (arr['present'] == "1") {
-                document.getElementById("barTDA7313").style.display = "";
-                document.getElementById("barTDA7313radio").style.display = "";
                 tabbis.onClick(1, parseInt(arr['inputnum']) - 1);
                 document.getElementById('Volume_range').value = arr["Volume"].replace(/\\/g, "");
                 onTDAchange('Volume', false);
@@ -1181,8 +1178,12 @@ function hardware(save) {
                 else
                     document.getElementById('mute').removeAttribute("checked");
             } else {
-                document.getElementById("Radio").style.display = "";
-                tabbis.onClick(1, 1);
+                document.getElementById("barTDA7313").style.display = "none";
+                document.getElementById("barTDA7313radio").style.display = "none";
+//                document.getElementById("audioinput1").style.display = "none";
+//                document.getElementById("audioinput3").style.display = "none";
+                tabbis.onClick(1, 1);                
+                document.getElementById("soudBar").style = "pointer-events:none;";
             }
         }
     }
@@ -1551,6 +1552,20 @@ function upgrade() {
 
     //	alert("Rebooting to the new release\nPlease refresh the page in few seconds.");
 }
+function getversion() {
+    xhr = new XMLHttpRequest();
+    xhr.onreadystatechange = function () {
+        if (xhr.readyState == 4 && xhr.status == 200) {
+            var arr = JSON.parse(xhr.responseText);
+            document.getElementById('currentrelease').innerHTML = arr["RELEASE"].replace(/\\/g, "") + " Rev: " + arr["REVISION"].replace(/\\/g, "");
+        }
+    }
+    try {
+        xhr.open("POST", "version", false);
+        xhr.setRequestHeader(content, ctype);
+        xhr.send("&");
+    } catch (e) { console.log("error" + e); }
+}
 
 function checkhistory() {
     if (window.XDomainRequest) {
@@ -1583,6 +1598,7 @@ function checkinfos() {
 }
 //load the version and history html
 function checkversion() {
+    getversion();
     if (window.XDomainRequest) {
         xhr = new XDomainRequest();
     } else if (window.XMLHttpRequest) {
@@ -1994,8 +2010,8 @@ document.addEventListener("DOMContentLoaded", function () {
     }
     else {
         document.getElementById("WIFI").click();
-        tabbis.onClick(0,3);
-        tabbis.onClick(2,0);
+        tabbis.onClick(0, 3);
+        tabbis.onClick(2, 0);
     }
     checkwebsocket();
     promptworking("");

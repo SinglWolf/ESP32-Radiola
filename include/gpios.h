@@ -24,9 +24,13 @@
 #define PIN_NUM_PWM GPIO_NUM_13     //пин управления оборотами вентилятора
 #define PIN_NUM_TACH GPIO_NUM_12    //Пин контроля оборотов вентилятора
 #define PIN_NUM_DS18B20 GPIO_NUM_14 //пин датчика температуры
-#define PIN_NUM_SDCS GPIO_NUM_15    //пин выбора SD карты
+//#define PIN_NUM_SDCS GPIO_NUM_15    //пин выбора SD карты
 #define PIN_NUM_BUZZ GPIO_NUM_33    //пин BUZZER
-#define PIN_NUM_LDR GPIO_NONE       //пин фоторезистора
+#define PIN_NUM_LDR GPIO_NUM_39       //пин фоторезистора
+#define PIN_NUM_KBD GPIO_NUM_34       //пин клавиатуры
+
+//
+#define PIN_NUM_STB GPIO_NUM_25       //пин STAND BY
 
 // I2C
 //------------------------------------------------
@@ -35,8 +39,8 @@
 
 // SOFTUART
 //------------------------------------------------
-#define PIN_NUM_RXD GPIO_NONE
-#define PIN_NUM_TXD GPIO_NONE
+#define PIN_NUM_RXD GPIO_NUM_36 // RXD BT201
+#define PIN_NUM_TXD GPIO_NUM_15 // TXD BT201
 //-------------------------
 // Must be HSPI or VSPI
 

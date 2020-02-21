@@ -76,28 +76,30 @@
 
 **Распиновка по-умолчанию** 
 
-| ESP32 | VS1053  | TFT  | XPT2046 | TDA7313<br/>TDA7317<br/>DS3231 | DS1820 |  Fan  | IRLED | BUZZER |
-| :---: | :-----: | :--: | :-----: | :-----: | :----: | :---: | :---: | :----: |
-|   19  |  MISO   | MISO | T_MISO  |         |        |       |       |        |
-|   23  |  MOSI   | MOSI | T_MOSI  |         |        |       |       |        |
-|   18  |  CLK    | CLK  | T_CLK   |         |        |       |       |        |
-|   5   |  XCS    |      |         |         |        |       |       |        |
-|   32  |  XDCS   |      |         |         |        |       |       |        |
-|   4   |  DREQ   |      |         |         |        |       |       |        |
-|   21  |         |      |         |   SDA   |        |       |       |        |
-|   22  |         |      |         |   SCL   |        |       |       |        |
-|   27  |         | CS   |         |         |        |       |       |        |
-|   2   |         | DC   |         |         |        |       |       |        |
-|   25  |         |      |         |         |        |       |       |        |
-|   35  |         |      |         |         |        |       |+IRLED |        |
-|   26  |         | LED  |         |         |        |       |       |        |
-|   12  |         |      |         |         |        | TACH  |       |        |
-|   13  |         |      |         |         |        | PWM   |       |        |
-|   14  |         |      |         |         | DS1820 |       |       |        |
-|   0   |         |      | T_CS    |         |        |       |       |        |
-|   33  |         |      |         |         |        |       |       |+BUZZER |
-| (EN)  |  RESET  | RES  |         |         |        |       |       |        |
-|       |         |      |         |         |        |       |       |        |
+| ESP32 | VS1053  | TFT  | XPT2046 | TDA7313<br/>TDA7317<br/>DS3231 | DS1820 |  Fan  | IRLED | BUZZER | STAND<br/>BY | BT201 |
+| :---: | :-----: | :--: | :-----: | :-----: | :----: | :---: | :---: | :----: |:----:|:----:|
+|   19  |  MISO   | MISO | T_MISO  |         |        |       |       |        |      |      |
+|   23  |  MOSI   | MOSI | T_MOSI  |         |        |       |       |        |      |      |
+|   18  |  CLK    | CLK  | T_CLK   |         |        |       |       |        |      |      |
+|   5   |  XCS    |      |         |         |        |       |       |        |      |      |
+|   32  |  XDCS   |      |         |         |        |       |       |        |      |      |
+|   4   |  DREQ   |      |         |         |        |       |       |        |      |      |
+|   21  |         |      |         |   SDA   |        |       |       |        |      |      |
+|   22  |         |      |         |   SCL   |        |       |       |        |      |      |
+|   27  |         | CS   |         |         |        |       |       |        |      |      |
+|   2   |         | DC   |         |         |        |       |       |        |      |      |
+|   25  |         |      |         |         |        |       |       |        | STB  |      |
+|   35  |         |      |         |         |        |       |+IRLED |        |      |      |
+|   26  |         | LED  |         |         |        |       |       |        |      |      |
+|   12  |         |      |         |         |        | TACH  |       |        |      |      |
+|   13  |         |      |         |         |        | PWM   |       |        |      |      |
+|   14  |         |      |         |         | DS1820 |       |       |        |      |      |
+|   0   |         |      | T_CS    |         |        |       |       |        |      |      |
+|   33  |         |      |         |         |        |       |       |+BUZZER |      |      |
+|   36  |         |      |         |         |        |       |       |        |      |  RX  |
+|   15  |         |      |         |         |        |       |       |        |      |  TX  |
+| (EN)  |  RESET  | RES  |         |         |        |       |       |        |      |      |
+|       |         |      |         |         |        |       |       |        |      |      |
 
 **[flash_download_tools_v3.6.8](https://www.espressif.com/sites/default/files/tools/flash_download_tools_v3.6.8.zip)**
 
@@ -114,6 +116,9 @@
 ![Image alt](https://github.com/SinglWolf/ESP32-Radiola/raw/master/pictures/flash_download_tools.png)
 
 **[ESP32-Radiola - если что-то пошло не так...](https://serverdoma.ru/viewtopic.php?f=70&t=1183)**
+
+**Принципиальная схема Радиолы**
+![Image alt](https://github.com/SinglWolf/ESP32-Radiola/raw/master/pictures/ESP32-Radiola.jpg)
 
 **Вкладки Веб-интерфейса**
 ![Image alt](https://github.com/SinglWolf/ESP32-Radiola/raw/master/pictures/radio.png)

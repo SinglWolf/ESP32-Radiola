@@ -118,7 +118,7 @@
 **Принципиальная схема Радиолы**
 ![Image alt](https://github.com/SinglWolf/ESP32-Radiola/raw/master/pictures/ESP32-Radiola.jpg)
 
-**Принципиальная схема перифирийных устройств Радиолы**
+**Принципиальная схема периферийных устройств Радиолы**
 ![Image alt](https://github.com/SinglWolf/ESP32-Radiola/raw/master/pictures/Peripherals-Radoila.jpg)
 
 

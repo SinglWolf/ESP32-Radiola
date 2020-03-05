@@ -378,7 +378,7 @@ void VS1053_Start()
 			LoadUserCodes(); // vs1053b patch and admix
 							 //			VS1053_SetVolumeLine(-31);
 							 //			VS1053_Admix(false);
-			ESP_LOGD(TAG, "vs1053b plugin patch loaded.");							 
+			ESP_LOGD(TAG, "vs1053b plugin patch loaded.");
 		}
 	}
 }
@@ -467,12 +467,15 @@ void VS1053_SetVolume(uint8_t xMinusHalfdB)
  * @return Returned value describes enhancement in multiplies
  * 		of 1.5dB. 0 value means no enhancement, 8 max (12dB).
  */
-int8_t VS1053_GetTreble()
+uint16_t VS1053_GetTreble()
 {
-	int8_t treble = (VS1053_ReadRegister(SPI_BASS) & 0xF000) >> 12;
-	if ((treble & 0x08))
-		treble |= 0xF0; // negative value
-	return (treble);
+	union sci_bass_m sci_base_value;
+	sci_base_value.word = VS1053_ReadRegister(SPI_BASS);
+	return (sci_base_value.nibble.Treble_Amplitude);
+	// int8_t treble = (VS1053_ReadRegister(SPI_BASS) & 0xF000) >> 12;
+	// if ((treble & 0x08))
+	// 	treble |= 0xF0; // negative value
+	// return (treble);
 }
 
 /**
@@ -485,10 +488,24 @@ int8_t VS1053_GetTreble()
  */
 void VS1053_SetTreble(int8_t xOneAndHalfdB)
 {
-	uint16_t bassReg = VS1053_ReadRegister(SPI_BASS);
+	union sci_bass_m sci_base_value;
 
-	if ((xOneAndHalfdB <= 7) && (xOneAndHalfdB >= -8))
-		VS1053_WriteRegister(SPI_BASS, MaskAndShiftRight(bassReg, 0x0F00, 8) | (xOneAndHalfdB << 4), bassReg & 0x00FF);
+	if (xOneAndHalfdB < -8)
+	{
+		xOneAndHalfdB = -8;
+	}
+	else if (xOneAndHalfdB > 7)
+	{
+		xOneAndHalfdB = 7;
+	}
+
+	sci_base_value.word = VS1053_ReadRegister(SPI_BASS);
+	sci_base_value.nibble.Treble_Amplitude = xOneAndHalfdB;
+	VS1053_WriteRegister16(SPI_BASS, sci_base_value.word);
+	// uint16_t bassReg = VS1053_ReadRegister(SPI_BASS);
+
+	// if ((xOneAndHalfdB <= 7) && (xOneAndHalfdB >= -8))
+	// 	VS1053_WriteRegister(SPI_BASS, MaskAndShiftRight(bassReg, 0x0F00, 8) | (xOneAndHalfdB << 4), bassReg & 0x00FF);
 }
 
 /**
@@ -500,9 +517,23 @@ void VS1053_SetTreble(int8_t xOneAndHalfdB)
  */
 void VS1053_SetTrebleFreq(uint8_t xkHz)
 {
-	uint16_t bassReg = VS1053_ReadRegister(SPI_BASS);
-	if (xkHz <= 15)
-		VS1053_WriteRegister(SPI_BASS, MaskAndShiftRight(bassReg, 0xF000, 8) | xkHz, bassReg & 0x00FF);
+	union sci_bass_m sci_base_value;
+
+	if (xkHz < 1)
+	{
+		xkHz = 1;
+	}
+	else if (xkHz > 15)
+	{
+		xkHz = 15;
+	}
+
+	sci_base_value.word = VS1053_ReadRegister(SPI_BASS);
+	sci_base_value.nibble.Treble_Freqlimt = xkHz;
+	VS1053_WriteRegister16(SPI_BASS, sci_base_value.word);
+	// uint16_t bassReg = VS1053_ReadRegister(SPI_BASS);
+	// if (xkHz <= 15)
+	// 	VS1053_WriteRegister(SPI_BASS, MaskAndShiftRight(bassReg, 0xF000, 8) | xkHz, bassReg & 0x00FF);
 }
 int8_t VS1053_GetTrebleFreq()
 {
@@ -515,7 +546,10 @@ int8_t VS1053_GetTrebleFreq()
  */
 uint8_t VS1053_GetBass()
 {
-	return ((VS1053_ReadRegister(SPI_BASS) & 0x00F0) >> 4);
+	union sci_bass_m sci_base_value;
+	sci_base_value.word = VS1053_ReadRegister(SPI_BASS);
+	return (sci_base_value.nibble.Bass_Amplitude);
+	//return ((VS1053_ReadRegister(SPI_BASS) & 0x00F0) >> 4);
 }
 
 /**
@@ -526,11 +560,21 @@ uint8_t VS1053_GetBass()
  */
 void VS1053_SetBass(uint8_t xdB)
 {
-	uint16_t bassReg = VS1053_ReadRegister(SPI_BASS);
-	if (xdB <= 15)
-		VS1053_WriteRegister(SPI_BASS, (bassReg & 0xFF00) >> 8, (bassReg & 0x000F) | (xdB << 4));
-	else
-		VS1053_WriteRegister(SPI_BASS, (bassReg & 0xFF00) >> 8, (bassReg & 0x000F) | 0xF0);
+	union sci_bass_m sci_base_value;
+
+if (xdB > 15)
+	{
+		xdB = 15;
+	}
+
+	sci_base_value.word = VS1053_ReadRegister(SPI_BASS);
+	sci_base_value.nibble.Bass_Amplitude = xdB;
+	VS1053_WriteRegister16(SPI_BASS, sci_base_value.word);
+	// uint16_t bassReg = VS1053_ReadRegister(SPI_BASS);
+	// if (xdB <= 15)
+	// 	VS1053_WriteRegister(SPI_BASS, (bassReg & 0xFF00) >> 8, (bassReg & 0x000F) | (xdB << 4));
+	// else
+	// 	VS1053_WriteRegister(SPI_BASS, (bassReg & 0xFF00) >> 8, (bassReg & 0x000F) | 0xF0);
 }
 
 /**
@@ -542,14 +586,31 @@ void VS1053_SetBass(uint8_t xdB)
  */
 void VS1053_SetBassFreq(uint8_t xTenHz)
 {
-	uint16_t bassReg = VS1053_ReadRegister(SPI_BASS);
-	if (xTenHz >= 2 && xTenHz <= 15)
-		VS1053_WriteRegister(SPI_BASS, MaskAndShiftRight(bassReg, 0xFF00, 8), (bassReg & 0x00F0) | xTenHz);
+	union sci_bass_m sci_base_value;
+
+	if (xTenHz < 2)
+	{
+		xTenHz = 2;
+	}
+	else if (xTenHz > 15)
+	{
+		xTenHz = 15;
+	}
+
+	sci_base_value.word = VS1053_ReadRegister(SPI_BASS);
+	sci_base_value.nibble.Bass_Freqlimt = xTenHz;
+	VS1053_WriteRegister16(SPI_BASS, sci_base_value.word);
+	// uint16_t bassReg = VS1053_ReadRegister(SPI_BASS);
+	// if (xTenHz >= 2 && xTenHz <= 15)
+	// 	VS1053_WriteRegister(SPI_BASS, MaskAndShiftRight(bassReg, 0xFF00, 8), (bassReg & 0x00F0) | xTenHz);
 }
 
-uint8_t VS1053_GetBassFreq()
+uint16_t VS1053_GetBassFreq()
 {
-	return ((VS1053_ReadRegister(SPI_BASS) & 0x000F));
+	union sci_bass_m sci_base_value;
+	sci_base_value.word = VS1053_ReadRegister(SPI_BASS);
+	return (sci_base_value.nibble.Bass_Freqlimt * 10);
+	//return ((VS1053_ReadRegister(SPI_BASS) & 0x000F));
 }
 
 uint8_t VS1053_GetSpatial()

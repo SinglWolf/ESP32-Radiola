@@ -107,15 +107,15 @@ void setfont(sizefont size)
 		case 320:
 			ucg_SetFont(&ucg, ucg_font_6x13_mf);
 			break;
-		case 128:
-			ucg_SetFont(&ucg, ucg_font_4x6_mf);
-			break;
-		case 96:
-			ucg_SetFont(&ucg, ucg_font_u8glib_4_hf);
-			break;
-		case 132:
+		// case 128:
+		// 	ucg_SetFont(&ucg, ucg_font_4x6_mf);
+		// 	break;
+		// case 96:
+		// 	ucg_SetFont(&ucg, ucg_font_u8glib_4_hf);
+		// 	break;
+		// case 132:
 		default: // 160
-			ucg_SetFont(&ucg, ucg_font_5x8_mf);
+			// ucg_SetFont(&ucg, ucg_font_5x8_mf);
 			;
 		}
 		break;
@@ -139,68 +139,68 @@ void setfont(sizefont size)
 			}
 			//			charset?ucg_SetFont(&ucg,ucg_font_crox5h ):ucg_SetFont(&ucg,ucg_font_inr16_mf ) ;
 			break;
-		case 128:
-			switch (charset)
-			{
-			case Cyrillic:
-				ucg_SetFont(&ucg, ucg_font_crox1c);
-				break;
-			case Greek:
-				ucg_SetFont(&ucg, ucg_font_helvR14_gr);
-				break;
-			default:
-			case Latin:
-				ucg_SetFont(&ucg, ucg_font_5x7_mf);
-				break;
-			}
-			//			charset?ucg_SetFont(&ucg,ucg_font_crox1c ):ucg_SetFont(&ucg,ucg_font_5x7_mf) ;
-			break;
-		case 132:
-			switch (charset)
-			{
-			case Cyrillic:
-				ucg_SetFont(&ucg, ucg_font_crox1c);
-				break;
-			case Greek:
-				ucg_SetFont(&ucg, ucg_font_helvR14_gr);
-				break;
-			default:
-			case Latin:
-				ucg_SetFont(&ucg, ucg_font_5x7_mf);
-				break;
-			}
-			//			charset?ucg_SetFont(&ucg,ucg_font_crox1c ):ucg_SetFont(&ucg,ucg_font_5x7_mf) ;
-			break;
-		case 96:
-			switch (charset)
-			{
-			case Cyrillic:
-				ucg_SetFont(&ucg, ucg_font_crox1c);
-				break;
-			case Greek:
-				ucg_SetFont(&ucg, ucg_font_5x7_gr);
-				break;
-			default:
-			case Latin:
-				ucg_SetFont(&ucg, ucg_font_5x7_mf);
-				break;
-			}
-			//			charset?ucg_SetFont(&ucg,ucg_font_crox1c ):ucg_SetFont(&ucg,ucg_font_4x6_mf) ;
-			break;
+		// case 128:
+		// 	switch (charset)
+		// 	{
+		// 	case Cyrillic:
+		// 		ucg_SetFont(&ucg, ucg_font_crox1c);
+		// 		break;
+		// 	case Greek:
+		// 		ucg_SetFont(&ucg, ucg_font_helvR14_gr);
+		// 		break;
+		// 	default:
+		// 	case Latin:
+		// 		ucg_SetFont(&ucg, ucg_font_5x7_mf);
+		// 		break;
+		// 	}
+		// 	//			charset?ucg_SetFont(&ucg,ucg_font_crox1c ):ucg_SetFont(&ucg,ucg_font_5x7_mf) ;
+		// 	break;
+		// case 132:
+		// 	switch (charset)
+		// 	{
+		// 	case Cyrillic:
+		// 		ucg_SetFont(&ucg, ucg_font_crox1c);
+		// 		break;
+		// 	case Greek:
+		// 		ucg_SetFont(&ucg, ucg_font_helvR14_gr);
+		// 		break;
+		// 	default:
+		// 	case Latin:
+		// 		ucg_SetFont(&ucg, ucg_font_5x7_mf);
+		// 		break;
+		// 	}
+		// 	//			charset?ucg_SetFont(&ucg,ucg_font_crox1c ):ucg_SetFont(&ucg,ucg_font_5x7_mf) ;
+		// 	break;
+		// case 96:
+		// 	switch (charset)
+		// 	{
+		// 	case Cyrillic:
+		// 		ucg_SetFont(&ucg, ucg_font_crox1c);
+		// 		break;
+		// 	case Greek:
+		// 		ucg_SetFont(&ucg, ucg_font_5x7_gr);
+		// 		break;
+		// 	default:
+		// 	case Latin:
+		// 		ucg_SetFont(&ucg, ucg_font_5x7_mf);
+		// 		break;
+		// 	}
+		// 	//			charset?ucg_SetFont(&ucg,ucg_font_crox1c ):ucg_SetFont(&ucg,ucg_font_4x6_mf) ;
+		// 	break;
 		default: // 160
-			switch (charset)
-			{
-			case Cyrillic:
-				ucg_SetFont(&ucg, ucg_font_crox1c);
-				break;
-			case Greek:
-				ucg_SetFont(&ucg, ucg_font_6x13_gr);
-				break;
-			default:
-			case Latin:
-				ucg_SetFont(&ucg, ucg_font_6x13_mf);
-				break;
-			}
+			// switch (charset)
+			// {
+			// case Cyrillic:
+			// 	ucg_SetFont(&ucg, ucg_font_crox1c);
+			// 	break;
+			// case Greek:
+			// 	ucg_SetFont(&ucg, ucg_font_6x13_gr);
+			// 	break;
+			// default:
+			// case Latin:
+			// 	ucg_SetFont(&ucg, ucg_font_6x13_mf);
+			// 	break;
+			// }
 			//			charset?ucg_SetFont(&ucg,ucg_font_crox1c ):ucg_SetFont(&ucg,ucg_font_6x13_mf) ;
 			;
 		}
@@ -226,53 +226,53 @@ void setfont(sizefont size)
 			}
 			//			charset?ucg_SetFont(&ucg,ucg_font_crox5h ):ucg_SetFont(&ucg,ucg_font_inr33_mf);
 			break;
-		case 128:
-			switch (charset)
-			{
-			case Cyrillic:
-				ucg_SetFont(&ucg, ucg_font_crox3c);
-				break;
-			case Greek:
-				ucg_SetFont(&ucg, ucg_font_helvR14_gr);
-				break;
-			default:
-			case Latin:
-				ucg_SetFont(&ucg, ucg_font_7x14_mf);
-				break;
-			}
-			//			charset?ucg_SetFont(&ucg,ucg_font_crox3c ):ucg_SetFont(&ucg,ucg_font_7x14_mf);
-			break;
-		case 96:
-			switch (charset)
-			{
-			case Cyrillic:
-				ucg_SetFont(&ucg, ucg_font_crox2h);
-				break;
-			case Greek:
-				ucg_SetFont(&ucg, ucg_font_5x7_gr);
-				break;
-			default:
-			case Latin:
-				ucg_SetFont(&ucg, ucg_font_6x12_mf);
-				break;
-			}
-			//			charset?ucg_SetFont(&ucg,ucg_font_crox2h ):ucg_SetFont(&ucg,ucg_font_6x12_mf);
-			break;
-		case 132:
+		// case 128:
+		// 	switch (charset)
+		// 	{
+		// 	case Cyrillic:
+		// 		ucg_SetFont(&ucg, ucg_font_crox3c);
+		// 		break;
+		// 	case Greek:
+		// 		ucg_SetFont(&ucg, ucg_font_helvR14_gr);
+		// 		break;
+		// 	default:
+		// 	case Latin:
+		// 		ucg_SetFont(&ucg, ucg_font_7x14_mf);
+		// 		break;
+		// 	}
+		// 	//			charset?ucg_SetFont(&ucg,ucg_font_crox3c ):ucg_SetFont(&ucg,ucg_font_7x14_mf);
+		// 	break;
+		// case 96:
+		// 	switch (charset)
+		// 	{
+		// 	case Cyrillic:
+		// 		ucg_SetFont(&ucg, ucg_font_crox2h);
+		// 		break;
+		// 	case Greek:
+		// 		ucg_SetFont(&ucg, ucg_font_5x7_gr);
+		// 		break;
+		// 	default:
+		// 	case Latin:
+		// 		ucg_SetFont(&ucg, ucg_font_6x12_mf);
+		// 		break;
+		// 	}
+		// 	//			charset?ucg_SetFont(&ucg,ucg_font_crox2h ):ucg_SetFont(&ucg,ucg_font_6x12_mf);
+		// 	break;
+		// case 132:
 		default: // 160
-			switch (charset)
-			{
-			case Cyrillic:
-				ucg_SetFont(&ucg, ucg_font_crox3c);
-				break;
-			case Greek:
-				ucg_SetFont(&ucg, ucg_font_helvR14_gr);
-				break;
-			default:
-			case Latin:
-				ucg_SetFont(&ucg, ucg_font_fur14_tf);
-				break;
-			}
+			// switch (charset)
+			// {
+			// case Cyrillic:
+			// 	ucg_SetFont(&ucg, ucg_font_crox3c);
+			// 	break;
+			// case Greek:
+			// 	ucg_SetFont(&ucg, ucg_font_helvR14_gr);
+			// 	break;
+			// default:
+			// case Latin:
+			// 	ucg_SetFont(&ucg, ucg_font_fur14_tf);
+			// 	break;
+			// }
 			//			charset?ucg_SetFont(&ucg,ucg_font_crox3c ):ucg_SetFont(&ucg,ucg_font_fur14_tf);
 
 			;
@@ -284,15 +284,15 @@ void setfont(sizefont size)
 		case 320:
 			ucg_SetFont(&ucg, ucg_font_inr53_mf);
 			break;
-		case 128:
-			ucg_SetFont(&ucg, ucg_font_helvR12_hf);
-			break;
-		case 96:
-			ucg_SetFont(&ucg, ucg_font_helvR12_hf);
-			break;
-		case 132:
+		// case 128:
+		// 	ucg_SetFont(&ucg, ucg_font_helvR12_hf);
+		// 	break;
+		// case 96:
+		// 	ucg_SetFont(&ucg, ucg_font_helvR12_hf);
+		// 	break;
+		// case 132:
 		default: // 160
-			ucg_SetFont(&ucg, ucg_font_inr38_mr);
+			// ucg_SetFont(&ucg, ucg_font_inr38_mr);
 			//ucg_SetFont(&ucg, ucg_font_helvB18_tf);
 			;
 		}

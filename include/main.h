@@ -42,7 +42,7 @@
 #include "driver/timer.h"
 
 #define RELEASE "1.0"
-#define REVISION "Beta 11a"
+#define REVISION "RC 1"
 
 #define TIMER_DIVIDER 16                        //5000000Hz 5MHz
 #define TIMER_DIVIDER1MS TIMER_BASE_CLK / 10000 //10000Hz
@@ -107,7 +107,7 @@ extern uint32_t wakeDelay;
 #define PRIO_SUBSERV 5
 #define PRIO_TIMER 11
 #define PRIO_OTA 10
-#define PRIO_DS18B20 9
+#define PRIO_DS18B20 3
 
 // CPU for task
 #define CPU_MAD 1 // internal decoder and vs1053

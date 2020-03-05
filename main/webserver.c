@@ -107,7 +107,9 @@ const char HARDWARE[] = {"HTTP/1.1 200 OK\r\nContent-Type:application/json\r\nCo
 };
 const char VERSION[] = {"HTTP/1.1 200 OK\r\nContent-Type:application/json\r\nContent-Length:%d\r\n\r\n{\
 \"RELEASE\":\"%s\",\
-\"REVISION\":\"%s\"\
+\"REVISION\":\"%s\",\
+\"curtemp\":\"%05.1f\",\
+\"rpmfan\":\"%04u\"\
 }"\
 };
 const char GPIOS[] = {"HTTP/1.1 200 OK\r\nContent-Type:application/json\r\nContent-Length:%d\r\n\r\n{\
@@ -504,6 +506,7 @@ uint16_t getVolume()
 // Set the volume with increment vol
 void setRelVolume(int8_t vol)
 {
+	beep(10);
 	char Vol[5];
 	int16_t rvol;
 	rvol = getIvol() + vol;
@@ -528,23 +531,6 @@ static void rssi(int socket)
 		rssi = wifidata.rssi;
 	}
 	sprintf(answer, "{\"wsrssi\":\"%d\"}", rssi);
-	websocketwrite(socket, answer, strlen(answer));
-}
-
-// send the current temperature
-static void curtemp(int socket)
-{
-	float curtemp = getTemperature();
-	char *wscurtemp = "{\"wscurtemp\":\"%.2f\"}";
-	char answer[strlen(wscurtemp) + sizeof(curtemp)];
-	sprintf(answer, wscurtemp, curtemp);
-	websocketwrite(socket, answer, strlen(answer));
-}
-// send the rpm of fan
-static void rpmfan(int socket)
-{
-	char answer[23];
-	sprintf(answer, "{\"wsrpmfan\":\"%u\"}", (uint16_t)(getRpmFan() * 60));
 	websocketwrite(socket, answer, strlen(answer));
 }
 
@@ -597,18 +583,11 @@ void websockethandle(int socket, wsopcode_t opcode, uint8_t *payload, size_t len
 	{
 		rssi(socket);
 	}
-	else if (strstr((char *)payload, "wscurtemp") != NULL)
-	{
-		curtemp(socket);
-	}
-	else if (strstr((char *)payload, "wsrpmfan") != NULL)
-	{
-		rpmfan(socket);
-	}
 }
 
 void playStationInt(int sid)
 {
+	beep(20);
 	struct shoutcast_info *si;
 	char answer[24];
 	si = getStation(sid);
@@ -1001,11 +980,14 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 	}
 	else if (strcmp(name, "/version") == 0)
 	{
-		int json_length = 28 + strlen(RELEASE) + strlen(REVISION);
+		int json_length = 53 + strlen(RELEASE) + strlen(REVISION) + 5 + 4;
 		char buf[70 + json_length];
 		sprintf(buf, VERSION,
 				json_length,
-				RELEASE, REVISION);
+				RELEASE,
+				REVISION,
+				getTemperature(),
+				(uint16_t)getRpmFan() * 20);
 		ESP_LOGD(TAG, "Test RELEASE and REVISION\nBuf len: %u\n\nBuf:\n%s", strlen(buf), buf);
 		write(conn, buf, strlen(buf));
 		return;
@@ -1516,6 +1498,7 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 			changed = false;
 			char arg[4];
 			bool gpio_mode = false;
+			g_device->options &= NT_GPIOMODE;
 			nvs_handle hardware_handle;
 			esp_err_t err = ESP_OK;
 
@@ -1530,7 +1513,6 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 					gpio_mode = true;
 					g_device->options |= T_GPIOMODE;
 				}
-
 			if (gpio_mode)
 			{
 				err = open_partition("hardware", "gpio_space", (changed == false ? NVS_READONLY : NVS_READWRITE), &hardware_handle);
@@ -1541,29 +1523,9 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 				else
 					close_partition(hardware_handle, "hardware");
 			}
-			if (changed)
-			{
-				g_device->options &= NT_GPIOMODE;
-			}
-			err |= gpio_get_spi_bus(&spi_no, &miso, &mosi, &sclk);
-			err |= gpio_get_vs1053(&xcs, &xdcs, &dreq);
-			err |= gpio_get_encoders(&enca, &encb, &encbtn);
-			err |= gpio_get_i2c(&sda, &scl);
-			err |= gpio_get_spi_lcd(&cs, &a0);
-			err |= gpio_get_ir_signal(&ir);
-			err |= gpio_get_backlightl(&led);
-			err |= gpio_get_tachometer(&tach);
-			err |= gpio_get_fanspeed(&fanspeed);
-			err |= gpio_get_ds18b20(&ds18b20);
-			err |= gpio_get_touch(&touch);
-			err |= gpio_get_buzzer(&buzzer);
-			err |= gpio_get_uart(&rxd, &txd);
-			err |= gpio_get_ldr(&ldr);
-			if (err == 0x1102)
-			{
-				changed = false;
-				g_device->options &= NT_GPIOMODE;
 
+			if (!changed)
+			{
 				err |= gpio_get_spi_bus(&spi_no, &miso, &mosi, &sclk);
 				err |= gpio_get_vs1053(&xcs, &xdcs, &dreq);
 				err |= gpio_get_encoders(&enca, &encb, &encbtn);
@@ -1578,8 +1540,27 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 				err |= gpio_get_buzzer(&buzzer);
 				err |= gpio_get_uart(&rxd, &txd);
 				err |= gpio_get_ldr(&ldr);
+				if (err == 0x1102)
+				{
+					g_device->options &= NT_GPIOMODE;
+
+					err |= gpio_get_spi_bus(&spi_no, &miso, &mosi, &sclk);
+					err |= gpio_get_vs1053(&xcs, &xdcs, &dreq);
+					err |= gpio_get_encoders(&enca, &encb, &encbtn);
+					err |= gpio_get_i2c(&sda, &scl);
+					err |= gpio_get_spi_lcd(&cs, &a0);
+					err |= gpio_get_ir_signal(&ir);
+					err |= gpio_get_backlightl(&led);
+					err |= gpio_get_tachometer(&tach);
+					err |= gpio_get_fanspeed(&fanspeed);
+					err |= gpio_get_ds18b20(&ds18b20);
+					err |= gpio_get_touch(&touch);
+					err |= gpio_get_buzzer(&buzzer);
+					err |= gpio_get_uart(&rxd, &txd);
+					err |= gpio_get_ldr(&ldr);
+				}
 			}
-			if (changed)
+			else
 			{
 				getSParameterFromResponse(arg, 4, "K_SPI=", data, data_size);
 				spi_no = atoi(arg);
@@ -1648,6 +1629,7 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 					changed = false;
 				}
 			}
+
 			int json_length = 432;
 			char buf[71 + json_length];
 			sprintf(buf, GPIOS,
@@ -1668,7 +1650,7 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 					(uint8_t)buzzer,
 					(uint8_t)rxd, (uint8_t)txd,
 					(uint8_t)ldr);
-			ESP_LOGE(TAG, "Test GPIOS\nSave: %d\nERR: %X\nBuf len: %u\nBuf: %s\nData: %s\nData size: %d\n\n", changed, err, strlen(buf), buf, data, data_size);
+			// ESP_LOGE(TAG, "Test GPIOS\nSave: %d\nERR: %X\nBuf len: %u\nBuf: %s\nData: %s\nData size: %d\n\n", changed, err, strlen(buf), buf, data, data_size);
 			write(conn, buf, strlen(buf));
 			if (changed)
 			{

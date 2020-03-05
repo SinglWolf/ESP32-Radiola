@@ -23,6 +23,7 @@ struct servFile
 #include "../../webpage/.tabbis"
 #include "../../webpage/.logo"
 #include "../../webpage/.favicon"
+#include "../../webpage/.icons"
 
 const struct servFile faviconFile = {
 	"/favicon.png",
@@ -62,10 +63,18 @@ const struct servFile styleFile = {
 	(struct servFile*)&scriptTabbis
 };
 
+const struct servFile styleIcons = {
+	"/icons.css",
+	"text/css",
+	sizeof(icons_css),
+	(const char*)icons_css,
+	(struct servFile*)&styleFile
+};
+
 const struct servFile indexFile = {
 	"/",
 	"text/html",
 	sizeof(index_html),
 	(const char*)index_html,
-	(struct servFile*)&styleFile
+	(struct servFile*)&styleIcons
 };

@@ -71,8 +71,7 @@ typedef struct
 #define MTNEW 1
 #define MTREFRESH 2
 
-#define VCTRL true
-#define SCTRL false
+#define VCTRL false
 
 extern xQueueHandle event_ir;
 extern ucg_t ucg;

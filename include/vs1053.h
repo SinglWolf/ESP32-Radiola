@@ -60,6 +60,35 @@
 #define SM_ADPCM_HP 0x2000
 #define SM_LINE1 0x4000
 #define para_endFillByte 0x1E06
+
+/**
+ * \brief A handler for accessing nibbles of the SCI_BASS word.
+ *
+ * a union of the SCI_BASS value and of its nibbles for 
+ * Treble/Bass and Freq/Amp.
+ */
+union sci_bass_m {
+
+  /**
+   * \brief whole word value
+   *
+   * allows access and handeling of whole uint16_t (aka word) value
+   */
+    uint16_t word;
+
+  /**
+   * \brief individual Nibbles
+   *
+   * allows access and handeling of individual nibble values
+   */
+    struct {
+      uint8_t  Bass_Freqlimt    : 4; // 0..3
+      uint8_t  Bass_Amplitude   : 4; // 4..7
+      uint8_t  Treble_Freqlimt  : 4; // 8..11
+       int8_t  Treble_Amplitude : 4; // 12..15
+    }nibble;
+  } ;
+
 //public functions
 //extern int vsVersion;
 int getVsVersion();
@@ -88,7 +117,7 @@ void VS1053_SetVolume(uint8_t xMinusHalfdB);
 void VS1053_VolumeUp(uint8_t xHalfdB);
 void VS1053_VolumeDown(uint8_t xHalfdB);
 //Treble control
-int8_t VS1053_GetTreble();
+uint16_t VS1053_GetTreble();
 void VS1053_SetTreble(int8_t xOneAndHalfdB);
 void VS1053_TrebleUp(uint8_t xOneAndHalfdB);
 void VS1053_TrebleDown(uint8_t xOneAndHalfdB);
@@ -100,7 +129,7 @@ void VS1053_SetBass(uint8_t xdB);
 void VS1053_BassUp(uint8_t xdB);
 void VS1053_BassDown(uint8_t xdB);
 void VS1053_SetBassFreq(uint8_t xTenHz);
-uint8_t VS1053_GetBassFreq(void);
+uint16_t VS1053_GetBassFreq(void);
 // Spacial
 uint8_t VS1053_GetSpatial();
 void VS1053_SetSpatial(uint8_t num);

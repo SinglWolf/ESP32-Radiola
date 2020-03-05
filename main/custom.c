@@ -8,6 +8,7 @@
 #include "custom.h"
 #include "main.h"
 
+#include <string.h>
 #include <stdio.h>
 #include "driver/gpio.h"
 #include "driver/pcnt.h"
@@ -23,17 +24,18 @@
 #include "owb_rmt.h"
 #include "ds18b20.h"
 #include "eeprom.h"
+#include "webserver.h"
 
 #define TAG "custom"
 
 #define PCNT_TACHOME PCNT_UNIT_0
 
-#define _RESOLUTION DS18B20_RESOLUTION_12_BIT
+#define _RESOLUTION DS18B20_RESOLUTION_9_BIT
 
 TimerHandle_t tachTmr;
 int id = 1;
-int interval = 1000;
-int16_t rpm_fan = 0;
+int interval = 3000;
+int16_t rpm_fan, old_rpm = 0;
 float cur_temp = 0;
 
 gpio_num_t tach;
@@ -195,6 +197,7 @@ void LedBacklightOff()
 
 void ds18b20Task(void *pvParameters)
 {
+	float old_temp = 0;
 	// Create a 1-Wire bus, using the RMT timeslot driver
 	OneWireBus *owb;
 	owb_rmt_driver_info rmt_driver_info;
@@ -230,7 +233,17 @@ void ds18b20Task(void *pvParameters)
 		{
 			ESP_LOGE(TAG, "DS18B20 ERROR: %d\n", error);
 		}
-
+		else
+		{
+			if (old_temp != cur_temp)
+			{
+				char *wscurtemp = "{\"wscurtemp\":\"%.1f\"}";
+				char answer[strlen(wscurtemp) + sizeof(cur_temp)];
+				sprintf(answer, wscurtemp, cur_temp);
+				websocketbroadcast(answer, strlen(answer));
+				old_temp = cur_temp;
+			}
+		}
 		//int uxHighWaterMark = uxTaskGetStackHighWaterMark(NULL);
 		//ESP_LOGD("ds18b20Task", striWATERMARK, uxHighWaterMark, xPortGetFreeHeapSize());
 
@@ -298,6 +311,13 @@ void TachTimer(TimerHandle_t xTimer)
 	if (pcnt_get_counter_value(PCNT_TACHOME, &rpm_fan) == ESP_OK)
 	{ //ESP_LOGI(TAG, "Current counter value :%d\n", rpm_fan * 60);
 		pcnt_counter_pause(PCNT_TACHOME);
+		if (old_rpm != rpm_fan)
+		{
+			char wsrpmfan[23];
+			sprintf(wsrpmfan, "{\"wsrpmfan\":\"%u\"}", (uint16_t)(rpm_fan * 20));
+			websocketbroadcast(wsrpmfan, strlen(wsrpmfan));
+			old_rpm = rpm_fan;
+		}
 		pcnt_counter_clear(PCNT_TACHOME);
 		pcnt_counter_resume(PCNT_TACHOME);
 	}
@@ -306,14 +326,7 @@ void TachTimer(TimerHandle_t xTimer)
 		ESP_LOGE(TAG, "Tachometer value not read!");
 	}
 }
-float getTemperature()
-{
-	return cur_temp;
-}
-uint16_t getRpmFan()
-{
-	return (uint16_t)rpm_fan;
-}
+
 void init_ds18b20()
 {
 	if (gpio_get_ds18b20(&ds18b20) == ESP_OK)
@@ -354,4 +367,12 @@ void init_ds18b20()
 	}
 	else
 		ESP_LOGE(TAG, "ds18b20 init fail!");
+}
+float getTemperature()
+{
+	return cur_temp;
+}
+uint16_t getRpmFan()
+{
+	return (uint16_t)rpm_fan;
 }

@@ -1,3 +1,4 @@
+@charset "UTF-8";
 body {
     padding: 0;
     height: 100%;
@@ -12,47 +13,52 @@ h2 {
 }
 
 [data-tabs] {
+    margin-top: 5px;
+    margin-bottom: 0px;
+    font-size: 30px;
     display: flex;
     background: #b19561;
-    padding: 0;
-    border: 1px solid #000;
-    border-top: none;
-    border-left: none;
-    border-right: none;
-    box-shadow: -1px 2px 1px 1px #000,inset 2px -1px 2px 1px #000,inset 2px -3px 2px 1px #FFEB3B,0px 0 7px 0 #efdc37
+    padding: 12px;
+    border: 2px solid #ccc;
+    border-radius: 14px;
+    box-shadow: inset 0 0 0 4px #FFEB3B,1px 0 0 1px #000,inset 0 0 2px 5px #000;
 }
 
 [data-tabs]>* {
+    position: relative;
     background: #d67a29;
-    color: #d67a29;
-    border: 1px solid #db8f1a;
+    color: #000;
+    border: 2px solid #db8f1a;
     border-bottom: none;
-    border-top-left-radius: 5px;
-    border-top-right-radius: 5px;
-    padding: 5px 10px 20px 10px;
-    margin: 15px 3px -1px 3px;
+    border-radius: 10px;
+    padding: 5px 5px 0 15px;
+    margin: 5px 4px 10px 4px;
     cursor: pointer;
     font-weight: bold;
     font-size: 1.7em;
     font-family: cursive;
     letter-spacing: .2em;
     -webkit-text-stroke-width: 1px;
-    -webkit-text-stroke-color: #000;
-    box-shadow: 1px -1px 0 1px #c15107,2px -2px 0 1px #c15107,3px -3px 0 1px #c15107,4px -4px 0 1px #c15107,4px -4px 5px 1px #FFEB3B,inset 0 3px 5px -1px #FFEB3B,9px -4px 5px 4px #000
+    -webkit-text-stroke-color: rgba(255,255,0,0.41);
+    box-shadow: 0 8px 0 0 #c15107,1px 10px 5px #000
 }
 
 [data-tabs] .active {
-    padding: 5px 10px 5px 10px;
-    margin: 35px 3px -1px 3px;
+    top: 4px;
+    padding: 5px 5px 0 15px;
+    margin: 5px 4px 10px 4px;
     color: darkgoldenrod;
-    -webkit-text-shadow: yellow 0 -5px 8px;
-    text-shadow: yellow 0 -5px 8px;
-    -webkit-text-stroke-color: #ff0
+    -webkit-text-shadow: yellow 0 0 15px;
+    text-shadow: yellow 0 0 15px;
+    -webkit-text-stroke-color: #ff0;
+    box-shadow: 0 2px 0 #d35400,0px 3px 6px #000;
+    position: relative
 }
 
 [data-panes]>* {
     display: none;
-    padding: 10px 0 0 0
+    padding: 0;
+    margin-top: 5px
 }
 
 [data-panes]>.active {
@@ -123,7 +129,7 @@ div.LEFT {
 }
 
 div.section {
-    border: 1px solid #ccc;
+    border: 2px solid #ccc;
     border-top: none;
     padding: 15px 15px 10px 5px;
     margin: 15px 0 10px 0;
@@ -132,8 +138,18 @@ div.section {
     box-shadow: inset 0 0 10px 0 #FFEB3B,1px 1px 2px 0 #000
 }
 
+div.sectiontda {
+    border: 2px solid #ccc;
+    border-top: none;
+    padding: 15px 15px 10px 5px;
+    margin: 15px 0 -15px 0;
+    box-shadow: inset 0 0 10px 0 #FFEB3B,1px 1px 2px 0 #000
+}
+
 #MAIN {
-    padding: 0 10px 10px 10px;
+    margin-left: auto;
+    margin-right: auto;
+    width: 690px;
     top: 85px;
     position: relative;
     background-color: #c9ab72
@@ -143,12 +159,13 @@ div.section {
     font: 18px "Trebuchet MS";
     color: #f8f8f8;
     background-color: #000;
-    padding: 10px 0 10px 10px;
-    margin: -5px 0 -15px 0;
-    border: 1px solid #ccc;
+    text-align: center;
+    padding: 10px 0 15px 10px;
+    margin: 0px 0 -20px 0;
+    border: 2px solid #ccc;
     box-shadow: inset 0 0 2px 2px #FFEB3B,1px 0 2px 0 #000;
     border-top-left-radius: 14px;
-    border-top-right-radius: 14px
+    border-top-right-radius: 14px;
 }
 
 #MAIN p {
@@ -163,7 +180,7 @@ div.section {
 #MAIN a,a:visited {
     font-size: 15px;
     color: currentColor;
-    text-decoration: none;
+    text-decoration: none
 }
 
 #MAIN a:hover {
@@ -270,7 +287,27 @@ div.section {
     cursor: pointer
 }
 
-#MAIN input[type=button]:active {
+#MAIN button {
+    color: #ff0;
+    font-size: 24px;
+    font-weight: bold;
+    position: relative;
+    padding: 10px 10px 0 10px;
+    margin: 0 5px 15px 5px;
+    border: solid 1px #dc911a;
+    border-radius: 5px;
+    background: #d67a29;
+    text-decoration: none;
+    outline: none;
+    text-align: center;
+    -webkit-transition: all .1s;
+    -moz-transition: all .1s;
+    transition: all .1s;
+    box-shadow: 0 5px 1px #c15107,1px 6px 5px yellow,1px 7px 2px 1px #000;
+    cursor: pointer
+}
+
+#MAIN input[type=button]:active,button:active {
     outline: none;
     text-decoration: none;
     box-shadow: 0 2px 0 #d35400,0px 3px 6px yellow;
@@ -379,15 +416,18 @@ div.section {
 }
 
 .icons {
-    margin: 10px
+    margin: 10px;
+    padding: 0;
+    display: block;
+    font-size: 40px
 }
 
 .icons8 {
-    padding: 10px;
+    padding: 10px 10px 0 10px;
     position: relative;
     display: inline-block;
     text-decoration: none;
-    border-radius: 50%/50%;
+    border-radius: 5px;
     border: solid 1px #dc911a;
     background: #d67a29;
     text-align: center;
@@ -402,73 +442,6 @@ div.section {
     box-shadow: 0 2px 0 #d35400,0px 3px 6px #000;
     position: relative;
     top: 4px
-}
-
-[class*=icono-] {
-    display: inline-block;
-    vertical-align: middle;
-    position: relative;
-    font-style: normal;
-    color: currentColor;
-    text-align: left;
-    text-indent: -9999px;
-    direction: ltr
-}
-
-[class*=icono-]:after,[class*=icono-]:before {
-    content: '';
-    pointer-events: none
-}
-
-[class*=icono-][class*=Circle] {
-    border-radius: 50%;
-    width: 30px;
-    height: 30px;
-    margin: 2px
-}
-
-[class*=icono-][class*=Square] {
-    border-radius: 4px;
-    width: 30px;
-    height: 30px;
-    margin: 2px
-}
-
-[class*=icono-],[class*=icono-] * {
-    box-sizing: border-box
-}
-
-.icono-play {
-    width: 0;
-    height: 0;
-    border-width: 10px 0 10px 16px;
-    border-style: solid;
-    border-top-color: transparent;
-    border-bottom-color: transparent;
-    margin: 7px 9px
-}
-
-.icono-stop {
-    width: 0;
-    height: 0;
-    border: 10px solid;
-    margin: 7px
-}
-
-.icono-previous {
-    -webkit-transform: rotate(180deg);
-    transform: rotate(180deg);
-    margin: 7px 10px 7px 14px
-}
-
-.icono-next,.icono-previous {
-    width: 0;
-    height: 0;
-    border: 10px solid transparent;
-    border-left: 10px solid;
-    border-right: none;
-    margin: 7px 14px 7px 10px;
-    box-shadow: 4px 0
 }
 
 .OffOn {
@@ -546,9 +519,7 @@ div.section {
     text-align: center;
     padding-top: 5px;
     padding-bottom: 5px;
-    margin-top: 10px;
-    margin-left: -9px;
-    padding-right: 19px;
+    margin-top: 90px;
     background-image: radial-gradient(#000,#6d630d);
     color: #ff0;
     font-size: 22px;
@@ -624,6 +595,7 @@ input[type='range']:focus::-moz-range-track {
 table {
     padding: 10px;
     margin: 5px;
+    width: 100%;
     border-radius: 7px;
     border-spacing: 2px 5px;
     box-shadow: inset 0 0 2px 1px yellow,1px 1px 3px 0 #000
@@ -650,11 +622,12 @@ tr {
     background-color: #d6bd59 !important
 }
 
-#stationsTable thead td, #IRcodesTable thead td, #GPIOsTable thead td {
+#stationsTable thead td,#IRcodesTable thead td,#GPIOsTable thead td {
     background-color: #000;
     cursor: auto;
-    color: white;
+    color: white
 }
+
 #stationsTable tr {
-   cursor: pointer;
+    cursor: pointer
 }

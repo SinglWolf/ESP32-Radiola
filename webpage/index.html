@@ -8,6 +8,7 @@
   <meta name=apple-mobile-web-app-status-bar-style content=default>
   <link rel=apple-touch-icon type="image/png" href=logo.png>
   <link rel=icon type="image/png" href=favicon.png />
+  <link rel=stylesheet title=base href=icons.css type="text/css" />
   <link rel=stylesheet title=base href=style.css type="text/css" />
   <style></style>
   <script src=script.js></script>
@@ -17,16 +18,16 @@
 <body>
   <div id="HEADER" onclick="ScrollUp();return!1;">
     <div class="LEFT">
-      <img src="logo.png">
+      <img src="logo.png" alt="">
     </div>
     <div class="RIGHT">
       <br>
       <br>
       <br>
       <br>
-      <div id="rssi"></div>
-      <div id="curtemp"></div>
-      <div id="rpmfan"></div>
+      <div id="_fan" style="display: none;"><i class="icon icon-fan"></i> <span id="rpmfan"></span></div>
+      <div id="_temp" style="display: none;"><i class="icon-thermometer"></i> <span id="curtemp"></span></div>
+      <div><i class="icon icon-wificonnection"></i> <span id="rssi">-30 дБм</span></div>
       <br>
     </div>
     <div id="HEAD">
@@ -104,15 +105,15 @@
     </div>
     <!-- The END Modal Edit window-->
     <div data-tabs>
-      <div id="PLAYER" class="active">РАДИО</div>
-      <div id="STATIONS">СТАНЦИИ</div>
-      <div id="SOUND">ЗВУК</div>
-      <div id="SETTINGS">НАСТРОЙКИ</div>
+      <div id="PLAYER" class="icon-radio-tower active"></div>
+      <div id="STATIONS" class="icon-playlist"></div>
+      <div id="SOUND" class="icon-equalizer"></div>
+      <div id="SETTINGS" class="icon-settings"></div>
     </div>
     <div data-panes>
       <div class="active">
         <!-- PLAY РАДИО -->
-        <h1>Управление станциями</h1>
+        <h1>ВОСПРОИЗВЕДЕНИЕ СТАНЦИИ</h1>
         <div class="section">
           <div class="bold2">Автовоспроизведение
             <div class="OffOn">
@@ -124,38 +125,29 @@
           <p>
             <select id="stationsSelect" onchange="Select()"></select>
           </p>
-          <!-- <span id=np> -->
           <div class="icons">
-            <div class="icons8" title="Предыдущая станция" onclick="prevStation()">
-              <i class="icono-previous"></i>
+            <div class="icons8" title="Предыдущая станция" onclick="prevStation()"> <i class="icon-previous"></i> </div>
+            <div class="icons8" title="Воспроизведение станции" onclick="playStation()"> <i class="icon-play"></i>
             </div>
-            <div class="icons8" title="Воспроизведение станции" onclick="playStation()">
-              <i class="icono-play"></i>
+            <div class="icons8" title="Остановить воспроизведение" onclick="stopStation()"> <i class="icon-stop"></i>
             </div>
-            <div class="icons8" title="Остановить воспроизведение" onclick="stopStation()">
-              <i class="icono-stop"></i>
-            </div>
-            <div class="icons8" title="Следующая станция" onclick="nextStation()">
-              <i class="icono-next"></i></div>
-            <br>
+            <div class="icons8" title="Следующая станция" onclick="nextStation()"> <i class="icon-next"></i></div> <br>
           </div>
-          <!-- </span> -->
           <br>
           <table>
             <tbody>
               <tr>
-                <td>Громкость:</td>
-                <td id="vol1_span">0 Дб</td>
-              </tr>
-              <tr>
-                <td colspan="2"><input id="vol1_range" max="254" min="0" name="vol1"
-                    oninput="onRangeVolChange(this.value,true)" style="height:25px;" type="range"></td>
+                <td><i class="icons icons8 icon-minus" onclick="VolumeBtn('vol1_range',-10)"></i></td>
+                <td style="text-align: center">Громкость: <span id="vol1_span">0 Дб</span><input id="vol1_range"
+                    max="254" min="0" name="vol1" oninput="onRangeVolChange(this.value,true)" style="height:25px;"
+                    type="range"></td>
+                <td><i class="icons icons8 icon-plus" onclick="VolumeBtn('vol1_range',+10)"></i></td>
               </tr>
             </tbody>
           </table>
           <br>
         </div>
-        <h1>Станция № <span id="curst"></span></h1>
+        <h1>СТАНЦИЯ № <span id="curst"></span></h1>
         <div class="section">
           <div class="bold2">Подробно
             <div class="OffOn">
@@ -204,9 +196,7 @@
           <br>
         </div>
         <h1>
-          Быстрое воспроизведение&nbsp;
-          <input type="button" onclick="editInstantStation()" value="Добавить и править">
-        </h1>
+          БЫСТРОЕ ВОСПРОИЗВЕДЕНИЕ</h1>
         <div class="section">
           <p> <span class="bold1">Полный URL: </span>
             <input type="text" id="instant_URL" name="URL" onkeyup="parseURL()" onmouseup="parseEditURL()">
@@ -219,38 +209,37 @@
             <br>
             <span class="bold1">Путь: </span>
             <input type="text" id="instant_path" name="path" value="/" onkeyup="buildURL()">
+            <button class="icon-page-edit" onclick="editInstantStation()" title="Добавить и править"></button>
           </p>
+
           <br>
           <div class="icons">
             <div class="icons8" title="Быстрое воспроизведение станции" onclick="instantPlay()">
-              <i class="icono-play"></i>
+              <i class="icon-play"></i>
             </div>
             <div class="icons8" title="Остановить быстрое воспроизведение станции" onclick="stopStation()">
-              <i class="icono-stop"></i>
+              <i class="icon-stop"></i>
             </div>
           </div>
-          <!-- <input type="button" value=Play onClick="instantPlay()">&nbsp; <input type="button" value="Стоп" onClick="stopStation()"> -->
           <br>
         </div>
-        <h1>Мониторинг</h1>
+        <h1>МОНИТОРИНГ</h1>
         <div class="section">
           <div class="icons">
             <div class="icons8" title="Запуск мониторинга" onclick="mplay()">
-              <i class="icono-play"></i>
+              <i class="icon-play"></i>
             </div>
             <div class="icons8" title="Остановка мониторинга" onclick="mstop()">
-              <i class="icono-stop"></i>
+              <i class="icon-stop"></i>
             </div>
-            <!-- <input type="button" value=Play onClick="mplay()"> &nbsp; <input type="button" value="Стоп" onClick="mstop()"></p> -->
           </div><br>
           <table>
             <tbody>
               <tr>
-                <td>Громкость</td>
-              </tr>
-              <tr>
-                <td><input id="volm_range" max="100" min="0" name="volm" oninput="mvol(this.value/100)"
-                    style="height:25px;" type="range"></td>
+                <td><i class="icons icons8 icon-minus" onclick="mvol('volm',-10)"></i></td>
+                <td style="text-align: center">Громкость: <span id="volm_span">50%</span><input id="volm_range" max="100"
+                    min="0" name="volm" oninput="mvol('volm',0)" style="height:25px;" type="range"></td>
+                <td><i class="icons icons8 icon-plus" onclick="mvol('volm',+10)"></i></td>
               </tr>
             </tbody>
           </table>
@@ -260,7 +249,7 @@
 
         </div>
         <h1>
-          Режим сна / Пробуждение&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span id="time">time</span>
+          РЕЖИМ СНА / ПРОБУЖДЕНИЕ&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span id="time">time</span>
         </h1>
         <div class="section">
           <p id="sw1">
@@ -284,7 +273,7 @@
       <!-- END PLAY РАДИО -->
       <div>
         <!-- СТАНЦИИ -->
-        <h1>Менеджер станций</h1>
+        <h1>МЕНЕДЖЕР СТАНЦИЙ</h1>
         <div class="section">
           <p>
             <input type="button" onclick="saveTextAsFile()" value="Сохранить станции из Радиолы">
@@ -308,9 +297,9 @@
             <thead>
               <tr>
                 <td style="width:5%;text-align: center; vertical-align: middle;">№</td>
-                <td style="width:38%; ">Имя</td>
-                <td style="width:45%; ">URL</td>
-                <td style="width:9%;text-align: center; vertical-align: middle;">Правка</td>
+                <td style="width:25%; ">Имя</td>
+                <td style="width:65%; ">URL</td>
+                <td class="icon-page-edit" style="width:5%;text-align: center; vertical-align: middle;"></td>
               </tr>
             </thead>
             <tbody></tbody>
@@ -321,14 +310,15 @@
       <div>
         <!-- ЗВУК -->
         <div id="soudBar" data-tabs>
-          <div onclick="tabbis.onClick(1,0);hardware(1)" class="active">КОМП</div>
-          <div onclick="tabbis.onClick(1,1);hardware(1)">РАДИО</div>
-          <div onclick="tabbis.onClick(1,2);hardware(1)">БЛЮТУЗ</div>
+          <div onclick="tabbis.onClick(1,0);hardware(1)" class="icon-audio-jack active"></div>
+          <div class="icon-radio" onclick="tabbis.onClick(1,1);hardware(1)"></div>
+          <div class="icon-bluetooth" onclick="tabbis.onClick(1,2);hardware(1)"></div>
         </div>
         <br>
+        <h1 style="border-radius: 14px;margin-top: -5px;">ИСТОЧНИК: <span id="source">VS1053</span></h1><br><br>
         <div id="barTDA7313">
-          <h1>TDA7313</h1>
-          <div class="section">
+          <h1>ЭКВАЛАЙЗЕР TDA7313</h1>
+          <div class="sectiontda">
             <div class="bold2">ЗВУК
               <div class="OffOn">
                 <input type="checkbox" id="mute" onclick="mute(1)" class="OffOn">
@@ -339,29 +329,32 @@
             <table>
               <tbody>
                 <tr>
-                  <td>Громкость:</td>
-                  <td id="Volume_span">0 дБ</td>
+                  <td><i class="icons icons8 icon-minus" onclick="btnTDA('Volume',-1)"></i></td>
+                  <td style="text-align: center">Громкость: <span id="Volume_span">0 Дб</span>
+                    <input id="Volume_range" max="17" min="0" name="Volume" oninput="onTDAchange('Volume')"
+                      style="height:25px;" type="range">
+                  </td>
+                  <td><i class="icons icons8 icon-plus" onclick="btnTDA('Volume',+1)"></i></td>
                 </tr>
+
                 <tr>
-                  <td colspan="2" style="text-align: center;"><input id="Volume_range" max="17" min="0" name="Volume"
-                      oninput="onTDAchange('Volume')" style="height:25px;" type="range"></td>
+                  <td><i class="icons icons8 icon-minus" onclick="btnTDA('Bass',-1)"></i></td>
+                  <td style="text-align: center">Низкие частоты: <span id="Bass_span">0 Дб</span>
+                    <input id="Bass_range" max="14" min="0" name="Bass" oninput="onTDAchange('Bass')"
+                      style="height:25px;" type="range">
+                  </td>
+                  <td><i class="icons icons8 icon-plus" onclick="btnTDA('Bass',+1)"></i></td>
                 </tr>
+
                 <tr>
-                  <td>Низкие частоты:</td>
-                  <td id="Bass_span">0 дБ</td>
+                  <td><i class="icons icons8 icon-minus" onclick="btnTDA('Treble',-1)"></i></td>
+                  <td style="text-align: center">Высокие частоты: <span id="Treble_span">0 Дб</span>
+                    <input id="Treble_range" max="14" min="0" name="Treble" oninput="onTDAchange('Treble')"
+                      style="height:25px;" type="range">
+                  </td>
+                  <td><i class="icons icons8 icon-plus" onclick="btnTDA('Treble',+1)"></i></td>
                 </tr>
-                <tr>
-                  <td colspan="2" style="text-align: center;"><input id="Bass_range" max="14" min="0" name="Bass"
-                      oninput="onTDAchange('Bass')" style="height:25px;" type="range"></td>
-                </tr>
-                <tr>
-                  <td>Высокие частоты:</td>
-                  <td id="Treble_span">0 дБ</td>
-                </tr>
-                <tr>
-                  <td colspan="2" style="text-align: center;"><input id="Treble_range" max="14" min="0" name="Treble"
-                      oninput="onTDAchange('Treble')" style="height:25px;" type="range"></td>
-                </tr>
+
               </tbody>
             </table>
             <br>
@@ -369,21 +362,21 @@
             <table id="Front">
               <tbody>
                 <tr>
-                  <td>Левый канал:</td>
-                  <td id="AttLF_span">0 дБ</td>
+                  <td><i class="icons icons8 icon-minus" onclick="btnTDA('AttLF',-1)"></i></td>
+                  <td style="text-align: center">Левый канал: <span id="AttLF_span">0 Дб</span>
+                    <input id="AttLF_range" max="13" min="0" name="AttLF" oninput="onTDAchange('AttLF')" type="range">
+                  </td>
+                  <td><i class="icons icons8 icon-plus" onclick="btnTDA('AttLF',+1)"></i></td>
                 </tr>
+
                 <tr>
-                  <td colspan="2" rowspan="1" style="text-align: center"><input id="AttLF_range" max="13" min="0"
-                      name="AttLF" oninput="onTDAchange('AttLF')" type="range"></td>
+                  <td><i class="icons icons8 icon-minus" onclick="btnTDA('AttRF',-1)"></i></td>
+                  <td style="text-align: center">Правый канал: <span id="AttRF_span">0 Дб</span>
+                    <input id="AttRF_range" max="13" min="0" name="AttRF" oninput="onTDAchange('AttRF')" type="range">
+                  </td>
+                  <td><i class="icons icons8 icon-plus" onclick="btnTDA('AttRF',+1)"></i></td>
                 </tr>
-                <tr>
-                  <td>Правый канал:</td>
-                  <td id="AttRF_span">0 дБ</td>
-                </tr>
-                <tr>
-                  <td colspan="2" rowspan="1" style="text-align: center"><input id="AttRF_range" max="13" min="0"
-                      name="AttRF" oninput="onTDAchange('AttRF')" type="range"></td>
-                </tr>
+
               </tbody>
             </table>
             <br>
@@ -396,21 +389,21 @@
             <table id="Rear">
               <tbody>
                 <tr>
-                  <td>Левый канал:</td>
-                  <td id="AttLR_span">0 дБ</td>
+                  <td><i class="icons icons8 icon-minus" onclick="btnTDA('AttLR',-1)"></i></td>
+                  <td style="text-align: center">Левый канал: <span id="AttLR_span">0 Дб</span>
+                    <input id="AttLR_range" max="13" min="0" name="AttLR" oninput="onTDAchange('AttLR')" type="range">
+                  </td>
+                  <td><i class="icons icons8 icon-plus" onclick="btnTDA('AttLR',+1)"></i></td>
                 </tr>
+
                 <tr>
-                  <td colspan="2" rowspan="1" style="text-align: center"><input id="AttLR_range" max="13" min="0"
-                      name="AttLR" oninput="onTDAchange('AttLR')" type="range"></td>
+                  <td><i class="icons icons8 icon-minus" onclick="btnTDA('AttRR',-1)"></i></td>
+                  <td style="text-align: center">Правый канал: <span id="AttRR_span">0 Дб</span>
+                    <input id="AttRR_range" max="13" min="0" name="AttRR" oninput="onTDAchange('AttRR')" type="range">
+                  </td>
+                  <td><i class="icons icons8 icon-plus" onclick="btnTDA('AttRR',+1)"></i></td>
                 </tr>
-                <tr>
-                  <td>Правый канал:</td>
-                  <td id="AttRR_span">0 дБ</td>
-                </tr>
-                <tr>
-                  <td colspan="2" rowspan="1" style="text-align: center"><input id="AttRR_range" max="13" min="0"
-                      name="AttRR" oninput="onTDAchange('AttRR')" type="range"></td>
-                </tr>
+
               </tbody>
             </table>
           </div>
@@ -419,7 +412,6 @@
         <div data-panes>
           <div id="audioinput1" style="border: none;" class="active">
             <!-- КОМП -->
-            <h1>ТОНКОМПЕНСАЦИЯ</h1>
             <div class="section">
               <div class="bold2">ТОНКОМПЕНСАЦИЯ
                 <div class="OffOn">
@@ -427,19 +419,16 @@
                   <label for="loud1"></label>
                 </div>
               </div>
-            </div>
-            <h1>ПРЕДУСИЛЕНИЕ</h1>
-            <div class="section">
               <table>
                 <tbody>
                   <tr>
-                    <td>ПРЕДУСИЛЕНИЕ:</td>
-                    <td id="sla1_span">0 дБ</td>
+                    <td><i class="icons icons8 icon-minus" onclick="btnTDA('sla1',-1)"></i></td>
+                    <td style="text-align: center">ПРЕДУСИЛЕНИЕ: <span id="sla1_span">0 Дб</span>
+                      <input id="sla1_range" max="3" min="0" name="SLA1" oninput="onTDAchange('sla1')" type="range">
+                    </td>
+                    <td><i class="icons icons8 icon-plus" onclick="btnTDA('sla1',+1)"></i></td>
                   </tr>
-                  <tr>
-                    <td colspan="2"><input id="sla1_range" max="3" min="0" name="SLA1" oninput="onTDAchange('sla1')"
-                        type="range"></td>
-                  </tr>
+
                 </tbody>
               </table>
             </div>
@@ -448,7 +437,6 @@
           <div id="audioinput2" style="border: none;">
             <!-- РАДИО -->
             <div id="barTDA7313radio">
-              <h1>ТОНКОМПЕНСАЦИЯ</h1>
               <div class="section">
                 <div class="bold2">ТОНКОМПЕНСАЦИЯ
                   <div class="OffOn">
@@ -456,80 +444,79 @@
                     <label for="loud2"></label>
                   </div>
                 </div>
-              </div>
-              <h1>ПРЕДУСИЛЕНИЕ</h1>
-              <div class="section">
                 <table>
                   <tbody>
                     <tr>
-                      <td>ПРЕДУСИЛЕНИЕ:</td>
-                      <td id="sla2_span">0 дБ</td>
-                    </tr>
-                    <tr>
-                      <td colspan="2"><input id="sla2_range" max="3" min="0" name="SLA2" oninput="onTDAchange('sla2')"
-                          type="range"></td>
+                      <td><i class="icons icons8 icon-minus" onclick="btnTDA('sla2',-1)"></i></td>
+                      <td style="text-align: center">ПРЕДУСИЛЕНИЕ: <span id="sla2_span">0 Дб</span>
+                        <input id="sla2_range" max="3" min="0" name="SLA2" oninput="onTDAchange('sla2')" type="range">
+                      </td>
+                      <td><i class="icons icons8 icon-plus" onclick="btnTDA('sla2',+1)"></i></td>
                     </tr>
                   </tbody>
                 </table>
               </div>
             </div>
-            <h1>VS1053</h1>
+            <h1>ЭКВАЛАЙЗЕР VS1053</h1>
             <div class="section">
               <table id="VS1053">
                 <tbody>
                   <tr>
-                    <td>Громкость:</td>
-                    <td id="vol_span"></td>
+                    <td><i class="icons icons8 icon-minus" onclick="VolumeBtn('vol1_range',-10)"></i></td>
+                    <td style="text-align: center">Громкость: <span id="vol_span"></span>
+                      <input id="vol_range" max="254" min="0" name="vol" oninput="onRangeVolChange(this.value,true)"
+                        type="range" value="100">
+                    </td>
+                    <td><i class="icons icons8 icon-plus" onclick="VolumeBtn('vol1_range',+10)"></i></td>
                   </tr>
+
                   <tr>
-                    <td colspan="2" style="text-align: center"><input id="vol_range" max="254" min="0" name="vol"
-                        oninput="onRangeVolChange(this.value,true)" type="range" value="100"></td>
+                    <td><i class="icons icons8 icon-minus" onclick="ToneBtn('treble_range',-1)"></i></td>
+                    <td style="text-align: center">Уровень ВЧ: <span id="treble_span"></span>
+                      <input id="treble_range" max="7" min="-8" name="treble"
+                        oninput="onRangeChange('treble_range', 'treble_span', 1.5, false)" type="range">
+                    </td>
+                    <td><i class="icons icons8 icon-plus" onclick="ToneBtn('treble_range',+1)"></i></td>
                   </tr>
+
                   <tr>
-                    <td>Уровень ВЧ:</td>
-                    <td id="treble_span"></td>
-                  </tr>
-                  <tr>
-                    <td colspan="2" style="text-align: center"><input id="treble_range" max="7" min="-8" name="treble"
-                        oninput="onRangeChange('treble_range', 'treble_span', 1.5, false)" type="range"></td>
-                  </tr>
-                  <tr>
-                    <td>Частота ВЧ:</td>
-                    <td id="treblefreq_span"></td>
-                  </tr>
-                  <tr>
-                    <td colspan="2" style="text-align: center"><input id="treblefreq_range" max="15" min="1"
-                        name="treblefreq"
+                    <td><i class="icons icons8 icon-minus" onclick="ToneBtn('treblefreq_range',-1)"></i></td>
+                    <td style="text-align: center">Частота ВЧ: <span id="treblefreq_span"></span>
+                      <input id="treblefreq_range" max="15" min="1" name="treblefreq"
                         oninput="onRangeChangeFreqTreble('treblefreq_range', 'treblefreq_span', 1, false)" type="range">
                     </td>
+                    <td><i class="icons icons8 icon-plus" onclick="ToneBtn('treblefreq_range',+1)"></i></td>
                   </tr>
+
                   <tr>
-                    <td>Уровень НЧ:</td>
-                    <td id="bass_span"></td>
+                    <td><i class="icons icons8 icon-minus" onclick="ToneBtn('bass_range',-1)"></i></td>
+                    <td style="text-align: center">Уровень НЧ: <span id="bass_span"></span>
+                      <input id="bass_range" max="15" min="0" name="bass"
+                        oninput="onRangeChange('bass_range', 'bass_span', 1, false)" type="range">
+                    </td>
+                    <td><i class="icons icons8 icon-plus" onclick="ToneBtn('bass_range',+1)"></i></td>
                   </tr>
+
                   <tr>
-                    <td colspan="2" style="text-align: center"><input id="bass_range" max="15" min="0" name="bass"
-                        oninput="onRangeChange('bass_range', 'bass_span', 1, false)" type="range"></td>
+                    <td><i class="icons icons8 icon-minus" onclick="ToneBtn('bassfreq_range',-1)"></i></td>
+                    <td style="text-align: center">Частота НЧ: <span id="bassfreq_span"></span>
+                      <input id="bassfreq_range" max="15" min="2" name="bassfreq"
+                        oninput="onRangeChangeFreqBass('bassfreq_range', 'bassfreq_span', 10, false)" type="range">
+                    </td>
+                    <td><i class="icons icons8 icon-plus" onclick="ToneBtn('bassfreq_range',+1)"></i></td>
                   </tr>
+
                   <tr>
-                    <td>Частота НЧ:</td>
-                    <td id="bassfreq_span"></td>
+                    <td><i class="icons icons8 icon-minus" onclick="ToneBtn('spacial_range',-1)"></i></td>
+                    <td style="text-align: center">Реверберация: <span id="spacial_span"></span>
+                      <input id="spacial_range" max="3" min="0" name="spacial"
+                        oninput="onRangeChangeSpatial('spacial_range', 'spacial_span')" type="range">
+                    </td>
+                    <td><i class="icons icons8 icon-plus" onclick="ToneBtn('spacial_range',+1)"></i></td>
                   </tr>
+
                   <tr>
-                    <td colspan="2" style="text-align: center"><input id="bassfreq_range" max="15" min="2"
-                        name="bassfreq" oninput="onRangeChangeFreqBass('bassfreq_range', 'bassfreq_span', 10, false)"
-                        type="range"></td>
-                  </tr>
-                  <tr>
-                    <td>Объёмный звук:</td>
-                    <td id="spacial_span"></td>
-                  </tr>
-                  <tr>
-                    <td colspan="2" style="text-align: center"><input id="spacial_range" max="3" min="0" name="spacial"
-                        oninput="onRangeChangeSpatial('spacial_range', 'spacial_span')" type="range"></td>
-                  </tr>
-                  <tr>
-                    <td class="bold" colspan="2" style="text-align: center"><input onclick="resetEQ()" type="button"
+                    <td class="bold" colspan="3" style="text-align: center"><input onclick="resetEQ()" type="button"
                         value="Сброс"></td>
                   </tr>
                 </tbody>
@@ -539,27 +526,23 @@
           <!-- END РАДИО -->
           <div id="audioinput3" style="border: none;">
             <!-- БЛЮТУЗ -->
-            <h1>ТОНКОМПЕНСАЦИЯ</h1>
-            <div class="section">
+             <div class="section">
               <div class="bold2">ТОНКОМПЕНСАЦИЯ
                 <div class="OffOn">
                   <input type="checkbox" id="loud3" onclick="clickloud()" class="OffOn">
                   <label for="loud3"></label>
                 </div>
               </div>
-            </div>
-            <h1>ПРЕДУСИЛЕНИЕ</h1>
-            <div class="section">
               <table>
                 <tbody>
                   <tr>
-                    <td>ПРЕДУСИЛЕНИЕ:</td>
-                    <td id="sla3_span">0 дБ</td>
+                    <td><i class="icons icons8 icon-minus" onclick="btnTDA('sla3',-1)"></i></td>
+                    <td style="text-align: center">ПРЕДУСИЛЕНИЕ: <span id="sla3_span">0 Дб</span>
+                      <input id="sla3_range" max="3" min="0" name="SLA3" oninput="onTDAchange('sla3')" type="range">
+                    </td>
+                    <td><i class="icons icons8 icon-plus" onclick="btnTDA('sla3',+1)"></i></td>
                   </tr>
-                  <tr>
-                    <td colspan="2"><input id="sla3_range" max="3" min="0" name="SLA3" oninput="onTDAchange('sla3')"
-                        type="range"></td>
-                  </tr>
+
                 </tbody>
               </table>
             </div>
@@ -571,18 +554,17 @@
       <div>
         <!-- НАСТРОЙКИ -->
         <div data-tabs>
-          <div id="WIFI" class="active">WIFI</div>
-          <div id="GPIOS">GPIOS</div>
-          <div id="REMOTE">ПУЛЬТ</div>
-          <div id="OPTIONS">ОПЦИИ</div>
-          <div id="UPDATE">UPDATE</div>
+          <div id="WIFI" class="icon-wifi active"></div>
+          <div id="GPIOS" class="icon-chip"></div>
+          <div id="REMOTE" class="icon-remotecontrol"></div>
+          <div id="OPTIONS" class="icon-cog"></div>
+          <div id="UPDATE" class="icon-update"></div>
         </div>
         <div data-panes>
           <div class="active">
             <!-- СЕТЬ WI-FI -->
             <h1>
-              Wifi и Сеть <input type="button" value="Сохранить" onclick="valid()">
-            </h1>
+              WIFI И СЕТЬ</h1>
             <div class="section">
               <table>
                 <tbody>
@@ -637,7 +619,11 @@
                   </tr>
                   <tr>
                     <td>MAC АДРЕС</td>
-                    <td colspan="2" id="Mac" rowspan="1"></td>
+                    <td colspan="2" id="Mac"></td>
+                  </tr>
+                  <tr>
+                    <td colspan="3" style="text-align:center"><button class="icon-floppy-o" onclick="valid()"
+                        title="Сохранить настройки в NVS"></button></td>
                   </tr>
                 </tbody>
               </table>
@@ -647,15 +633,15 @@
           <!-- END СЕТЬ WI-FI -->
           <div>
             <!-- GPIOS -->
-            <h1>GPIOS &nbsp;<input type="button" value="Считать значения по-умолчанию" onclick="gpios(0,0,0)">
-              <input type="button" value="Считать значения из NVS" onclick="gpios(1,0,0)">
-              <input type="button" value="Сохранить значения в NVS" onclick="gpios(1,1,0)">
-            </h1>
+            <h1>GPIOS</h1>
             <div class="section">
+              <button class="icon-upload" onclick="gpios(0,0,0)" title="Считать значения по-умолчанию"></button>
+              <button class="icon-download" onclick="gpios(1,0,0)" title="Считать значения из NVS"></button>
+              <button class="icon-floppy-o" onclick="gpios(1,1,0)" title="Сохранить значения в NVS"></button>
               <table id="GPIOsState">
                 <tbody>
                   <tr>
-                    <td colspan="2" rowspan="1">СТАТУС</td>
+                    <td>СТАТУС</td>
                     <td id="GPIOsErr"></td>
                   </tr>
                 </tbody>
@@ -771,15 +757,15 @@
           <!-- END GPIOS -->
           <div>
             <!-- ИК-ПУЛЬТ -->
-            <h1>КОДЫ ИК-ПУЛЬТА <input type="button" value="Считать значения по-умолчанию" onclick="ircodes(0,0,0)">
-              <input type="button" value="Считать значения из NVS" onclick="ircodes(1,0,0)"><input type="button"
-                value="Сохранить значения в NVS" onclick="ircodes(1,1,0)">
-            </h1>
+            <h1>КОДЫ ИК-ПУЛЬТА</h1>
             <div class="section">
+              <button class="icon-upload" onclick="ircodes(0,0,0)" title="Считать значения по-умолчанию"></button>
+              <button class="icon-download" onclick="ircodes(1,0,0)" title="Считать значения из NVS"></button>
+              <button class="icon-floppy-o" onclick="ircodes(1,1,0)" title="Сохранить значения в NVS"></button>
               <table id="IRcodesState">
                 <tbody>
                   <tr>
-                    <td colspan="2" rowspan="1">СТАТУС</td>
+                    <td>СТАТУС</td>
                     <td id="IrErr"></td>
                   </tr>
                 </tbody>
@@ -905,10 +891,11 @@
           <!-- END ИК-ПУЛЬТ -->
           <div>
             <!-- ОПЦИИ -->
-            <h1>ОПЦИИ
-              <input type="button" onclick="devoptions(0)" value="Обновить"><input type="button" onclick="devoptions(1)"
-                value="Сохранить"></h1>
+            <h1>ОПЦИИ</h1>
             <div class="section">
+              <button class="icon-download" onclick="devoptions(0)" title="Загрузить настройки по-умолчанию"></button>
+              <button class="icon-floppy-o" onclick="devoptions(1)"
+                title="Сохранить настройки в NVS и применить"></button>
               <table id="OptionsTable">
                 <tbody>
                   <tr>
@@ -987,10 +974,11 @@
               <div id="brightOn">
                 <table id="bright">
                   <tbody>
+                    <tr id="_night">
+                      <td colspan="3" style="text-align: center;">НОЧНОЙ РЕЖИМ</td>
+                    </tr>
                     <tr id="by_time">
-                      <td>ЗАТЕМНЕНИЕ</td>
-                      <td>С:</td>
-                      <td><select name="begin_h">
+                      <td colspan="3" style="text-align: center;">С:&nbsp;<select name="begin_h">
                           <option value="0">00</option>
                           <option value="1">01</option>
                           <option value="2">02</option>
@@ -1020,9 +1008,7 @@
                           <option value="15">15</option>
                           <option value="30">30</option>
                           <option value="45">45</option>
-                        </select></td>
-                      <td>ДО:</td>
-                      <td><select name="end_h">
+                        </select>&nbsp; &nbsp;ДО:&nbsp;<select name="end_h">
                           <option value="0">00</option>
                           <option value="1">01</option>
                           <option value="2">02</option>
@@ -1054,28 +1040,38 @@
                           <option value="45">45</option>
                         </select></td>
                     </tr>
+                    <tr>
+                      <td colspan="3" style="text-align: center;">ЯРКОСТЬ ДИСПЛЕЯ</td>
+                    </tr>
+                    <tr id="brightness_sun">
+                      <td colspan="1"><i class="icons icons8 icon-brightness-darken"></i></td>
+                      <td style="text-align: center;"><i class="icons icon-sun-o"></i><input id="day_brightness"
+                          max="254" min="0" name="day_brightness" type="range" value="127"></td>
+                      <td><i class="icons icons8 icon-brightness-brighten"></i></td>
+                    </tr>
                     <tr id="brightness">
-                      <td>ЯРКОСТЬ</td>
-                      <td>ДЕНЬ</td>
-                      <td><input id="day_brightness" max="254" min="0" name="day_brightness" type="range" value="127">
-                      </td>
-                      <td>НОЧЬ</td>
-                      <td><input id="night_brightness" max="254" min="0" name="night_brightness" type="range"
-                          value="127"></td>
+                      <td><i class="icons icons8 icon-brightness-darken"></i></td>
+                      <td style="text-align: center;"><i class="icons icon-moon-o"></i><input id="night_brightness"
+                          max="254" min="0" name="night_brightness" type="range" value="127"></td>
+                      <td><i class="icons icons8 icon-brightness-brighten"></i></td>
                     </tr>
                     <tr id="by_lighting">
-                      <td>ПОРОГ</td>
-                      <td style=" text-align: center;" colspan="4" rowspan="1"><input id="brightness_trigger" max="1023"
-                          min="0" name="brightness_trigger" type="range" value="127"></td>
+                      <td style=" text-align: center;"><i class="icons icons8 icon-brightness-darken"></i></td>
+                      <td style=" text-align: center;"><i class="icons icon-ios-lightbulb"></i><input
+                          id="lighting_trigger" max="1023" min="0" name="lighting_trigger" type="range" value="127">
+                      </td>
+                      <td><i class="icons icons8 icon-brightness-brighten"></i></td>
                     </tr>
                     <tr id="by_hand">
-                      <td>ЯРКОСТЬ</td>
-                      <td style=" text-align: center;" colspan="4" rowspan="1"><input id="hand_brightness" max="254"
-                          min="0" name="hand_brightness" type="range" value="127"></td>
+                      <td style=" text-align: center;"><i class="icons icons8 icon-brightness-darken"></i></td>
+                      <td style=" text-align: center;"><i class="icons icon-brightness"></i><input id="hand_brightness"
+                          max="254" min="0" name="hand_brightness" type="range" value="127"></td>
+                      <td><i class="icons icons8 icon-brightness-brighten"></i></td>
                     </tr>
                   </tbody>
                 </table>
               </div>
+
               <table id="FanControlTable">
                 <tbody>
                   <tr>
@@ -1122,10 +1118,10 @@
               </table>
             </div>
 
-            <h1>ЗАГРУЗКА\СОХРАНЕНИЕ НАСТРОЕК
-              <input type="button" value="Загрузить настройки из файла" onclick="loadCSV()">
-              <input type="button" value="Сохранить настройки в файл" onclick="saveCSV()"></h1>
+            <h1>ЗАГРУЗКА\СОХРАНЕНИЕ НАСТРОЕК</h1>
             <div class="section">
+              <button class="icon-download" onclick="loadCSV()" title="Загрузить настройки из файла"></button>
+              <button class="icon-floppy-o" onclick="saveCSV()" title="Сохранить настройки в файл"></button>
               <table id="CSVname">
                 <tbody>
                   <tr>
@@ -1157,10 +1153,8 @@
           <div>
             <!-- ОБНОВЛЕНИЯ -->
             <h1>
-              Текущая версия: <span id="currentrelease">1.0 Rev: Beta 9</span>&nbsp;Обновить до:
-              <span id="newrelease">1.0 Rev: Beta 10</span>
-              <input type="button" value="Обновить сейчас" onclick="upgrade()">
-              &nbsp;
+              ТЕКУЩАЯ ВЕРСИЯ: <span id="currentrelease">1.0 Rev: Beta 9</span>&nbsp;ОБНОВИТЬ ДО:
+              <span id="newrelease">1.0 Rev: Beta 10</span>&nbsp;
               <span id="updatefb"></span>
               <br>
             </h1>
@@ -1168,19 +1162,15 @@
               <p>
                 <span class="bold4" id="Version"></span>
                 <br>
-                <span class="bold4">Чтобы обновить или перезагрузить текущий релиз:</span>
-                <br>
-                <br>
-                <input type="button" value="Обновить сейчас" onclick="upgrade()">
+                <button class="icon-refresh" onclick="upgrade()" title="Обновить сейчас"></button>
                 <br>
                 <span class="bold4" id="Infos"></span>
                 <br>
               </p>
             </div>
-            <h1>История:</h1>
+            <h1>ИСТОРИЯ:</h1>
             <div class="section">
-              <input type="button" value="Загрузить" onclick="checkhistory()">
-              <br>
+              <button class="icon-download" onclick="checkhistory()" title="Загрузить историю версий"></button>
               <span class="bold4" id="History"></span>
               <br>
             </div>
@@ -1191,11 +1181,11 @@
       </div>
       <!-- END НАСТРОЙКИ -->
     </div>
-    <div id="footer"><a href="https://github.com/SinglWolf/ESP32-Radiola" target="_blank">РАДИОЛА by SinglWolf © 2020
-        Все права защищены.</a>
-    </div>
-
   </div>
+  <div id="footer"><a href="https://github.com/SinglWolf/ESP32-Radiola" target="_blank">РАДИОЛА by SinglWolf © 2020
+      Все права защищены.</a>
+  </div>
+
   <script src="tabbis.js"></script>
   <script>
     localStorage.removeItem("tabbis");

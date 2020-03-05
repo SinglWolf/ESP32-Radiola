@@ -56,3 +56,14 @@ xxd.exe -i favicon.png > .favicon
 REM sed.exe -i 's/\[\]/\[\]/g' favicon
 sed.exe -i 's/unsigned/const/g' .favicon
 MOVE favicon.ori favicon.png
+
+ECHO icons.css
+COPY icons.css icons.ori
+python ./css-html-js-minify.py icons.css
+gzip.exe  icons.min.css 
+MOVE icons.min.css.gz icons.css
+xxd.exe -i icons.css > .icons
+REM sed.exe -i 's/\[\]/\[\]/g' style
+sed.exe -i 's/unsigned/const/g' .icons
+MOVE icons.ori icons.css
+

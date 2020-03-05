@@ -42,7 +42,8 @@ xQueueHandle event_lcd = NULL;
 ucg_t ucg;
 static xTaskHandle pxTaskLcd;
 // list of screen
-typedef enum typeScreen {
+typedef enum typeScreen
+{
 	smain,
 	svolume,
 	sstation,
@@ -85,8 +86,8 @@ static void evtScreen(typelcmd value);
 Encoder_t *encoder0 = NULL;
 Encoder_t *encoder1 = NULL;
 
-static adc1_channel_t ldrchannel1 = GPIO_NONE;
-static adc2_channel_t ldrchannel2 = GPIO_NONE;
+static adc1_channel_t ldr_channel, kbd_channel = GPIO_NONE;
+static bool inside = false;
 
 void LdrInit()
 {
@@ -98,72 +99,37 @@ void LdrInit()
 		switch (ldr)
 		{
 		case GPIO_NUM_36: //
-			ldrchannel1 = ADC1_CHANNEL_0;
+			ldr_channel = ADC1_CHANNEL_0;
 			break;
 		case GPIO_NUM_37:
-			ldrchannel1 = ADC1_CHANNEL_1;
+			ldr_channel = ADC1_CHANNEL_1;
 			break;
 		case GPIO_NUM_38:
-			ldrchannel1 = ADC1_CHANNEL_2;
+			ldr_channel = ADC1_CHANNEL_2;
 			break;
 		case GPIO_NUM_39:
-			ldrchannel1 = ADC1_CHANNEL_3;
+			ldr_channel = ADC1_CHANNEL_3;
 			break;
 		case GPIO_NUM_32:
-			ldrchannel1 = ADC1_CHANNEL_4;
+			ldr_channel = ADC1_CHANNEL_4;
 			break;
 		case GPIO_NUM_33:
-			ldrchannel1 = ADC1_CHANNEL_5;
+			ldr_channel = ADC1_CHANNEL_5;
 			break;
 		case GPIO_NUM_34:
-			ldrchannel1 = ADC1_CHANNEL_6;
+			ESP_LOGE(TAG, "Channel reserved for keyboard!");
 			break;
 		case GPIO_NUM_35:
-			ldrchannel1 = ADC1_CHANNEL_7;
-			break;
-		case GPIO_NUM_4: //
-			ldrchannel2 = ADC2_CHANNEL_0;
-			break;
-		case GPIO_NUM_0:
-			ldrchannel2 = ADC2_CHANNEL_1;
-			break;
-		case GPIO_NUM_2:
-			ldrchannel2 = ADC2_CHANNEL_2;
-			break;
-		case GPIO_NUM_15:
-			ldrchannel2 = ADC2_CHANNEL_3;
-			break;
-		case GPIO_NUM_13:
-			ldrchannel2 = ADC2_CHANNEL_4;
-			break;
-		case GPIO_NUM_12:
-			ldrchannel2 = ADC2_CHANNEL_5;
-			break;
-		case GPIO_NUM_14:
-			ldrchannel2 = ADC2_CHANNEL_6;
-			break;
-		case GPIO_NUM_27:
-			ldrchannel2 = ADC2_CHANNEL_7;
-			break;
-		case GPIO_NUM_25:
-			ldrchannel2 = ADC2_CHANNEL_8;
-			break;
-		case GPIO_NUM_26:
-			ldrchannel2 = ADC2_CHANNEL_9;
+			ldr_channel = ADC1_CHANNEL_7;
 			break;
 		default:
 			ESP_LOGD(TAG, "LDR Channel not defined");
 		}
-		if (ldrchannel1 != GPIO_NONE)
+		if (ldr_channel != GPIO_NONE)
 		{
-			ESP_LOGD(TAG, "First channel for LDR defined, number: %i", ldrchannel1);
+			ESP_LOGD(TAG, "Channel for GPIO: %d defined, number: %i", ldr, ldr_channel);
 			adc1_config_width(ADC_WIDTH_12Bit);
-			adc1_config_channel_atten(ldrchannel1, ADC_ATTEN_0db);
-		}
-		else if (ldrchannel2 != GPIO_NONE)
-		{
-			ESP_LOGD(TAG, "Second channel for LDR defined, number: %i", ldrchannel2);
-			adc2_config_channel_atten(ldrchannel2, ADC_ATTEN_0db);
+			adc1_config_channel_atten(ldr_channel, ADC_ATTEN_0db);
 		}
 	}
 }
@@ -175,62 +141,15 @@ void LdrLoop()
 		uint32_t voltage = 0;
 		uint32_t voltage0 = 0;
 		uint32_t voltage1 = 0;
-		if ((ldrchannel1 == GPIO_NONE) && (ldrchannel2 == GPIO_NONE))
+		if (ldr_channel == GPIO_NONE)
 			return; //пин фоторезистора не определён
-		if (ldrchannel1 != GPIO_NONE)
+		if (ldr_channel != GPIO_NONE)
 		{
 			//Первое считвыание. Снимаем напряжение 4 раза и вычисляем среднее значение.
-			voltage0 = (adc1_get_raw(ldrchannel1) + adc1_get_raw(ldrchannel1) + adc1_get_raw(ldrchannel1) + adc1_get_raw(ldrchannel1)) / 4;
+			voltage0 = (adc1_get_raw(ldr_channel) + adc1_get_raw(ldr_channel) + adc1_get_raw(ldr_channel) + adc1_get_raw(ldr_channel)) / 4;
 			vTaskDelay(1);
 			//Второе считвыание. Снимаем напряжение 4 раза и вычисляем среднее значение.
-			voltage1 = (adc1_get_raw(ldrchannel1) + adc1_get_raw(ldrchannel1) + adc1_get_raw(ldrchannel1) + adc1_get_raw(ldrchannel1)) / 4;
-		}
-		else if (ldrchannel2 != GPIO_NONE)
-		{
-			esp_err_t err;
-			int raw = 0;
-			//Первое считвыание. Снимаем напряжение 4 раза.
-			err = adc2_get_raw(ldrchannel2, ADC_WIDTH_12Bit, &raw);
-			voltage0 = raw;
-			err |= adc2_get_raw(ldrchannel2, ADC_WIDTH_12Bit, &raw);
-			voltage0 = voltage0 + raw;
-			err |= adc2_get_raw(ldrchannel2, ADC_WIDTH_12Bit, &raw);
-			voltage0 = voltage0 + raw;
-			err |= adc2_get_raw(ldrchannel2, ADC_WIDTH_12Bit, &raw);
-			voltage0 = voltage0 + raw;
-			// и вычисляем среднее значение
-			voltage0 = voltage0 / 4;
-			vTaskDelay(1);
-			raw = 0;
-			//Второе считвыание. Снимаем напряжение 4 раза.
-			err |= adc2_get_raw(ldrchannel2, ADC_WIDTH_12Bit, &raw);
-			voltage1 = raw;
-			err |= adc2_get_raw(ldrchannel2, ADC_WIDTH_12Bit, &raw);
-			voltage1 = voltage1 + raw;
-			err |= adc2_get_raw(ldrchannel2, ADC_WIDTH_12Bit, &raw);
-			voltage1 = voltage1 + raw;
-			err |= adc2_get_raw(ldrchannel2, ADC_WIDTH_12Bit, &raw);
-			voltage1 = voltage1 + raw;
-			// и вычисляем среднее значение
-			voltage1 = voltage1 / 4;
-
-			if (err == ESP_OK)
-			{
-				printf("raw: %d\n", raw);
-			}
-			else if (err == ESP_ERR_INVALID_STATE)
-			{
-				ESP_LOGD(TAG, "%s: ADC2 not initialized yet.\n", esp_err_to_name(err));
-			}
-			else if (err == ESP_ERR_TIMEOUT)
-			{
-				//This can not happen in this example. But if WiFi is in use, such error code could be returned.
-				ESP_LOGD(TAG, "%s: ADC2 is in use by Wi-Fi.\n", esp_err_to_name(err));
-			}
-			else
-			{
-				ESP_LOGD(TAG, "%s\n", esp_err_to_name(err));
-			}
+			voltage1 = (adc1_get_raw(ldr_channel) + adc1_get_raw(ldr_channel) + adc1_get_raw(ldr_channel) + adc1_get_raw(ldr_channel)) / 4;
 		}
 		ESP_LOGD(TAG, "LDR voltage0: %d\nLDR voltage1: %d\n", voltage0, voltage1);
 		if ((voltage0 > 3700) || (voltage1 > 3700))
@@ -550,6 +469,7 @@ void startStop()
 }
 void stationOk()
 {
+	beep(10);
 	ESP_LOGD(TAG, "STATION OK");
 	if (strlen(irStr) > 0)
 	{
@@ -581,6 +501,7 @@ void changeStation(int16_t value)
 // a number of station in progress...
 void nbStation(char nb)
 {
+	beep(10);
 	if (strlen(irStr) >= 3)
 		irStr[0] = 0;
 	uint8_t id = strlen(irStr);
@@ -610,6 +531,7 @@ static void evtScreen(typelcmd value)
 
 static void evtStation(int16_t value)
 { // value +1 or -1
+	beep(10);
 	event_lcd_t evt;
 	evt.lcmd = estation;
 	evt.lline = (char *)((uint32_t)value);
@@ -619,6 +541,7 @@ static void evtStation(int16_t value)
 // toggle main / time
 static void toggletime()
 {
+	beep(10);
 	event_lcd_t evt;
 	evt.lcmd = etoggle;
 	evt.lline = NULL;
@@ -658,8 +581,9 @@ void encoderCompute(Encoder_t *enc, bool role)
 			if (stateScreen != (role ? sstation : svolume))
 				role ? evtStation(newValue) : setRelVolume(newValue);
 		}
-	} //else
-	  // no event on button switch
+	}
+	else
+	// no event on button switch
 	{
 		if ((stateScreen != estate) && (newValue != 0))
 		{
@@ -879,7 +803,7 @@ esp_err_t ir_key_init()
 			g_device->ir_mode = IR_DEFAULD;
 			saveDeviceSettings(g_device);
 			return err;
-		}		
+		}
 		for (indexKey = KEY_UP; indexKey < KEY_MAX; indexKey++)
 		{
 			// get the key in the nvs
@@ -941,6 +865,82 @@ IRAM_ATTR void multiService() // every 1ms
 	if (divide++ == 10) // only every 10ms
 	{
 		divide = 0;
+	}
+}
+void adcLoop()
+{
+	uint32_t voltage, voltage0, voltage1;
+	bool wasVol = false;
+	if (kbd_channel == GPIO_NONE)
+		return; // no gpio specified
+
+	voltage0 = (adc1_get_raw(kbd_channel) + adc1_get_raw(kbd_channel) + adc1_get_raw(kbd_channel) + adc1_get_raw(kbd_channel)) / 4;
+	vTaskDelay(1);
+	voltage1 = (adc1_get_raw(kbd_channel) + adc1_get_raw(kbd_channel) + adc1_get_raw(kbd_channel) + adc1_get_raw(kbd_channel)) / 4;
+	//	printf ("Volt0: %d, Volt1: %d\n",voltage0,voltage1);
+	voltage = (voltage0 + voltage1) * 105 / (819);
+	if (voltage < 40)
+		return; // no panel
+				//	printf("Voltage: %d\n",voltage);
+
+	if (inside && (voltage0 > 3700))
+	{
+		inside = false;
+		wasVol = false;
+		return;
+	}
+	if (voltage0 > 3700)
+	{
+		wasVol = false;
+	}
+	if ((voltage0 > 3700) || (voltage1 > 3700))
+		return; // must be two valid voltage
+
+	if (voltage < 985)
+		ESP_LOGD(TAG, "Voltage: %i", voltage);
+	//		printf("VOLTAGE: %d\n",voltage);
+	if ((voltage > 400) && (voltage < 590)) // volume +
+	{
+		setRelVolume(+5);
+		wasVol = true;
+		ESP_LOGD(TAG, "Volume+ : %i", voltage);
+	}
+	else if ((voltage > 730) && (voltage < 830)) // volume -
+	{
+		setRelVolume(-5);
+		wasVol = true;
+		ESP_LOGD(TAG, "Volume- : %i", voltage);
+	}
+	else if ((voltage > 900) && (voltage < 985)) // station+
+	{
+		if (!wasVol)
+		{
+			evtStation(1);
+			ESP_LOGD(TAG, "station+: %i", voltage);
+		}
+	}
+	else if ((voltage > 620) && (voltage < 710)) // station-
+	{
+		if (!wasVol)
+		{
+			evtStation(-1);
+			ESP_LOGD(TAG, "station-: %i", voltage);
+		}
+	}
+	if (!inside)
+	{
+		if ((voltage > 100) && (voltage < 220)) // toggle time/info  old stop
+		{
+			inside = true;
+			toggletime();
+			ESP_LOGD(TAG, "toggle time: %i", voltage);
+		}
+		else if ((voltage > 278) && (voltage < 380)) //start stop toggle   old start
+		{
+			inside = true;
+			startStop();
+			ESP_LOGD(TAG, "start stop: %i", voltage);
+		}
 	}
 }
 //--------------------
@@ -1069,6 +1069,15 @@ void task_addon(void *pvParams)
 {
 	xTaskHandle pxCreatedTask;
 	LdrInit(); // Инициализация фоторезистора
+	if (PIN_NUM_KBD == GPIO_NUM_34)
+	{
+		kbd_channel = ADC1_CHANNEL_6;
+		ESP_LOGD(TAG, "Channel for KBD defined, number: %i", kbd_channel);
+		adc1_config_width(ADC_WIDTH_12Bit);
+		adc1_config_channel_atten(kbd_channel, ADC_ATTEN_0db);
+	}
+	else
+		ESP_LOGD(TAG, "Channel for KBD not defined");
 	ir_key_init();
 	initButtonDevices();
 
@@ -1095,6 +1104,7 @@ void task_addon(void *pvParams)
 
 	while (1)
 	{
+		adcLoop();			  // compute the adc keyboard
 		encoderLoop();		  // compute the encoder
 		irLoop();			  // compute the ir
 		touchLoop();		  // compute the touch screen

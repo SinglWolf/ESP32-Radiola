@@ -54,11 +54,9 @@ function openwebsocket() {
             }
             if (arr["wscurtemp"]) {
                 document.getElementById('curtemp').innerHTML = arr["wscurtemp"] + ' ℃';
-                setTimeout(wsaskcurtemp, 5000);
             }
             if (arr["wsrpmfan"]) {
-                document.getElementById('rpmfan').innerHTML = arr["wsrpmfan"] + ' Об/мин';
-                setTimeout(wsaskrpmfan, 1000);
+                document.getElementById('rpmfan').innerHTML = arr["wsrpmfan"] + ' Об/м';
             }
         } catch (e) { console.log("error" + e); }
     }
@@ -70,8 +68,6 @@ function openwebsocket() {
             window.timerID = 0;
         }
         setTimeout(wsaskrssi, 5000); // start the rssi display
-        setTimeout(wsaskcurtemp, 5000); // start the curent tempemperature to display
-        setTimeout(wsaskrpmfan, 1000); // start the rpm of fan to display
         websocket.send("opencheck");
     }
     websocket.onclose = function (event) {
@@ -97,18 +93,6 @@ function changeTitle($arr) {
 function wsaskrssi() {
     try {
         websocket.send("wsrssi &");
-    } catch (e) { console.log("error" + e); }
-}
-// ask for the curtemp and restart the timer
-function wsaskcurtemp() {
-    try {
-        websocket.send("wscurtemp &");
-    } catch (e) { console.log("error" + e); }
-}
-// ask for the rpm and restart the timer
-function wsaskrpmfan() {
-    try {
-        websocket.send("wsrpmfan &");
     } catch (e) { console.log("error" + e); }
 }
 
@@ -168,9 +152,14 @@ function mpause() {
     monitor.pause();
 }
 
-function mvol($val) {
+function mvol($name, $step) {
+    var val = parseInt(document.getElementById($name + '_range').value) + $step;
+    if (val < 0) val = 0;
+    if (val > 100) val = 100;
+    document.getElementById($name + '_range').value = val;
+    document.getElementById($name + '_span').innerHTML = val + "%";
     monitor = document.getElementById("audio");
-    monitor.volume = $val;
+    monitor.volume = val / 100;
 }
 
 function checkwebsocket() {
@@ -637,7 +626,7 @@ function onRangeChangeSpatial($range, $spanid, $nosave) {
             label = "Минимум";
             break;
         case '2':
-            label = "Норма";
+            label = "Средняя";
             break;
         case '3':
             label = "Максимум";
@@ -645,6 +634,36 @@ function onRangeChangeSpatial($range, $spanid, $nosave) {
     }
     document.getElementById($spanid).innerHTML = label;
     if (typeof ($nosave) == 'undefined') saveSoundSettings();
+}
+
+function btnTDA($name, $step) {
+    var val = parseInt(document.getElementById($name + '_range').value) + $step;
+    switch ($name) {
+        case 'Volume':
+            if (val < 0) val = 0;
+            if (val > 17) val = 17;
+            break;
+        case 'Treble':
+        case 'Bass':
+            if (val < 0) val = 0;
+            if (val > 14) val = 14;
+            break;
+        case 'AttLF':
+        case 'AttRF':
+        case 'AttLR':
+        case 'AttRR':
+            if (val < 0) val = 0;
+            if (val > 13) val = 13;
+            break;
+        case 'sla1':
+        case 'sla2':
+        case 'sla3':
+            if (val < 0) val = 0;
+            if (val > 3) val = 3;
+            break;
+    }
+    document.getElementById($name + '_range').value = val;
+    onTDAchange($name);
 }
 
 function onTDAchange($name, $nosave) {
@@ -837,6 +856,47 @@ function logValue(value) {
     var val = Math.round((Math.log10(255 / log) * 105.54571334));
     return val;
 }
+function VolumeBtn($element, $step) {
+    var Volume = parseInt(document.getElementById($element).value) + $step;
+    if (Volume < 5) Volume = 0;
+    if (Volume > 249) Volume = 254;
+    onRangeVolChange(Volume, true);
+
+}
+function ToneBtn($element, $step) {
+    var value = parseInt(document.getElementById($element).value) + $step;
+    if ($element != "spacial_range")
+        document.getElementById($element).value = value;
+    if ($element == "treble_range") {
+        if (value < -8) value = -8;
+        if (value > 7) value = 7;
+        document.getElementById('treble_span').innerHTML = (value * 1.5) + " дБ";
+    }
+    if ($element == "treblefreq_range") {
+        if (value < 1) value = 1;
+        if (value > 15) value = 15;
+        document.getElementById('treblefreq_span').innerHTML = "От " + value + " кГц";
+    }
+    if ($element == "bass_range") {
+        if (value < 0) value = 0;
+        if (value > 15) value = 15;
+        document.getElementById('bass_span').innerHTML = value + " дБ";
+    }
+    if ($element == "bassfreq_range") {
+        if (value < 2) value = 2;
+        if (value > 15) value = 15;
+        document.getElementById('bassfreq_span').innerHTML = "До " + (value * 10) + " Гц";
+    }
+    if ($element == "spacial_range") {
+        if (value < 0) value = 0;
+        if (value > 3) value = 3;
+        document.getElementById($element).value = value;
+        onRangeChangeSpatial('spacial_range', 'spacial_span', false);
+    }
+    saveSoundSettings();
+
+}
+
 
 
 function onRangeVolChange($value, $local) {
@@ -909,7 +969,7 @@ function wifi(valid) {
 
 function clickrear($nosave) {
     if (document.getElementById("rearON").checked)
-        document.getElementById("Rear").style.display = "block";
+        document.getElementById("Rear").style.display = "table";
     else
         document.getElementById("Rear").style.display = "none";
     if (typeof ($nosave) == 'undefined') hardware(1);
@@ -1022,19 +1082,25 @@ function displaybright() {
         if (document.getElementById('O_LCD_BRG').value == 1) {
             document.getElementById("by_hand").style.visibility = "collapse";
             document.getElementById("by_time").style.visibility = "visible";
+            document.getElementById("_night").style.visibility = "visible";
             document.getElementById("brightness").style.visibility = "visible";
+            document.getElementById("brightness_sun").style.visibility = "visible";
             document.getElementById("by_lighting").style.visibility = "collapse";
         }
         if (document.getElementById('O_LCD_BRG').value == 2) {
             document.getElementById("by_hand").style.visibility = "collapse";
             document.getElementById("by_time").style.visibility = "collapse";
+            document.getElementById("_night").style.visibility = "collapse";
             document.getElementById("brightness").style.visibility = "visible";
+            document.getElementById("brightness_sun").style.visibility = "visible";
             document.getElementById("by_lighting").style.visibility = "visible";
         }
         if (document.getElementById('O_LCD_BRG').value == 3) {
             document.getElementById("by_hand").style.visibility = "visible";
+            document.getElementById("_night").style.visibility = "collapse";
             document.getElementById("by_time").style.visibility = "collapse";
             document.getElementById("brightness").style.visibility = "collapse";
+            document.getElementById("brightness_sun").style.visibility = "collapse";
             document.getElementById("by_lighting").style.visibility = "collapse";
         }
     }
@@ -1126,7 +1192,7 @@ function gpios(gpio_mode, save, load) {
             "&P_TXD=" + P_TXD.innerHTML +
             "&P_LDR=" + P_LDR.innerHTML;
     } else save = 0;
-
+    gpio_mode = load;
     xhr.open("POST", "gpios", false);
     xhr.setRequestHeader(content, ctype);
     xhr.send("gpio_mode=" + gpio_mode +
@@ -1145,6 +1211,17 @@ function hardware(save) {
             var arr = JSON.parse(xhr.responseText);
             if (arr['present'] == "1") {
                 tabbis.onClick(1, parseInt(arr['inputnum']) - 1);
+                switch (arr['inputnum']) {
+                    case '1':
+                        document.getElementById('source').innerHTML = "AUX";
+                        break;
+                    case '2':
+                        document.getElementById('source').innerHTML = "VS1053";
+                        break;
+                    case '3':
+                        document.getElementById('source').innerHTML = "BT201";
+                        break;
+                }
                 document.getElementById('Volume_range').value = arr["Volume"].replace(/\\/g, "");
                 onTDAchange('Volume', false);
                 document.getElementById('Treble_range').value = arr["Treble"].replace(/\\/g, "");
@@ -1180,9 +1257,9 @@ function hardware(save) {
             } else {
                 document.getElementById("barTDA7313").style.display = "none";
                 document.getElementById("barTDA7313radio").style.display = "none";
-//                document.getElementById("audioinput1").style.display = "none";
-//                document.getElementById("audioinput3").style.display = "none";
-                tabbis.onClick(1, 1);                
+                //                document.getElementById("audioinput1").style.display = "none";
+                //                document.getElementById("audioinput3").style.display = "none";
+                tabbis.onClick(1, 1);
                 document.getElementById("soudBar").style = "pointer-events:none;";
             }
         }
@@ -1558,6 +1635,14 @@ function getversion() {
         if (xhr.readyState == 4 && xhr.status == 200) {
             var arr = JSON.parse(xhr.responseText);
             document.getElementById('currentrelease').innerHTML = arr["RELEASE"].replace(/\\/g, "") + " Rev: " + arr["REVISION"].replace(/\\/g, "");
+            if (arr["curtemp"] != "000.0") {
+                document.getElementById('curtemp').innerHTML = parseFloat(arr["curtemp"]) + ' ℃';
+                document.getElementById('_temp').style.display = "block";
+            }
+            if (arr["rpmfan"] != "0000") {
+                document.getElementById('rpmfan').innerHTML = arr["rpmfan"] + ' Об/м';
+                document.getElementById('_fan').style.display = "block";
+            }
         }
     }
     try {
@@ -1775,6 +1860,7 @@ function loadStations() {
         tr.ondrop = dragDrop;
         tr.ondragover = allowDrop;
         td.appendChild(document.createTextNode(id));
+        td.style = "padding-left: 3px;";
         td.setAttribute('onclick', 'playEditStation(this.parentNode);');
         tr.appendChild(td);
         // Name
@@ -1800,7 +1886,7 @@ function loadStations() {
         // edit button			
         td = document.createElement('TD');
         td.style = "text-align: center; vertical-align: middle;";
-        td.innerHTML = "<a href=\"javascript:void(0)\" onClick=\"editStation(" + id + ")\">Правка</a>";
+        td.innerHTML = "<a class=\"icon-page-edit\" href=\"javascript:void(0)\" onClick=\"editStation(" + id + ")\"></a>";
         tr.appendChild(td);
         if (idlist === idstr) {
             setEditBackground(tr);

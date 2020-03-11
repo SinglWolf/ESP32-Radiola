@@ -72,7 +72,7 @@
 
 **Распиновка по-умолчанию** 
 
-| ESP   | VS1053<br/>TFT<br/>TOUCH  | TDA7313<br/>TDA7317<br/>DS3231 | DS1820 |  FAN  | IR | BUZZ | STD<br/>BY | BTX01 | ENC | KBD | LDR |
+| ESP   | VS1053<br/>TFT<br/>TOUCH  | TDA7313<br/>TDA7317<br/>DS3231 | DS1820 |  FAN  | IR | BUZZ | STAND<br/>BY | BTX01 | ENC | KBD | LDR |
 | :---: | :-----: | :-----: | :----: | :---: | :---: | :----: |:----:|:----:|:----:|:----:|:----:|
 |   19  |  MISO   |         |        |       |       |        |      |      |      |      |      |
 |   23  |  MOSI   |         |        |       |       |        |      |      |      |      |      |

@@ -72,7 +72,7 @@
 
 **Распиновка по-умолчанию** 
 
-| ESP32 | VS1053  | TFT  | XPT2046 | TDA7313<br/>TDA7317<br/>DS3231 | DS1820 |  FAN  | IRLED | BUZZER | STAND<br/>BY | BT201 | ENCODER | KBD | LDR |
+| ESP | VS1053  | TFT  | TOUCH | TDA7313<br/>TDA7317<br/>DS3231 | DS1820 |  FAN  | IR | BUZZ | STD<br/>BY | BTX01 | ENC | KBD | LDR |
 | :---: | :-----: | :--: | :-----: | :-----: | :----: | :---: | :---: | :----: |:----:|:----:|:----:|:----:|:----:|
 |   19  |  MISO   | MISO | T_MISO  |         |        |       |       |        |      |      |      |      |      |
 |   23  |  MOSI   | MOSI | T_MOSI  |         |        |       |       |        |      |      |      |      |      |

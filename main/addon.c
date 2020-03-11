@@ -84,7 +84,6 @@ void drawScreen();
 static void evtScreen(typelcmd value);
 
 Encoder_t *encoder0 = NULL;
-Encoder_t *encoder1 = NULL;
 
 static adc1_channel_t ldr_channel, kbd_channel = GPIO_NONE;
 static bool inside = false;
@@ -165,11 +164,7 @@ void LdrLoop()
 
 void *getEncoder(int num)
 {
-	if (num == 0)
-		return (void *)encoder0;
-	if (num == 1)
-		return (void *)encoder1;
-	return NULL;
+	return (void *)encoder0;
 }
 
 static void ClearBuffer()
@@ -736,7 +731,7 @@ void initButtonDevices()
 	if (enca0 == GPIO_NONE)
 		isEncoder = false; //no encoder
 	if (isEncoder)
-		encoder0 = ClickEncoderInit(enca0, encb0, encbtn0, ((g_device->options & T_ENC0) == 0) ? false : true);
+		encoder0 = ClickEncoderInit(enca0, encb0, encbtn0, ((g_device->options & Y_ENC) == 0) ? false : true);
 }
 
 // custom ir code init from hardware nvs partition
@@ -869,6 +864,7 @@ IRAM_ATTR void multiService() // every 1ms
 }
 void adcLoop()
 {
+	return;
 	uint32_t voltage, voltage0, voltage1;
 	bool wasVol = false;
 	if (kbd_channel == GPIO_NONE)
@@ -952,7 +948,7 @@ void task_lcd(void *pvParams)
 	event_lcd_t evt;  // lcd event
 	event_lcd_t evt1; // lcd event
 	ESP_LOGD(TAG, "task_lcd Started, LCD Type");
-	defaultStateScreen = (g_device->options & T_TOGGLETIME) ? stime : smain;
+	defaultStateScreen = (g_device->options & Y_TOGGLETIME) ? stime : smain;
 	drawFrame();
 
 	while (1)
@@ -1044,7 +1040,7 @@ void task_lcd(void *pvParams)
 				case etoggle:
 					defaultStateScreen = (stateScreen == smain) ? stime : smain;
 					(stateScreen == smain) ? Screen(stime) : Screen(smain);
-					g_device->options = (defaultStateScreen == smain) ? g_device->options & NT_TOGGLETIME : g_device->options | T_TOGGLETIME;
+					g_device->options = (defaultStateScreen == smain) ? g_device->options & N_TOGGLETIME : g_device->options | Y_TOGGLETIME;
 					saveDeviceSettings(g_device);
 					break;
 				default:;

@@ -84,7 +84,7 @@ void lcd_welcome(const char *ip, const char *state);
 void setFuturNum(int16_t new);
 int16_t getFuturNum();
 void wakeLcd();
-void *getEncoder(int num);
+void *getEncoder();
 uint32_t get_ir_code();
 void set_ir_training(bool training);
 #endif

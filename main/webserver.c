@@ -1411,9 +1411,9 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 					if (O_TIME_FORMAT != atoi(val_1))
 					{
 						if (atoi(val_1) == 0)
-							g_device->options &= NT_DDMM;
+							g_device->options &= N_DDMM;
 						else
-							g_device->options |= T_DDMM;
+							g_device->options |= Y_DDMM;
 						reboot = true;
 					}
 				}
@@ -1422,9 +1422,9 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 					if (O_LCD_ROTA != atoi(val_1))
 					{
 						if (atoi(val_1) == 0)
-							g_device->options &= NT_ROTAT;
+							g_device->options &= N_ROTAT;
 						else
-							g_device->options |= T_ROTAT;
+							g_device->options |= Y_ROTAT;
 						reboot = true;
 					}
 				}
@@ -1498,7 +1498,7 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 			changed = false;
 			char arg[4];
 			bool gpio_mode = false;
-			g_device->options &= NT_GPIOMODE;
+			g_device->options &= N_GPIOMODE;
 			nvs_handle hardware_handle;
 			esp_err_t err = ESP_OK;
 
@@ -1511,14 +1511,14 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 				if ((strcmp(arg, "1") == 0))
 				{
 					gpio_mode = true;
-					g_device->options |= T_GPIOMODE;
+					g_device->options |= Y_GPIOMODE;
 				}
 			if (gpio_mode)
 			{
 				err = open_partition("hardware", "gpio_space", (changed == false ? NVS_READONLY : NVS_READWRITE), &hardware_handle);
 				if (err != ESP_OK)
 				{
-					g_device->options &= NT_GPIOMODE;
+					g_device->options &= N_GPIOMODE;
 				}
 				else
 					close_partition(hardware_handle, "hardware");
@@ -1542,7 +1542,7 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 				err |= gpio_get_ldr(&ldr);
 				if (err == 0x1102)
 				{
-					g_device->options &= NT_GPIOMODE;
+					g_device->options &= N_GPIOMODE;
 
 					err |= gpio_get_spi_bus(&spi_no, &miso, &mosi, &sclk);
 					err |= gpio_get_vs1053(&xcs, &xdcs, &dreq);

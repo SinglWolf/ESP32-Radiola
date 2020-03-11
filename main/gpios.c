@@ -188,35 +188,35 @@ esp_err_t gpio_set_vs1053(gpio_num_t xcs, gpio_num_t xdcs, gpio_num_t dreq)
 
 void option_get_lcd_rotat(uint8_t *rt)
 {
-	*rt = ((g_device->options) & T_ROTAT) ? 1 : 0;
+	*rt = ((g_device->options) & Y_ROTAT) ? 1 : 0;
 }
 
 void option_set_lcd_rotat(uint8_t rt)
 {
 	if (rt == 0)
-		g_device->options &= NT_ROTAT;
+		g_device->options &= N_ROTAT;
 	else
-		g_device->options |= T_ROTAT;
+		g_device->options |= Y_ROTAT;
 	saveDeviceSettings(g_device);
 }
 
 void option_get_ddmm(uint8_t *ddmm)
 {
-	*ddmm = ((g_device->options) & T_DDMM) ? 1 : 0;
+	*ddmm = ((g_device->options) & Y_DDMM) ? 1 : 0;
 }
 
 void option_set_ddmm(uint8_t ddmm)
 {
 	if (ddmm == 0)
-		g_device->options &= NT_DDMM;
+		g_device->options &= N_DDMM;
 	else
-		g_device->options |= T_DDMM;
+		g_device->options |= Y_DDMM;
 	saveDeviceSettings(g_device);
 }
 
 bool option_get_gpio_mode()
 {
-	if (g_device->options & T_GPIOMODE)
+	if (g_device->options & Y_GPIOMODE)
 		return true;
 	else
 		return false;
@@ -225,9 +225,9 @@ bool option_get_gpio_mode()
 void option_set_gpio_mode(uint8_t gpio_mode)
 {
 	if (gpio_mode == 0)
-		g_device->options &= NT_GPIOMODE;
+		g_device->options &= N_GPIOMODE;
 	else
-		g_device->options |= T_GPIOMODE;
+		g_device->options |= Y_GPIOMODE;
 	saveDeviceSettings(g_device);
 }
 

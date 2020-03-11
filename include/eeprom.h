@@ -11,29 +11,29 @@
 #include "tda7313.h"
 
 // константы для флагов опций
-#define T_DDMM 0x01
-#define NT_DDMM 0xFE
+#define Y_DDMM 0x01
+#define N_DDMM 0xFE
 
-#define T_ROTAT 0x02
-#define NT_ROTAT 0xFD
+#define Y_ROTAT 0x02
+#define N_ROTAT 0xFD
 
-#define T_ENC0 0x04
-#define NT_ENC0 0xFB
+#define Y_ENC 0x04
+#define N_ENC 0xFB
 
-#define T_ENC1 0x08
-#define NT_ENC1 0xF7
+#define T_ENC1 0x08  // Свободный бит
+#define NT_ENC1 0xF7 // Свободный бит
 
-#define T_WIFIAUTO 0x10
-#define NT_WIFIAUTO 0xEF
+#define Y_WIFIAUTO 0x10
+#define N_WIFIAUTO 0xEF
 
-#define T_TOGGLETIME 0x20
-#define NT_TOGGLETIME 0xDF
+#define Y_TOGGLETIME 0x20
+#define N_TOGGLETIME 0xDF
 
-#define T_PATCH 0x40
-#define NT_PATCH 0xBF
+#define Y_PATCH 0x40
+#define N_PATCH 0xBF
 
-#define T_GPIOMODE 0x80
-#define NT_GPIOMODE 0x7F
+#define Y_GPIOMODE 0x80
+#define N_GPIOMODE 0x7F
 
 #define APMODE 0
 #define STA1 1
@@ -50,16 +50,18 @@
 #define TZONELEN 30
 #define NTP_LEN 20
 
-typedef enum backlight_mode_t {
+typedef enum backlight_mode_t
+{
 	NOT_ADJUSTABLE, //Нерегулируемая подсветка
 	BY_TIME,		//По времени
 	BY_LIGHTING,	//По уровню освещённости в помещении
 	BY_HAND			//Ручная регулировка
 } backlight_mode_t;
 
-typedef enum ir_mode_t {
-	IR_DEFAULD,  // Опрос кодов по-умолчанию
-	IR_CUSTOM,   //Опрос пользовательских кодов
+typedef enum ir_mode_t
+{
+	IR_DEFAULD, // Опрос кодов по-умолчанию
+	IR_CUSTOM,  //Опрос пользовательских кодов
 } ir_mode_t;
 
 struct device_settings
@@ -88,6 +90,7 @@ struct device_settings
 	uint8_t autostart;		 // 0: stopped, 1: playing
 	uint8_t i2sspeed;		 // 0 = 48kHz, 1 = 96kHz, 2 = 128kHz
 	uint32_t uartspeed;		 // serial baud
+	char bt_ver[15];		 // for version BT module
 	char ua[39];			 // user agent
 	uint8_t ntp_mode;		 // ntp_mode
 	uint32_t sleepValue;
@@ -96,15 +99,15 @@ struct device_settings
 	input_mode_t audio_input_num; //
 	ir_mode_t ir_mode;			  // Режим работы ИК-пульта
 	uint8_t trace_level;
-	uint32_t lcd_out;  // timeout in seconds to switch off the lcd. 0 = no timeout
-	uint8_t options; // bit 0:0 = MMDD, 1 = DDMM  in the time display 
-					   // bit 1: 0 = lcd without rotation  1 = lcd rotated 180
-					   // bit 2: Half step of encoder0 
-					   // bit 3: Half step of encoder1
-					   // bit 4: wifi auto reconnect
-					   // bit 5: TOGGLE time or main sreen
-					   // bit 6: 0 patch load  1 no patch
-					   // bit 7: 0 = gpio default 1 = gpio NVS
+	uint32_t lcd_out; // timeout in seconds to switch off the lcd. 0 = no timeout
+	uint8_t options;  // bit 0:0 = MMDD, 1 = DDMM  in the time display
+					  // bit 1: 0 = lcd without rotation  1 = lcd rotated 180
+					  // bit 2: Half step of encoder0
+					  // bit 3: Half step of encoder1
+					  // bit 4: wifi auto reconnect
+					  // bit 5: TOGGLE time or main sreen
+					  // bit 6: 0 patch load  1 no patch
+					  // bit 7: 0 = gpio default 1 = gpio NVS
 	char hostname[HOSTLEN];
 	uint32_t tp_calx;
 	uint32_t tp_caly;

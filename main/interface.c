@@ -32,6 +32,7 @@
 #include "mdns.h"
 
 #include "esp_wifi.h"
+#include "bt_x01.h"
 
 const char parslashquote[] = {"(\""};
 const char parquoteslash[] = {"\")"};
@@ -42,7 +43,7 @@ const char stritWIFISTATUS[] = {"#WIFI.STATUS#\nIP: %d.%d.%d.%d\nMask: %d.%d.%d.
 const char stritWIFISTATION[] = {"#WIFI.STATION#\nSSID: %s\nPASSWORD: %s\n##WIFI.STATION#\n"};
 const char stritPATCH[] = {"#WIFI.PATCH#: VS1053 Patch will be %s after power Off and On#\n"};
 const char stritCMDERROR[] = {"##CMD_ERROR#\n"};
-const char stritHELP0[] = {"\
+const char wifiHELP[] = {"\
 Commands:\n\
 ---------\n\
  Wifi related commands\n\
@@ -56,6 +57,9 @@ wifi.station: the current ssid and password\n\
 wifi.status: give the current IP GW and mask\n\
 wifi.rssi: print the rssi (power of the reception\n\
 wifi.auto[(\"x\")]  show the autoconnection  state or set it to x. x=0: reboot on wifi disconnect or 1: try reconnection.\n\n\
+"};
+
+const char clientHelp[] = {"\
 //////////////////\n\
   Station Client commands\n\
 //////////////////\n\
@@ -65,10 +69,9 @@ cli.port(\"xxxx\"): the port number of the station on instant play\n\
 cli.instant: play the instant station\n\
 cli.start: start to play the current station\n\
 cli.play(\"x\"): play the x recorded station in the list\n\
-"};
-
-const char stritHELP1[] = {"\
 cli.prev (or cli.previous): select the previous station in the list and play it\n\
+"};
+const char clientHelp1[] = {"\
 cli.next: select the next station in the list and play it\
 cli.stop: stop the playing station or instant\n\
 cli.list: list all recorded stations\n\
@@ -79,15 +82,15 @@ cli.vol-: Decrement the volume by 10 \n\
 cli.vol+: Increment the volume by 10 \n\
 Every vol command from uart or web or browser respond with ##CLI.VOL#: xxx\n\
 cli.info: Respond with nameset, all icy, meta, volume and stae playing or stopped. Used to refresh the lcd informations \n\n\
+"};
+
+const char sysHELP[] = {"\
 //////////////////\n\
   System commands\n\
 //////////////////\n\
 sys.uart(\"x\"): Change the baudrate of the uart on the next reset.\n\
  Valid x are: 1200, 2400, 4800, 9600, 14400, 19200, 28800, 38400, 57600, 76880, 115200, 230400\n\
 sys.i2s: Display the current I2S speed\n\
-"};
-
-const char stritHELP2[] = {"\
 sys.i2s(\"x\"): Change and record the I2S clock speed of the vs1053 GPIO5 MCLK of the i2s interface to external dac.\n\
 : 0=48kHz, 1=96kHz, 2=192kHz, other equal 0\n\
 sys.erase: erase all recorded configuration and stations.\n\
@@ -96,30 +99,41 @@ sys.update: start an OTA (On The Air) update of the software\n\
 sys.boot: reboot.\n\
 sys.patch and sys.patch(\"x\"): Display and Change the status of the vs1053 patch at power on.\n\
  0 = Patch will not be loaded, 1 or up = Patch will be loaded (default) at power On \n\
+ "};
+const char sysHELP1[] = {"\
 sys.version: Display the Release and Revision numbers\n\
-"};
-
-const char stritHELP3[] = {"\
 sys.date: Send a ntp request and Display the current locale time\n\
 sys.dlog: Display the current log level\n\
 sys.logx: Set log level to x with x=n for none, v for verbose, d for debug, i for info, w for warning, e for error\n\
 sys.log: do nothing apart a trace on uart (debug use)\n\
 sys.lcdout and sys.lcdout(\"x\"): Timer in seconds to switch off the lcd. 0= no timer\n\
-"};
-
-const char stritHELP4[] = {"\
 sys.ddmm and sys.ddmm(\"x\"):  Display and Change  the date format. 0:MMDD, 1:DDMM\n\
 sys.host and sys.host(\"your hostname\"): display and change the hostname for mDNS\n\
 sys.rotat and sys.rotat(\"x\"): Change and display the lcd rotation option (reset needed). 0:no rotation, 1: rotation\n\
-sys.henc0 or sys.henc1: Display the current step setting for the encoder. Normal= 4 steps/notch, Half: 2 steps/notch\n\
-sys.hencx(\"y\") with y=0 Normal, y=1 Half\n\
-sys.cali[brate]: start a touch screen calibration\n\
+sys.henc: Display the current step setting for the encoder. Normal= 4 steps/notch, Half: 2 steps/notch\n\
+sys.henc(\"y\") with y=0 Normal, y=1 Half\n\
+sys.calibrate: start a touch screen calibration\n\n\
+"};
+
+const char otherHELP[] = {"\
+///////////\n\
+  Commands for BT201\n\
+///////////\n\
+bt.play: Play/Pause music into BT201.\n\
+bt.next: Next melody into BT201.\n\
+bt.prev: Previous melody into BT201.\n\
+bt.volup: Volume + melody into BT201.\n\
+bt.voldown: Volume - melody into BT201.\n\
+bt.reset: Reset BT201\n\
+bt.factory: Return to factory settings BT201\n\
+bt.AT+COMMAND: Send command to BT201 \n\
+eg, bt.AT+AA00 - Stopping play music it now \n\n\
 ///////////\n\
   Other\n\
 ///////////\n\
 help: this command\n\
 <enter> will display\n\
-#INFO:\"\"#\n\
+#INFO:\"\"\n\
 \n\
 A command error display:\n\
 ##CMD_ERROR#\n\r"};
@@ -206,7 +220,7 @@ void readRssi()
 
 void printInfo(char *s)
 {
-	kprintf("#INFO:\"%s\"#\n", s);
+	kprintf("#INFO:\"%s\"\n", s);
 }
 
 const char htitle[] = {"\
@@ -336,7 +350,7 @@ bool getAutoWifi(void)
 }
 void setAutoWifi()
 {
-	autoWifi = (g_device->options & T_WIFIAUTO) ? true : false;
+	autoWifi = (g_device->options & Y_WIFIAUTO) ? true : false;
 }
 
 void wifiAuto(char *cmd)
@@ -356,9 +370,9 @@ void wifiAuto(char *cmd)
 	uint8_t value = atoi(t + 2);
 
 	if (value == 0)
-		g_device->options &= NT_WIFIAUTO;
+		g_device->options &= N_WIFIAUTO;
 	else
-		g_device->options |= T_WIFIAUTO;
+		g_device->options |= Y_WIFIAUTO;
 	autoWifi = value;
 	saveDeviceSettings(g_device);
 
@@ -835,7 +849,7 @@ void syspatch(char *s)
 	char *t = strstr(s, parslashquote);
 	if (t == NULL)
 	{
-		if ((g_device->options & T_PATCH) != 0)
+		if ((g_device->options & Y_PATCH) != 0)
 			kprintf("##VS1053 Patch is not loaded#\n");
 		else
 			kprintf("##VS1053 Patch is loaded#\n");
@@ -849,12 +863,12 @@ void syspatch(char *s)
 	}
 	uint8_t value = atoi(t + 2);
 	if (value == 0)
-		g_device->options |= T_PATCH;
+		g_device->options |= Y_PATCH;
 	else
-		g_device->options &= NT_PATCH; // 0 = load patch
+		g_device->options &= N_PATCH; // 0 = load patch
 
 	saveDeviceSettings(g_device);
-	kprintf(stritPATCH, (g_device->options & T_PATCH) != 0 ? "unloaded" : "Loaded");
+	kprintf(stritPATCH, (g_device->options & Y_PATCH) != 0 ? "unloaded" : "Loaded");
 }
 
 // display or change the DDMM display mode
@@ -879,9 +893,9 @@ void sysddmm(char *s)
 	}
 	uint8_t value = atoi(t + 2);
 	if (value == 0)
-		g_device->options &= NT_DDMM;
+		g_device->options &= N_DDMM;
 	else
-		g_device->options |= T_DDMM;
+		g_device->options |= Y_DDMM;
 	ddmm = (value) ? 1 : 0;
 	saveDeviceSettings(g_device);
 	option_set_ddmm(ddmm);
@@ -889,26 +903,23 @@ void sysddmm(char *s)
 }
 
 // get or set the encoder half resolution. Must be set depending of the hardware
-void syshenc(int nenc, char *s)
+void syshenc(char *s)
 {
 	char *t = strstr(s, parslashquote);
 	Encoder_t *encoder;
 	bool encvalue;
-	encoder = (Encoder_t *)getEncoder(nenc);
+	encoder = (Encoder_t *)getEncoder();
 	if (encoder == NULL)
 	{
 		kprintf("Encoder not defined#\n");
 		return;
 	}
 	uint8_t options = g_device->options;
-	if (nenc == 0)
-		encvalue = options & T_ENC0;
-	else
-		encvalue = options & T_ENC1;
+	encvalue = options & Y_ENC;
 
 	if (t == NULL)
 	{
-		kprintf("##Step for encoder%d is ", nenc);
+		kprintf("##Step for encoder is ");
 		if (encvalue)
 			kprintf("half#\n");
 		else
@@ -926,24 +937,14 @@ void syshenc(int nenc, char *s)
 	uint8_t value = atoi(t + 2);
 	if (value == 0)
 	{
-		if (nenc == 0)
-			g_device->options &= NT_ENC0;
-		else
-			g_device->options &= NT_ENC1;
+		g_device->options &= N_ENC;
 	}
 	else
 	{
-		if (nenc == 0)
-			g_device->options |= T_ENC0;
-		else
-			g_device->options |= T_ENC1;
+		g_device->options |= Y_ENC;
 	}
 	setHalfStep(encoder, value);
-	// if (nenc == 0)
-	// 	encvalue = g_device->options & T_ENC0;
-	// else
-	// 	encvalue = g_device->options & T_ENC1;
-	syshenc(nenc, (char *)"");
+	syshenc((char *)"");
 	saveDeviceSettings(g_device);
 }
 
@@ -969,9 +970,9 @@ void sysrotat(char *s)
 	}
 	uint8_t value = atoi(t + 2);
 	if (value == 0)
-		g_device->options &= NT_ROTAT;
+		g_device->options &= N_ROTAT;
 	else
-		g_device->options |= T_ROTAT;
+		g_device->options |= Y_ROTAT;
 	rotat = value;
 	option_set_lcd_rotat(rotat);
 	saveDeviceSettings(g_device);
@@ -1137,7 +1138,73 @@ void checkCommand(int size, char *s)
 		tmp[i] = s[i];
 	tmp[size] = 0;
 	//	kprintf("size: %d, cmd=%s\n",size,tmp);
-	if (startsWith("dbg.", tmp))
+	if (startsWith("bt.", tmp))
+	{
+		if (bt.present)
+		{
+			if (strcmp(tmp + 3, "reset") == 0)
+			{
+				kprintf("Reset BT201...\n");
+				set_echo_bt();
+				sendData("AT+CZ");
+			}
+			else if (strcmp(tmp + 3, "play") == 0)
+			{
+				kprintf("Play/Pause music into BT201...\n");
+				set_echo_bt();
+				sendData("AT+CB");
+			}
+			else if (strcmp(tmp + 3, "next") == 0)
+			{
+				kprintf("Next melody into BT201...\n");
+				set_echo_bt();
+				sendData("AT+CC");
+			}
+			else if (strcmp(tmp + 3, "prev") == 0)
+			{
+				kprintf("Previous melody into BT201...\n");
+				set_echo_bt();
+				sendData("AT+CD");
+			}
+			else if (strcmp(tmp + 3, "volup") == 0)
+			{
+				kprintf("Volume + into BT201...\n");
+				sendData("AT+CE");
+				vTaskDelay(10);
+				sendData("AT+QA");
+			}
+			else if (strcmp(tmp + 3, "voldown") == 0)
+			{
+				kprintf("Volume - into BT201...\n");
+				sendData("AT+CF");
+				vTaskDelay(10);
+				sendData("AT+QA");
+			}
+			else if (strcmp(tmp + 3, "factory") == 0)
+			{
+				kprintf("Return to factory settings BT201...\n");
+				set_echo_bt();
+				sendData("AT+CW");
+			}
+			else if (strncmp(tmp + 3, "AT+", 3) == 0)
+			{
+				// разделитель
+				char sep[] = ".";
+				// Выделение первой части строки
+				char *bt_cmd = strtok(tmp, sep);
+				// Выделение второй части строки
+				bt_cmd = strtok(NULL, sep);
+				kprintf("Send command: \"%s\" to BT201...\n", bt_cmd);
+				set_echo_bt();
+				sendData(bt_cmd);
+			}
+			else
+				printInfo(tmp);
+		}
+		else
+			kprintf("BT201 %s!", g_device->bt_ver);
+	}
+	else if (startsWith("dbg.", tmp))
 	{
 		if (strcmp(tmp + 4, "fifo") == 0)
 			kprintf("Buffer fill %u%%, %u bytes, OverRun: %ld, UnderRun: %ld\n",
@@ -1268,10 +1335,8 @@ void checkCommand(int size, char *s)
 			hostname(tmp);
 		else if (startsWith("rotat", tmp + 4))
 			sysrotat(tmp);
-		else if (startsWith("henc0", tmp + 4))
-			syshenc(0, tmp);
-		else if (startsWith("henc1", tmp + 4))
-			syshenc(1, tmp);
+		else if (startsWith("henc", tmp + 4))
+			syshenc(tmp);
 		else
 			printInfo(tmp);
 	}
@@ -1279,15 +1344,17 @@ void checkCommand(int size, char *s)
 	{
 		if (strcmp(tmp, "help") == 0)
 		{
-			kprintfl(stritHELP0);
+			kprintfl(wifiHELP);
 			vTaskDelay(1);
-			kprintfl(stritHELP1);
+			kprintfl(clientHelp);
 			vTaskDelay(1);
-			kprintfl(stritHELP2);
+			kprintfl(clientHelp1);
 			vTaskDelay(1);
-			kprintfl(stritHELP3);
+			kprintfl(sysHELP);
 			vTaskDelay(1);
-			kprintfl(stritHELP4);
+			kprintfl(sysHELP1);
+			vTaskDelay(1);
+			kprintfl(otherHELP);
 		}
 		else
 			printInfo(tmp);

@@ -373,7 +373,7 @@ void VS1053_Start()
 		VS1053_I2SRate(g_device->i2sspeed);
 
 		// plugin patch
-		if (g_device->options & T_PATCH)
+		if (g_device->options & Y_PATCH)
 		{
 			LoadUserCodes(); // vs1053b patch and admix
 							 //			VS1053_SetVolumeLine(-31);
@@ -467,7 +467,7 @@ void VS1053_SetVolume(uint8_t xMinusHalfdB)
  * @return Returned value describes enhancement in multiplies
  * 		of 1.5dB. 0 value means no enhancement, 8 max (12dB).
  */
-uint16_t VS1053_GetTreble()
+uint8_t VS1053_GetTreble()
 {
 	union sci_bass_m sci_base_value;
 	sci_base_value.word = VS1053_ReadRegister(SPI_BASS);
@@ -605,11 +605,11 @@ void VS1053_SetBassFreq(uint8_t xTenHz)
 	// 	VS1053_WriteRegister(SPI_BASS, MaskAndShiftRight(bassReg, 0xFF00, 8), (bassReg & 0x00F0) | xTenHz);
 }
 
-uint16_t VS1053_GetBassFreq()
+uint8_t VS1053_GetBassFreq()
 {
 	union sci_bass_m sci_base_value;
 	sci_base_value.word = VS1053_ReadRegister(SPI_BASS);
-	return (sci_base_value.nibble.Bass_Freqlimt * 10);
+	return (sci_base_value.nibble.Bass_Freqlimt);
 	//return ((VS1053_ReadRegister(SPI_BASS) & 0x000F));
 }
 

@@ -51,7 +51,6 @@
 #include "main.h"
 
 #include "spiram_fifo.h"
-#include "bt_config.h"
 #include "audio_player.h"
 
 #include "eeprom.h"
@@ -69,6 +68,7 @@
 #include "addon.h"
 #include "tda7313.h"
 #include "custom.h"
+#include "bt_x01.h"
 
 #include "sdkconfig.h"
 
@@ -768,8 +768,8 @@ void uartInterfaceTask(void *pvParameters)
 		}
 		checkCommand(t, tmp);
 
-		int uxHighWaterMark = uxTaskGetStackHighWaterMark(NULL);
-		ESP_LOGD("uartInterfaceTask", striWATERMARK, uxHighWaterMark, xPortGetFreeHeapSize());
+		// int uxHighWaterMark = uxTaskGetStackHighWaterMark(NULL);
+		// ESP_LOGD("uartInterfaceTask", striWATERMARK, uxHighWaterMark, xPortGetFreeHeapSize());
 
 		for (t = 0; t < sizeof(tmp); t++)
 			tmp[t] = 0;
@@ -863,16 +863,16 @@ void app_main()
 			eeEraseAll();
 			g_device = getDeviceSettings();
 			g_device->cleared = 0xAABB;			   // marker init done
-			g_device->options &= NT_GPIOMODE;	  // Режим считывания GPIO 0 - по-умолчанию, 1 - из NVS
+			g_device->options &= N_GPIOMODE;	  // Режим считывания GPIO 0 - по-умолчанию, 1 - из NVS
 			g_device->uartspeed = 115200;		   // default
 			g_device->ir_mode = IR_DEFAULD;		   // Опрос кодов по-умолчанию
 			g_device->audio_input_num = COMPUTER;  // default
-			g_device->options |= T_PATCH;		   // load patch
+			g_device->options |= Y_PATCH;		   // load patch
 			g_device->trace_level = ESP_LOG_ERROR; // default
 			g_device->vol = 100;				   // default
 			g_device->ntp_mode = 0;				   // Режим  использования серверов NTP 0 - по-умолчанию, 1 - пользовательские
-			g_device->options |= T_ROTAT;
-			g_device->options |= T_DDMM;
+			g_device->options |= Y_ROTAT;
+			g_device->options |= Y_DDMM;
 			g_device->current_ap = STA1;
 			strcpy(g_device->ssid1, "OpenWrt");
 			strcpy(g_device->pass1, "1234567890");
@@ -951,7 +951,7 @@ void app_main()
 		g_device->uartspeed = uspeed;
 		saveDeviceSettings(g_device);
 	}
-
+	uartBtInit();
 	lcd_welcome("", "");
 	lcd_welcome("", "ЗАПУСК");
 

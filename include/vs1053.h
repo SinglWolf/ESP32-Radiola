@@ -117,7 +117,7 @@ void VS1053_SetVolume(uint8_t xMinusHalfdB);
 void VS1053_VolumeUp(uint8_t xHalfdB);
 void VS1053_VolumeDown(uint8_t xHalfdB);
 //Treble control
-uint16_t VS1053_GetTreble();
+uint8_t VS1053_GetTreble();
 void VS1053_SetTreble(int8_t xOneAndHalfdB);
 void VS1053_TrebleUp(uint8_t xOneAndHalfdB);
 void VS1053_TrebleDown(uint8_t xOneAndHalfdB);
@@ -129,7 +129,7 @@ void VS1053_SetBass(uint8_t xdB);
 void VS1053_BassUp(uint8_t xdB);
 void VS1053_BassDown(uint8_t xdB);
 void VS1053_SetBassFreq(uint8_t xTenHz);
-uint16_t VS1053_GetBassFreq(void);
+uint8_t VS1053_GetBassFreq(void);
 // Spacial
 uint8_t VS1053_GetSpatial();
 void VS1053_SetSpatial(uint8_t num);

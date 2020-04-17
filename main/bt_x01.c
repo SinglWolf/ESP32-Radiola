@@ -14,15 +14,9 @@
 static QueueHandle_t bt_queue;
 uint8_t *bt_data;
 int rxBytes = 0;
-bool echo_bt = false;
 char event_bt[BUF_SIZE] = {""};
 
 struct bt_x01 bt;
-
-void set_echo_bt()
-{
-    echo_bt = true;
-}
 
 uint8_t check_index(const char *find)
 {
@@ -46,12 +40,16 @@ void unicode_to_utf8(uint8_t event_index)
 {
     if (event_index > 0)
     {
-        event_index = event_index + 3;
-        uint8_t count = 0;
         uint8_t step = 1;
+        uint8_t count = 0;
 
-        if (bt_data[event_index + 1] == 0 || bt_data[event_index + 1] == 4)
-            step = 2;
+        if (rxBytes > 2)
+        {
+            event_index = event_index + 3;
+            if (bt_data[event_index + 1] == 0 || bt_data[event_index + 1] == 4)
+                step = 2;
+        }
+
         for (int i = event_index; i < rxBytes; i = i + step)
         {
             if (bt_data[i + 1] == 4)
@@ -106,7 +104,17 @@ void unicode_to_utf8(uint8_t event_index)
 void check_event()
 {
     //
-    uint8_t txt_index = check_index("AT+VER");
+
+    uint8_t txt_index = check_index("OK"); // Успешное выполнение команды
+    if (txt_index > 0)
+    {
+        if (bt.err == 0)
+            checkCommand(2, "OK");
+        else
+            checkCommand(5, "ERROR");
+    }
+    bt.err = 0; // Сброс ошибок.
+    txt_index = check_index("AT+VER");
     if (txt_index > 0)
     {
         unicode_to_utf8(txt_index);
@@ -418,6 +426,45 @@ void check_event()
             break;
         }
     }
+    txt_index = check_index("ER+"); // Ошибки
+    if (txt_index > 0)
+    {
+        unicode_to_utf8(txt_index);
+        bt.err = atoi(event_bt);
+        // ESP_LOGD(TAG, "ERROR: %u\n", bt.err);
+        kprintf("#BT ERROR #%u :", bt.err);
+        switch (bt.err)
+        {
+        case 1:
+            // Полученный фрейм данных не корректен
+            kprintf("The received data frame is not correct.\n");
+            break;
+        case 2:
+            // Полученная команда не существует
+            kprintf("The received command does not exist.\n");
+            break;
+        case 3:
+            // При записи устройство не подключено или другие ошибки
+            kprintf("When recording, the device is not online or other errors.\n");
+            break;
+        case 4:
+            // Отправленные параметры выходят за пределы допустимого диапазона, либо формат команды неверен.
+            kprintf("Sent parameters are out of range or the command format is incorrect.\n");
+            break;
+        case 5:
+            // Указанное устройство [TF или U диск] не подключено или работает неправильно.
+            kprintf("The specified device [TF or U disk] is not connected or is not working properly.\n");
+            break;
+        case 6:
+            // Ошибка в указанном пути к устройству [диск TF или U].
+            kprintf("Error in the specified device path [TF or U disk].\n");
+            break;
+        default:
+            // Не определено.
+            kprintf("Undetermined.\n");
+            break;
+        }
+    }
 }
 void sendData(const char *at_data)
 {
@@ -491,11 +538,6 @@ static void uartBtTask()
                         // ESP_LOGD(TAG, "read data: %s size: %d", bt_data, rxBytes);
                         // ESP_LOG_BUFFER_HEXDUMP(TAG, bt_data, pos, ESP_LOG_INFO);
                         check_event();
-                        if (echo_bt)
-                        {
-                            kprintf("#BT:%s\n", (const char *)bt_data);
-                            echo_bt = false;
-                        }
                     }
                 }
                 break;

@@ -1132,6 +1132,8 @@ void ntp_print_time()
 
 void checkCommand(int size, char *s)
 {
+	if (size < 2)
+		return;
 	char *tmp = (char *)malloc((size + 1) * sizeof(char));
 	int i;
 	for (i = 0; i < size; i++)
@@ -1145,25 +1147,21 @@ void checkCommand(int size, char *s)
 			if (strcmp(tmp + 3, "reset") == 0)
 			{
 				kprintf("Reset BT201...\n");
-				set_echo_bt();
 				sendData("AT+CZ");
 			}
 			else if (strcmp(tmp + 3, "play") == 0)
 			{
 				kprintf("Play/Pause music into BT201...\n");
-				set_echo_bt();
 				sendData("AT+CB");
 			}
 			else if (strcmp(tmp + 3, "next") == 0)
 			{
 				kprintf("Next melody into BT201...\n");
-				set_echo_bt();
 				sendData("AT+CC");
 			}
 			else if (strcmp(tmp + 3, "prev") == 0)
 			{
 				kprintf("Previous melody into BT201...\n");
-				set_echo_bt();
 				sendData("AT+CD");
 			}
 			else if (strcmp(tmp + 3, "volup") == 0)
@@ -1183,7 +1181,6 @@ void checkCommand(int size, char *s)
 			else if (strcmp(tmp + 3, "factory") == 0)
 			{
 				kprintf("Return to factory settings BT201...\n");
-				set_echo_bt();
 				sendData("AT+CW");
 			}
 			else if (strncmp(tmp + 3, "AT+", 3) == 0)
@@ -1195,7 +1192,6 @@ void checkCommand(int size, char *s)
 				// Выделение второй части строки
 				bt_cmd = strtok(NULL, sep);
 				kprintf("Send command: \"%s\" to BT201...\n", bt_cmd);
-				set_echo_bt();
 				sendData(bt_cmd);
 			}
 			else
@@ -1340,24 +1336,22 @@ void checkCommand(int size, char *s)
 		else
 			printInfo(tmp);
 	}
-	else
+	else if (strcmp(tmp, "help") == 0)
 	{
-		if (strcmp(tmp, "help") == 0)
-		{
-			kprintfl(wifiHELP);
-			vTaskDelay(1);
-			kprintfl(clientHelp);
-			vTaskDelay(1);
-			kprintfl(clientHelp1);
-			vTaskDelay(1);
-			kprintfl(sysHELP);
-			vTaskDelay(1);
-			kprintfl(sysHELP1);
-			vTaskDelay(1);
-			kprintfl(otherHELP);
-		}
-		else
-			printInfo(tmp);
+		kprintfl(wifiHELP);
+		vTaskDelay(1);
+		kprintfl(clientHelp);
+		vTaskDelay(1);
+		kprintfl(clientHelp1);
+		vTaskDelay(1);
+		kprintfl(sysHELP);
+		vTaskDelay(1);
+		kprintfl(sysHELP1);
+		vTaskDelay(1);
+		kprintfl(otherHELP);
 	}
+	else
+		printInfo(tmp);
+
 	free(tmp);
 }

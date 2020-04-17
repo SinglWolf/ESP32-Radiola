@@ -46,11 +46,11 @@ struct bt_x01
     uint16_t total_time;
     uint16_t current_time;
     uint8_t isert_info;
+    uint8_t err;
 };
 extern struct bt_x01 bt;
 
 void uartBtInit();
 void sendData(const char *at_data);
-void set_echo_bt();
 
 #endif /* BT_X01_H_ */

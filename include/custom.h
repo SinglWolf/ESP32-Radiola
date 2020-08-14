@@ -9,9 +9,15 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/timers.h"
 
+typedef enum led_channel_t
+{
+	DISPLAY, // Дисплей
+	FAN,	 //Вентилятор
+	BUZZER,	 //Пищалка
+} led_channel_t;
+
 void LedBacklightInit();
-void LedBacklightOn();
-void LedBacklightOff();
+void SetLedBacklight();
 void ds18b20Task(void *pvParameters);
 void tach_init();
 void init_ds18b20();

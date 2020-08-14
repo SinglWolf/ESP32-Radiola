@@ -849,7 +849,27 @@ void app_main()
 	//init hardware
 	partitions_init();
 	ESP_LOGI(TAG, "Partition init done...");
+	//
+	//Настройка пина 34 для SOFTRESET
+	// gpio_config_t io_conf;
+	// io_conf.intr_type = GPIO_PIN_INTR_DISABLE;	  //disable interrupt
+	// io_conf.mode = GPIO_MODE_INPUT;				  //set as inputmode
+	// io_conf.pin_bit_mask = (1ULL << GPIO_NUM_34); //bit mask of the pins that you want to set
+	// io_conf.pull_down_en = GPIO_PULLDOWN_DISABLE; //disable pull-down mode
+	// io_conf.pull_up_en = GPIO_PULLUP_ENABLE;	  //enable pull-up mode
+	// // io_conf.pull_down_en = GPIO_PULLDOWN_ENABLE; //enable pull-down mode
+	// // io_conf.pull_up_en = GPIO_PULLUP_DISABLE;	 //disable pull-up mode
+	// esp_err_t error = gpio_config(&io_conf); //configure GPIO with the given settings
 
+	// if (error != ESP_OK)
+	// {
+	// 	printf("error configuring inputs\n");
+	// }
+	gpio_pad_select_gpio(GPIO_NUM_34);
+	gpio_set_direction(GPIO_NUM_34, GPIO_MODE_INPUT);
+	gpio_set_pull_mode(GPIO_NUM_34, GPIO_PULLUP_ONLY);
+	vTaskDelay(10);
+	ESP_LOGE(TAG, "gpio_get_level(GPIO_NUM_34): %d\n", gpio_get_level(GPIO_NUM_34));
 	if (g_device->cleared != 0xAABB)
 	{
 		ESP_LOGE(TAG, "Device config not ok. Try to restore");
@@ -863,7 +883,7 @@ void app_main()
 			eeEraseAll();
 			g_device = getDeviceSettings();
 			g_device->cleared = 0xAABB;			   // marker init done
-			g_device->options &= N_GPIOMODE;	  // Режим считывания GPIO 0 - по-умолчанию, 1 - из NVS
+			g_device->options &= N_GPIOMODE;	   // Режим считывания GPIO 0 - по-умолчанию, 1 - из NVS
 			g_device->uartspeed = 115200;		   // default
 			g_device->ir_mode = IR_DEFAULD;		   // Опрос кодов по-умолчанию
 			g_device->audio_input_num = COMPUTER;  // default
@@ -878,13 +898,13 @@ void app_main()
 			strcpy(g_device->pass1, "1234567890");
 			g_device->dhcpEn1 = 1;
 			g_device->lcd_out = 0;
-			g_device->backlight_mode = NOT_ADJUSTABLE; // по-умолчанию подсветка нерегулируемая
-			g_device->backlight_level = 255;		   // по-умолчанию подсветка максимальная
-			strcpy(g_device->tzone, "YEKT-5");		   // Часовой пояс Екатеринбурга
-			strcpy(g_device->ntp_server[0], _NTP0);	// 0
-			strcpy(g_device->ntp_server[1], _NTP1);	// 1
-			strcpy(g_device->ntp_server[2], _NTP2);	// 2
-			strcpy(g_device->ntp_server[3], _NTP3);	// 3
+			g_device->backlight_mode = BY_LIGHTING; // по-умолчанию подсветка регулируемая
+			g_device->backlight_level = 255;		// по-умолчанию подсветка максимальная
+			strcpy(g_device->tzone, "YEKT-5");		// Часовой пояс Екатеринбурга
+			strcpy(g_device->ntp_server[0], _NTP0); // 0
+			strcpy(g_device->ntp_server[1], _NTP1); // 1
+			strcpy(g_device->ntp_server[2], _NTP2); // 2
+			strcpy(g_device->ntp_server[3], _NTP3); // 3
 
 			saveDeviceSettings(g_device);
 		}

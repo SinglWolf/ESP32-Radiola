@@ -10,31 +10,6 @@
 #include "esp_system.h"
 #include "tda7313.h"
 
-// константы для флагов опций
-#define Y_DDMM 0x01
-#define N_DDMM 0xFE
-
-#define Y_ROTAT 0x02
-#define N_ROTAT 0xFD
-
-#define Y_ENC 0x04
-#define N_ENC 0xFB
-
-#define T_ENC1 0x08  // Свободный бит
-#define NT_ENC1 0xF7 // Свободный бит
-
-#define Y_WIFIAUTO 0x10
-#define N_WIFIAUTO 0xEF
-
-#define Y_TOGGLETIME 0x20
-#define N_TOGGLETIME 0xDF
-
-#define Y_PATCH 0x40
-#define N_PATCH 0xBF
-
-#define Y_GPIOMODE 0x80
-#define N_GPIOMODE 0x7F
-
 #define APMODE 0
 #define STA1 1
 #define STA2 2
@@ -50,6 +25,31 @@
 #define TZONELEN 30
 #define NTP_LEN 20
 
+// константы для маски флагов опций
+#define Y_DDMM 0x01 // Формат отображения даты на дисплее bit 0: 0 = MMDD, 1 = DDMM
+#define N_DDMM 0xFE
+
+#define Y_ROTAT 0x02 // Поворот изображения дисплея bit 1: 0 = нет  1 = поворот на 180 градусов
+#define N_ROTAT 0xFD
+
+#define Y_ENC 0x04 // bit 2: Half step of encoder
+#define N_ENC 0xFB
+
+#define Y_VOL 0x08 // Свободный бит
+#define N_VOL 0xF7 // Свободный бит
+
+#define Y_WIFIAUTO 0x10 // bit 4: wifi auto reconnect
+#define N_WIFIAUTO 0xEF
+
+#define Y_TOGGLETIME 0x20 // bit 5: TOGGLE time or main sreen
+#define N_TOGGLETIME 0xDF
+
+#define Y_PATCH 0x40 // bit 6: 0 patch load  1 no patch
+#define N_PATCH 0xBF
+
+#define Y_GPIOMODE 0x80 // bit 7: 0 = gpio default 1 = gpio NVS
+#define N_GPIOMODE 0x7F
+
 typedef enum backlight_mode_t
 {
 	NOT_ADJUSTABLE, //Нерегулируемая подсветка
@@ -61,7 +61,7 @@ typedef enum backlight_mode_t
 typedef enum ir_mode_t
 {
 	IR_DEFAULD, // Опрос кодов по-умолчанию
-	IR_CUSTOM,  //Опрос пользовательских кодов
+	IR_CUSTOM,	//Опрос пользовательских кодов
 } ir_mode_t;
 
 struct device_settings
@@ -100,14 +100,7 @@ struct device_settings
 	ir_mode_t ir_mode;			  // Режим работы ИК-пульта
 	uint8_t trace_level;
 	uint32_t lcd_out; // timeout in seconds to switch off the lcd. 0 = no timeout
-	uint8_t options;  // bit 0:0 = MMDD, 1 = DDMM  in the time display
-					  // bit 1: 0 = lcd without rotation  1 = lcd rotated 180
-					  // bit 2: Half step of encoder0
-					  // bit 3: Half step of encoder1
-					  // bit 4: wifi auto reconnect
-					  // bit 5: TOGGLE time or main sreen
-					  // bit 6: 0 patch load  1 no patch
-					  // bit 7: 0 = gpio default 1 = gpio NVS
+	uint8_t options;  // Переменная для хранения состояния флагов различных опций
 	char hostname[HOSTLEN];
 	uint32_t tp_calx;
 	uint32_t tp_caly;
@@ -133,7 +126,7 @@ struct device_settings
 struct shoutcast_info
 {
 	char domain[73]; //url
-	char file[116];  //path
+	char file[116];	 //path
 	char name[64];
 	uint16_t port; //port
 };

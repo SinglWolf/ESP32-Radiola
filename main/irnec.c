@@ -38,7 +38,7 @@
 #define NEC_HEADER_LOW_US 4600							  /*!< NEC protocol header: negative 4.5ms*/
 #define NEC_REPEAT_LOW_US 2300							  /*!< NEC protocol repeat: negative 2.25ms*/
 #define NEC_BIT_ONE_HIGH_US 600							  /*!< NEC protocol data bit 1: positive 0.56ms */
-#define NEC_BIT_ONE_LOW_US (2250 - NEC_BIT_ONE_HIGH_US)   /*!< NEC protocol data bit 1: negative 1.69ms */
+#define NEC_BIT_ONE_LOW_US (2250 - NEC_BIT_ONE_HIGH_US)	  /*!< NEC protocol data bit 1: negative 1.69ms */
 #define NEC_BIT_ZERO_HIGH_US 600						  /*!< NEC protocol data bit 0: positive 0.56ms */
 #define NEC_BIT_ZERO_LOW_US (1120 - NEC_BIT_ZERO_HIGH_US) /*!< NEC protocol data bit 0: negative 0.56ms */
 #define NEC_BIT_END 600 /*560*/							  /*!< NEC protocol end: positive 0.56ms */
@@ -72,7 +72,7 @@ inline bool nec_check_in_range(int duration_ticks, int target_us, int margin_us)
  */
 static bool nec_header_if(rmt_item32_t *item)
 {
-	ESP_LOGD(NEC_TAG, "Header Duration0: %x Level0: %x, Duration1: %x, Level1: %x", item->duration0, item->level0, item->duration1, item->level1);
+	// ESP_LOGD(NEC_TAG, "Header Duration0: %x Level0: %x, Duration1: %x, Level1: %x", item->duration0, item->level0, item->duration1, item->level1);
 	if ((item->level0 == RMT_RX_ACTIVE_LEVEL && item->level1 != RMT_RX_ACTIVE_LEVEL) && nec_check_in_range(item->duration0, NEC_HEADER_HIGH_US, NEC_BIT_MARGIN) && nec_check_in_range(item->duration1, NEC_HEADER_LOW_US, NEC_BIT_MARGIN))
 	{
 		return true;
@@ -84,12 +84,12 @@ static bool nec_header_if(rmt_item32_t *item)
  */
 static bool nec_repeat_if(rmt_item32_t *item)
 {
-	ESP_LOGD(NEC_TAG, "Repeat Duration0: %x Level0: %x, Duration1: %x, Level1: %x", item->duration0, item->level0, item->duration1, item->level1);
+	// ESP_LOGD(NEC_TAG, "Repeat Duration0: %x Level0: %x, Duration1: %x, Level1: %x", item->duration0, item->level0, item->duration1, item->level1);
 	ESP_LOGV(NEC_TAG, "NEC_ITEM_DURATION0(%d)= %d", item->duration0, NEC_ITEM_DURATION(item->duration0));
 	ESP_LOGV(NEC_TAG, "NEC_ITEM_DURATION1(%d)= %d", item->duration1, NEC_ITEM_DURATION(item->duration1));
 	if ((item->level0 == RMT_RX_ACTIVE_LEVEL && item->level1 != RMT_RX_ACTIVE_LEVEL) && nec_check_in_range(item->duration0, NEC_HEADER_HIGH_US, NEC_BIT_MARGIN) && nec_check_in_range(item->duration1, NEC_REPEAT_LOW_US, NEC_BIT_MARGIN))
 	{
-		ESP_LOGD(NEC_TAG, "nec_repeat_if true");
+		// ESP_LOGD(NEC_TAG, "nec_repeat_if true");
 		return true;
 	}
 	return false;
@@ -100,12 +100,12 @@ static bool nec_repeat_if(rmt_item32_t *item)
 
 static bool nec_bit_one_if(rmt_item32_t *item)
 {
-	ESP_LOGD(NEC_TAG, "nec_bit_one_if Duration0: %x Level0: %x, Duration1: %x, Level1: %x", item->duration0, item->level0, item->duration1, item->level1);
+	// ESP_LOGD(NEC_TAG, "nec_bit_one_if Duration0: %x Level0: %x, Duration1: %x, Level1: %x", item->duration0, item->level0, item->duration1, item->level1);
 	ESP_LOGV(NEC_TAG, "NEC_ITEM_DURATION0(%d)= %d", item->duration0, NEC_ITEM_DURATION(item->duration0));
 	ESP_LOGV(NEC_TAG, "NEC_ITEM_DURATION1(%d)= %d", item->duration1, NEC_ITEM_DURATION(item->duration1));
 	if ((item->level0 == RMT_RX_ACTIVE_LEVEL && item->level1 != RMT_RX_ACTIVE_LEVEL) && nec_check_in_range(item->duration0, NEC_BIT_ONE_HIGH_US, NEC_BIT_MARGIN) && nec_check_in_range(item->duration1, NEC_BIT_ONE_LOW_US, NEC_BIT_MARGIN))
 	{
-		ESP_LOGD(NEC_TAG, "nec_bit_one_if true");
+		// ESP_LOGD(NEC_TAG, "nec_bit_one_if true");
 		return true;
 	}
 	return false;
@@ -116,12 +116,12 @@ static bool nec_bit_one_if(rmt_item32_t *item)
  */
 static bool nec_bit_zero_if(rmt_item32_t *item)
 {
-	ESP_LOGD(NEC_TAG, "nec_bit_zero_if Duration0: %x Level0: %x, Duration1: %x, Level1: %x", item->duration0, item->level0, item->duration1, item->level1);
+	// ESP_LOGD(NEC_TAG, "nec_bit_zero_if Duration0: %x Level0: %x, Duration1: %x, Level1: %x", item->duration0, item->level0, item->duration1, item->level1);
 	ESP_LOGV(NEC_TAG, "NEC_ITEM_DURATION0(%d)= %d", item->duration0, NEC_ITEM_DURATION(item->duration0));
 	ESP_LOGV(NEC_TAG, "NEC_ITEM_DURATION1(%d)= %d", item->duration1, NEC_ITEM_DURATION(item->duration1));
 	if ((item->level0 == RMT_RX_ACTIVE_LEVEL && item->level1 != RMT_RX_ACTIVE_LEVEL) && nec_check_in_range(item->duration0, NEC_BIT_ZERO_HIGH_US, NEC_BIT_MARGIN) && nec_check_in_range(item->duration1, NEC_BIT_ZERO_LOW_US, NEC_BIT_MARGIN))
 	{
-		ESP_LOGD(NEC_TAG, "nec_bit_zero_if true");
+		// ESP_LOGD(NEC_TAG, "nec_bit_zero_if true");
 		return true;
 	}
 	return false;
@@ -132,7 +132,7 @@ static bool nec_bit_zero_if(rmt_item32_t *item)
  */
 static int nec_parse_items(rmt_item32_t *item, int item_num, uint16_t *addr, uint16_t *data)
 {
-	ESP_LOGD(NEC_TAG, "RMT item len: %d", item_num);
+	// ESP_LOGD(NEC_TAG, "RMT item len: %d", item_num);
 	//	ESP_LOGD(NEC_TAG,"Duration0: %x, Level0: %x, Duration1: %x, Level1: %x",item->duration0,item->level0,item->duration1,item->level1);
 
 	//	ESP_LOG_BUFFER_HEXDUMP(NEC_TAG, item, item_num, ESP_LOG_DEBUG);
@@ -145,13 +145,13 @@ static int nec_parse_items(rmt_item32_t *item, int item_num, uint16_t *addr, uin
 	int i = 0, j = 0;
 	if ((w_len == 2) && (nec_repeat_if(item)))
 	{
-		ESP_LOGD(NEC_TAG, "Repeat detected");
+		// ESP_LOGD(NEC_TAG, "Repeat detected");
 		return RTN_REPEAT;
 	}
 	if (!nec_header_if(item++))
 	{
 		item--;
-		ESP_LOGD(NEC_TAG, "Duration0: %x, Level0: %x, Duration1: %x, Level1: %x", item->duration0, item->level0, item->duration1, item->level1);
+		// ESP_LOGD(NEC_TAG, "Duration0: %x, Level0: %x, Duration1: %x, Level1: %x", item->duration0, item->level0, item->duration1, item->level1);
 		return -2;
 	}
 	uint16_t addr_t = 0;
@@ -242,7 +242,7 @@ void rmt_nec_rx_task()
 		ESP_ERROR_CHECK(rmt_rx_start(RMT_RX_CHANNEL, 1));
 		// ESP_ERROR_CHECK(rmt_get_ringbuf_handle(channel, &rb));
 		// ESP_ERROR_CHECK(rmt_rx_start(channel, 1));
-		ESP_LOGD(NEC_TAG, "RMT started");
+		// ESP_LOGD(NEC_TAG, "RMT started");
 		while (rb)
 		{
 			size_t rx_size = 0;
@@ -269,7 +269,7 @@ void rmt_nec_rx_task()
 					else if (res > 0)
 					{
 						offset += res + 1;
-						ESP_LOGD(NEC_TAG, "RMT RCV --- addr: 0x%04x cmd: 0x%04x", rmt_addr, rmt_cmd);
+						// ESP_LOGD(NEC_TAG, "RMT RCV --- addr: 0x%04x cmd: 0x%04x", rmt_addr, rmt_cmd);
 						//evt.channel = channel;
 						evt.channel = RMT_RX_CHANNEL;
 						evt.addr = rmt_addr;
@@ -283,7 +283,7 @@ void rmt_nec_rx_task()
 					}
 					else
 					{
-						ESP_LOGD(NEC_TAG, "RMT Res: %d", res);
+						// ESP_LOGD(NEC_TAG, "RMT Res: %d", res);
 						break;
 					}
 				}
@@ -297,6 +297,6 @@ void rmt_nec_rx_task()
 			}
 		}
 	}
-	ESP_LOGD(NEC_TAG, "RMT finished");
+	// ESP_LOGD(NEC_TAG, "RMT finished");
 	vTaskDelete(NULL);
 }

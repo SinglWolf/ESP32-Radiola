@@ -10,6 +10,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <sys/time.h>
+#include "driver/ledc.h"
 
 #include "ClickEncoder.h"
 #include "main.h"
@@ -32,6 +33,12 @@
 static void evtClearScreen();
 // second before time display in stop state
 #define DTIDLE 60
+long map(long x, long in_min, long in_max, long out_min, long out_max)
+{
+	return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+}
+
+static uint8_t old_backlight_level = 0; // Предыдущее состояние уровня подсветки дисплея
 
 const char *stopped = "ОСТАНОВЛЕН";
 const char *starting = "ЗАПУСК";
@@ -83,88 +90,14 @@ void Screen(typeScreen st);
 void drawScreen();
 static void evtScreen(typelcmd value);
 
-Encoder_t *encoder0 = NULL;
+Encoder_t *encoder = NULL;
 
 static adc1_channel_t ldr_channel, kbd_channel = GPIO_NONE;
 static bool inside = false;
 
-void LdrInit()
-{
-	gpio_num_t ldr;
-	gpio_get_ldr(&ldr);
-	if (ldr != GPIO_NONE)
-	{
-		// вычисление канала по используемому пину
-		switch (ldr)
-		{
-		case GPIO_NUM_36: //
-			ldr_channel = ADC1_CHANNEL_0;
-			break;
-		case GPIO_NUM_37:
-			ldr_channel = ADC1_CHANNEL_1;
-			break;
-		case GPIO_NUM_38:
-			ldr_channel = ADC1_CHANNEL_2;
-			break;
-		case GPIO_NUM_39:
-			ldr_channel = ADC1_CHANNEL_3;
-			break;
-		case GPIO_NUM_32:
-			ldr_channel = ADC1_CHANNEL_4;
-			break;
-		case GPIO_NUM_33:
-			ldr_channel = ADC1_CHANNEL_5;
-			break;
-		case GPIO_NUM_34:
-			ESP_LOGE(TAG, "Channel reserved for keyboard!");
-			break;
-		case GPIO_NUM_35:
-			ldr_channel = ADC1_CHANNEL_7;
-			break;
-		default:
-			ESP_LOGD(TAG, "LDR Channel not defined");
-		}
-		if (ldr_channel != GPIO_NONE)
-		{
-			ESP_LOGD(TAG, "Channel for GPIO: %d defined, number: %i", ldr, ldr_channel);
-			adc1_config_width(ADC_WIDTH_12Bit);
-			adc1_config_channel_atten(ldr_channel, ADC_ATTEN_0db);
-		}
-	}
-}
-
-void LdrLoop()
-{
-	if (g_device->backlight_mode == BY_LIGHTING)
-	{
-		uint32_t voltage = 0;
-		uint32_t voltage0 = 0;
-		uint32_t voltage1 = 0;
-		if (ldr_channel == GPIO_NONE)
-			return; //пин фоторезистора не определён
-		if (ldr_channel != GPIO_NONE)
-		{
-			//Первое считвыание. Снимаем напряжение 4 раза и вычисляем среднее значение.
-			voltage0 = (adc1_get_raw(ldr_channel) + adc1_get_raw(ldr_channel) + adc1_get_raw(ldr_channel) + adc1_get_raw(ldr_channel)) / 4;
-			vTaskDelay(1);
-			//Второе считвыание. Снимаем напряжение 4 раза и вычисляем среднее значение.
-			voltage1 = (adc1_get_raw(ldr_channel) + adc1_get_raw(ldr_channel) + adc1_get_raw(ldr_channel) + adc1_get_raw(ldr_channel)) / 4;
-		}
-		ESP_LOGD(TAG, "LDR voltage0: %d\nLDR voltage1: %d\n", voltage0, voltage1);
-		if ((voltage0 > 3700) || (voltage1 > 3700))
-			return; // должно быть два действительных напряжения
-		//Вычисляем среднее значение для достоверности считанных значений.
-		voltage = (voltage0 + voltage1) * 105 / (819);
-		if (voltage < 40)
-			return; // фоторезистор не подключен
-
-		ESP_LOGD(TAG, "LDR voltage: %d", voltage);
-	}
-}
-
 void *getEncoder(int num)
 {
-	return (void *)encoder0;
+	return (void *)encoder;
 }
 
 static void ClearBuffer()
@@ -199,7 +132,7 @@ uint16_t GetHeight()
 void wakeLcd()
 {
 	// add the gpio switch on here gpioLedBacklight can be directly a GPIO_NUM_xx or declared in gpio.h
-	LedBacklightOn();
+	SetLedBacklight();
 	timerLcdOut = getLcdOut(); // rearm the tempo
 	if (itLcdOut)
 	{
@@ -213,7 +146,8 @@ void sleepLcd()
 {
 	itLcdOut = 2; // in sleep
 	// add the gpio switch off here
-	LedBacklightOff();
+	g_device->backlight_level = 0;
+	SetLedBacklight();
 	evtClearScreen();
 }
 
@@ -599,9 +533,9 @@ void encoderCompute(Encoder_t *enc, bool role)
 
 void encoderLoop()
 {
-	// encoder0 = volume control or station when pushed
+	// encoder = volume control or station when pushed
 	if (isEncoder)
-		encoderCompute(encoder0, VCTRL);
+		encoderCompute(encoder, VCTRL);
 }
 
 void set_ir_training(bool training)
@@ -731,7 +665,7 @@ void initButtonDevices()
 	if (enca0 == GPIO_NONE)
 		isEncoder = false; //no encoder
 	if (isEncoder)
-		encoder0 = ClickEncoderInit(enca0, encb0, encbtn0, ((g_device->options & Y_ENC) == 0) ? false : true);
+		encoder = ClickEncoderInit(enca0, encb0, encbtn0, ((g_device->options & Y_ENC) == 0) ? false : true);
 }
 
 // custom ir code init from hardware nvs partition
@@ -855,7 +789,7 @@ static uint8_t divide = 0;
 IRAM_ATTR void multiService() // every 1ms
 {
 	if (isEncoder)
-		service(encoder0);
+		service(encoder);
 	ServiceAddon();
 	if (divide++ == 10) // only every 10ms
 	{
@@ -864,20 +798,54 @@ IRAM_ATTR void multiService() // every 1ms
 }
 void adcLoop()
 {
-	return;
-	uint32_t voltage, voltage0, voltage1;
-	bool wasVol = false;
+	if (ldr_channel != GPIO_NONE) //пин фоторезистора определён
+	{
+
+		if (g_device->backlight_mode == NOT_ADJUSTABLE)
+		{
+			g_device->backlight_level = 255;
+		}
+		else if (g_device->backlight_mode == BY_TIME)
+		{
+			// Уровень подсветки в зависимости от времени суток
+		}
+		else if (g_device->backlight_mode == BY_LIGHTING)
+		{
+			g_device->night_brightness = 55; // Временные установки
+			g_device->day_brightness = 255;	 // Временные установки
+			adc1_config_width(ADC_WIDTH_9Bit);
+			adc1_config_channel_atten(ldr_channel, ADC_ATTEN_11db);
+			uint32_t voltage = 0;
+			// Снимаем напряжение.
+			voltage = (adc1_get_raw(ldr_channel));
+			// vTaskDelay(1);
+			g_device->backlight_level = map(voltage, 0, 511, g_device->day_brightness, g_device->night_brightness);
+			ESP_LOGD(TAG, "LDR voltage: %d\n", voltage);
+			ESP_LOGD(TAG, "backlight_level: %d\n", g_device->backlight_level);
+		}
+		else if (g_device->backlight_mode == BY_HAND)
+		{
+			// Ручная регулировка уровня подсветки
+		}
+		if (g_device->backlight_level != old_backlight_level) // Если уровень изменился, применяем к дисплею
+		{
+			SetLedBacklight();
+			old_backlight_level = g_device->backlight_level; // Запоминаем текущий уровень подсветки
+		}
+	}
 	if (kbd_channel == GPIO_NONE)
 		return; // no gpio specified
-
+	uint32_t voltage, voltage0, voltage1;
+	bool wasVol = false;
+	adc1_config_width(ADC_WIDTH_12Bit);
+	adc1_config_channel_atten(kbd_channel, ADC_ATTEN_0db);
 	voltage0 = (adc1_get_raw(kbd_channel) + adc1_get_raw(kbd_channel) + adc1_get_raw(kbd_channel) + adc1_get_raw(kbd_channel)) / 4;
 	vTaskDelay(1);
 	voltage1 = (adc1_get_raw(kbd_channel) + adc1_get_raw(kbd_channel) + adc1_get_raw(kbd_channel) + adc1_get_raw(kbd_channel)) / 4;
 	//	printf ("Volt0: %d, Volt1: %d\n",voltage0,voltage1);
 	voltage = (voltage0 + voltage1) * 105 / (819);
-	if (voltage < 40)
-		return; // no panel
-				//	printf("Voltage: %d\n",voltage);
+	if (voltage < 100)
+		return; // клавиатура не подключена...
 
 	if (inside && (voltage0 > 3700))
 	{
@@ -953,7 +921,6 @@ void task_lcd(void *pvParams)
 
 	while (1)
 	{
-		LdrLoop();		   // Опрос фоторезистора
 		if (itLcdOut == 1) // switch off the lcd
 		{
 			sleepLcd();
@@ -1064,16 +1031,60 @@ extern void rmt_nec_rx_task();
 void task_addon(void *pvParams)
 {
 	xTaskHandle pxCreatedTask;
-	LdrInit(); // Инициализация фоторезистора
-	if (PIN_NUM_KBD == GPIO_NUM_34)
+	// Инициализация фоторезистора
+	gpio_num_t ldr;
+	gpio_get_ldr(&ldr);
+	if (ldr != GPIO_NONE)
+	{
+		// вычисление канала по используемому пину
+		switch (ldr)
+		{
+		case GPIO_NUM_36: //
+			ldr_channel = ADC1_CHANNEL_0;
+			break;
+		case GPIO_NUM_37:
+			ldr_channel = ADC1_CHANNEL_1;
+			break;
+		case GPIO_NUM_38:
+			ldr_channel = ADC1_CHANNEL_2;
+			break;
+		case GPIO_NUM_39:
+			ldr_channel = ADC1_CHANNEL_3;
+			break;
+		case GPIO_NUM_32:
+			ldr_channel = ADC1_CHANNEL_4;
+			break;
+		case GPIO_NUM_33:
+			ldr_channel = ADC1_CHANNEL_5;
+			break;
+		case GPIO_NUM_34:
+			ESP_LOGE(TAG, "Channel reserved for keyboard!");
+			break;
+		case GPIO_NUM_35:
+			ldr_channel = ADC1_CHANNEL_7;
+			break;
+		default:
+			ESP_LOGD(TAG, "LDR Channel not defined");
+		}
+		if (ldr_channel != GPIO_NONE)
+		{
+			ESP_LOGD(TAG, "Channel for GPIO: %d defined, number: %i", ldr, ldr_channel);
+			// adc1_config_width(ADC_WIDTH_9Bit);
+			// adc1_config_channel_atten(ldr_channel, ADC_ATTEN_11db);
+		}
+	}
+	if (PIN_NUM_KBD == GPIO_NUM_34) // Инициализация клавиатуры
 	{
 		kbd_channel = ADC1_CHANNEL_6;
 		ESP_LOGD(TAG, "Channel for KBD defined, number: %i", kbd_channel);
-		adc1_config_width(ADC_WIDTH_12Bit);
-		adc1_config_channel_atten(kbd_channel, ADC_ATTEN_0db);
+		// adc1_config_width(ADC_WIDTH_12Bit);
+		// adc1_config_channel_atten(kbd_channel, ADC_ATTEN_0db);
 	}
 	else
+	{
+		kbd_channel = GPIO_NONE;
 		ESP_LOGD(TAG, "Channel for KBD not defined");
+	}
 	ir_key_init();
 	initButtonDevices();
 
@@ -1100,10 +1111,10 @@ void task_addon(void *pvParams)
 
 	while (1)
 	{
-		adcLoop();			  // compute the adc keyboard
-		encoderLoop();		  // compute the encoder
-		irLoop();			  // compute the ir
-		touchLoop();		  // compute the touch screen
+		adcLoop();			  // Опрос фоторезистора и клавиатуры
+		encoderLoop();		  // Опрос энкодера
+		irLoop();			  // Опрос ИК-пульта
+		touchLoop();		  // Опрос тачскрина
 		if (timerScreen >= 3) //  sec timeout transient screen
 		{
 			//			if ((stateScreen != smain)&&(stateScreen != stime)&&(stateScreen != snull))

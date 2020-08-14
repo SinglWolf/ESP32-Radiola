@@ -24,7 +24,9 @@
 #define ENC_ACCEL_TOP 3072 // max. acceleration:  (val >> 5)
 #define ENC_ACCEL_INC 80
 #define ENC_ACCEL_DEC 2
+#define ENC_SINGLECLICKONLY 1
 
+#define TAG "ClickEncoder"
 // ----------------------------------------------------------------------------
 /*
   int8_t enc->pinA;
@@ -46,8 +48,6 @@
   uint16_t buttonDoubleClickTime = BTN_DOUBLECLICKTIME;
   unsigned long enc->lastButtonCheck = 0;
 */
-
-#define TAG "ClickEncoder"
 
 // ----------------------------------------------------------------------------
 
@@ -217,7 +217,6 @@ IRAM_ATTR void service(Encoder_t *enc)
         }
         else
         {
-#define ENC_SINGLECLICKONLY 1
           if (enc->doubleClickTicks > ENC_SINGLECLICKONLY)
           { // prevent trigger in single click mode
             if (enc->doubleClickTicks < (BTN_DOUBLECLICKTIME / ENC_BUTTONINTERVAL))
@@ -312,9 +311,6 @@ Button getButton(Encoder_t *enc)
 
 bool getPinState(Encoder_t *enc)
 {
-  bool pinState;
-  {
-    pinState = digitalRead(enc->pinBTN);
-  }
+  bool pinState = digitalRead(enc->pinBTN);
   return pinState;
 }

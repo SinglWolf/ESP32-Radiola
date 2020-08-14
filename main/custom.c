@@ -45,12 +45,6 @@ gpio_num_t led;
 gpio_num_t fanspeed;
 gpio_num_t buzzer;
 
-typedef enum led_channel_t {
-	DISPLAY, // Дисплей
-	FAN,	 //Вентилятор
-	BUZZER,  //Пищалка
-} led_channel_t;
-
 led_channel_t channels;
 ledc_channel_config_t ledc_channel_display, ledc_channel_fan, ledc_channel_buzzer;
 ledc_timer_config_t ledc_timer_display, ledc_timer_fan, ledc_timer_buzzer;
@@ -64,15 +58,9 @@ void LedBacklightInit()
 	{
 		if (g_device->backlight_mode == NOT_ADJUSTABLE)
 		{
-			// gpio_output_conf(led);
-			// gpio_set_level(led, 1);
-			ESP_ERROR_CHECK(ledc_set_duty(LEDC_LOW_SPEED_MODE, DISPLAY, 255));
-			ESP_ERROR_CHECK(ledc_update_duty(LEDC_LOW_SPEED_MODE, DISPLAY));
+			g_device->backlight_level = 255;
 		}
-		else
-		{
-			/* AdjustBrightInit(); */
-		}
+		SetLedBacklight();
 	}
 }
 
@@ -80,7 +68,7 @@ void AdjustBrightInit()
 {
 	//Подготовка и настройка конфигурации таймера LED-контроллера
 	ledc_timer_display.duty_resolution = LEDC_TIMER_8_BIT; // разрешение ШИМ
-	ledc_timer_display.freq_hz = 5000;					   // частота сигнала ШИМ
+	ledc_timer_display.freq_hz = 25000;					   // частота сигнала ШИМ
 	ledc_timer_display.speed_mode = LEDC_LOW_SPEED_MODE;   // режим таймера
 	ledc_timer_display.timer_num = DISPLAY;				   // номер таймера
 	// Установить конфигурацию таймера DISPLAY для низкоскоростного канала
@@ -176,21 +164,11 @@ void beep(uint8_t time)
 	}
 }
 
-void LedBacklightOn()
+void SetLedBacklight()
 {
 	if (led != GPIO_NONE)
 	{
-		//gpio_set_level(led, 1);
-		ESP_ERROR_CHECK(ledc_set_duty(LEDC_LOW_SPEED_MODE, DISPLAY, 255));
-		ESP_ERROR_CHECK(ledc_update_duty(LEDC_LOW_SPEED_MODE, DISPLAY));
-	}
-}
-
-void LedBacklightOff()
-{
-	if (led != GPIO_NONE)
-	{ //gpio_set_level(led, 0);
-		ESP_ERROR_CHECK(ledc_set_duty(LEDC_LOW_SPEED_MODE, DISPLAY, 0));
+		ESP_ERROR_CHECK(ledc_set_duty(LEDC_LOW_SPEED_MODE, DISPLAY, g_device->backlight_level));
 		ESP_ERROR_CHECK(ledc_update_duty(LEDC_LOW_SPEED_MODE, DISPLAY));
 	}
 }
@@ -232,17 +210,15 @@ void ds18b20Task(void *pvParameters)
 		if (error != DS18B20_OK)
 		{
 			ESP_LOGE(TAG, "DS18B20 ERROR: %d\n", error);
+			cur_temp = old_temp;
 		}
-		else
+		if (old_temp != cur_temp)
 		{
-			if (old_temp != cur_temp)
-			{
-				char *wscurtemp = "{\"wscurtemp\":\"%.1f\"}";
-				char answer[strlen(wscurtemp) + sizeof(cur_temp)];
-				sprintf(answer, wscurtemp, cur_temp);
-				websocketbroadcast(answer, strlen(answer));
-				old_temp = cur_temp;
-			}
+			char *wscurtemp = "{\"wscurtemp\":\"%.1f\"}";
+			char answer[strlen(wscurtemp) + sizeof(cur_temp)];
+			sprintf(answer, wscurtemp, cur_temp);
+			websocketbroadcast(answer, strlen(answer));
+			old_temp = cur_temp;
 		}
 		//int uxHighWaterMark = uxTaskGetStackHighWaterMark(NULL);
 		//ESP_LOGD("ds18b20Task", striWATERMARK, uxHighWaterMark, xPortGetFreeHeapSize());
@@ -280,7 +256,7 @@ void tach_init()
 				.pos_mode = PCNT_COUNT_INC, // Count up on the positive edge
 				.neg_mode = PCNT_COUNT_DIS, // Keep the counter value on the negative edge
 				// What to do when control input is low or high?
-				.lctrl_mode = PCNT_MODE_KEEP,	// Reverse counting direction if low
+				.lctrl_mode = PCNT_MODE_KEEP,	 // Reverse counting direction if low
 				.hctrl_mode = PCNT_MODE_REVERSE, // Keep the primary counter mode if high
 				// Set the maximum and minimum limit values to watch
 				.counter_h_lim = 6000,

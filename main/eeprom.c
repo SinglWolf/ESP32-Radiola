@@ -106,7 +106,7 @@ void eeEraseAll()
 	{
 		for (i = 0; i < 4096; i++)
 			buffer[i] = 0;
-		ESP_ERROR_CHECK(esp_partition_write(DEVICE, 0, buffer, 4096));  //clear device
+		ESP_ERROR_CHECK(esp_partition_write(DEVICE, 0, buffer, 4096));	//clear device
 		ESP_ERROR_CHECK(esp_partition_write(DEVICE1, 0, buffer, 4096)); //clear device1
 		for (i = 0; i < 16; i++)
 		{

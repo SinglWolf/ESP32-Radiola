@@ -11,9 +11,9 @@
 #include "tda7313.h"
 #include <string.h>
 #include <esp_log.h>
-#include "gpios.h"
 #include "eeprom.h"
 #include "main.h"
+#include "gpios.h"
 
 static const char *TAG = "TDA7313";
 
@@ -366,7 +366,7 @@ esp_err_t tda7313_init()
 {
 	gpio_num_t sda_gpio;
 	gpio_num_t scl_gpio;
-	esp_err_t err;
+	esp_err_t err = ESP_OK;
 	gpio_get_i2c(&sda_gpio, &scl_gpio);
 	addressTDA = TDAaddress;
 	TDA.present = false;

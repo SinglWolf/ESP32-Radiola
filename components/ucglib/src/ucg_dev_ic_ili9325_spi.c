@@ -156,21 +156,21 @@ static ucg_int_t ucg_handle_ili9325_l90fx(ucg_t *ucg)
   
 */
 
-static const ucg_pgm_uint8_t ucg_ili9325_set_x_pos_seq[] = 
-{
-  UCG_C10(0x020),	UCG_VARX(0,0x00, 0), UCG_VARX(0,0x0ff, 0),					/* set x position */
-  UCG_C10(0x022),							/* write to RAM */
-  UCG_DATA(),								/* change to data mode */
-  UCG_END()
-};
+// static const ucg_pgm_uint8_t ucg_ili9325_set_x_pos_seq[] = 
+// {
+//   UCG_C10(0x020),	UCG_VARX(0,0x00, 0), UCG_VARX(0,0x0ff, 0),					/* set x position */
+//   UCG_C10(0x022),							/* write to RAM */
+//   UCG_DATA(),								/* change to data mode */
+//   UCG_END()
+// };
 
-static const ucg_pgm_uint8_t ucg_ili9325_set_y_pos_seq[] = 
-{
-  UCG_C10(0x021),	UCG_VARY(8,0x01, 0), UCG_VARY(0,0x0ff, 0),		/* set y position */
-  UCG_C10(0x022),							/* write to RAM */
-  UCG_DATA(),								/* change to data mode */
-  UCG_END()
-};
+// static const ucg_pgm_uint8_t ucg_ili9325_set_y_pos_seq[] = 
+// {
+//   UCG_C10(0x021),	UCG_VARY(8,0x01, 0), UCG_VARY(0,0x0ff, 0),		/* set y position */
+//   UCG_C10(0x022),							/* write to RAM */
+//   UCG_DATA(),								/* change to data mode */
+//   UCG_END()
+// };
 
 /* without CmdDataSequence */ 
 // static ucg_int_t xxxxxx_ucg_handle_ili9325_l90tc(ucg_t *ucg)

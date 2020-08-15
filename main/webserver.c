@@ -981,7 +981,7 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 	else if (strcmp(name, "/version") == 0)
 	{
 		int json_length = 53 + strlen(RELEASE) + strlen(REVISION) + 5 + 4;
-		char buf[70 + json_length];
+		char buf[446];
 		sprintf(buf, VERSION,
 				json_length,
 				RELEASE,
@@ -1131,7 +1131,7 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 			int json_length;
 			json_length = 216;
 
-			char buf[295];
+			char buf[302];
 			sprintf(buf, HARDWARE,
 					json_length,
 					tda7313_get_present(),
@@ -1631,7 +1631,7 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 			}
 
 			int json_length = 432;
-			char buf[71 + json_length];
+			char buf[77 + json_length];
 			sprintf(buf, GPIOS,
 					json_length,
 					option_get_gpio_mode(),

@@ -86,6 +86,10 @@ const int CONNECTED_AP = 0x00000010;
 #define PRIO_CONNECT configMAX_PRIORITIES - 1
 #define striWATERMARK "watermark: %d  heap: %d"
 
+#ifndef IPADDR2_COPY
+#define IPADDR2_COPY(dest, src) SMEMCPY(dest, src, sizeof(ip4_addr_t))
+#endif
+
 void start_network();
 void autoPlay();
 /* */
@@ -299,45 +303,27 @@ static void init_hardware()
 }
 
 /* event handler for pre-defined wifi events */
-static esp_err_t event_handler(void *ctx, system_event_t *event)
+static void wifi_event_handler(void *arg, esp_event_base_t event_base,
+							   int32_t event_id, void *event_data)
 {
-	EventGroupHandle_t wifi_event = ctx;
+	//EventGroupHandle_t wifi_event = ctx;
 
-	switch (event->event_id)
+	if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_START)
 	{
-	case SYSTEM_EVENT_STA_START:
 		esp_wifi_connect();
-		break;
-
-	case SYSTEM_EVENT_STA_CONNECTED:
-		xEventGroupSetBits(wifi_event, CONNECTED_AP);
-		ESP_LOGI(TAG, "Wifi connected");
-		if (wifiInitDone)
-		{
-			clientSaveOneHeader("Wifi Connected.", 18, METANAME);
-			vTaskDelay(1000);
-			autoPlay();
-		} // retry
-		else
-			wifiInitDone = true;
-		break;
-
-	case SYSTEM_EVENT_STA_GOT_IP:
-		xEventGroupSetBits(wifi_event, CONNECTED_BIT);
-		break;
-
-	case SYSTEM_EVENT_STA_DISCONNECTED:
+	}
+	else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED)
+	{
 		/* This is a workaround as ESP32 WiFi libs don't currently
            auto-reassociate. */
-		xEventGroupClearBits(wifi_event, CONNECTED_AP);
-		xEventGroupClearBits(wifi_event, CONNECTED_BIT);
+		xEventGroupClearBits(wifi_event_group, CONNECTED_AP);
+		xEventGroupClearBits(wifi_event_group, CONNECTED_BIT);
 		ESP_LOGE(TAG, "Wifi Disconnected.");
-		vTaskDelay(100);
+		vTaskDelay(10);
 		if (!getAutoWifi() && (wifiInitDone))
 		{
 			ESP_LOGE(TAG, "reboot");
-			fflush(stdout);
-			vTaskDelay(100);
+			vTaskDelay(10);
 			esp_restart();
 		}
 		else
@@ -345,7 +331,7 @@ static esp_err_t event_handler(void *ctx, system_event_t *event)
 			if (wifiInitDone) // a completed init done
 			{
 				ESP_LOGE(TAG, "Connection tried again");
-				// clientDisconnect("Wifi Disconnected.");
+				//clientDisconnect("Wifi Disconnected.");
 				clientSilentDisconnect();
 				vTaskDelay(100);
 				clientSaveOneHeader("Wifi Disconnected.", 18, METANAME);
@@ -356,26 +342,36 @@ static esp_err_t event_handler(void *ctx, system_event_t *event)
 			else
 			{
 				ESP_LOGE(TAG, "Try next AP");
-				vTaskDelay(100);
+				vTaskDelay(10);
 			} // init failed?
 		}
-		break;
-
-	case SYSTEM_EVENT_AP_START:
-		xEventGroupSetBits(wifi_event, CONNECTED_AP);
-		xEventGroupSetBits(wifi_event, CONNECTED_BIT);
-		wifiInitDone = true;
-		break;
-
-	case SYSTEM_EVENT_AP_STADISCONNECTED:
-		break;
-
-	default:
-		break;
 	}
-	return ESP_OK;
+	else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_CONNECTED)
+	{
+		xEventGroupSetBits(wifi_event_group, CONNECTED_AP);
+		ESP_LOGI(TAG, "Wifi connected");
+		if (wifiInitDone)
+		{
+			clientSaveOneHeader("Wifi Connected.", 18, METANAME);
+			vTaskDelay(200);
+			autoPlay();
+		} // retry
+		else
+		{
+			wifiInitDone = true;
+		}
+	}
+	else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP)
+	{
+		xEventGroupSetBits(wifi_event_group, CONNECTED_BIT);
+	}
+	if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_AP_START)
+	{
+		xEventGroupSetBits(wifi_event_group, CONNECTED_BIT);
+		xEventGroupSetBits(wifi_event_group, CONNECTED_AP);
+		wifiInitDone = true;
+	}
 }
-
 static void unParse(char *str)
 {
 	int i;
@@ -400,16 +396,33 @@ static void start_wifi()
 	// wifi_mode_t mode;
 	char ssid[SSIDLEN];
 	char pass[PASSLEN];
+	static bool first_pass = false;
 
-	wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
-	ESP_ERROR_CHECK(esp_wifi_init(&cfg));
-	//    ESP_ERROR_CHECK( esp_wifi_set_storage(WIFI_STORAGE_RAM) );
+	static bool initialized = false;
+	if (!initialized)
+	{
+		wifi_event_group = xEventGroupCreate();
 
-	tcpip_adapter_init();
-	tcpip_adapter_dhcpc_stop(TCPIP_ADAPTER_IF_STA); // Don't run a DHCP client
-													/* FreeRTOS event group to signal when we are connected & ready to make a request */
-	wifi_event_group = xEventGroupCreate();
-	ESP_ERROR_CHECK(esp_event_loop_init(event_handler, wifi_event_group));
+		tcpip_adapter_init();
+
+		ESP_ERROR_CHECK(esp_event_loop_create_default());
+
+		wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
+		ESP_ERROR_CHECK(esp_wifi_init(&cfg));
+		//    ESP_ERROR_CHECK( esp_wifi_set_storage(WIFI_STORAGE_RAM) );
+
+		ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &wifi_event_handler, NULL));
+		ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &wifi_event_handler, NULL));
+		ESP_ERROR_CHECK(esp_wifi_set_storage(WIFI_STORAGE_RAM));
+		ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_NULL));
+
+		tcpip_adapter_dhcpc_stop(TCPIP_ADAPTER_IF_STA); // Don't run a DHCP client
+														/* FreeRTOS event group to signal when we are connected & ready to make a request */
+
+		// ESP_ERROR_CHECK(esp_event_loop_init(event_handler, wifi_event_group));
+		initialized = true;
+	}
+	ESP_LOGI(TAG, "WiFi init done!");
 
 	if (g_device->current_ap == APMODE)
 	{
@@ -431,9 +444,11 @@ static void start_wifi()
 
 	while (1)
 	{
-		ESP_ERROR_CHECK(esp_wifi_stop());
-		vTaskDelay(10);
-
+		if (first_pass)
+		{
+			ESP_ERROR_CHECK(esp_wifi_stop());
+			vTaskDelay(10);
+		}
 		switch (g_device->current_ap)
 		{
 		case STA1: //ssid1 used
@@ -520,6 +535,7 @@ static void start_wifi()
 		}
 		else
 			break; //
+		first_pass = true;
 	}
 }
 
@@ -620,7 +636,7 @@ void start_network()
 			else
 				tcpip_adapter_get_ip_info(TCPIP_ADAPTER_IF_STA, &ip_info);
 		}
-		ip_addr_t ipdns0 = dns_getserver(0);
+		const ip_addr_t *ipdns0 = dns_getserver(0);
 		// ip_addr_t ipdns1 = dns_getserver(1);
 		printf("\nDNS: %s  \n", ip4addr_ntoa((struct ip4_addr *)&ipdns0));
 		strcpy(localIp, ip4addr_ntoa(&ip_info.ip));
@@ -888,7 +904,7 @@ void app_main()
 			g_device->ir_mode = IR_DEFAULD;		   // Опрос кодов по-умолчанию
 			g_device->audio_input_num = COMPUTER;  // default
 			g_device->options |= Y_PATCH;		   // load patch
-			g_device->trace_level = ESP_LOG_ERROR; // default
+			g_device->trace_level = ESP_LOG_DEBUG; // default
 			g_device->vol = 100;				   // default
 			g_device->ntp_mode = 0;				   // Режим  использования серверов NTP 0 - по-умолчанию, 1 - пользовательские
 			g_device->options |= Y_ROTAT;

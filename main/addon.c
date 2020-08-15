@@ -290,7 +290,7 @@ void drawNumber()
 // draw the station screen
 void drawStation()
 {
-	char sNum[4];
+	char sNum[7];
 	char *ddot;
 	struct shoutcast_info *si;
 

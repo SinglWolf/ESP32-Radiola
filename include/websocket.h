@@ -14,7 +14,9 @@ Inspirated by:
 #define WEBSOCKETS_MAX_HEADER_SIZE (14)
 
 typedef uint32_t u32;
-#include "crypto/sha1_i.h"
+
+#include "mbedtls/base64.h"
+#include "mbedtls/sha1.h"
 
 #define NBCLIENT 5
 #define MAXDATA 528
@@ -78,4 +80,6 @@ bool sendFrame(int socket, wsopcode_t opcode, uint8_t *payload, size_t length);
 // parse a new client request and prepare the answer
 uint32_t decodeHttpMessage(char *inputMessage, char *outputMessage);
 void wsclientDisconnect(int socket, uint16_t code, char *reason, size_t reasonLen);
+
+char* ws_hash_handshake(char* key,uint8_t len); // returns string of output
 #endif

@@ -30,10 +30,10 @@
 #define BUFLEN 256
 #define LINES 9
 
-uint16_t y;  //Height of a line
+uint16_t y;	 //Height of a line
 uint16_t yy; //Height of screen
-uint16_t x;  //Width
-uint16_t z;  // an internal offset for y
+uint16_t x;	 //Width
+uint16_t z;	 // an internal offset for y
 
 //struct tm *dt;
 time_t now;
@@ -41,10 +41,10 @@ struct tm timeinfo;
 uint8_t volume;
 
 char station[BUFLEN]; //received station
-char title[BUFLEN];   // received title
+char title[BUFLEN];	  // received title
 char nameset[BUFLEN]; // the local name of the station
 
-char *lline[LINES];   // array of ptr of n lines
+char *lline[LINES];	  // array of ptr of n lines
 uint8_t iline[LINES]; //array of index for scrolling
 uint8_t tline[LINES];
 uint8_t mline[LINES]; // mark to display
@@ -84,7 +84,8 @@ static uint16_t HHeader = 40;
 static char TTitleStr[15];
 static char TTimeStr[15];
 
-typedef enum Lang {
+typedef enum Lang
+{
 	Latin,
 	Cyrillic,
 	Greek
@@ -115,8 +116,8 @@ void setfont(sizefont size)
 		// 	break;
 		// case 132:
 		default: // 160
-			// ucg_SetFont(&ucg, ucg_font_5x8_mf);
-			;
+				 // ucg_SetFont(&ucg, ucg_font_5x8_mf);
+				 ;
 		}
 		break;
 
@@ -188,21 +189,21 @@ void setfont(sizefont size)
 		// 	//			charset?ucg_SetFont(&ucg,ucg_font_crox1c ):ucg_SetFont(&ucg,ucg_font_4x6_mf) ;
 		// 	break;
 		default: // 160
-			// switch (charset)
-			// {
-			// case Cyrillic:
-			// 	ucg_SetFont(&ucg, ucg_font_crox1c);
-			// 	break;
-			// case Greek:
-			// 	ucg_SetFont(&ucg, ucg_font_6x13_gr);
-			// 	break;
-			// default:
-			// case Latin:
-			// 	ucg_SetFont(&ucg, ucg_font_6x13_mf);
-			// 	break;
-			// }
-			//			charset?ucg_SetFont(&ucg,ucg_font_crox1c ):ucg_SetFont(&ucg,ucg_font_6x13_mf) ;
-			;
+				 // switch (charset)
+				 // {
+				 // case Cyrillic:
+				 // 	ucg_SetFont(&ucg, ucg_font_crox1c);
+				 // 	break;
+				 // case Greek:
+				 // 	ucg_SetFont(&ucg, ucg_font_6x13_gr);
+				 // 	break;
+				 // default:
+				 // case Latin:
+				 // 	ucg_SetFont(&ucg, ucg_font_6x13_mf);
+				 // 	break;
+				 // }
+				 //			charset?ucg_SetFont(&ucg,ucg_font_crox1c ):ucg_SetFont(&ucg,ucg_font_6x13_mf) ;
+				 ;
 		}
 		break;
 
@@ -260,22 +261,22 @@ void setfont(sizefont size)
 		// 	break;
 		// case 132:
 		default: // 160
-			// switch (charset)
-			// {
-			// case Cyrillic:
-			// 	ucg_SetFont(&ucg, ucg_font_crox3c);
-			// 	break;
-			// case Greek:
-			// 	ucg_SetFont(&ucg, ucg_font_helvR14_gr);
-			// 	break;
-			// default:
-			// case Latin:
-			// 	ucg_SetFont(&ucg, ucg_font_fur14_tf);
-			// 	break;
-			// }
-			//			charset?ucg_SetFont(&ucg,ucg_font_crox3c ):ucg_SetFont(&ucg,ucg_font_fur14_tf);
+				 // switch (charset)
+				 // {
+				 // case Cyrillic:
+				 // 	ucg_SetFont(&ucg, ucg_font_crox3c);
+				 // 	break;
+				 // case Greek:
+				 // 	ucg_SetFont(&ucg, ucg_font_helvR14_gr);
+				 // 	break;
+				 // default:
+				 // case Latin:
+				 // 	ucg_SetFont(&ucg, ucg_font_fur14_tf);
+				 // 	break;
+				 // }
+				 //			charset?ucg_SetFont(&ucg,ucg_font_crox3c ):ucg_SetFont(&ucg,ucg_font_fur14_tf);
 
-			;
+				 ;
 		}
 		break;
 	case large:
@@ -292,9 +293,9 @@ void setfont(sizefont size)
 		// 	break;
 		// case 132:
 		default: // 160
-			// ucg_SetFont(&ucg, ucg_font_inr38_mr);
-			//ucg_SetFont(&ucg, ucg_font_helvB18_tf);
-			;
+				 // ucg_SetFont(&ucg, ucg_font_inr38_mr);
+				 //ucg_SetFont(&ucg, ucg_font_helvB18_tf);
+				 ;
 		}
 		break;
 	default:
@@ -683,7 +684,7 @@ void drawFrameUcg(uint8_t mTscreen)
 		ucg_DrawBox(&ucg, 0, 0, x - 1, 15);
 		for (i = 0; i < LINES; i++)
 			draw(i);
-	// no break
+	/* fall through */
 	case MTREFRESH:
 		markDrawResetUcg(TIME);
 		drawLinesUcg();
@@ -720,7 +721,7 @@ void drawNumberUcg(uint8_t mTscreen, char *irStr)
 	case 1:
 		TTitleStr[0] = 0;
 		drawTTitleUcg(number);
-	// no break
+	/* fall through */
 	case 2:
 		xxx = (x / 2) - (ucg_GetStrWidth(&ucg, irStr) / 2);
 		ucg_SetColor(&ucg, 0, CBLACK);
@@ -745,7 +746,7 @@ void drawStationUcg(uint8_t mTscreen, char *snum, char *ddot)
 	case 1:
 		TTitleStr[0] = 0;
 		drawTTitleUcg(ststr);
-	// no break
+	/* fall through */
 	case 2:
 		ucg_SetColor(&ucg, 0, CBLACK);
 		ucg_DrawBox(&ucg, 0, HHeader, x, yy);
@@ -784,6 +785,7 @@ void drawVolumeUcg(uint8_t mTscreen)
 		ucg_ClearScreen(&ucg);
 		TTitleStr[0] = 0;
 		drawTTitleUcg(vlstr);
+		/* fall through */
 	case 2:
 		//        ucg_SetFont(&ucg,ucg_font_inr49_tf);
 		setfont(large);
@@ -846,11 +848,14 @@ void drawTimeUcg(uint8_t mTscreen)
 		// draw ip
 		//ucg_SetFont(&ucg,ucg_font_6x13_tf);
 		ucg_DrawString(&ucg, 4, yy - 18, 0, strdate);
+		/* fall through */
 	case 2:
 		if (getDdmm())
-			sprintf(strdate, "%02d-%02d-%04d", timeinfo.tm_mday, timeinfo.tm_mon + 1, timeinfo.tm_year + 1900);
+			//sprintf(strdate, "%02d-%02d-%04d", timeinfo.tm_mday, timeinfo.tm_mon + 1, timeinfo.tm_year + 1900);
+			strftime(strdate, 8, "%d:%m:%y", &timeinfo);
 		else
-			sprintf(strdate, "%02d-%02d-%04d", timeinfo.tm_mon + 1, timeinfo.tm_mday, timeinfo.tm_year + 1900);
+			//sprintf(strdate, "%02d-%02d-%04d", timeinfo.tm_mon + 1, timeinfo.tm_mday, timeinfo.tm_year + 1900);
+			strftime(strdate, 8, "%m:%d:%y", &timeinfo);
 		drawTTitleUcg(strdate);
 		if (strcmp(TTimeStr, strtime) != 0)
 		{

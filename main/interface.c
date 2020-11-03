@@ -140,7 +140,7 @@ A command error display:\n\
 
 uint16_t currentStation = 0;
 static IRAM_ATTR uint32_t lcd_out = 0xFFFFFFFF;
-static esp_log_level_t s_log_default_level = CONFIG_LOG_BOOTLOADER_LEVEL;
+static esp_log_level_t s_log_default_level = CONFIG_LOG_BOOTLOADER_LEVEL_INFO;
 extern void wsVol(char *vol);
 extern void playStation(char *id);
 void clientVol(char *s);
@@ -343,7 +343,7 @@ void wifiConnectMem()
 }
 
 static bool autoConWifi = true; // control for wifiReConnect & wifiDisconnect
-static bool autoWifi = false;   // auto reconnect wifi if disconnected
+static bool autoWifi = false;	// auto reconnect wifi if disconnected
 bool getAutoWifi(void)
 {
 	return autoWifi;
@@ -1182,6 +1182,16 @@ void checkCommand(int size, char *s)
 			{
 				kprintf("Return to factory settings BT201...\n");
 				sendData("AT+CW");
+			}
+			else if (strcmp(tmp + 3, "debugon") == 0)
+			{
+				kprintf("Extended output of module BT201 events enabled...\n");
+				bt.debug = true;
+			}
+			else if (strcmp(tmp + 3, "debugoff") == 0)
+			{
+				kprintf("Extended output of module BT201 events disabled...\n");
+				bt.debug = false;
 			}
 			else if (strncmp(tmp + 3, "AT+", 3) == 0)
 			{

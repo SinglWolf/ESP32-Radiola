@@ -237,8 +237,8 @@
             <tbody>
               <tr>
                 <td><i class="icons icons8 icon-minus" onclick="mvol('volm',-10)"></i></td>
-                <td style="text-align: center">Громкость: <span id="volm_span">50%</span><input id="volm_range" max="100"
-                    min="0" name="volm" oninput="mvol('volm',0)" style="height:25px;" type="range"></td>
+                <td style="text-align: center">Громкость: <span id="volm_span">50%</span><input id="volm_range"
+                    max="100" min="0" name="volm" oninput="mvol('volm',0)" style="height:25px;" type="range"></td>
                 <td><i class="icons icons8 icon-plus" onclick="mvol('volm',+10)"></i></td>
               </tr>
             </tbody>
@@ -526,7 +526,7 @@
           <!-- END РАДИО -->
           <div id="audioinput3" style="border: none;">
             <!-- БЛЮТУЗ -->
-             <div class="section">
+            <div class="section">
               <div class="bold2">ТОНКОМПЕНСАЦИЯ
                 <div class="OffOn">
                   <input type="checkbox" id="loud3" onclick="clickloud()" class="OffOn">
@@ -949,9 +949,18 @@
                   <tr>
                     <td>Формат вывода даты</td>
                     <td><select id="O_TIME_FORMAT">
-                        <option value="0">ММ:ДД</option>
-                        <option value="1">ДД:ММ</option>
-                      </select></td>
+                        <option value="0" id="q1"></option>
+                        <option value="1" id="q2"></option>
+                      </select>
+                      <script type="text/javascript">
+                        var day = new Date();
+                        let days_f = ['воскресенье', 'понедельник', 'вторник', 'среда', 'четверг', 'пятница', 'суббота'];
+                        let days = ['ВС', 'ПН', 'ВТ', 'СР', 'ЧТ', 'ПТ', 'СБ'];
+                        let months = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
+                        document.getElementById('q1').innerHTML = day.getDate() + ' ' + months[day.getMonth()] + ', ' + days[day.getDay()] + '. ' + day.getFullYear() + ' г.';
+                        document.getElementById('q2').innerHTML = day.getDate() + ' ' + months[day.getMonth()] + ', ' + days_f[day.getDay()];
+                      </script>
+                    </td>
                   </tr>
                   <tr>
                     <td>Поворот дисплея</td>

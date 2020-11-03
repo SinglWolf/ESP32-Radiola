@@ -20,35 +20,9 @@
 
 #define LOG_LOCAL_LEVEL ESP_LOG_VERBOSE
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdbool.h>
-#include <time.h>
-#include <sys/time.h>
-#include <nvs.h>
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "freertos/event_groups.h"
-#include "freertos/queue.h"
-#include "esp_system.h"
-#include "esp_wifi.h"
-#include "esp_event_loop.h"
-#include "esp_log.h"
-#include "esp_ota_ops.h"
-#include "driver/i2s.h"
-#include "driver/uart.h"
-#include "driver/pcnt.h"
-
-#include "lwip/sys.h"
-#include "lwip/netdb.h"
-#include "lwip/api.h"
-#include "lwip/tcp.h"
-#include "lwip/dns.h"
-#include "lwip/apps/sntp.h"
-#include "mdns.h"
-
 #include "main.h"
+#include "esp_ota_ops.h"
+#include "mdns.h"
 
 #include "spiram_fifo.h"
 #include "audio_player.h"
@@ -86,10 +60,8 @@ const int CONNECTED_AP = 0x00000010;
 #define PRIO_CONNECT configMAX_PRIORITIES - 1
 #define striWATERMARK "watermark: %d  heap: %d"
 
-#ifndef IPADDR2_COPY
-#define IPADDR2_COPY(dest, src) SMEMCPY(dest, src, sizeof(ip4_addr_t))
-#endif
-
+static void obtain_time(void);
+static void initialize_sntp(void);
 void start_network();
 void autoPlay();
 /* */
@@ -391,9 +363,10 @@ static void unParse(char *str)
 
 static void start_wifi()
 {
-	ESP_LOGI(TAG, "starting wifi");
+	ESP_LOGI(TAG, "Starting WiFi");
+
 	setAutoWifi();
-	// wifi_mode_t mode;
+
 	char ssid[SSIDLEN];
 	char pass[PASSLEN];
 	static bool first_pass = false;
@@ -401,25 +374,20 @@ static void start_wifi()
 	static bool initialized = false;
 	if (!initialized)
 	{
+		esp_netif_init();
 		wifi_event_group = xEventGroupCreate();
-
-		tcpip_adapter_init();
-
 		ESP_ERROR_CHECK(esp_event_loop_create_default());
-
+		ap = esp_netif_create_default_wifi_ap();
+		assert(ap);
+		sta = esp_netif_create_default_wifi_sta();
+		assert(sta);
 		wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
 		ESP_ERROR_CHECK(esp_wifi_init(&cfg));
-		//    ESP_ERROR_CHECK( esp_wifi_set_storage(WIFI_STORAGE_RAM) );
-
 		ESP_ERROR_CHECK(esp_event_handler_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &wifi_event_handler, NULL));
 		ESP_ERROR_CHECK(esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &wifi_event_handler, NULL));
 		ESP_ERROR_CHECK(esp_wifi_set_storage(WIFI_STORAGE_RAM));
 		ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_NULL));
-
-		tcpip_adapter_dhcpc_stop(TCPIP_ADAPTER_IF_STA); // Don't run a DHCP client
-														/* FreeRTOS event group to signal when we are connected & ready to make a request */
-
-		// ESP_ERROR_CHECK(esp_event_loop_init(event_handler, wifi_event_group));
+		//ESP_ERROR_CHECK( esp_wifi_start() );
 		initialized = true;
 	}
 	ESP_LOGI(TAG, "WiFi init done!");
@@ -447,7 +415,7 @@ static void start_wifi()
 		if (first_pass)
 		{
 			ESP_ERROR_CHECK(esp_wifi_stop());
-			vTaskDelay(10);
+			vTaskDelay(5);
 		}
 		switch (g_device->current_ap)
 		{
@@ -477,7 +445,7 @@ static void start_wifi()
 					.max_connection = 2,
 					.beacon_interval = 200},
 			};
-			ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_AP, &ap_config));
+			ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_AP, &ap_config));
 			ESP_LOGE(TAG, "The default AP is  WifiESP32Radiola. Connect your wifi to it.\nThen connect a webbrowser to 192.168.4.1 and go to Setting\nMay be long to load the first time.Be patient.");
 
 			vTaskDelay(1);
@@ -488,23 +456,27 @@ static void start_wifi()
 		else
 		{
 			printf("WIFI TRYING TO CONNECT TO SSID %d\n", g_device->current_ap);
-			wifi_config_t wifi_config = {
-				.sta = {
-					.bssid_set = 0,
-				},
-			};
+			wifi_config_t wifi_config =
+				{
+					.sta =
+						{
+							.bssid_set = 0,
+						},
+				};
 			strcpy((char *)wifi_config.sta.ssid, ssid);
 			strcpy((char *)wifi_config.sta.password, pass);
 			unParse((char *)(wifi_config.sta.ssid));
 			unParse((char *)(wifi_config.sta.password));
 			if (strlen(ssid) /*&&strlen(pass)*/)
 			{
-				esp_wifi_disconnect();
-				ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_config));
-				// ESP_LOGI(TAG, "connecting %s, %d, %s, %d",ssid,strlen((char*)(wifi_config.sta.ssid)),pass,strlen((char*)(wifi_config.sta.password)));
+				if (CONNECTED_BIT > 1)
+				{
+					esp_wifi_disconnect();
+				}
+				ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config));
+				//	ESP_LOGI(TAG, "connecting %s, %d, %s, %d",ssid,strlen((char*)(wifi_config.sta.ssid)),pass,strlen((char*)(wifi_config.sta.password)));
 				ESP_LOGI(TAG, "connecting %s", ssid);
 				ESP_ERROR_CHECK(esp_wifi_start());
-				// 	esp_wifi_connect();
 			}
 			else
 			{
@@ -517,14 +489,16 @@ static void start_wifi()
 					printf("Wait for the AP\n");
 				}
 				else
+				{
 					printf("Empty AP. Try next one\n");
+				}
 
 				saveDeviceSettings(g_device);
 				continue;
 			}
 		}
 
-		/* Wait for the callback to set the CONNECTED_BIT in the event group. */
+		/* Wait for the callback to set the CONNECTED_AP in the event group. */
 		if ((xEventGroupWaitBits(wifi_event_group, CONNECTED_AP, false, true, 2000) & CONNECTED_AP) == 0)
 		//timeout . Try the next AP
 		{
@@ -539,7 +513,47 @@ static void start_wifi()
 	}
 }
 
-void initialize_sntp(void)
+void time_sync_notification_cb(struct timeval *tv)
+{
+	ESP_LOGI(TAG, "Notification of a time synchronization event");
+}
+
+static void obtain_time(void)
+{
+	if (sntp_enabled())
+		sntp_stop();
+	initialize_sntp();
+
+	// wait for time to be set
+	time_t now = 0;
+	struct tm timeinfo = {0};
+	int retry = 0;
+	const int retry_count = 30;
+	while (sntp_get_sync_status() == SNTP_SYNC_STATUS_RESET && ++retry < retry_count)
+	{
+		ESP_LOGI(TAG, "Waiting for system time to be set... (%d/%d)", retry, retry_count);
+		vTaskDelay(1000 / portTICK_PERIOD_MS);
+		if (retry % 3 == 0)
+		{
+			sntp_restart();
+		}
+	}
+	if (retry >= retry_count)
+	{
+		lcd_welcome("", "ВРЕМЯ НЕ ПОЛУЧЕНО");
+		// fflush(stdout);
+		vTaskDelay(500);
+		// esp_restart();
+	}
+	else
+	{
+		lcd_welcome("", "ВРЕМЯ ПОЛУЧЕНО");
+	}
+	time(&now);
+	localtime_r(&now, &timeinfo);
+}
+
+static void initialize_sntp(void)
 {
 	ESP_LOGI(TAG, "Initializing SNTP");
 	sntp_setoperatingmode(SNTP_OPMODE_POLL);
@@ -547,18 +561,29 @@ void initialize_sntp(void)
 	sntp_setservername(1, g_device->ntp_server[1]);
 	sntp_setservername(2, g_device->ntp_server[2]);
 	sntp_setservername(3, g_device->ntp_server[3]);
+	sntp_set_time_sync_notification_cb(time_sync_notification_cb);
+#ifdef CONFIG_SNTP_TIME_SYNC_METHOD_SMOOTH
+	sntp_set_sync_mode(SNTP_SYNC_MODE_SMOOTH);
+#endif
 	sntp_init();
 }
 
 void start_network()
 {
-	// struct device_settings *g_device;
-	tcpip_adapter_ip_info_t info;
+	//	struct device_settings *g_device;
+
+	esp_netif_ip_info_t info;
 	wifi_mode_t mode;
 	ip4_addr_t ipAddr;
 	ip4_addr_t mask;
 	ip4_addr_t gate;
 	uint8_t dhcpEn = 0;
+
+	IP4_ADDR(&ipAddr, 192, 168, 4, 1);
+	IP4_ADDR(&gate, 192, 168, 4, 1);
+	IP4_ADDR(&mask, 255, 255, 255, 0);
+
+	esp_netif_dhcpc_stop(sta); // Don't run a DHCP client
 
 	switch (g_device->current_ap)
 	{
@@ -574,37 +599,36 @@ void start_network()
 		IP4_ADDR(&mask, g_device->mask2[0], g_device->mask2[1], g_device->mask2[2], g_device->mask2[3]);
 		dhcpEn = g_device->dhcpEn2;
 		break;
-
-	default: // other: AP mode
-		IP4_ADDR(&ipAddr, 192, 168, 4, 1);
-		IPADDR2_COPY(&gate, &ipAddr);
-		IP4_ADDR(&mask, 255, 255, 255, 0);
 	}
 
-	IPADDR2_COPY(&info.ip, &ipAddr);
-	IPADDR2_COPY(&info.gw, &gate);
-	IPADDR2_COPY(&info.netmask, &mask);
+	ip4_addr_copy(info.ip, ipAddr);
+	ip4_addr_copy(info.gw, gate);
+	ip4_addr_copy(info.netmask, mask);
 
 	ESP_ERROR_CHECK(esp_wifi_get_mode(&mode));
+
 	if (mode == WIFI_MODE_AP)
 	{
-		xEventGroupWaitBits(wifi_event_group, CONNECTED_BIT, false, true, 3000);
-		IPADDR2_COPY(&info.ip, &ipAddr);
-		tcpip_adapter_set_ip_info(TCPIP_ADAPTER_IF_AP, &info);
-		// 	g_device->dhcpEn1 = g_device->dhcpEn2 = 1;
-		// 	IPADDR2_COPY(&g_device->mask1, &mask);
-		// 	IPADDR2_COPY(&g_device->mask2, &mask);
-		// 	saveDeviceSettings(g_device);
-		strcpy(localIp, ip4addr_ntoa(&info.ip));
-		printf("IP: %s\n\n", ip4addr_ntoa(&info.ip));
+		xEventGroupWaitBits(wifi_event_group, CONNECTED_AP, false, true, 3000);
+		ip4_addr_copy(info.ip, ipAddr);
+		esp_netif_set_ip_info(ap, &info);
+
+		esp_netif_ip_info_t ap_ip_info;
+		ap_ip_info.ip.addr = 0;
+		while (ap_ip_info.ip.addr == 0)
+		{
+			esp_netif_get_ip_info(ap, &ap_ip_info);
+		}
 	}
 	else // mode STA
 	{
-		if (dhcpEn)											 // check if ip is valid without dhcp
-			tcpip_adapter_dhcpc_start(TCPIP_ADAPTER_IF_STA); //  run a DHCP client
+		if (dhcpEn) // check if ip is valid without dhcp
+		{
+			esp_netif_dhcpc_start(sta); //  run a DHCP client
+		}
 		else
 		{
-			ESP_ERROR_CHECK(tcpip_adapter_set_ip_info(TCPIP_ADAPTER_IF_STA, &info));
+			ESP_ERROR_CHECK(esp_netif_set_ip_info(sta, &info));
 			dns_clear_servers(false);
 			IP_SET_TYPE((ip_addr_t *)&info.gw, IPADDR_TYPE_V4); // mandatory
 			((ip_addr_t *)&info.gw)->type = IPADDR_TYPE_V4;
@@ -616,9 +640,13 @@ void start_network()
 		if ((xEventGroupWaitBits(wifi_event_group, CONNECTED_BIT, false, true, 3000) & CONNECTED_BIT) == 0) //timeout
 		{																									// enable dhcp and restart
 			if (g_device->current_ap == 1)
+			{
 				g_device->dhcpEn1 = 1;
+			}
 			else
+			{
 				g_device->dhcpEn2 = 1;
+			}
 			saveDeviceSettings(g_device);
 			fflush(stdout);
 			vTaskDelay(100);
@@ -626,66 +654,113 @@ void start_network()
 		}
 
 		vTaskDelay(1);
+
 		// retrieve the current ip
-		tcpip_adapter_ip_info_t ip_info;
-		ip_info.ip.addr = 0;
-		while (ip_info.ip.addr == 0)
+		esp_netif_ip_info_t sta_ip_info;
+		sta_ip_info.ip.addr = 0;
+		while (sta_ip_info.ip.addr == 0)
 		{
-			if (mode == WIFI_MODE_AP)
-				tcpip_adapter_get_ip_info(TCPIP_ADAPTER_IF_AP, &ip_info);
-			else
-				tcpip_adapter_get_ip_info(TCPIP_ADAPTER_IF_STA, &ip_info);
+			esp_netif_get_ip_info(sta, &sta_ip_info);
 		}
+
 		const ip_addr_t *ipdns0 = dns_getserver(0);
-		// ip_addr_t ipdns1 = dns_getserver(1);
-		printf("\nDNS: %s  \n", ip4addr_ntoa((struct ip4_addr *)&ipdns0));
-		strcpy(localIp, ip4addr_ntoa(&ip_info.ip));
-		printf("IP: %s\n\n", ip4addr_ntoa(&ip_info.ip));
+		ESP_LOGW(TAG, "DNS: %s  \n", ip4addr_ntoa((struct ip4_addr *)&ipdns0));
 
 		if (dhcpEn) // if dhcp enabled update fields
 		{
-			tcpip_adapter_get_ip_info(TCPIP_ADAPTER_IF_STA, &info);
+			esp_netif_get_ip_info(sta, &info);
 			switch (g_device->current_ap)
 			{
 			case STA1: //ssid1 used
-				IPADDR2_COPY(&g_device->ipAddr1, &info.ip);
-				IPADDR2_COPY(&g_device->mask1, &info.netmask);
-				IPADDR2_COPY(&g_device->gate1, &info.gw);
+				ip4_addr_copy(ipAddr, info.ip);
+				g_device->ipAddr1[0] = ip4_addr1_val(ipAddr);
+				g_device->ipAddr1[1] = ip4_addr2_val(ipAddr);
+				g_device->ipAddr1[2] = ip4_addr3_val(ipAddr);
+				g_device->ipAddr1[3] = ip4_addr4_val(ipAddr);
+
+				ip4_addr_copy(ipAddr, info.gw);
+				g_device->gate1[0] = ip4_addr1_val(ipAddr);
+				g_device->gate1[1] = ip4_addr2_val(ipAddr);
+				g_device->gate1[2] = ip4_addr3_val(ipAddr);
+				g_device->gate1[3] = ip4_addr4_val(ipAddr);
+
+				ip4_addr_copy(ipAddr, info.netmask);
+				g_device->mask1[0] = ip4_addr1_val(ipAddr);
+				g_device->mask1[1] = ip4_addr2_val(ipAddr);
+				g_device->mask1[2] = ip4_addr3_val(ipAddr);
+				g_device->mask1[3] = ip4_addr4_val(ipAddr);
 				break;
-			case STA2: //ssid1 used
-				IPADDR2_COPY(&g_device->ipAddr2, &info.ip);
-				IPADDR2_COPY(&g_device->mask2, &info.netmask);
-				IPADDR2_COPY(&g_device->gate2, &info.gw);
+
+			case STA2: //ssid2 used
+				ip4_addr_copy(ipAddr, info.ip);
+				g_device->ipAddr2[0] = ip4_addr1_val(ipAddr);
+				g_device->ipAddr2[1] = ip4_addr2_val(ipAddr);
+				g_device->ipAddr2[2] = ip4_addr3_val(ipAddr);
+				g_device->ipAddr2[3] = ip4_addr4_val(ipAddr);
+
+				ip4_addr_copy(ipAddr, info.gw);
+				g_device->gate2[0] = ip4_addr1_val(ipAddr);
+				g_device->gate2[1] = ip4_addr2_val(ipAddr);
+				g_device->gate2[2] = ip4_addr3_val(ipAddr);
+				g_device->gate2[3] = ip4_addr4_val(ipAddr);
+
+				ip4_addr_copy(ipAddr, info.netmask);
+				g_device->mask2[0] = ip4_addr1_val(ipAddr);
+				g_device->mask2[1] = ip4_addr2_val(ipAddr);
+				g_device->mask2[2] = ip4_addr3_val(ipAddr);
+				g_device->mask2[3] = ip4_addr4_val(ipAddr);
 				break;
 			}
 		}
 		saveDeviceSettings(g_device);
-		tcpip_adapter_set_hostname(TCPIP_ADAPTER_IF_STA, "ESP32Radiola");
-		if (sntp_enabled())
-			sntp_stop();
-		//ESP_LOGE(TAG, "sntp_enabled: %d", sntp_enabled());
-		initialize_sntp();
+		esp_netif_set_hostname(sta, "ESP32Radiola");
 
 		// wait for time to be set
+		lcd_welcome("", "ПОЛУЧЕНИЕ ВРЕМЕНИ");
+
 		time_t now = 0;
 		struct tm timeinfo = {0};
-		int retry = 0;
-		const int retry_count = 10;
-		while (timeinfo.tm_year < (2016 - 1900) && ++retry < retry_count)
+		time(&now);
+		localtime_r(&now, &timeinfo);
+		// Is time set? If not, tm_year will be (1970 - 1900).
+		if (timeinfo.tm_year < (2016 - 1900))
 		{
-			ESP_LOGI(TAG, "Waiting for system time to be set... (%d/%d)", retry, retry_count);
-			vTaskDelay(3000 / portTICK_PERIOD_MS);
+			ESP_LOGI(TAG, "Time is not set yet. Connecting to WiFi and getting time over NTP.");
+			obtain_time();
+			// update 'now' variable with current time
 			time(&now);
-			localtime_r(&now, &timeinfo);
 		}
-		//ESP_LOGE(TAG, "sntp_enabled: %d", sntp_enabled());
+#ifdef CONFIG_SNTP_TIME_SYNC_METHOD_SMOOTH
+		else
+		{
+			// add 500 ms error to the current system time.
+			// Only to demonstrate a work of adjusting method!
+			{
+				ESP_LOGI(TAG, "Add a error for test adjtime");
+				struct timeval tv_now;
+				gettimeofday(&tv_now, NULL);
+				int64_t cpu_time = (int64_t)tv_now.tv_sec * 1000000L + (int64_t)tv_now.tv_usec;
+				int64_t error_time = cpu_time + 500 * 1000L;
+				struct timeval tv_error = {.tv_sec = error_time / 1000000L, .tv_usec = error_time % 1000000L};
+				settimeofday(&tv_error, NULL);
+			}
+
+			ESP_LOGI(TAG, "Time was set, now just adjusting it. Use SMOOTH SYNC method.");
+			obtain_time();
+			// update 'now' variable with current time
+			time(&now);
+		}
+#endif
 		setenv("TZ", g_device->tzone, 1);
 		tzset();
 		localtime_r(&now, &timeinfo);
 	}
+	ip4_addr_copy(ipAddr, info.ip);
+	strcpy(localIp, ip4addr_ntoa(&ipAddr));
+	ESP_LOGW(TAG, "IP: %s\n\n", localIp);
 
-	lcd_welcome(localIp, "IP найден");
-	vTaskDelay(10);
+	lcd_welcome(localIp, "IP ПОЛУЧЕН");
+	vTaskDelay(100);
 }
 
 //timer isr
@@ -797,8 +872,8 @@ void uartInterfaceTask(void *pvParameters)
 // Show ip on AP mode.
 void autoPlay()
 {
-	char *apmode = "по IP %s";
-	char *confAP = "Веб-интерфейс  доступен";
+	char *apmode = "IP %s";
+	char *confAP = "Веб-интерфейс доступен по";
 	char buf[strlen(apmode) + strlen(confAP)];
 
 	sprintf(buf, apmode, localIp);
@@ -866,26 +941,6 @@ void app_main()
 	partitions_init();
 	ESP_LOGI(TAG, "Partition init done...");
 	//
-	//Настройка пина 34 для SOFTRESET
-	// gpio_config_t io_conf;
-	// io_conf.intr_type = GPIO_PIN_INTR_DISABLE;	  //disable interrupt
-	// io_conf.mode = GPIO_MODE_INPUT;				  //set as inputmode
-	// io_conf.pin_bit_mask = (1ULL << GPIO_NUM_34); //bit mask of the pins that you want to set
-	// io_conf.pull_down_en = GPIO_PULLDOWN_DISABLE; //disable pull-down mode
-	// io_conf.pull_up_en = GPIO_PULLUP_ENABLE;	  //enable pull-up mode
-	// // io_conf.pull_down_en = GPIO_PULLDOWN_ENABLE; //enable pull-down mode
-	// // io_conf.pull_up_en = GPIO_PULLUP_DISABLE;	 //disable pull-up mode
-	// esp_err_t error = gpio_config(&io_conf); //configure GPIO with the given settings
-
-	// if (error != ESP_OK)
-	// {
-	// 	printf("error configuring inputs\n");
-	// }
-	gpio_pad_select_gpio(GPIO_NUM_34);
-	gpio_set_direction(GPIO_NUM_34, GPIO_MODE_INPUT);
-	gpio_set_pull_mode(GPIO_NUM_34, GPIO_PULLUP_ONLY);
-	vTaskDelay(10);
-	ESP_LOGE(TAG, "gpio_get_level(GPIO_NUM_34): %d\n", gpio_get_level(GPIO_NUM_34));
 	if (g_device->cleared != 0xAABB)
 	{
 		ESP_LOGE(TAG, "Device config not ok. Try to restore");
@@ -910,17 +965,17 @@ void app_main()
 			g_device->options |= Y_ROTAT;
 			g_device->options |= Y_DDMM;
 			g_device->current_ap = STA1;
-			strcpy(g_device->ssid1, "OpenWrt");
-			strcpy(g_device->pass1, "1234567890");
+			strcpy(g_device->ssid1, CONFIG_WIFI_SSID);
+			strcpy(g_device->pass1, CONFIG_WIFI_PASSWORD);
 			g_device->dhcpEn1 = 1;
 			g_device->lcd_out = 0;
-			g_device->backlight_mode = BY_LIGHTING; // по-умолчанию подсветка регулируемая
-			g_device->backlight_level = 255;		// по-умолчанию подсветка максимальная
-			strcpy(g_device->tzone, "YEKT-5");		// Часовой пояс Екатеринбурга
-			strcpy(g_device->ntp_server[0], _NTP0); // 0
-			strcpy(g_device->ntp_server[1], _NTP1); // 1
-			strcpy(g_device->ntp_server[2], _NTP2); // 2
-			strcpy(g_device->ntp_server[3], _NTP3); // 3
+			g_device->backlight_mode = BY_LIGHTING;		  // по-умолчанию подсветка регулируемая
+			g_device->backlight_level = 255;			  // по-умолчанию подсветка максимальная
+			strcpy(g_device->tzone, CONFIG_TZONE);		  // по-умолчанию часовой пояс Екатеринбурга
+			strcpy(g_device->ntp_server[0], CONFIG_NTP0); // 0
+			strcpy(g_device->ntp_server[1], CONFIG_NTP1); // 1
+			strcpy(g_device->ntp_server[2], CONFIG_NTP2); // 2
+			strcpy(g_device->ntp_server[3], CONFIG_NTP3); // 3
 
 			saveDeviceSettings(g_device);
 		}
@@ -988,8 +1043,6 @@ void app_main()
 		saveDeviceSettings(g_device);
 	}
 	uartBtInit();
-	lcd_welcome("", "");
-	lcd_welcome("", "ЗАПУСК");
 
 	// volume
 	setIvol(g_device->vol);
@@ -1001,6 +1054,7 @@ void app_main()
 	xTaskCreatePinnedToCore(timerTask, "timerTask", 2100, NULL, PRIO_TIMER, &pxCreatedTask, CPU_TIMER);
 	ESP_LOGI(TAG, "%s task: %x", "t0", (unsigned int)pxCreatedTask);
 
+	lcd_welcome("", "ЗАПУСК СЕТИ");
 	//-----------------------------
 	// start the network
 	//-----------------------------
@@ -1045,8 +1099,9 @@ void app_main()
 	audio_player_init(player_config);
 
 	// LCD Display infos
-	lcd_welcome(localIp, "ЗАПУЩЕНО");
-	vTaskDelay(10);
+	lcd_welcome("", "");
+	lcd_welcome("", "ЗАПУСК ЗАДАЧ");
+	vTaskDelay(100);
 	ESP_LOGI(TAG, "RAM left %d", esp_get_free_heap_size());
 
 	//start tasks of ESP32Radiola

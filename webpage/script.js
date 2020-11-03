@@ -1192,7 +1192,6 @@ function gpios(gpio_mode, save, load) {
             "&P_TXD=" + P_TXD.innerHTML +
             "&P_LDR=" + P_LDR.innerHTML;
     } else save = 0;
-    gpio_mode = load;
     xhr.open("POST", "gpios", false);
     xhr.setRequestHeader(content, ctype);
     xhr.send("gpio_mode=" + gpio_mode +

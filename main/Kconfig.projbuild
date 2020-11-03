@@ -1,16 +1,16 @@
-menu "Web Radio / Bluetooth Speaker"
+menu "Конфигурация ESP32-Радиолы"
 
-menu "Wifi Configuration"
+menu "Конфигурация Wifi"
 
 config WIFI_SSID
-    string "WiFi SSID"
-	default "myssid"
+    string "Название Wi-Fi сети"
+	default "OpenWrt"
 	help
 		SSID (network name) to connect to.
 
 config WIFI_PASSWORD
-    string "WiFi Password"
-	default "myssid"
+    string "Пароль WiFi"
+	default "1234567890"
 	help
 		WiFi password (WPA or WPA2) to use.
 
@@ -18,48 +18,87 @@ config WIFI_PASSWORD
 
 endmenu
 
-menu "Audio Output"
+menu "Серверы точного времени"
+
+config NTP0
+	string "NTP №0"
+	default "0.ru.pool.ntp.org"
+
+config NTP1
+	string "NTP №1"
+	default "1.ru.pool.ntp.org"
+
+config NTP2
+	string "NTP №2"
+	default "2.ru.pool.ntp.org"
+
+config NTP3
+	string "NTP №3"
+	default "3.ru.pool.ntp.org"
+
+    choice SNTP_TIME_SYNC_METHOD
+        prompt "Метод синхронизации времени"
+        default SNTP_TIME_SYNC_METHOD_IMMED
+        help
+            Метод синхронизации времени.
+
+        config SNTP_TIME_SYNC_METHOD_IMMED
+            bool "время обновляется сразу после получения"
+        config SNTP_TIME_SYNC_METHOD_SMOOTH
+            bool "время обновляется плавно, методом (adjtime)"
+    endchoice
+
+endmenu 
+
+menu "Настройка часового пояса"
 
 choice
-    prompt "Select Audio Output Mode"
-    default I2S
+    prompt "Выберите свой часовой пояс"
+    default TZONE_5
     help
-        This option selects the audio output.
+        Выбор часового пояса
 
-    config AUDIO_OUTPUT_MODE_I2S
-        bool "Generic I2S"
-    config AUDIO_OUTPUT_MODE_I2S_MERUS
-        bool "Merus Audio I2S"
-    config AUDIO_OUTPUT_MODE_DAC_BUILT_IN
-        bool "Built-In DAC"
-    config AUDIO_OUTPUT_MODE_PDM
-        bool "PDM"
-	config AUDIO_OUTPUT_MODE_VS1053
-        bool "VS1053"
+    config TZONE_1
+        bool "Киев, София"
+    config TZONE_2
+        bool "Калинингад"
+    config TZONE_3
+        bool "Москва"
+    config TZONE_4
+        bool "Самара"
+	config TZONE_5
+        bool "Екатеринбург"
+	config TZONE_6
+        bool "Омск"
+	config TZONE_7
+        bool "Красноярск"
+	config TZONE_8
+        bool "Иркутск"
+	config TZONE_9
+        bool "Чита"
+	config TZONE_10
+        bool "Владивосток"
+	config TZONE_11
+        bool "Южно-Сахалинск"
+	config TZONE_12
+        bool "Петропавловск-Камчатский"
 endchoice
 
-config AUDIO_OUTPUT_MODE
-    int
-    default 0 if AUDIO_OUTPUT_MODE_I2S
-    default 1 if AUDIO_OUTPUT_MODE_I2S_MERUS
-    default 2 if AUDIO_OUTPUT_MODE_DAC_BUILT_IN
-    default 3 if AUDIO_OUTPUT_MODE_PDM
-	default 4 if AUDIO_OUTPUT_MODE_VS1053
+config TZONE
+    string
+    default "EET-2EEST,M3.5.0/3,M10.5.0/4" if TZONE_1
+    default "EET-2" if TZONE_2
+    default "MSK-3" if TZONE_3
+    default "SAMT-4" if TZONE_4
+	default "YEKT-5" if TZONE_5
+	default "OMST-6" if TZONE_6
+	default "KRAT-7" if TZONE_7
+	default "IRKT-8" if TZONE_8
+	default "YAKT-9" if TZONE_9
+	default "VLAT-10" if TZONE_10
+	default "SAKT-11" if TZONE_11
+	default "PETT-12" if TZONE_12
 
 endmenu
-
-menuconfig BT_SPEAKER_MODE
-    bool "Bluetooth Speaker Mode"
-    help
-       Select this option to turn on bluetooth speaker mode.
-       Web radio streaming will be unavailable.
-   depends on CLASSIC_BT_ENABLED
-
-   config BT_NAME
-    string "Bluetooth Name"
-	default "ESP_SPEAKER"
-	help
-		Bluetooth name exposed by the device.
-   depends on BT_SPEAKER_MODE
 
 endmenu

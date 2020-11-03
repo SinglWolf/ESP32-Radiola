@@ -26,6 +26,7 @@ struct bt_x01
     uint8_t gain_mic;
     uint8_t status_bluetooth;
     uint8_t ble_state;
+    bool debug;
     bool need_password;
     bool support_hfp;
     bool support_a2dp;

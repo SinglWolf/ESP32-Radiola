@@ -44,11 +44,6 @@ const char CLISTOP[] = {"##CLI.STOPPED# from %s\n"};
 #define strcMALLOC "Client: incmalloc fails for %d"
 #define strcMALLOC1 "%s malloc fails"
 
-/* TODO:
-	- METADATA HANDLING
-	- IP SETTINGS
-	- VS1053 - DELAY USING vTaskDelay
-*/
 static struct icyHeader header = {{{NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL}}};
 
 static char metaint[10];
@@ -1382,14 +1377,14 @@ void clientTask(void *pvParams)
 				setVolumei(0);
 				audio_player_stop();
 				player_config->media_stream->eof = true;
-				//				bufferReset();
+				//
 				VS1053_flush_cancel(2);
 				playing = 0;
 				vTaskDelay(40); // stop without click
 				setVolumei(getVolume());
 			}
 
-			//			bufferReset();
+			//
 			shutdown(sockfd, SHUT_RDWR); // stop the socket
 			vTaskDelay(1);
 			close(sockfd);

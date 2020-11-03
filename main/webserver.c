@@ -1354,7 +1354,7 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 			//uint8_t begin_h, begin_m, end_h, end_m;
 			option_get_lcd_rotat(&O_LCD_ROTA);
 			option_get_ddmm(&O_TIME_FORMAT);
-			char *O_NTP0 = _NTP0, *O_NTP1 = _NTP1, *O_NTP2 = _NTP2, *O_NTP3 = _NTP3;
+			char *O_NTP0 = CONFIG_NTP0, *O_NTP1 = CONFIG_NTP1, *O_NTP2 = CONFIG_NTP2, *O_NTP3 = CONFIG_NTP3;
 			if (O_NTP == 1)
 			{
 				O_NTP0 = g_device->ntp_server[0];

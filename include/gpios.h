@@ -68,7 +68,7 @@
 #define PIN_LCD_BACKLIGHT GPIO_NUM_26 // 255 GPIO_NONE (255), если не используется
 
 // touch screen  T_DO is MISO, T_DIN is MOSI, T_CLK is CLk of the spi bus
-#define PIN_TOUCH_CS GPIO_NUM_0 //Chip select T_CS
+#define PIN_TOUCH_CS GPIO_NONE //Chip select T_CS  GPIO_NUM_0
 
 esp_err_t gpio_set_nvs(const char *name_pin, gpio_num_t gpio_num);
 esp_err_t gpio_get_nvs(const char *name_pin, gpio_num_t *gpio_num);

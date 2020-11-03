@@ -81,8 +81,8 @@ int oldsec = 0;
 
 static uint16_t HHeader = 40;
 
-static char TTitleStr[15];
-static char TTimeStr[15];
+static char TTitleStr[16];
+static char TTimeStr[16];
 
 typedef enum Lang
 {
@@ -283,7 +283,8 @@ void setfont(sizefont size)
 		switch (inX)
 		{
 		case 320:
-			ucg_SetFont(&ucg, ucg_font_inr53_mf);
+			// ucg_SetFont(&ucg, ucg_font_inr53_mf);
+			ucg_SetFont(&ucg, ucg_font_inr62_mn);
 			break;
 		// case 128:
 		// 	ucg_SetFont(&ucg, ucg_font_helvR12_hf);
@@ -612,10 +613,10 @@ void draw(int i)
 				uint16_t len, xpos, yyy;
 				setfont(small);
 				char strsec[30];
-				if (getDdmm())
-					sprintf(strsec, "%02d-%02d  %02d:%02d:%02d", timeinfo.tm_mday, timeinfo.tm_mon + 1, timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
+				if (timeinfo.tm_sec % 2) // Проверка на нечетность
+					strftime(strsec, 30, "%H:%M", &timeinfo);
 				else
-					sprintf(strsec, "%02d-%02d  %02d:%02d:%02d", timeinfo.tm_mon + 1, timeinfo.tm_mday, timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
+					strftime(strsec, 30, "%H %M", &timeinfo);
 				len = ucg_GetStrWidth(&ucg, strsec);
 				ucg_SetColori(&ucg, 250, 250, 255);
 				ucg_SetColor(&ucg, 1, CBLACK);
@@ -805,35 +806,39 @@ void drawVolumeUcg(uint8_t mTscreen)
 	//  screenBottomUcg();
 }
 
-static void drawSecond()
-{
-	time(&now);
-	localtime_r(&now, &timeinfo);
-	if (oldsec != timeinfo.tm_sec)
-	{
-		char strseco[3 + timeinfo.tm_sec];
-		uint16_t len;
-		sprintf(strseco, ":%02d", timeinfo.tm_sec);
-		setfont(text);
-		len = ucg_GetStrWidth(&ucg, "xxx");
-		ucg_SetColor(&ucg, 0, CBLACK);
-		ucg_DrawBox(&ucg, x - len - 8, yy - 18, x, ucg_GetFontAscent(&ucg) + 2);
-		ucg_SetColor(&ucg, 1, CBLACK);
-		ucg_SetFontMode(&ucg, UCG_FONT_MODE_SOLID);
-		ucg_SetColor(&ucg, 0, CBODY);
-		ucg_DrawString(&ucg, x - len - 8, yy - 18, 0, strseco);
-		ucg_SetFontMode(&ucg, UCG_FONT_MODE_TRANSPARENT);
-		oldsec = timeinfo.tm_sec;
-	}
-}
+// static void drawSecond()
+// {
+// 	time(&now);
+// 	localtime_r(&now, &timeinfo);
+// 	if (oldsec != timeinfo.tm_sec)
+// 	{
+// 		char strseco[3 + timeinfo.tm_sec];
+// 		uint16_t len;
+// 		sprintf(strseco, ":%02d", timeinfo.tm_sec);
+// 		setfont(text);
+// 		len = ucg_GetStrWidth(&ucg, "xxx");
+// 		ucg_SetColor(&ucg, 0, CBLACK);
+// 		ucg_DrawBox(&ucg, x - len - 8, yy - 18, x, ucg_GetFontAscent(&ucg) + 2);
+// 		ucg_SetColor(&ucg, 1, CBLACK);
+// 		ucg_SetFontMode(&ucg, UCG_FONT_MODE_SOLID);
+// 		ucg_SetColor(&ucg, 0, CBODY);
+// 		ucg_DrawString(&ucg, x - len - 8, yy - 18, 0, strseco);
+// 		ucg_SetFontMode(&ucg, UCG_FONT_MODE_TRANSPARENT);
+// 		oldsec = timeinfo.tm_sec;
+// 	}
+// }
 
 void drawTimeUcg(uint8_t mTscreen)
 {
 	time(&now);
 	localtime_r(&now, &timeinfo);
-	char strdate[23];
-	char strtime[20];
-	sprintf(strtime, "%02d:%02d", timeinfo.tm_hour, timeinfo.tm_min);
+	char strdate[30], strdate_copy[30];
+	char strtime[16];
+	// strftime(strtime, 16, "%H %M", &timeinfo);
+	if (timeinfo.tm_sec % 2) // Проверка на нечетность
+		strftime(strtime, 16, "%H:%M", &timeinfo);
+	else
+		strftime(strtime, 16, "%H %M", &timeinfo);
 	switch (mTscreen)
 	{
 	case 1:
@@ -850,16 +855,116 @@ void drawTimeUcg(uint8_t mTscreen)
 		ucg_DrawString(&ucg, 4, yy - 18, 0, strdate);
 		/* fall through */
 	case 2:
-		if (getDdmm())
-			//sprintf(strdate, "%02d-%02d-%04d", timeinfo.tm_mday, timeinfo.tm_mon + 1, timeinfo.tm_year + 1900);
-			strftime(strdate, 8, "%d:%m:%y", &timeinfo);
-		else
-			//sprintf(strdate, "%02d-%02d-%04d", timeinfo.tm_mon + 1, timeinfo.tm_mday, timeinfo.tm_year + 1900);
-			strftime(strdate, 8, "%m:%d:%y", &timeinfo);
-		drawTTitleUcg(strdate);
+
 		if (strcmp(TTimeStr, strtime) != 0)
 		{
-			//ucg_SetFont(&ucg,ucg_font_inr38_mf);
+			int length = strftime(strdate, 30, "%d ", &timeinfo);
+			switch (timeinfo.tm_mon)
+			{
+			case 0:
+				strcpy(strdate + length, "января");
+				break;
+			case 1:
+				strcpy(strdate + length, "февраля");
+				break;
+			case 2:
+				strcpy(strdate + length, "марта");
+				break;
+			case 3:
+				strcpy(strdate + length, "апреля");
+				break;
+			case 4:
+				strcpy(strdate + length, "мая");
+				break;
+			case 5:
+				strcpy(strdate + length, "июня");
+				break;
+			case 6:
+				strcpy(strdate + length, "июля");
+				break;
+			case 7:
+				strcpy(strdate + length, "августа");
+				break;
+			case 8:
+				strcpy(strdate + length, "сентября");
+				break;
+			case 9:
+				strcpy(strdate + length, "октября");
+				break;
+			case 10:
+				strcpy(strdate + length, "ноября");
+				break;
+			case 11:
+				strcpy(strdate + length, "декабря");
+				break;
+			}
+			length = strlen(strdate);
+			strcpy(strdate + length, ", ");
+			length = strlen(strdate);
+			if (getDdmm())
+			{
+				switch (timeinfo.tm_wday)
+				{
+				case 0:
+					strcpy(strdate + length, "воскресенье");
+					break;
+				case 1:
+					strcpy(strdate + length, "понедельник");
+					break;
+				case 2:
+					strcpy(strdate + length, "вторник");
+					break;
+				case 3:
+					strcpy(strdate + length, "среда");
+					break;
+				case 4:
+					strcpy(strdate + length, "четверг");
+					break;
+				case 5:
+					strcpy(strdate + length, "пятница");
+					break;
+				case 6:
+					strcpy(strdate + length, "суббота");
+					break;
+				}
+			}
+			else
+			{
+				switch (timeinfo.tm_wday)
+				{
+				case 0:
+					strcpy(strdate + length, "ВС");
+					break;
+				case 1:
+					strcpy(strdate + length, "ПН");
+					break;
+				case 2:
+					strcpy(strdate + length, "ВТ");
+					break;
+				case 3:
+					strcpy(strdate + length, "СР");
+					break;
+				case 4:
+					strcpy(strdate + length, "ЧТ");
+					break;
+				case 5:
+					strcpy(strdate + length, "ПТ");
+					break;
+				case 6:
+					strcpy(strdate + length, "СБ");
+					break;
+				}
+				char y_tmp[14];
+				strftime(y_tmp, 14, ". %Y г.", &timeinfo);
+				length = strlen(strdate);
+				strcpy(strdate + length, y_tmp);
+			}
+			if (strcmp(strdate, strdate_copy) != 0)
+			{
+				removeUtf8(strdate);
+				drawTTitleUcg(strdate);
+				strcpy(strdate, strdate_copy);
+			}
 			setfont(large);
 			ucg_SetColor(&ucg, 0, CBODY);
 			ucg_SetFontMode(&ucg, UCG_FONT_MODE_SOLID);
@@ -871,7 +976,7 @@ void drawTimeUcg(uint8_t mTscreen)
 		break;
 	default:;
 	}
-	drawSecond();
+	// drawSecond();
 	;
 }
 

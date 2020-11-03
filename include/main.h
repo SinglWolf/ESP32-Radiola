@@ -39,10 +39,35 @@
 
 #ifndef _MAIN_H_
 #define _MAIN_H_
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdbool.h>
+#include <time.h>
+#include <sys/time.h>
+#include <nvs.h>
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "freertos/event_groups.h"
+#include "freertos/queue.h"
+#include "esp_system.h"
+#include "esp_wifi.h"
+#include "esp_event.h"
+#include "esp_log.h"
+#include "driver/i2s.h"
+#include "driver/uart.h"
+#include "driver/pcnt.h"
+
+#include "lwip/sys.h"
+#include "lwip/netdb.h"
+#include "lwip/api.h"
+#include "lwip/tcp.h"
+#include "lwip/dns.h"
+#include "lwip/apps/sntp.h"
 #include "driver/timer.h"
 
 #define RELEASE "2.0"
-#define REVISION "0"
+#define REVISION "1"
 
 #define TIMER_DIVIDER 16                        //5000000Hz 5MHz
 #define TIMER_DIVIDER1MS TIMER_BASE_CLK / 10000 //10000Hz
@@ -60,9 +85,9 @@
 #define wakeTimer TIMER_1
 
 //extern os_timer_t sleepTimer;
-extern uint32_t sleepDelay;
+// extern uint32_t sleepDelay;
 //extern os_timer_t wakeTimer;
-extern uint32_t wakeDelay;
+// extern uint32_t wakeDelay;
 
 // event for timers and encoder
 #define TIMER_SLEEP 0
@@ -147,6 +172,8 @@ void interrupt1Ms();
 #define interrupts interrupt1Ms
 //void noInterrupts();
 //void interrupts();
-char *getIp();
+char* getIp();
+esp_netif_t *ap;
+esp_netif_t *sta;
 
 #endif /* _MAIN_H_ */

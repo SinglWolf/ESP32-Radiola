@@ -17,26 +17,21 @@
 #define PASSLEN 64
 #define HOSTLEN 24
 
-#define _NTP0 "0.ru.pool.ntp.org"
-#define _NTP1 "1.ru.pool.ntp.org"
-#define _NTP2 "2.ru.pool.ntp.org"
-#define _NTP3 "3.ru.pool.ntp.org"
-
 #define TZONELEN 30
 #define NTP_LEN 20
 
 // константы для маски флагов опций
-#define Y_DDMM 0x01 // Формат отображения даты на дисплее bit 0: 0 = MMDD, 1 = DDMM
+#define Y_DDMM 0x01 // bit 0: Формат отображения даты на дисплее 0 = MMDD, 1 = DDMM
 #define N_DDMM 0xFE
 
-#define Y_ROTAT 0x02 // Поворот изображения дисплея bit 1: 0 = нет  1 = поворот на 180 градусов
+#define Y_ROTAT 0x02 // bit 1: Поворот изображения дисплея 0 = нет  1 = поворот на 180 градусов
 #define N_ROTAT 0xFD
 
 #define Y_ENC 0x04 // bit 2: Half step of encoder
 #define N_ENC 0xFB
 
-#define Y_VOL 0x08 // Свободный бит
-#define N_VOL 0xF7 // Свободный бит
+#define Y_AUTO 0x08 // bit 3: Свободный бит
+#define N_AUTO 0xF7 //
 
 #define Y_WIFIAUTO 0x10 // bit 4: wifi auto reconnect
 #define N_WIFIAUTO 0xEF

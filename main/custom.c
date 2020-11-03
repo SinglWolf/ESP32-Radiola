@@ -194,7 +194,7 @@ void ds18b20Task(void *pvParameters)
 	ds18b20_use_crc(ds18b20_info, true); // enable CRC check for temperature readings
 	ds18b20_set_resolution(ds18b20_info, _RESOLUTION);
 	DS18B20_ERROR error = status;
-	while (error == DS18B20_OK)
+	while (1)
 	{
 		ds18b20_convert_all(owb);
 
@@ -223,14 +223,14 @@ void ds18b20Task(void *pvParameters)
 		//int uxHighWaterMark = uxTaskGetStackHighWaterMark(NULL);
 		//ESP_LOGD("ds18b20Task", striWATERMARK, uxHighWaterMark, xPortGetFreeHeapSize());
 
-		vTaskDelay(10);
+		vTaskDelay(100);
 	}
 
 	// clean up dynamically allocated data
 
-	ds18b20_free(&ds18b20_info);
+	// ds18b20_free(&ds18b20_info);
 
-	owb_uninitialize(owb);
+	// owb_uninitialize(owb);
 }
 /* Initialize tachometer */
 void tach_init()

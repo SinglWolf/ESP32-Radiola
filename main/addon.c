@@ -27,6 +27,7 @@
 #include "eeprom.h"
 #include "addonucg.h"
 #include "xpt2046.h"
+#include "bt_x01.h"
 
 #define TAG "addon"
 
@@ -167,7 +168,8 @@ void in_welcome(const char *ip, const char *state, int y, char *Version)
 	DrawBox(2, 4 * y, GetWidth() - 2, y);
 	DrawColor(1, 255, 255, 255);
 	DrawString(2, 4 * y, state);
-	DrawString(DrawString(2, 5 * y, "IP:") + 18, 5 * y, ip);
+	if (strlen(ip) != 0)
+		DrawString(DrawString(2, 5 * y, "IP:") + 18, 5 * y, ip);
 }
 
 void lcd_welcome(const char *ip, const char *state)
@@ -180,11 +182,11 @@ void lcd_welcome(const char *ip, const char *state)
 		ClearBuffer();
 	setfont(2);
 	int y = -ucg_GetFontDescent(&ucg) + ucg_GetFontAscent(&ucg) + 3; //interline
-	sprintf(text, "ESP32-Радиола");
+	sprintf(text, "ESP32-РАДИОЛА");
 	removeUtf8(text);
-	DrawString(GetWidth() / 4, 2, text);
+	DrawString((GetWidth() / 2) - (ucg_GetStrWidth(&ucg, text) / 2), 5, text);
 	setfont(1);
-	sprintf(text, "Версия: %s Rev: %s\n", RELEASE, REVISION);
+	sprintf(text, "ВЕРСИЯ: %s Rev: %s\n", RELEASE, REVISION);
 	removeUtf8(text);
 	in_welcome(ip, text1, y, text);
 }
@@ -820,8 +822,8 @@ void adcLoop()
 			voltage = (adc1_get_raw(ldr_channel));
 			// vTaskDelay(1);
 			g_device->backlight_level = map(voltage, 0, 511, g_device->day_brightness, g_device->night_brightness);
-			ESP_LOGD(TAG, "LDR voltage: %d\n", voltage);
-			ESP_LOGD(TAG, "backlight_level: %d\n", g_device->backlight_level);
+			// ESP_LOGD(TAG, "LDR voltage: %d\n", voltage);
+			// ESP_LOGD(TAG, "backlight_level: %d\n", g_device->backlight_level);
 		}
 		else if (g_device->backlight_mode == BY_HAND)
 		{

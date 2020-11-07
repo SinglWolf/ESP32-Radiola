@@ -141,10 +141,26 @@ void InitPWM()
 {
 	gpio_get_backlightl(&led);
 	if (led != GPIO_NONE)
+	{
 		AdjustBrightInit();
+		set_bright(1);
+	}
+	else
+	{
+		set_bright(0);
+	}
+
 	gpio_get_fanspeed(&fanspeed);
 	if (fanspeed != GPIO_NONE)
+	{
 		FanPwmInit();
+		set_fan(1);
+	}
+	else
+	{
+		set_fan(0);
+	}
+
 	gpio_get_buzzer(&buzzer);
 	if (buzzer != GPIO_NONE)
 		BuzzerInit();

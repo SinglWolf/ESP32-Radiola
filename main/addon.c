@@ -1071,9 +1071,15 @@ void task_addon(void *pvParams)
 		if (ldr_channel != GPIO_NONE)
 		{
 			ESP_LOGD(TAG, "Channel for GPIO: %d defined, number: %i", ldr, ldr_channel);
+			g_device->ldr = true;
 			// adc1_config_width(ADC_WIDTH_9Bit);
 			// adc1_config_channel_atten(ldr_channel, ADC_ATTEN_11db);
 		}
+		else
+		{
+			g_device->ldr = false;
+		}
+		saveDeviceSettings(g_device);
 	}
 	if (PIN_NUM_KBD == GPIO_NUM_34) // Инициализация клавиатуры
 	{
@@ -1089,6 +1095,7 @@ void task_addon(void *pvParams)
 	}
 	ir_key_init();
 	initButtonDevices();
+
 
 	serviceAddon = &multiService;
 	; // connect the 1ms interruption

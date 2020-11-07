@@ -18,7 +18,6 @@
 #include <time.h>
 
 #include "esp_log.h"
-#include "logo.h"
 #include "interface.h"
 #include "eeprom.h"
 #include "addonucg.h"

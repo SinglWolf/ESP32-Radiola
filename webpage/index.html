@@ -900,7 +900,7 @@
                 <tbody>
                   <tr>
                     <td>Логи CMD-Консоли</td>
-                    <td><select id="O_ESPLOG">
+                    <td><select id="ESPLOG">
                         <option value="0">Выключить</option>
                         <option value="1">Ошибки</option>
                         <option value="2">Предупреждения</option>
@@ -911,7 +911,7 @@
                   </tr>
                   <tr>
                     <td>Сервера точного времени</td>
-                    <td><select id="O_NTP" onclick="NTPservers()">
+                    <td><select id="NTP" onclick="NTPservers()">
                         <option value="0">по-умолчанию</option>
                         <option value="1">свои</option>
                       </select></td>
@@ -919,15 +919,15 @@
                   <tr id="custom_NTP">
                     <td>Сервера пользователя</td>
                     <td>
-                      <p><b>0:</b> <input id="O_NTP0" type="text"></p>
-                      <p><b>1:</b> <input id="O_NTP1" type="text"></p>
-                      <p><b>2:</b> <input id="O_NTP2" type="text"></p>
-                      <p><b>3:</b> <input id="O_NTP3" type="text"></p>
+                      <p><b>0:</b> <input id="NTP0" type="text"></p>
+                      <p><b>1:</b> <input id="NTP1" type="text"></p>
+                      <p><b>2:</b> <input id="NTP2" type="text"></p>
+                      <p><b>3:</b> <input id="NTP3" type="text"></p>
                     </td>
                   </tr>
                   <tr>
                     <td>Часовой пояс</td>
-                    <td><select id="O_TZONE" onclick="TimeZone()">
+                    <td><select id="TZONE" onclick="TimeZone()">
                         <option value="EET-2EEST,M3.5.0/3,M10.5.0/4">Киев, София</option>
                         <option value="EET-2">Калинингад</option>
                         <option value="MSK-3">Москва</option>
@@ -948,7 +948,7 @@
                   </tr>
                   <tr>
                     <td>Формат вывода даты</td>
-                    <td><select id="O_TIME_FORMAT">
+                    <td><select id="TIME_FORMAT">
                         <option value="0" id="q1"></option>
                         <option value="1" id="q2"></option>
                       </select>
@@ -964,14 +964,14 @@
                   </tr>
                   <tr>
                     <td>Поворот дисплея</td>
-                    <td><select id="O_LCD_ROTA">
+                    <td><select id="LCD_ROTA">
                         <option value="0">НЕТ</option>
                         <option value="1">ДА</option>
                       </select></td>
                   </tr>
-                  <tr>
+                  <tr id="BRG_ON">
                     <td>Яркость дисплея</td>
-                    <td><select id="O_LCD_BRG" onclick="displaybright()">
+                    <td><select id="LCD_BRG" onclick="displaybright()">
                         <option value="0">Не регулировать</option>
                         <option value="1">автоматически по времени</option>
                         <option value="2">автоматически от освещения</option>
@@ -1052,29 +1052,29 @@
                     <tr>
                       <td colspan="3" style="text-align: center;">ЯРКОСТЬ ДИСПЛЕЯ</td>
                     </tr>
-                    <tr id="brightness_sun">
+                    <tr id="brg_sun">
                       <td colspan="1"><i class="icons icons8 icon-brightness-darken"></i></td>
-                      <td style="text-align: center;"><i class="icons icon-sun-o"></i><input id="day_brightness"
-                          max="254" min="0" name="day_brightness" type="range" value="127"></td>
+                      <td style="text-align: center;"><i class="icons icon-sun-o"></i><input id="day_brg"
+                          max="254" min="0" name="day_brg" type="range" value="127"></td>
                       <td><i class="icons icons8 icon-brightness-brighten"></i></td>
                     </tr>
-                    <tr id="brightness">
+                    <tr id="brg">
                       <td><i class="icons icons8 icon-brightness-darken"></i></td>
-                      <td style="text-align: center;"><i class="icons icon-moon-o"></i><input id="night_brightness"
-                          max="254" min="0" name="night_brightness" type="range" value="127"></td>
+                      <td style="text-align: center;"><i class="icons icon-moon-o"></i><input id="night_brg"
+                          max="254" min="0" name="night_brg" type="range" value="127"></td>
                       <td><i class="icons icons8 icon-brightness-brighten"></i></td>
                     </tr>
                     <tr id="by_lighting">
                       <td style=" text-align: center;"><i class="icons icons8 icon-brightness-darken"></i></td>
                       <td style=" text-align: center;"><i class="icons icon-ios-lightbulb"></i><input
-                          id="lighting_trigger" max="1023" min="0" name="lighting_trigger" type="range" value="127">
+                          id="brg_lvl" max="255" min="0" name="brg_lvl" type="range" value="127">
                       </td>
                       <td><i class="icons icons8 icon-brightness-brighten"></i></td>
                     </tr>
                     <tr id="by_hand">
                       <td style=" text-align: center;"><i class="icons icons8 icon-brightness-darken"></i></td>
-                      <td style=" text-align: center;"><i class="icons icon-brightness"></i><input id="hand_brightness"
-                          max="254" min="0" name="hand_brightness" type="range" value="127"></td>
+                      <td style=" text-align: center;"><i class="icons icon-brightness"></i><input id="hand_brg"
+                          max="254" min="0" name="hand_brg" type="range" value="127"></td>
                       <td><i class="icons icons8 icon-brightness-brighten"></i></td>
                     </tr>
                   </tbody>

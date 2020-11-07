@@ -30,8 +30,8 @@
 #define Y_ENC 0x04 // bit 2: Half step of encoder
 #define N_ENC 0xFB
 
-#define Y_AUTO 0x08 // bit 3: Свободный бит
-#define N_AUTO 0xF7 //
+#define Y_BACKLIGHT 0x08 // bit 3: Регулируемая подсветка дисплея 0 = нету 1 = есть
+#define N_BACKLIGHT 0xF7 //
 
 #define Y_WIFIAUTO 0x10 // bit 4: wifi auto reconnect
 #define N_WIFIAUTO 0xEF
@@ -39,10 +39,10 @@
 #define Y_TOGGLETIME 0x20 // bit 5: TOGGLE time or main sreen
 #define N_TOGGLETIME 0xDF
 
-#define Y_PATCH 0x40 // bit 6: 0 patch load  1 no patch
-#define N_PATCH 0xBF
+#define Y_FAN 0x40 // bit 6: Регулировка оборотов вентилятора 0 = нету 1 = есть
+#define N_FAN 0xBF
 
-#define Y_GPIOMODE 0x80 // bit 7: 0 = gpio default 1 = gpio NVS
+#define Y_GPIOMODE 0x80 // bit 7: 0 = gpio default 1 = gpio from NVS
 #define N_GPIOMODE 0x7F
 
 typedef enum backlight_mode_t
@@ -100,7 +100,8 @@ struct device_settings
 	uint32_t tp_calx;
 	uint32_t tp_caly;
 	backlight_mode_t backlight_mode; //режим управления подсветкой
-	uint8_t backlight_level,		 //общий уровень подсветки
+	uint8_t hand_brightness,		 //ручной уровень подсветки
+		backlight_level,			 //текущий уровень подсветки
 		day_brightness,				 //уровень дневной подсвеки
 		night_brightness,			 //уровень ночной подсветки
 		begin_h,					 //Время ночной подсветки начало, часы
@@ -109,9 +110,10 @@ struct device_settings
 		end_m,						 //Время ночной подсветки конец, минуты
 		FanControl,					 //Режим управления оборотами вентилятора
 		min_temp,					 //Минимальная температура срабатывания автоматики управления оборотами
-		max_temp,					 //Максимальная температура срабатывания выключения звука
+		max_temp,					 //Максимальная температура срабатывания биппера и выключения звука
 		min_pwm,					 //Минимальный уровень оборотов вентилятора при включении питания
 		hand_pwm;					 //Уровень оборотов при ручной регулировке
+	bool ldr;						 // Признак присутствия фоторезистора
 
 	char tzone[TZONELEN];
 	char ntp_server[4][NTP_LEN];

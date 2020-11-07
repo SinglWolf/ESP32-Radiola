@@ -32,6 +32,8 @@
 
 xSemaphoreHandle semfile = NULL;
 
+const char HTTP_header[] = {"HTTP/1.1 200 OK\r\nContent-Type:application/json\r\nContent-Length:%d\r\n\r\n"};
+
 const char strsROK[] = {"HTTP/1.1 200 OK\r\nContent-Type: %s\r\nContent-Length: %lu\r\nConnection: keep-alive\r\n\r\n%s"};
 const char tryagain[] = {"try again"};
 
@@ -40,8 +42,11 @@ const char strsMALLOC[] = {"WebServer inmalloc fails for %d\n"};
 const char strsMALLOC1[] = {"WebServer %s malloc fails\n"};
 const char strsSOCKET[] = {"WebServer Socket fails %s errno: %d\n"};
 const char strsID[] = {"getstation, no id or Wrong id %d\n"};
-const char strsR13[] = {"HTTP/1.1 200 OK\r\nContent-Type:application/json\r\nContent-Length:13\r\n\r\n{\"%s\":\"%c\"}"};
-const char strsICY[] = {"HTTP/1.1 200 OK\r\nContent-Type:application/json\r\nContent-Length:%d\r\n\r\n{\
+const char RAUTO[] = {"\
+{\"rauto\":\"%c\"\
+}"};
+const char strsICY[] = {"\
+{\
 \"curst\":\"%s\",\
 \"descr\":\"%s\",\
 \"name\":\"%s\",\
@@ -58,9 +63,10 @@ const char strsICY[] = {"HTTP/1.1 200 OK\r\nContent-Type:application/json\r\nCon
 \"bfreq\":\"%s\",\
 \"spac\":\"%s\",\
 \"auto\":\"%c\"\
-}"\
-};
-const char strsWIFI[] = {"HTTP/1.1 200 OK\r\nContent-Type:application/json\r\nContent-Length:%d\r\n\r\n{\
+}"};
+
+const char strsWIFI[] = {"\
+{\
 \"ssid\":\"%s\",\
 \"pasw\":\"%s\",\
 \"ssid2\":\"%s\",\
@@ -76,16 +82,18 @@ const char strsWIFI[] = {"HTTP/1.1 200 OK\r\nContent-Type:application/json\r\nCo
 \"dhcp2\":\"%s\",\
 \"mac\":\"%s\",\
 \"host\":\"%s\"\
-}"\
-};
-const char strsGSTAT[] = {"HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: %d\r\n\r\n{\
+}"};
+
+const char strsGSTAT[] = {"\
+{\
 \"Name\":\"%s\",\
 \"URL\":\"%s\",\
 \"File\":\"%s\",\
 \"Port\":\"%d\"\
-}"\
-};
-const char HARDWARE[] = {"HTTP/1.1 200 OK\r\nContent-Type:application/json\r\nContent-Length:%d\r\n\r\n{\
+}"};
+
+const char HARDWARE[] = {"\
+{\
 \"present\":\"%u\",\
 \"inputnum\":\"%u\",\
 \"Volume\":\"%02u\",\
@@ -103,16 +111,18 @@ const char HARDWARE[] = {"HTTP/1.1 200 OK\r\nContent-Type:application/json\r\nCo
 \"sla2\":\"%u\",\
 \"sla3\":\"%u\",\
 \"mute\":\"%u\"\
-}"\
-};
-const char VERSION[] = {"HTTP/1.1 200 OK\r\nContent-Type:application/json\r\nContent-Length:%d\r\n\r\n{\
+}"};
+
+const char VERSION[] = {"\
+{\
 \"RELEASE\":\"%s\",\
 \"REVISION\":\"%s\",\
 \"curtemp\":\"%05.1f\",\
 \"rpmfan\":\"%04u\"\
-}"\
-};
-const char GPIOS[] = {"HTTP/1.1 200 OK\r\nContent-Type:application/json\r\nContent-Length:%d\r\n\r\n{\
+}"};
+
+const char GPIOS[] = {"\
+{\
 \"GPIO_MODE\":\"%u\",\
 \"ERROR\":\"%04X\",\
 \"K_SPI\":\"%u\",\
@@ -139,41 +149,43 @@ const char GPIOS[] = {"HTTP/1.1 200 OK\r\nContent-Type:application/json\r\nConte
 \"P_RXD\":\"%03u\",\
 \"P_TXD\":\"%03u\",\
 \"P_LDR\":\"%03u\"\
-}"\
-};
-const char DEVOPTIONS[] = {"HTTP/1.1 200 OK\r\nContent-Type:application/json\r\nContent-Length:%d\r\n\r\n{\
-\"O_ESPLOG\":\"%u\",\
-\"O_NTP\":\"%u\",\
-\"O_NTP0\":\"%s\",\
-\"O_NTP1\":\"%s\",\
-\"O_NTP2\":\"%s\",\
-\"O_NTP3\":\"%s\",\
-\"O_TZONE\":\"%s\",\
-\"O_TIME_FORMAT\":\"%u\",\
-\"O_LCD_ROTA\":\"%u\"\
 }"};
-/* ,\
-\"custom_NTP0\":\"%s\",\
-\"custom_NTP1\":\"%s\",\
-\"custom_NTP2\":\"%s\",\
-\"custom_NTP3\":\"%s\",\
-\"custom_TZ\":\"%s\",\
-\"O_LCD_BRG\":\"%u\",\
+
+const char DEVOPTIONS[] = {"\
+{\
+\"ESPLOG\":\"%u\",\
+\"NTP\":\"%u\",\
+\"NTP0\":\"%s\",\
+\"NTP1\":\"%s\",\
+\"NTP2\":\"%s\",\
+\"NTP3\":\"%s\",\
+\"TZONE\":\"%s\",\
+\"TIME_FORMAT\":\"%u\",\
+\"LCD_ROTA\":\"%u\"\
+}"};
+
+const char CONTROL[] = {"\
+{\
+\"lcd_brg\":\"%u\",\
 \"begin_h\":\"%02u\",\
 \"begin_m\":\"%02u\",\
 \"end_h\":\"%02u\",\
 \"end_m\":\"%02u\",\
-\"day_brightness\":\"%03u\",\
-\"night_brightness\":\"%03u\",\
-\"brightness_trigger\":\"%04u\",\
-\"hand_brightness\":\"%03u\",\
-\"FanControl\":\"%u\",\
+\"day_brg\":\"%03u\",\
+\"night_brg\":\"%03u\",\
+\"hand_brg\":\"%03u\",\
+\"fan_control\":\"%u\",\
 \"min_temp\":\"%02u\",\
 \"max_temp\":\"%02u\",\
 \"min_pwm\":\"%03u\",\
-\"hand_pwm\":\"%03u\",\ */
+\"hand_pwm\":\"%03u\",\
+\"BRG_ON\":\"%u\",\
+\"FAN_ON\":\"%u\",\
+\"LDR\":\"%u\"\
+}"};
 
-const char IRCODES[] = {"HTTP/1.1 200 OK\r\nContent-Type:application/json\r\nContent-Length:%d\r\n\r\n{\
+const char IRCODES[] = {"\
+{\
 \"IR_MODE\":\"%u\",\
 \"ERROR\":\"%04X\",\
 \"K_0\":\"%s\",\
@@ -194,6 +206,26 @@ const char IRCODES[] = {"HTTP/1.1 200 OK\r\nContent-Type:application/json\r\nCon
 \"K_15\":\"%s\",\
 \"K_16\":\"%s\"\
 }"};
+
+char *concat(const char *s1, const char *s2)
+{
+
+	size_t len1 = strlen(s1);
+	size_t len2 = strlen(s2);
+
+	char *result = malloc(len1 + len2 + 1);
+
+	if (!result)
+	{
+		fprintf(stderr, "malloc() failed: insufficient memory!\n");
+		return NULL;
+	}
+
+	memcpy(result, s1, len1);
+	memcpy(result + len1, s2, len2 + 1);
+
+	return result;
+}
 
 static uint32_t IR_Key[KEY_MAX][2];
 esp_err_t get_ir_key(bool ir_mode)
@@ -802,8 +834,7 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 					if (strlen(si->name) > sizeof(si->name))
 						si->name[sizeof(si->name) - 1] = 0; //truncate if any (rom crash)
 					sprintf(ibuf, "%u", si->port);
-					int json_length = strlen(si->domain) + strlen(si->file) + strlen(si->name) + strlen(ibuf) + 40;
-					buf = inmalloc(json_length + 75);
+					buf = inmalloc(1024);
 
 					if (buf == NULL)
 					{
@@ -817,8 +848,17 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 						for (i = 0; i < sizeof(buf); i++)
 							buf[i] = 0;
 						sprintf(buf, strsGSTAT,
-								json_length, si->name, si->domain, si->file, si->port);
-						ESP_LOGV(TAG, "getStation Buf len:%u : %s", strlen(buf), buf);
+								si->name,
+								si->domain,
+								si->file,
+								si->port);
+						// ESP_LOGI(TAG, "TEST getStation\njson_length len:%u\n%s", strlen(buf), buf);
+						int json_length = strlen(buf);
+						char *s = concat(HTTP_header, buf);
+
+						sprintf(buf, s, json_length);
+						free(s);
+
 						write(conn, buf, strlen(buf));
 						infree(buf);
 					}
@@ -956,9 +996,29 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 	}
 	else if (strcmp(name, "/rauto") == 0)
 	{
-		char buf[strlen(strsR13) + 16]; // = inmalloc( strlen(strsRAUTO)+16);
-		sprintf(buf, strsR13, "rauto", (g_device->autostart) ? '1' : '0');
-		write(conn, buf, strlen(buf));
+		char *buf = inmalloc(1024);
+		if (buf == NULL)
+		{
+			ESP_LOGE(TAG, " %s malloc fails", "post RAUTO");
+			infree(buf);
+			respKo(conn);
+			return;
+		}
+		else
+		{
+			sprintf(buf, RAUTO,
+					(g_device->autostart) ? '1' : '0');
+
+			// ESP_LOGI(TAG, "TEST RAUTO\njson_length len:%u\n%s", strlen(buf), buf);
+			int json_length = strlen(buf);
+			char *s = concat(HTTP_header, buf);
+
+			sprintf(buf, s, json_length);
+			free(s);
+
+			write(conn, buf, strlen(buf));
+			infree(buf);
+		}
 		return;
 	}
 	else if (strcmp(name, "/stop") == 0)
@@ -980,16 +1040,31 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 	}
 	else if (strcmp(name, "/version") == 0)
 	{
-		int json_length = 53 + strlen(RELEASE) + strlen(REVISION) + 5 + 4;
-		char buf[446];
-		sprintf(buf, VERSION,
-				json_length,
-				RELEASE,
-				REVISION,
-				getTemperature(),
-				(uint16_t)getRpmFan() * 20);
-		ESP_LOGD(TAG, "Test RELEASE and REVISION\nBuf len: %u\n\nBuf:\n%s", strlen(buf), buf);
-		write(conn, buf, strlen(buf));
+		char *buf = inmalloc(1024);
+		if (buf == NULL)
+		{
+			ESP_LOGE(TAG, " %s malloc fails", "post VERSION");
+			infree(buf);
+			respKo(conn);
+			return;
+		}
+		else
+		{
+			sprintf(buf, VERSION,
+					RELEASE,
+					REVISION,
+					getTemperature(),
+					(uint16_t)getRpmFan() * 20);
+			// ESP_LOGI(TAG, "TEST VERSION\njson_length len:%u\n%s", strlen(buf), buf);
+			int json_length = strlen(buf);
+			char *s = concat(HTTP_header, buf);
+
+			sprintf(buf, s, json_length);
+			free(s);
+
+			write(conn, buf, strlen(buf));
+			infree(buf);
+		}
 		return;
 	}
 	else if (strcmp(name, "/ircode") == 0) // start the IR TRAINING
@@ -1031,22 +1106,11 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 		if (not2 == NULL)
 			not2 = header->members.single.audioinfo;
 		//if ((header->members.single.notice2 != NULL)&&(strlen(header->members.single.notice2)==0)) not2=header->members.single.audioinfo;
-		int json_length;
-		json_length = 166 + //
-					  ((header->members.single.description == NULL) ? 0 : strlen(header->members.single.description)) +
-					  ((header->members.single.name == NULL) ? 0 : strlen(header->members.single.name)) +
-					  ((header->members.single.bitrate == NULL) ? 0 : strlen(header->members.single.bitrate)) +
-					  ((header->members.single.url == NULL) ? 0 : strlen(header->members.single.url)) +
-					  ((header->members.single.notice1 == NULL) ? 0 : strlen(header->members.single.notice1)) +
-					  ((not2 == NULL) ? 0 : strlen(not2)) +
-					  ((header->members.single.genre == NULL) ? 0 : strlen(header->members.single.genre)) +
-					  ((header->members.single.metadata == NULL) ? 0 : strlen(header->members.single.metadata)) + strlen(currentSt) + strlen(vol) + strlen(treble) + strlen(bass) + strlen(tfreq) + strlen(bfreq) + strlen(spac);
-		ESP_LOGD(TAG, "icy start header %x  len:%d vollen:%u vol:%s", (int)header, json_length, strlen(vol), vol);
 
-		char *buf = inmalloc(json_length + 75);
+		char *buf = inmalloc(1024);
 		if (buf == NULL)
 		{
-			ESP_LOGE(TAG, " %s malloc fails", "post icy");
+			ESP_LOGE(TAG, " %s malloc fails", "post ICY");
 			infree(buf);
 			respKo(conn);
 			return;
@@ -1056,7 +1120,6 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 			uint8_t vauto = 0;
 			vauto = (g_device->autostart) ? '1' : '0';
 			sprintf(buf, strsICY,
-					json_length,
 					currentSt,
 					(header->members.single.description == NULL) ? "" : header->members.single.description,
 					(header->members.single.name == NULL) ? "" : header->members.single.name,
@@ -1068,7 +1131,14 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 					(header->members.single.metadata == NULL) ? "" : header->members.single.metadata,
 					vol, treble, bass, tfreq, bfreq, spac,
 					vauto);
-			ESP_LOGV(TAG, "test: len fmt:%u %u\n%s\n", strlen(strsICY), strlen(strsICY), buf);
+
+			// ESP_LOGI(TAG, "TEST strsICY\njson_length len:%u\n%s", strlen(buf), buf);
+			int json_length = strlen(buf);
+			char *s = concat(HTTP_header, buf);
+
+			sprintf(buf, s, json_length);
+			free(s);
+
 			write(conn, buf, strlen(buf));
 			infree(buf);
 			wsMonitor();
@@ -1128,31 +1198,45 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 					ESP_ERROR_CHECK(tda7313_set_mute(atoi(arg)));
 				saveDeviceSettings(g_device);
 			}
-			int json_length;
-			json_length = 216;
+			char *buf = inmalloc(1024);
+			if (buf == NULL)
+			{
+				ESP_LOGE(TAG, " %s malloc fails", "post HARDWARE");
+				infree(buf);
+				respKo(conn);
+				return;
+			}
+			else
+			{
 
-			char buf[302];
-			sprintf(buf, HARDWARE,
-					json_length,
-					tda7313_get_present(),
-					(uint8_t)g_device->audio_input_num,
-					tda7313_get_volume(),
-					tda7313_get_treble(),
-					tda7313_get_bass(),
-					tda7313_get_rear(),
-					tda7313_get_attlf(),
-					tda7313_get_attrf(),
-					tda7313_get_attlr(),
-					tda7313_get_attrr(),
-					tda7313_get_loud(1),
-					tda7313_get_loud(2),
-					tda7313_get_loud(3),
-					tda7313_get_sla(1),
-					tda7313_get_sla(2),
-					tda7313_get_sla(3),
-					tda7313_get_mute());
-			ESP_LOGD(TAG, "Test hardware\nSave: %s\nBuf len:%u\n%s", save, strlen(buf), buf);
-			write(conn, buf, strlen(buf));
+				sprintf(buf, HARDWARE,
+						tda7313_get_present(),
+						(uint8_t)g_device->audio_input_num,
+						tda7313_get_volume(),
+						tda7313_get_treble(),
+						tda7313_get_bass(),
+						tda7313_get_rear(),
+						tda7313_get_attlf(),
+						tda7313_get_attrf(),
+						tda7313_get_attlr(),
+						tda7313_get_attrr(),
+						tda7313_get_loud(1),
+						tda7313_get_loud(2),
+						tda7313_get_loud(3),
+						tda7313_get_sla(1),
+						tda7313_get_sla(2),
+						tda7313_get_sla(3),
+						tda7313_get_mute());
+				// ESP_LOGI(TAG, "TEST HARDWARE\njson_length len:%u\n%s", strlen(buf), buf);
+				int json_length = strlen(buf);
+				char *s = concat(HTTP_header, buf);
+
+				sprintf(buf, s, json_length);
+				free(s);
+
+				write(conn, buf, strlen(buf));
+				infree(buf);
+			}
 			return;
 		}
 	}
@@ -1286,37 +1370,46 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 			char tmpip[16], tmpmsk[16], tmpgw[16];
 			char tmpip2[16], tmpmsk2[16], tmpgw2[16];
 			esp_wifi_get_mac(WIFI_IF_STA, macaddr);
-			int json_length;
-			json_length = 95 + 39 + 10 +
-						  strlen(g_device->ssid1) +
-						  strlen(g_device->pass1) +
-						  strlen(g_device->ssid2) +
-						  strlen(g_device->pass2) +
-						  strlen(g_device->ua) +
-						  strlen(g_device->hostname) +
-						  sprintf(tmpip, "%u.%u.%u.%u", g_device->ipAddr1[0], g_device->ipAddr1[1], g_device->ipAddr1[2], g_device->ipAddr1[3]) +
-						  sprintf(tmpmsk, "%u.%u.%u.%u", g_device->mask1[0], g_device->mask1[1], g_device->mask1[2], g_device->mask1[3]) +
-						  sprintf(tmpgw, "%u.%u.%u.%u", g_device->gate1[0], g_device->gate1[1], g_device->gate1[2], g_device->gate1[3]) +
-						  sprintf(adhcp, "%u", g_device->dhcpEn1) +
-						  sprintf(tmpip2, "%u.%u.%u.%u", g_device->ipAddr2[0], g_device->ipAddr2[1], g_device->ipAddr2[2], g_device->ipAddr2[3]) +
-						  sprintf(tmpmsk2, "%u.%u.%u.%u", g_device->mask2[0], g_device->mask2[1], g_device->mask2[2], g_device->mask2[3]) +
-						  sprintf(tmpgw2, "%u.%u.%u.%u", g_device->gate2[0], g_device->gate2[1], g_device->gate2[2], g_device->gate2[3]) +
-						  sprintf(adhcp2, "%u", g_device->dhcpEn2) +
-						  sprintf(macstr, MACSTR, MAC2STR(macaddr));
-
-			char *buf = inmalloc(json_length + 95 + 39 + 10);
+			sprintf(tmpip, "%u.%u.%u.%u", g_device->ipAddr1[0], g_device->ipAddr1[1], g_device->ipAddr1[2], g_device->ipAddr1[3]);
+			sprintf(tmpmsk, "%u.%u.%u.%u", g_device->mask1[0], g_device->mask1[1], g_device->mask1[2], g_device->mask1[3]);
+			sprintf(tmpgw, "%u.%u.%u.%u", g_device->gate1[0], g_device->gate1[1], g_device->gate1[2], g_device->gate1[3]);
+			sprintf(adhcp, "%u", g_device->dhcpEn1);
+			sprintf(tmpip2, "%u.%u.%u.%u", g_device->ipAddr2[0], g_device->ipAddr2[1], g_device->ipAddr2[2], g_device->ipAddr2[3]);
+			sprintf(tmpmsk2, "%u.%u.%u.%u", g_device->mask2[0], g_device->mask2[1], g_device->mask2[2], g_device->mask2[3]);
+			sprintf(tmpgw2, "%u.%u.%u.%u", g_device->gate2[0], g_device->gate2[1], g_device->gate2[2], g_device->gate2[3]);
+			sprintf(adhcp2, "%u", g_device->dhcpEn2);
+			sprintf(macstr, MACSTR, MAC2STR(macaddr));
+			char *buf = inmalloc(1024);
 			if (buf == NULL)
 			{
-				ESP_LOGE(TAG, " %s malloc fails", "post wifi");
+				ESP_LOGE(TAG, " %s malloc fails", "post WIFI");
 				respKo(conn);
 				//return;
 			}
 			else
 			{
 				sprintf(buf, strsWIFI,
-						json_length,
-						g_device->ssid1, g_device->pass1, g_device->ssid2, g_device->pass2, tmpip, tmpmsk, tmpgw, tmpip2, tmpmsk2, tmpgw2, g_device->ua, adhcp, adhcp2, macstr, g_device->hostname);
-				ESP_LOGD(TAG, "TEST WIFI:\nContent-Length: %d\nBuf len:%u\n%s", json_length, strlen(buf), buf);
+						g_device->ssid1,
+						g_device->pass1,
+						g_device->ssid2,
+						g_device->pass2,
+						tmpip,
+						tmpmsk,
+						tmpgw,
+						tmpip2,
+						tmpmsk2,
+						tmpgw2,
+						g_device->ua,
+						adhcp,
+						adhcp2,
+						macstr,
+						g_device->hostname);
+				// ESP_LOGI(TAG, "TEST WIFI\njson_length len:%u\n%s", strlen(buf), buf);
+				int json_length = strlen(buf);
+				char *s = concat(HTTP_header, buf);
+
+				sprintf(buf, s, json_length);
+				free(s);
 				write(conn, buf, strlen(buf));
 				infree(buf);
 			}
@@ -1342,27 +1435,178 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 			return;
 		}
 	}
+	else if (strcmp(name, "/control") == 0)
+	{
+		changed = false;
+		if (data_size > 0)
+		{
+			/*
+\"lcd_brg\":\"%u\",\
+\"begin_h\":\"%02u\",\
+\"begin_m\":\"%02u\",\
+\"end_h\":\"%02u\",\
+\"end_m\":\"%02u\",\
+\"day_brg\":\"%03u\",\
+\"night_brg\":\"%03u\",\
+\"hand_brg\":\"%03u\",\
+\"fan_control\":\"%u\",\
+\"min_temp\":\"%02u\",\
+\"max_temp\":\"%02u\",\
+\"min_pwm\":\"%03u\",\
+\"hand_pwm\":\"%03u\",\
+\"BRG_ON\":\"%u\",\
+\"FAN_ON\":\"%u\",\
+\"LDR\":\"%u\"\
+
+ */
+
+			u_int8_t lcd_brg = g_device->backlight_mode;
+			u_int8_t begin_h = g_device->begin_h;
+			u_int8_t begin_m = g_device->begin_m;
+			u_int8_t end_h = g_device->end_h;
+			u_int8_t end_m = g_device->end_m;
+			u_int8_t day_brg = g_device->day_brightness;
+			u_int8_t night_brg = g_device->night_brightness;
+			u_int8_t hand_brg = g_device->hand_brightness;
+			u_int8_t fan_control = 0, min_temp = 0, max_temp = 0, min_pwm = 0, hand_pwm = 0;
+			u_int8_t BRG_ON;
+			u_int8_t FAN_ON;
+			u_int8_t LDR = g_device->ldr;
+
+			get_bright(&BRG_ON);
+			get_fan(&FAN_ON);
+			char val_1[1];
+			if (getSParameterFromResponse(val_1, 1, "save=", data, data_size))
+				if (strcmp(val_1, "1") == 0)
+					changed = true;
+			if (changed)
+			{
+				if (getSParameterFromResponse(val_1, 1, "lcd_brg=", data, data_size))
+				{
+					lcd_brg = atoi(val_1);
+					if (g_device->backlight_mode != lcd_brg)
+						g_device->backlight_mode = lcd_brg;
+				}
+				if (getSParameterFromResponse(val_1, 1, "begin_h=", data, data_size))
+				{
+					begin_h = atoi(val_1);
+				}
+				if (getSParameterFromResponse(val_1, 1, "begin_m=", data, data_size))
+				{
+					begin_m = atoi(val_1);
+				}
+
+				if (getSParameterFromResponse(val_1, 1, "end_h=", data, data_size))
+				{
+					end_h = atoi(val_1);
+				}
+
+				if (getSParameterFromResponse(val_1, 1, "end_m=", data, data_size))
+				{
+					end_m = atoi(val_1);
+				}
+
+				if (getSParameterFromResponse(val_1, 1, "day_brg=", data, data_size))
+				{
+					day_brg = atoi(val_1);
+				}
+
+				if (getSParameterFromResponse(val_1, 1, "night_brg=", data, data_size))
+				{
+					night_brg = atoi(val_1);
+				}
+
+				if (getSParameterFromResponse(val_1, 1, "hand_brg=", data, data_size))
+				{
+					hand_brg = atoi(val_1);
+				}
+
+				if (getSParameterFromResponse(val_1, 1, "fan_control=", data, data_size))
+				{
+					fan_control = atoi(val_1);
+				}
+
+				if (getSParameterFromResponse(val_1, 1, "min_temp=", data, data_size))
+				{
+					min_temp = atoi(val_1);
+				}
+
+				if (getSParameterFromResponse(val_1, 1, "max_temp=", data, data_size))
+				{
+					max_temp = atoi(val_1);
+				}
+
+				if (getSParameterFromResponse(val_1, 1, "min_pwm=", data, data_size))
+				{
+					min_pwm = atoi(val_1);
+				}
+
+				if (getSParameterFromResponse(val_1, 1, "hand_pwm=", data, data_size))
+				{
+					hand_pwm = atoi(val_1);
+				}
+
+				saveDeviceSettings(g_device);
+			}
+
+			char *buf = inmalloc(1024);
+			if (buf == NULL)
+			{
+				ESP_LOGE(TAG, " %s malloc fails", "post CONTROL");
+				respKo(conn);
+			}
+			else
+			{
+				sprintf(buf, CONTROL,
+						lcd_brg,
+						begin_h,
+						begin_m,
+						end_h,
+						end_m,
+						day_brg,
+						night_brg,
+						hand_brg,
+						fan_control,
+						min_temp,
+						max_temp,
+						min_pwm,
+						hand_pwm,
+						BRG_ON,
+						FAN_ON,
+						LDR);
+				// ESP_LOGI(TAG, "TEST CONTROL\njson_length len:%u\n%s", strlen(buf), buf);
+				int json_length = strlen(buf);
+				char *s = concat(HTTP_header, buf);
+
+				sprintf(buf, s, json_length);
+				free(s);
+
+				write(conn, buf, strlen(buf));
+				infree(buf);
+			}
+			return;
+		}
+	}
 	else if (strcmp(name, "/devoptions") == 0)
 	{
 		changed = false;
 		if (data_size > 0)
 		{
 			esp_log_level_t log_level = g_device->trace_level;
-			uint8_t O_NTP = g_device->ntp_mode;
-			uint8_t O_TIME_FORMAT;
-			uint8_t O_LCD_ROTA;
-			//uint8_t begin_h, begin_m, end_h, end_m;
-			option_get_lcd_rotat(&O_LCD_ROTA);
-			option_get_ddmm(&O_TIME_FORMAT);
-			char *O_NTP0 = CONFIG_NTP0, *O_NTP1 = CONFIG_NTP1, *O_NTP2 = CONFIG_NTP2, *O_NTP3 = CONFIG_NTP3;
-			if (O_NTP == 1)
+			uint8_t NTP = g_device->ntp_mode;
+			uint8_t TIME_FORMAT;
+			uint8_t LCD_ROTA;
+			get_lcd_rotat(&LCD_ROTA);
+			get_ddmm(&TIME_FORMAT);
+			char *NTP0 = CONFIG_NTP0, *NTP1 = CONFIG_NTP1, *NTP2 = CONFIG_NTP2, *NTP3 = CONFIG_NTP3;
+			if (NTP == 1)
 			{
-				O_NTP0 = g_device->ntp_server[0];
-				O_NTP1 = g_device->ntp_server[1];
-				O_NTP2 = g_device->ntp_server[2];
-				O_NTP3 = g_device->ntp_server[3];
+				NTP0 = g_device->ntp_server[0];
+				NTP1 = g_device->ntp_server[1];
+				NTP2 = g_device->ntp_server[2];
+				NTP3 = g_device->ntp_server[3];
 			}
-			char *O_TZONE = g_device->tzone;
+			char *TZONE = g_device->tzone;
 			bool reboot = false;
 			char val_1[1];
 			if (getSParameterFromResponse(val_1, 1, "save=", data, data_size))
@@ -1370,45 +1614,45 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 					changed = true;
 			if (changed)
 			{
-				if (getSParameterFromResponse(val_1, 1, "O_ESPLOG=", data, data_size))
+				if (getSParameterFromResponse(val_1, 1, "ESPLOG=", data, data_size))
 				{
 					log_level = atoi(val_1);
 					if (g_device->trace_level != log_level)
 						setLogLevel(log_level);
 				}
-				if (getSParameterFromResponse(val_1, 1, "O_NTP=", data, data_size))
+				if (getSParameterFromResponse(val_1, 1, "NTP=", data, data_size))
 				{
-					O_NTP = atoi(val_1);
-					if (g_device->ntp_mode != O_NTP)
-						g_device->ntp_mode = O_NTP;
+					NTP = atoi(val_1);
+					if (g_device->ntp_mode != NTP)
+						g_device->ntp_mode = NTP;
 				}
-				if (O_NTP == 1)
+				if (NTP == 1)
 				{
-					O_NTP0 = getParameterFromResponse("O_NTP0=", data, data_size);
-					pathParse(O_NTP0);
-					strcpy(g_device->ntp_server[0], O_NTP0);
-					O_NTP1 = getParameterFromResponse("O_NTP1=", data, data_size);
-					pathParse(O_NTP1);
-					strcpy(g_device->ntp_server[1], O_NTP1);
-					O_NTP2 = getParameterFromResponse("O_NTP2=", data, data_size);
-					pathParse(O_NTP2);
-					strcpy(g_device->ntp_server[2], O_NTP2);
-					O_NTP3 = getParameterFromResponse("O_NTP3=", data, data_size);
-					pathParse(O_NTP3);
-					strcpy(g_device->ntp_server[3], O_NTP3);
+					NTP0 = getParameterFromResponse("NTP0=", data, data_size);
+					pathParse(NTP0);
+					strcpy(g_device->ntp_server[0], NTP0);
+					NTP1 = getParameterFromResponse("NTP1=", data, data_size);
+					pathParse(NTP1);
+					strcpy(g_device->ntp_server[1], NTP1);
+					NTP2 = getParameterFromResponse("NTP2=", data, data_size);
+					pathParse(NTP2);
+					strcpy(g_device->ntp_server[2], NTP2);
+					NTP3 = getParameterFromResponse("NTP3=", data, data_size);
+					pathParse(NTP3);
+					strcpy(g_device->ntp_server[3], NTP3);
 					reboot = true;
 				}
-				O_TZONE = getParameterFromResponse("O_TZONE=", data, data_size);
-				pathParse(O_TZONE);
-				if (O_TZONE != g_device->tzone)
+				TZONE = getParameterFromResponse("TZONE=", data, data_size);
+				pathParse(TZONE);
+				if (TZONE != g_device->tzone)
 				{
-					strcpy(g_device->tzone, O_TZONE);
+					strcpy(g_device->tzone, TZONE);
 					reboot = true;
 				}
 
-				if (getSParameterFromResponse(val_1, 1, "O_TIME_FORMAT=", data, data_size))
+				if (getSParameterFromResponse(val_1, 1, "TIME_FORMAT=", data, data_size))
 				{
-					if (O_TIME_FORMAT != atoi(val_1))
+					if (TIME_FORMAT != atoi(val_1))
 					{
 						if (atoi(val_1) == 0)
 							g_device->options &= N_DDMM;
@@ -1417,9 +1661,9 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 						reboot = true;
 					}
 				}
-				if (getSParameterFromResponse(val_1, 1, "O_LCD_ROTA=", data, data_size))
+				if (getSParameterFromResponse(val_1, 1, "LCD_ROTA=", data, data_size))
 				{
-					if (O_LCD_ROTA != atoi(val_1))
+					if (LCD_ROTA != atoi(val_1))
 					{
 						if (atoi(val_1) == 0)
 							g_device->options &= N_ROTAT;
@@ -1429,50 +1673,35 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 					}
 				}
 				saveDeviceSettings(g_device);
-
-				// infree(ssid);
-				// infree(pasw);
-				// infree(ssid2);
-				// infree(pasw2);
-				// infree(aip);
-				// infree(amsk);
-				// infree(agw);
-				// infree(aip2);
-				// infree(amsk2);
-				// infree(agw2);
 			}
-			int json_length = 122 +
-							  1 + //log_level
-							  1 + //   O_NTP
-							  strlen(O_NTP0) +
-							  strlen(O_NTP1) +
-							  strlen(O_NTP2) +
-							  strlen(O_NTP3) +
-							  strlen(O_TZONE) +
-							  1 + //O_TIME_FORMAT
-							  1;  //O_LCD_ROTA
 
-			char *buf = inmalloc(json_length + 95 + 39 + 10);
+			char *buf = inmalloc(1024);
 			if (buf == NULL)
 			{
-				ESP_LOGE(TAG, " %s malloc fails", "post devoptions");
+				ESP_LOGE(TAG, " %s malloc fails", "post DEVOPTIONS");
 				respKo(conn);
 				//return;
 			}
 			else
 			{
 				sprintf(buf, DEVOPTIONS,
-						json_length,
 						log_level,
-						O_NTP,
-						O_NTP0,
-						O_NTP1,
-						O_NTP2,
-						O_NTP3,
-						O_TZONE,
-						O_TIME_FORMAT,
-						O_LCD_ROTA);
-				ESP_LOGD(TAG, "TEST devoptions\nBuf len:%u\n%s", strlen(buf), buf);
+						NTP,
+						NTP0,
+						NTP1,
+						NTP2,
+						NTP3,
+						TZONE,
+						TIME_FORMAT,
+						LCD_ROTA);
+
+				// ESP_LOGI(TAG, "TEST devoptions\njson_length len:%u\n%s", strlen(buf), buf);
+				int json_length = strlen(buf);
+				char *s = concat(HTTP_header, buf);
+
+				sprintf(buf, s, json_length);
+				free(s);
+
 				write(conn, buf, strlen(buf));
 				infree(buf);
 			}
@@ -1629,32 +1858,46 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 					changed = false;
 				}
 			}
+			char *buf = inmalloc(1024);
+			if (buf == NULL)
+			{
+				ESP_LOGE(TAG, " %s malloc fails", "post GPIOS");
+				infree(buf);
+				respKo(conn);
+				return;
+			}
+			else
+			{
+				sprintf(buf, GPIOS,
+						get_gpio_mode(),
+						err,
+						spi_no, (uint8_t)miso, (uint8_t)mosi, (uint8_t)sclk,
+						(uint8_t)xcs, (uint8_t)xdcs, (uint8_t)dreq,
+						(uint8_t)enca, (uint8_t)encb, (uint8_t)encbtn,
+						(uint8_t)sda, (uint8_t)scl,
+						(uint8_t)cs, (uint8_t)a0,
+						(uint8_t)ir,
+						(uint8_t)led,
+						(uint8_t)tach,
+						(uint8_t)fanspeed,
+						(uint8_t)ds18b20,
+						(uint8_t)touch,
+						(uint8_t)buzzer,
+						(uint8_t)rxd, (uint8_t)txd,
+						(uint8_t)ldr);
+				// ESP_LOGI(TAG, "TEST GPIOS\njson_length len:%u\n%s", strlen(buf), buf);
+				int json_length = strlen(buf);
+				char *s = concat(HTTP_header, buf);
 
-			int json_length = 432;
-			char buf[77 + json_length];
-			sprintf(buf, GPIOS,
-					json_length,
-					option_get_gpio_mode(),
-					err,
-					spi_no, (uint8_t)miso, (uint8_t)mosi, (uint8_t)sclk,
-					(uint8_t)xcs, (uint8_t)xdcs, (uint8_t)dreq,
-					(uint8_t)enca, (uint8_t)encb, (uint8_t)encbtn,
-					(uint8_t)sda, (uint8_t)scl,
-					(uint8_t)cs, (uint8_t)a0,
-					(uint8_t)ir,
-					(uint8_t)led,
-					(uint8_t)tach,
-					(uint8_t)fanspeed,
-					(uint8_t)ds18b20,
-					(uint8_t)touch,
-					(uint8_t)buzzer,
-					(uint8_t)rxd, (uint8_t)txd,
-					(uint8_t)ldr);
-			// ESP_LOGE(TAG, "Test GPIOS\nSave: %d\nERR: %X\nBuf len: %u\nBuf: %s\nData: %s\nData size: %d\n\n", changed, err, strlen(buf), buf, data, data_size);
-			write(conn, buf, strlen(buf));
+				sprintf(buf, s, json_length);
+				free(s);
+
+				write(conn, buf, strlen(buf));
+				infree(buf);
+			}
 			if (changed)
 			{
-				option_set_gpio_mode(true);
+				set_gpio_mode(true);
 				fflush(stdout);
 				vTaskDelay(100);
 				esp_restart();
@@ -1742,41 +1985,53 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 					changed = false;
 				}
 			}
-			char str_sodes[KEY_MAX][14];
-			uint8_t len_codes = 0;
-			for (uint8_t indexKey = KEY_UP; indexKey < KEY_MAX; indexKey++)
+			char *buf = inmalloc(1024);
+			if (buf == NULL)
 			{
-				len_codes += get_code(buf_code, IR_Key[indexKey][0], IR_Key[indexKey][1]);
-				strcpy(str_sodes[indexKey], buf_code);
-				ESP_LOGD(TAG, " IrKey for set0: %X, for set1: %X str_sodes: %s", IR_Key[indexKey][0], IR_Key[indexKey][1], str_sodes[indexKey]);
+				ESP_LOGE(TAG, " %s malloc fails", "post IRCODES");
+				infree(buf);
+				respKo(conn);
+				return;
 			}
-			ir_mode = g_device->ir_mode;
-			int json_length = 190 + len_codes;
-			char buf[190 + len_codes];
-			sprintf(buf, IRCODES,
-					json_length,
-					ir_mode,
-					err,
-					str_sodes[KEY_UP],
-					str_sodes[KEY_LEFT],
-					str_sodes[KEY_OK],
-					str_sodes[KEY_RIGHT],
-					str_sodes[KEY_DOWN],
-					str_sodes[KEY_0],
-					str_sodes[KEY_1],
-					str_sodes[KEY_2],
-					str_sodes[KEY_3],
-					str_sodes[KEY_4],
-					str_sodes[KEY_5],
-					str_sodes[KEY_6],
-					str_sodes[KEY_7],
-					str_sodes[KEY_8],
-					str_sodes[KEY_9],
-					str_sodes[KEY_STAR],
-					str_sodes[KEY_DIESE]);
+			else
+			{
+				char str_sodes[KEY_MAX][14];
+				for (uint8_t indexKey = KEY_UP; indexKey < KEY_MAX; indexKey++)
+				{
+					strcpy(str_sodes[indexKey], buf_code);
+					ESP_LOGD(TAG, " IrKey for set0: %X, for set1: %X str_sodes: %s", IR_Key[indexKey][0], IR_Key[indexKey][1], str_sodes[indexKey]);
+				}
+				ir_mode = g_device->ir_mode;
+				sprintf(buf, IRCODES,
+						ir_mode,
+						err,
+						str_sodes[KEY_UP],
+						str_sodes[KEY_LEFT],
+						str_sodes[KEY_OK],
+						str_sodes[KEY_RIGHT],
+						str_sodes[KEY_DOWN],
+						str_sodes[KEY_0],
+						str_sodes[KEY_1],
+						str_sodes[KEY_2],
+						str_sodes[KEY_3],
+						str_sodes[KEY_4],
+						str_sodes[KEY_5],
+						str_sodes[KEY_6],
+						str_sodes[KEY_7],
+						str_sodes[KEY_8],
+						str_sodes[KEY_9],
+						str_sodes[KEY_STAR],
+						str_sodes[KEY_DIESE]);
 
-			//ESP_LOGE(TAG, "Test IRCODE\nSave: %d\nERR: %X\nir_mode: %d\nBuf len: %u\nBuf: %s\nData: %s\nlen_codes size: %d\n\n", changed, err, ir_mode, strlen(buf), buf, data, len_codes);
-			write(conn, buf, strlen(buf));
+				// ESP_LOGI(TAG, "TEST IRCODES\njson_length len:%u\n%s", strlen(buf), buf);
+				int json_length = strlen(buf);
+				char *s = concat(HTTP_header, buf);
+
+				sprintf(buf, s, json_length);
+				free(s);
+				write(conn, buf, strlen(buf));
+				infree(buf);
+			}
 			if (changed)
 			{
 				g_device->ir_mode = IR_CUSTOM;

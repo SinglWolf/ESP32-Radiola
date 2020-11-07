@@ -1,31 +1,35 @@
+@ECHO OFF
 REM  Need python3
+
+CD webpage
 ECHO style
 COPY style.css style.ori
 python ./css-html-js-minify.py style.css
 gzip.exe  style.min.css 
 MOVE style.min.css.gz style.css
 xxd.exe -i style.css > .style
-REM sed.exe -i 's/\[\]/\[\]/g' style
 sed.exe -i 's/unsigned/const/g' .style
 MOVE style.ori style.css
 
 ECHO script
 COPY script.js script.ori
-REM python ./css-html-js-minify.py script.js 
-gzip.exe  script.js 
-MOVE script.js.gz script.js
+IF EXIST script.min.js (
+	gzip.exe script.min.js
+	MOVE script.min.js.gz script.js
+) ELSE (
+	gzip.exe script.js 
+	MOVE script.js.gz script.js
+)
 xxd.exe -i script.js > .script
-REM sed.exe -i 's/\[\]/\[\]/g' script
 sed.exe -i 's/unsigned/const/g' .script
 MOVE script.ori script.js
 
 ECHO tabbis
 COPY tabbis.js tabbis.ori
-python ./css-html-js-minify.py tabbis.js 
+python ./css-html-js-minify.py tabbis.js
 gzip.exe  tabbis.js 
 MOVE tabbis.js.gz tabbis.js
 xxd.exe -i tabbis.js > .tabbis
-REM sed.exe -i 's/\[\]/\[\]/g' script
 sed.exe -i 's/unsigned/const/g' .tabbis
 MOVE tabbis.ori tabbis.js
 
@@ -35,7 +39,6 @@ python ./css-html-js-minify.py index.htm
 gzip.exe index.html
 MOVE index.html.gz index.html
 xxd.exe -i index.html > .index
-REM sed.exe -i 's/\[\]/\[\]/g' index
 sed.exe -i 's/unsigned/const/g' .index
 MOVE index.htm index.html
 
@@ -44,7 +47,6 @@ COPY logo.png logo.ori
 gzip.exe logo.png
 MOVE logo.png.gz logo.png
 xxd.exe -i logo.png > .logo
-REM sed.exe -i 's/\[\]/\[\]/g' logo
 sed.exe -i 's/unsigned/const/g' .logo
 MOVE logo.ori logo.png
 
@@ -53,7 +55,6 @@ COPY favicon.png favicon.ori
 gzip.exe favicon.png
 MOVE favicon.png.gz favicon.png
 xxd.exe -i favicon.png > .favicon
-REM sed.exe -i 's/\[\]/\[\]/g' favicon
 sed.exe -i 's/unsigned/const/g' .favicon
 MOVE favicon.ori favicon.png
 
@@ -63,7 +64,5 @@ python ./css-html-js-minify.py icons.css
 gzip.exe  icons.min.css 
 MOVE icons.min.css.gz icons.css
 xxd.exe -i icons.css > .icons
-REM sed.exe -i 's/\[\]/\[\]/g' style
 sed.exe -i 's/unsigned/const/g' .icons
 MOVE icons.ori icons.css
-

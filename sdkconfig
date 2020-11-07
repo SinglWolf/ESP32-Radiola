@@ -132,7 +132,7 @@ CONFIG_WIFI_PASSWORD="1234567890"
 #
 # Серверы точного времени
 #
-CONFIG_NTP0="0.pool.ntp.org "
+CONFIG_NTP0="0.pool.ntp.org"
 CONFIG_NTP1="1.pool.ntp.org"
 CONFIG_NTP2="2.pool.ntp.org"
 CONFIG_NTP3="3.pool.ntp.org"
@@ -157,6 +157,14 @@ CONFIG_TZONE_5=y
 # CONFIG_TZONE_12 is not set
 CONFIG_TZONE="YEKT-5"
 # end of Настройка часового пояса
+
+#
+# Формат вывода даты
+#
+CONFIG_DATAFORMAT_0=y
+# CONFIG_DATAFORMAT_1 is not set
+CONFIG_DATAFORMAT=0xFE
+# end of Формат вывода даты
 # end of Конфигурация ESP32-Радиолы
 
 #
@@ -776,7 +784,7 @@ CONFIG_MBEDTLS_SSL_OUT_CONTENT_LEN=4096
 # CONFIG_MBEDTLS_ECP_RESTARTABLE is not set
 # CONFIG_MBEDTLS_CMAC_C is not set
 CONFIG_MBEDTLS_HARDWARE_AES=y
-# CONFIG_MBEDTLS_HARDWARE_MPI is not set
+CONFIG_MBEDTLS_HARDWARE_MPI=y
 CONFIG_MBEDTLS_HARDWARE_SHA=y
 CONFIG_MBEDTLS_HAVE_TIME=y
 # CONFIG_MBEDTLS_HAVE_TIME_DATE is not set

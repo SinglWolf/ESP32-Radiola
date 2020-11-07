@@ -22,31 +22,31 @@ menu "Серверы точного времени"
 
 config NTP0
 	string "NTP №0"
-	default "0.ru.pool.ntp.org"
+	default "0.pool.ntp.org"
 
 config NTP1
 	string "NTP №1"
-	default "1.ru.pool.ntp.org"
+	default "1.pool.ntp.org"
 
 config NTP2
 	string "NTP №2"
-	default "2.ru.pool.ntp.org"
+	default "2.pool.ntp.org"
 
 config NTP3
 	string "NTP №3"
-	default "3.ru.pool.ntp.org"
+	default "3.pool.ntp.org"
 
-    choice SNTP_TIME_SYNC_METHOD
-        prompt "Метод синхронизации времени"
-        default SNTP_TIME_SYNC_METHOD_IMMED
-        help
-            Метод синхронизации времени.
+choice SNTP_TIME_SYNC_METHOD
+    prompt "Метод синхронизации времени"
+    default SNTP_TIME_SYNC_METHOD_IMMED
+    help
+        Метод синхронизации времени.
 
-        config SNTP_TIME_SYNC_METHOD_IMMED
-            bool "время обновляется сразу после получения"
-        config SNTP_TIME_SYNC_METHOD_SMOOTH
-            bool "время обновляется плавно, методом (adjtime)"
-    endchoice
+    config SNTP_TIME_SYNC_METHOD_IMMED
+        bool "время обновляется сразу после получения"
+    config SNTP_TIME_SYNC_METHOD_SMOOTH
+        bool "время обновляется плавно, методом (adjtime)"
+endchoice
 
 endmenu 
 
@@ -99,6 +99,26 @@ config TZONE
 	default "SAKT-11" if TZONE_11
 	default "PETT-12" if TZONE_12
 
+endmenu
+
+menu "Формат вывода даты"
+
+choice
+    prompt "Выберите формат вывода даты"
+    default DATAFORMAT_0
+    help
+        Выбор часового пояса
+
+    config DATAFORMAT_0
+        bool "4 ноября, СР. 2020 г."
+    config DATAFORMAT_1
+        bool "4 ноября, среда"
+endchoice
+
+config DATAFORMAT
+    hex
+    default 0xFE if DATAFORMAT_0
+    default 0x01 if DATAFORMAT_1
 endmenu
 
 endmenu

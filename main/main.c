@@ -75,7 +75,7 @@ static uint8_t clientIvol = 0;
 //ip
 static char localIp[20];
 // 4MB sram?
-static bool bigRam = false;
+static bool bigRam, time_sync = false;
 // timeout to save volume in flash
 static uint32_t ctimeVol = 0;
 static bool divide = false;
@@ -516,6 +516,7 @@ static void start_wifi()
 void time_sync_notification_cb(struct timeval *tv)
 {
 	ESP_LOGI(TAG, "Notification of a time synchronization event");
+	time_sync = true;
 }
 
 static void obtain_time(void)
@@ -533,22 +534,8 @@ static void obtain_time(void)
 	{
 		ESP_LOGI(TAG, "Waiting for system time to be set... (%d/%d)", retry, retry_count);
 		vTaskDelay(1000 / portTICK_PERIOD_MS);
-		if (retry % 3 == 0)
-		{
-			sntp_restart();
-		}
 	}
-	if (retry >= retry_count)
-	{
-		lcd_welcome("", "ВРЕМЯ НЕ ПОЛУЧЕНО");
-		// fflush(stdout);
-		vTaskDelay(500);
-		// esp_restart();
-	}
-	else
-	{
-		lcd_welcome("", "ВРЕМЯ ПОЛУЧЕНО");
-	}
+
 	time(&now);
 	localtime_r(&now, &timeinfo);
 }
@@ -751,6 +738,17 @@ void start_network()
 			time(&now);
 		}
 #endif
+		if (time_sync)
+		{
+			lcd_welcome("", "ВРЕМЯ ПОЛУЧЕНО");
+		}
+		else
+		{
+			lcd_welcome("", "ВРЕМЯ НЕ ПОЛУЧЕНО");
+			// fflush(stdout);
+			vTaskDelay(500);
+			// esp_restart();
+		}
 		setenv("TZ", g_device->tzone, 1);
 		tzset();
 		localtime_r(&now, &timeinfo);
@@ -953,15 +951,14 @@ void app_main()
 			free(g_device);
 			eeEraseAll();
 			g_device = getDeviceSettings();
-			g_device->cleared = 0xAABB;			   // marker init done
-			g_device->options &= N_GPIOMODE;	   // Режим считывания GPIO 0 - по-умолчанию, 1 - из NVS
-			g_device->uartspeed = 115200;		   // default
-			g_device->ir_mode = IR_DEFAULD;		   // Опрос кодов по-умолчанию
-			g_device->audio_input_num = COMPUTER;  // default
-			g_device->options |= Y_PATCH;		   // load patch
-			g_device->trace_level = ESP_LOG_DEBUG; // default
-			g_device->vol = 100;				   // default
-			g_device->ntp_mode = 0;				   // Режим  использования серверов NTP 0 - по-умолчанию, 1 - пользовательские
+			g_device->cleared = 0xAABB;			  // marker init done
+			g_device->options &= N_GPIOMODE;	  // Режим считывания GPIO 0 - по-умолчанию, 1 - из NVS
+			g_device->uartspeed = 115200;		  // default
+			g_device->ir_mode = IR_DEFAULD;		  // Опрос кодов по-умолчанию
+			g_device->audio_input_num = COMPUTER; // default
+			g_device->trace_level = ESP_LOG_INFO; // default
+			g_device->vol = 100;				  // default
+			g_device->ntp_mode = 0;				  // Режим  использования серверов NTP 0 - по-умолчанию, 1 - пользовательские
 			g_device->options |= Y_ROTAT;
 			g_device->options |= Y_DDMM;
 			g_device->current_ap = STA1;
@@ -989,7 +986,7 @@ void app_main()
 	VS1053_spi_init();
 	//
 	g_device->audio_input_num = COMPUTER;
-	//ESP_LOGI(TAG, "CHECK GPIO_MODE: %d", option_get_gpio_mode());
+	//ESP_LOGI(TAG, "CHECK GPIO_MODE: %d", get_gpio_mode());
 	//audio input number COMPUTER, RADIO, BLUETOOTH
 	ESP_LOGI(TAG, "audio input number %d\nOne of COMPUTER = 1, RADIO, BLUETOOTH", g_device->audio_input_num);
 
@@ -1000,14 +997,14 @@ void app_main()
 	setLogLevel(g_device->trace_level);
 	//time display
 	uint8_t ddmm;
-	option_get_ddmm(&ddmm);
+	get_ddmm(&ddmm);
 	setDdmm(ddmm ? 1 : 0);
 
 	init_hardware();
 	ESP_LOGI(TAG, "Hardware init done...");
 	// lcd init
 	uint8_t rt;
-	option_get_lcd_rotat(&rt);
+	get_lcd_rotat(&rt);
 	ESP_LOGI(TAG, "LCD Rotat %d", rt);
 	//lcd rotation
 	setRotat(rt);

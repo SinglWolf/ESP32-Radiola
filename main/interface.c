@@ -41,7 +41,6 @@ const char msgcli[] = {"##CLI."};
 
 const char stritWIFISTATUS[] = {"#WIFI.STATUS#\nIP: %d.%d.%d.%d\nMask: %d.%d.%d.%d\nGateway: %d.%d.%d.%d\n##WIFI.STATUS#\n"};
 const char stritWIFISTATION[] = {"#WIFI.STATION#\nSSID: %s\nPASSWORD: %s\n##WIFI.STATION#\n"};
-const char stritPATCH[] = {"#WIFI.PATCH#: VS1053 Patch will be %s after power Off and On#\n"};
 const char stritCMDERROR[] = {"##CMD_ERROR#\n"};
 const char wifiHELP[] = {"\
 Commands:\n\
@@ -97,8 +96,6 @@ sys.erase: erase all recorded configuration and stations.\n\
 sys.heap: show the ram heap size\n\
 sys.update: start an OTA (On The Air) update of the software\n\
 sys.boot: reboot.\n\
-sys.patch and sys.patch(\"x\"): Display and Change the status of the vs1053 patch at power on.\n\
- 0 = Patch will not be loaded, 1 or up = Patch will be loaded (default) at power On \n\
  "};
 const char sysHELP1[] = {"\
 sys.version: Display the Release and Revision numbers\n\
@@ -843,34 +840,6 @@ void clientVol(char *s)
 		free(vol);
 }
 
-// option for loading or not the pacth of the vs1053
-void syspatch(char *s)
-{
-	char *t = strstr(s, parslashquote);
-	if (t == NULL)
-	{
-		if ((g_device->options & Y_PATCH) != 0)
-			kprintf("##VS1053 Patch is not loaded#\n");
-		else
-			kprintf("##VS1053 Patch is loaded#\n");
-		return;
-	}
-	char *t_end = strstr(t, parquoteslash);
-	if (t_end == NULL)
-	{
-		kprintf(stritCMDERROR);
-		return;
-	}
-	uint8_t value = atoi(t + 2);
-	if (value == 0)
-		g_device->options |= Y_PATCH;
-	else
-		g_device->options &= N_PATCH; // 0 = load patch
-
-	saveDeviceSettings(g_device);
-	kprintf(stritPATCH, (g_device->options & Y_PATCH) != 0 ? "unloaded" : "Loaded");
-}
-
 // display or change the DDMM display mode
 void sysddmm(char *s)
 {
@@ -898,7 +867,7 @@ void sysddmm(char *s)
 		g_device->options |= Y_DDMM;
 	ddmm = (value) ? 1 : 0;
 	saveDeviceSettings(g_device);
-	option_set_ddmm(ddmm);
+	set_ddmm(ddmm);
 	sysddmm((char *)"");
 }
 
@@ -974,7 +943,7 @@ void sysrotat(char *s)
 	else
 		g_device->options |= Y_ROTAT;
 	rotat = value;
-	option_set_lcd_rotat(rotat);
+	set_lcd_rotat(rotat);
 	saveDeviceSettings(g_device);
 	sysrotat((char *)"");
 }
@@ -1000,7 +969,7 @@ void syslcdout(char *s)
 	g_device->lcd_out = value;
 	lcd_out = value;
 	saveDeviceSettings(g_device);
-	option_set_lcd_out(lcd_out);
+	set_lcd_out(lcd_out);
 	syslcdout((char *)"");
 	wakeLcd();
 }
@@ -1008,7 +977,7 @@ void syslcdout(char *s)
 uint32_t getLcdOut()
 {
 	int increm = 0;
-	option_get_lcd_out(&lcd_out);
+	get_lcd_out(&lcd_out);
 	if (lcd_out == 0xFFFFFFFF)
 	{
 		lcd_out = g_device->lcd_out;
@@ -1309,8 +1278,6 @@ void checkCommand(int size, char *s)
 		}
 		else if (strcmp(tmp + 4, "update") == 0)
 			update_firmware((char *)"ESP32Radiola");
-		else if (startsWith("patch", tmp + 4))
-			syspatch(tmp);
 		else if (strcmp(tmp + 4, "date") == 0)
 			ntp_print_time();
 		else if (strncmp(tmp + 4, "vers", 4) == 0)

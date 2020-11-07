@@ -113,7 +113,7 @@ bool VS1053_HW_init()
 		ESP_LOGE(TAG, "VS1053 not used");
 		return false;
 	}
-//	uint32_t freq = spi_cal_clock(APB_CLK_FREQ, 1400000, 128, NULL);
+	//	uint32_t freq = spi_cal_clock(APB_CLK_FREQ, 1400000, 128, NULL);
 	uint32_t freq = spi_get_actual_clock(APB_CLK_FREQ, 1400000, 128);
 	ESP_LOGI(TAG, "VS1053 LFreq: %d", freq);
 	spi_device_interface_config_t devcfg = {
@@ -295,9 +295,9 @@ void VS1053_I2SRate(uint8_t speed)
 		speed = 0;
 	if (vsVersion != 4)
 		return;
-	VS1053_WriteRegister16(SPI_WRAMADDR, 0xc040);	 //address of GPIO_ODATA is 0xC017
+	VS1053_WriteRegister16(SPI_WRAMADDR, 0xc040);	  //address of GPIO_ODATA is 0xC017
 	VS1053_WriteRegister16(SPI_WRAM, 0x0008 | speed); //
-	VS1053_WriteRegister16(SPI_WRAMADDR, 0xc040);	 //address of GPIO_ODATA is 0xC017
+	VS1053_WriteRegister16(SPI_WRAMADDR, 0xc040);	  //address of GPIO_ODATA is 0xC017
 	VS1053_WriteRegister16(SPI_WRAM, 0x000C | speed); //
 	ESP_LOGI(TAG, "I2S Speed: %d", speed);
 }
@@ -356,9 +356,9 @@ void VS1053_Start()
 
 	//these 4 lines makes board to run on mp3 mode, no soldering required anymore
 	VS1053_WriteRegister16(SPI_WRAMADDR, 0xc017); //address of GPIO_DDR is 0xC017
-	VS1053_WriteRegister16(SPI_WRAM, 0x0003);	 //GPIO_DDR=3
+	VS1053_WriteRegister16(SPI_WRAM, 0x0003);	  //GPIO_DDR=3
 	VS1053_WriteRegister16(SPI_WRAMADDR, 0xc019); //address of GPIO_ODATA is 0xC019
-	VS1053_WriteRegister16(SPI_WRAM, 0x0000);	 //GPIO_ODATA=0
+	VS1053_WriteRegister16(SPI_WRAM, 0x0000);	  //GPIO_ODATA=0
 	vTaskDelay(50);
 	VS1053_SoftwareReset();
 	while (VS1053_checkDREQ() == 0)
@@ -371,17 +371,14 @@ void VS1053_Start()
 	{
 
 		VS1053_WriteRegister16(SPI_WRAMADDR, 0xc017); //
-		VS1053_WriteRegister16(SPI_WRAM, 0x00F0);	 //
+		VS1053_WriteRegister16(SPI_WRAM, 0x00F0);	  //
 		VS1053_I2SRate(g_device->i2sspeed);
 
 		// plugin patch
-		if (g_device->options & Y_PATCH)
-		{
-			LoadUserCodes(); // vs1053b patch and admix
-							 //			VS1053_SetVolumeLine(-31);
-							 //			VS1053_Admix(false);
-			ESP_LOGD(TAG, "vs1053b plugin patch loaded.");
-		}
+		LoadUserCodes(); // vs1053b patch and admix
+						 //			VS1053_SetVolumeLine(-31);
+						 //			VS1053_Admix(false);
+		ESP_LOGI(TAG, "vs1053b plugin patch loaded.");
 	}
 }
 
@@ -564,7 +561,7 @@ void VS1053_SetBass(uint8_t xdB)
 {
 	union sci_bass_m sci_base_value;
 
-if (xdB > 15)
+	if (xdB > 15)
 	{
 		xdB = 15;
 	}

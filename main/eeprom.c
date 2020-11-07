@@ -259,7 +259,8 @@ void saveDeviceSettings(struct device_settings *settings)
 	vTaskDelay(1);
 	ESP_ERROR_CHECK(esp_partition_write(DEVICE, 0, settings, DEVICE->size));
 	vTaskDelay(1);
-	ESP_ERROR_CHECK(tda7313_save_nvs());
+	if (tda7313_get_present())
+		ESP_ERROR_CHECK(tda7313_save_nvs());
 	xSemaphoreGive(muxDevice);
 }
 void saveDeviceSettingsVolume(struct device_settings *settings)

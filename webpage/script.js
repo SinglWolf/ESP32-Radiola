@@ -991,43 +991,70 @@ function saveCSV() {
     alert("Ещё не реализовано...");
 }
 
+function control(save) {
+    set_control = "";
+    xhr = new XMLHttpRequest();
+    xhr.onreadystatechange = function () {
+        if (xhr.readyState == 4 && xhr.status == 200) {
+            var arr = JSON.parse(xhr.responseText);
+            document.getElementById('LCD_BRG').value = arr["lcd_brg"];
+        }
+    }
+    if (save == 0) {
+        displaybright();
+        FanControl();
+    }
+    else {
+        set_option = "&ESPLOG=" + document.getElementById('ESPLOG').value +
+            "&NTP=" + document.getElementById('NTP').value +
+            "&NTP0=" + document.getElementById('NTP0').value +
+            "&NTP1=" + document.getElementById('NTP1').value +
+            "&NTP2=" + document.getElementById('NTP2').value +
+            "&NTP3=" + document.getElementById('NTP3').value +
+            "&TZONE=" + document.getElementById('TZONE').value +
+            "&TIME_FORMAT=" + document.getElementById('TIME_FORMAT').value +
+            "&LCD_ROTA=" + document.getElementById('LCD_ROTA').value;
+        save = 0;
+        set_option = "";
+    }
+    xhr.open("POST", "control", false);
+    xhr.setRequestHeader(content, ctype);
+    xhr.send("save=" + save +
+        set_control +
+        "&");
+}
+
 function devoptions(save) {
     set_option = "";
     xhr = new XMLHttpRequest();
     xhr.onreadystatechange = function () {
         if (xhr.readyState == 4 && xhr.status == 200) {
             var arr = JSON.parse(xhr.responseText);
-            document.getElementById('O_ESPLOG').value = arr["O_ESPLOG"];
-            document.getElementById('O_NTP').value = arr["O_NTP"];
-            document.getElementById('O_NTP0').value = arr["O_NTP0"];
-            document.getElementById('O_NTP1').value = arr["O_NTP1"];
-            document.getElementById('O_NTP2').value = arr["O_NTP2"];
-            document.getElementById('O_NTP3').value = arr["O_NTP3"];
-            document.getElementById('O_TZONE').value = arr["O_TZONE"];
-            document.getElementById('O_TIME_FORMAT').value = arr["O_TIME_FORMAT"];
-            document.getElementById('O_LCD_ROTA').value = arr["O_LCD_ROTA"];
+            document.getElementById('ESPLOG').value = arr["ESPLOG"];
+            document.getElementById('NTP').value = arr["NTP"];
+            document.getElementById('NTP0').value = arr["NTP0"];
+            document.getElementById('NTP1').value = arr["NTP1"];
+            document.getElementById('NTP2').value = arr["NTP2"];
+            document.getElementById('NTP3').value = arr["NTP3"];
+            document.getElementById('TZONE').value = arr["TZONE"];
+            document.getElementById('TIME_FORMAT').value = arr["TIME_FORMAT"];
+            document.getElementById('LCD_ROTA').value = arr["LCD_ROTA"];
         }
     }
     if (save == 0) {
         NTPservers();
         TimeZone();
-        displaybright();
-        FanControl();
     }
     else if ((save == 1) && (confirm("Сохранить настройки в NVS?\nДля вступления в силу некоторых настроек, Радиола может быть перезагружена."))) {
-        // if (document.getElementById('O_TZONE').value == "CUSTOMTZ") {
-        //     alert("Формат строки должен быть в стандарте POSIX!!!\nНапример,\"EET-2EEST,M3.5.0/3,M10.5.0/4\"\nЧасовой пояс - София");
-        //     document.getElementById('O_TZONE').value = document.getElementById('custom_TZ').value;
-        //}
-        set_option = "&O_ESPLOG=" + document.getElementById('O_ESPLOG').value +
-            "&O_NTP=" + document.getElementById('O_NTP').value +
-            "&O_NTP0=" + document.getElementById('O_NTP0').value +
-            "&O_NTP1=" + document.getElementById('O_NTP1').value +
-            "&O_NTP2=" + document.getElementById('O_NTP2').value +
-            "&O_NTP3=" + document.getElementById('O_NTP3').value +
-            "&O_TZONE=" + document.getElementById('O_TZONE').value +
-            "&O_TIME_FORMAT=" + document.getElementById('O_TIME_FORMAT').value +
-            "&O_LCD_ROTA=" + document.getElementById('O_LCD_ROTA').value;
+        set_option = "&ESPLOG=" + document.getElementById('ESPLOG').value +
+            "&NTP=" + document.getElementById('NTP').value +
+            "&NTP0=" + document.getElementById('NTP0').value +
+            "&NTP1=" + document.getElementById('NTP1').value +
+            "&NTP2=" + document.getElementById('NTP2').value +
+            "&NTP3=" + document.getElementById('NTP3').value +
+            "&TZONE=" + document.getElementById('TZONE').value +
+            "&TIME_FORMAT=" + document.getElementById('TIME_FORMAT').value +
+            "&LCD_ROTA=" + document.getElementById('LCD_ROTA').value;
     } else {
         save = 0;
         set_option = "";
@@ -1057,7 +1084,7 @@ function FanControl() {
 
 
 function NTPservers() {
-    if (document.getElementById('O_NTP').value == "0") {
+    if (document.getElementById('NTP').value == "0") {
         document.getElementById("custom_NTP").style.display = "none";
     } else {
         document.getElementById("custom_NTP").style.display = "contents";
@@ -1066,7 +1093,7 @@ function NTPservers() {
 }
 
 function TimeZone() {
-    if (document.getElementById('O_TZONE').value == "CUSTOMTZ") {
+    if (document.getElementById('TZONE').value == "CUSTOMTZ") {
         document.getElementById("edit_TZ").style.display = "contents";
     } else {
         document.getElementById("edit_TZ").style.display = "none";
@@ -1075,32 +1102,32 @@ function TimeZone() {
 }
 
 function displaybright() {
-    if (document.getElementById('O_LCD_BRG').value == 0) {
+    if (document.getElementById('LCD_BRG').value == 0) {
         document.getElementById("brightOn").style.display = "none";
     } else {
         document.getElementById("brightOn").style.display = "";
-        if (document.getElementById('O_LCD_BRG').value == 1) {
+        if (document.getElementById('LCD_BRG').value == 1) {
             document.getElementById("by_hand").style.visibility = "collapse";
             document.getElementById("by_time").style.visibility = "visible";
             document.getElementById("_night").style.visibility = "visible";
-            document.getElementById("brightness").style.visibility = "visible";
-            document.getElementById("brightness_sun").style.visibility = "visible";
+            document.getElementById("brg").style.visibility = "visible";
+            document.getElementById("brg_sun").style.visibility = "visible";
             document.getElementById("by_lighting").style.visibility = "collapse";
         }
-        if (document.getElementById('O_LCD_BRG').value == 2) {
+        if (document.getElementById('LCD_BRG').value == 2) {
             document.getElementById("by_hand").style.visibility = "collapse";
             document.getElementById("by_time").style.visibility = "collapse";
             document.getElementById("_night").style.visibility = "collapse";
-            document.getElementById("brightness").style.visibility = "visible";
-            document.getElementById("brightness_sun").style.visibility = "visible";
+            document.getElementById("brg").style.visibility = "visible";
+            document.getElementById("brg_sun").style.visibility = "visible";
             document.getElementById("by_lighting").style.visibility = "visible";
         }
-        if (document.getElementById('O_LCD_BRG').value == 3) {
+        if (document.getElementById('LCD_BRG').value == 3) {
             document.getElementById("by_hand").style.visibility = "visible";
             document.getElementById("_night").style.visibility = "collapse";
             document.getElementById("by_time").style.visibility = "collapse";
-            document.getElementById("brightness").style.visibility = "collapse";
-            document.getElementById("brightness_sun").style.visibility = "collapse";
+            document.getElementById("brg").style.visibility = "collapse";
+            document.getElementById("brg_sun").style.visibility = "collapse";
             document.getElementById("by_lighting").style.visibility = "collapse";
         }
     }
@@ -1804,7 +1831,7 @@ function stChanged() {
         port = parser.port;
         if (!port) port = 80;
         /*				file=tbody.rows[ind].cells[3].innerText;
-        				port= tbody.rows[ind].cells[4].innerText;*/
+                        port= tbody.rows[ind].cells[4].innerText;*/
         localStorage.setItem(id, "{\"Name\":\"" + name + "\",\"URL\":\"" + url + "\",\"File\":\"" + file + "\",\"Port\":\"" + port + "\"}");
         tosend = tosend + "&id=" + id + "&url=" + url + "&name=" + name + "&file=" + file + "&port=" + port + "&";
     }
@@ -2041,6 +2068,7 @@ document.addEventListener("DOMContentLoaded", function () {
         });
         document.getElementById("OPTIONS").addEventListener("click", function () {
             devoptions(0);
+            control(0);
         });
         document.getElementById("UPDATE").addEventListener("click", function () {
             checkversion();

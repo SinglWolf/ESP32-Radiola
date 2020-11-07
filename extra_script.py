@@ -56,7 +56,7 @@ if not isfile(servfile):
         # Windows...
         subprocess.call('./generate.bat' + PROJECT_INCLUDE_DIR + DEBUG, shell=True)
 else:
-    print(index_h)
+    print("servfile.h present...")
 # if not isfile("${PROJECT_DIR}/webpage/.index"):
 #     before_build
 #env.AddPreAction("${BUILD_DIR}/esp-idf/main/webserver.c.o", before_build)

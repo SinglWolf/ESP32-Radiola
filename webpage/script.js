@@ -1,7 +1,7 @@
 var content = "Content-type",
     ctype = "application/x-www-form-urlencoded",
     cjson = "application/json";
-var auto, intervalid, intervalrssi, timeid, websocket, urlmonitor, e, moniPlaying = false,
+var auto, intervalid, intervalrssi, timeid, websocket, urlmonitor, monitor, e, moniPlaying = false,
     editPlaying = false,
     editIndex = 0,
     curtab = "PLAYER",
@@ -34,7 +34,7 @@ function openwebsocket() {
             if (arr["wssound"]) soundResp(arr["wssound"]);
             if (arr["monitor"]) playMonitor(arr["monitor"]);
             if (arr["wsstation"]) wsplayStation(arr["wsstation"]);
-            if (arr["ircode"]) { code = document.getElementById('new_key').innerHTML = arr["ircode"]; }
+            if (arr["ircode"]) { document.getElementById('new_key').innerHTML = arr["ircode"]; }
             if (arr["upgrade"]) { document.getElementById('updatefb').innerHTML = arr["upgrade"]; }
             if (arr["iurl"]) {
                 document.getElementById('instant_url').value = arr["iurl"];
@@ -98,10 +98,10 @@ function wsaskrssi() {
 
 function wsplayStation($arr) {
     var i;
-    select = document.getElementById('stationsSelect');
-    opt = select.options;
+    var select = document.getElementById('stationsSelect');
+    var opt = select.options;
     for (i = 0; i < maxStation; i++) {
-        id = opt[i].value.split(":");
+        var id = opt[i].value.split(":");
         id = id[0];
         if (id == $arr) break;
     }
@@ -129,7 +129,7 @@ function mplay() {
     else src = urlmonitor;
     monitor.src = src;
     monitor.volume = document.getElementById("volm_range").value / 100;
-    while (monitor.networkState == 2);
+    while (monitor.networkState == 2) { };
     monitor.play();
     moniPlaying = true;
     monitor.muted = false;
@@ -153,7 +153,7 @@ function mpause() {
 }
 
 function mvol($name, $step) {
-    var val = parseInt(document.getElementById($name + '_range').value) + $step;
+    var val = parseInt(document.getElementById($name + '_range').value, 10) + $step;
     if (val < 0) val = 0;
     if (val > 100) val = 100;
     document.getElementById($name + '_range').value = val;
@@ -215,14 +215,14 @@ function eraseIrKey() {
     document.getElementById('K_' + document.getElementById('key_num').value).innerHTML = "";
 }
 function saveIrKey(num) {
-    val = document.getElementById('new_key').innerHTML;
+    var val = document.getElementById('new_key').innerHTML;
     if (val == "") {
         alert("Сначала нажмите кнопку пульта!");
     } else {
-        checkIR = 0;
-        checkir = false;
+        var checkIR = 0;
+        var checkir = false;
 
-        for (i = 0; i < 17; i++) {
+        for (var i = 0; i < 17; i++) {
             if (document.getElementById('K_' + i).innerHTML == val) checkIR++;
         }
 
@@ -237,7 +237,8 @@ function saveIrKey(num) {
         }
         else {
             document.getElementById('K_' + num).innerHTML = val;
-            document.getElementById('K_' + num).style = "color:red;";
+            // document.getElementById('K_' + num).style = "color:red;";
+            document.getElementById('K_' + num).style.color = "red";
             abortIrKey();
         }
     }
@@ -245,7 +246,7 @@ function saveIrKey(num) {
 
 function clearAllKey() {
     if (confirm("Стереть все текущие коды пульта?")) {
-        for (i = 0; i < 17; i++) {
+        for (var i = 0; i < 17; i++) {
             document.getElementById('K_' + i).innerHTML = "";
         }
     }
@@ -261,13 +262,13 @@ function training(key, num) {
 }
 
 function ircodes(ir_mode, save, load) {
-    var setircodes = "", ir_mode_txt, err, style_color;
+    var setircodes = "", ir_mode_txt, err, style_color, xhr;
     xhr = new XMLHttpRequest();
     xhr.onreadystatechange = function () {
         if (xhr.readyState == 4 && xhr.status == 200) {
             var arr = JSON.parse(xhr.responseText);
             if (load == 1) {
-                ir_mode = parseInt(arr["IR_MODE"].replace(/\\/g, ""));
+                ir_mode = parseInt(arr["IR_MODE"].replace(/\\/g, ""), 10);
             }
             err = arr["ERROR"].replace(/\\/g, "");
             if (err != "0000") {
@@ -289,14 +290,14 @@ function ircodes(ir_mode, save, load) {
                 }
             }
             document.getElementById("IrErr").style.color = style_color;
-            IrErr.innerHTML = ir_mode_txt;
-            for (i = 0; i < 17; i++) {
+            document.getElementById("IrErr").innerHTML = ir_mode_txt;
+            for (var i = 0; i < 17; i++) {
                 document.getElementById('K_' + i).innerHTML = arr["K_" + i];
             }
         }
     }
     if ((save == 1) && (confirm("Записать коды пульта в NVS?"))) {
-        for (i = 0; i < 17; i++) {
+        for (var i = 0; i < 17; i++) {
             setircodes += "&K_" + i + "=" + document.getElementById('K_' + i).innerHTML;
         }
     } else save = 0;
@@ -337,7 +338,7 @@ function dtime() {
         elt = document.getElementById('sminutes'),
         eltw = document.getElementById('wminutes');
     //	document.getElementById("time").innerHTML = d.toLocaleTimeString();	
-    udate = d.toTimeString().split(" ");
+    var udate = d.toTimeString().split(" ");
     document.getElementById("time").innerHTML = udate[0];
     if ((!isNaN(elt.innerHTML)) && (elt.innerHTML != "0"))
         --elt.innerHTML;
@@ -364,7 +365,7 @@ function startSleep() {
     if (!isNaN(h0)) {
         if (!isNaN(h1)) // time mode
         {
-            fut = new Date(cur.getFullYear(), cur.getMonth(), cur.getDate(), h0, h1, 0);
+            var fut = new Date(cur.getFullYear(), cur.getMonth(), cur.getDate(), h0, h1, 0);
             if (fut.getTime() > cur.getTime())
                 valm = Math.round((fut.getTime() - cur.getTime()) / 60000); //seconds
             else valm = 1440 - Math.round((cur.getTime() - fut.getTime()) / 60000); //seconds
@@ -405,7 +406,7 @@ function startWake() {
     if (!isNaN(h0)) {
         if (!isNaN(h1)) // time mode
         {
-            fut = new Date(cur.getFullYear(), cur.getMonth(), cur.getDate(), h0, h1, 0);
+            var fut = new Date(cur.getFullYear(), cur.getMonth(), cur.getDate(), h0, h1, 0);
             if (fut.getTime() > cur.getTime())
                 valm = Math.round((fut.getTime() - cur.getTime()) / 60000); //seconds
             else valm = 1440 - Math.round((cur.getTime() - fut.getTime()) / 60000); //seconds
@@ -496,10 +497,10 @@ function full() {
 
 function icyResp(arr) {
     document.getElementById('curst').innerHTML = arr["curst"].replace(/\\/g, "");
-    select = document.getElementById('stationsSelect');
-    opt = select.options;
+    var select = document.getElementById('stationsSelect');
+    var opt = select.options, i;
     for (i = 0; i < maxStation; i++) {
-        id = opt[i].value.split(":");
+        var id = opt[i].value.split(":");
         id = id[0];
         if (id == document.getElementById('curst').innerHTML) break;
     }
@@ -527,7 +528,7 @@ function icyResp(arr) {
     } else {
         document.getElementById('lurl').style.display = "inline-block";
         document.getElementById('icon').style.display = "inline-block";
-        $url = arr["url1"].replace(/\\/g, "").replace(/ /g, "");
+        var $url = arr["url1"].replace(/\\/g, "").replace(/ /g, "");
         if ($url == 'http://www.icecast.org/')
             document.getElementById('icon').src = "/logo.png";
         else document.getElementById('icon').src = "http://www.google.com/s2/favicons?domain_url=" + $url;
@@ -563,7 +564,7 @@ function soundResp(arr) {
 }
 
 function refresh() {
-    xhr = new XMLHttpRequest();
+    var xhr = new XMLHttpRequest();
     xhr.onreadystatechange = function () {
         if (xhr.readyState == 4 && xhr.status == 200) {
             try {
@@ -637,7 +638,7 @@ function onRangeChangeSpatial($range, $spanid, $nosave) {
 }
 
 function btnTDA($name, $step) {
-    var val = parseInt(document.getElementById($name + '_range').value) + $step;
+    var val = parseInt(document.getElementById($name + '_range').value, 10) + $step;
     switch ($name) {
         case 'Volume':
             if (val < 0) val = 0;
@@ -857,14 +858,14 @@ function logValue(value) {
     return val;
 }
 function VolumeBtn($element, $step) {
-    var Volume = parseInt(document.getElementById($element).value) + $step;
+    var Volume = parseInt(document.getElementById($element).value, 10) + $step;
     if (Volume < 5) Volume = 0;
     if (Volume > 249) Volume = 254;
     onRangeVolChange(Volume, true);
 
 }
 function ToneBtn($element, $step) {
-    var value = parseInt(document.getElementById($element).value) + $step;
+    var value = parseInt(document.getElementById($element).value, 10) + $step;
     if ($element != "spacial_range")
         document.getElementById($element).value = value;
     if ($element == "treble_range") {
@@ -906,7 +907,7 @@ function onRangeVolChange($value, $local) {
     document.getElementById('vol_range').value = $value;
     document.getElementById('vol1_range').value = $value;
     if ($local) {
-        xhr = new XMLHttpRequest();
+        var xhr = new XMLHttpRequest();
         xhr.open("POST", "soundvol", false);
         xhr.setRequestHeader(content, ctype);
         xhr.send("vol=" + $value + "&");
@@ -914,7 +915,7 @@ function onRangeVolChange($value, $local) {
 }
 
 function wifi(valid) {
-    xhr = new XMLHttpRequest();
+    var xhr = new XMLHttpRequest();
     xhr.onreadystatechange = function () {
         if (xhr.readyState == 4 && xhr.status == 200) {
             var arr = JSON.parse(xhr.responseText);
@@ -992,8 +993,8 @@ function saveCSV() {
 }
 
 function control(save) {
-    set_control = "";
-    xhr = new XMLHttpRequest();
+    var set_control = "", set_option;
+    var xhr = new XMLHttpRequest();
     xhr.onreadystatechange = function () {
         if (xhr.readyState == 4 && xhr.status == 200) {
             var arr = JSON.parse(xhr.responseText);
@@ -1025,8 +1026,8 @@ function control(save) {
 }
 
 function devoptions(save) {
-    set_option = "";
-    xhr = new XMLHttpRequest();
+    var set_option = "";
+    var xhr = new XMLHttpRequest();
     xhr.onreadystatechange = function () {
         if (xhr.readyState == 4 && xhr.status == 200) {
             var arr = JSON.parse(xhr.responseText);
@@ -1135,13 +1136,13 @@ function displaybright() {
 
 function gpios(gpio_mode, save, load) {
     var setgpios = "",
-        gpio_mode_txt, err, style_color;
+        gpio_mode_txt, err, style_color, xhr;
     xhr = new XMLHttpRequest();
     xhr.onreadystatechange = function () {
         if (xhr.readyState == 4 && xhr.status == 200) {
             var arr = JSON.parse(xhr.responseText);
             if (load == 1) {
-                gpio_mode = parseInt(arr["GPIO_MODE"].replace(/\\/g, ""));
+                gpio_mode = parseInt(arr["GPIO_MODE"].replace(/\\/g, ""), 10);
             }
             err = arr["ERROR"].replace(/\\/g, "");
             if (err != "0000") {
@@ -1163,61 +1164,61 @@ function gpios(gpio_mode, save, load) {
                 }
             }
             document.getElementById("GPIOsErr").style.color = style_color;
-            GPIOsErr.innerHTML = gpio_mode_txt;
-            K_SPI.innerHTML = parseInt(arr["K_SPI"].replace(/\\/g, ""));
-            P_MISO.innerHTML = parseInt(arr["P_MISO"].replace(/\\/g, ""));
-            P_MOSI.innerHTML = parseInt(arr["P_MOSI"].replace(/\\/g, ""));
-            P_CLK.innerHTML = parseInt(arr["P_CLK"].replace(/\\/g, ""));
-            P_XCS.innerHTML = parseInt(arr["P_XCS"].replace(/\\/g, ""));
-            P_XDCS.innerHTML = parseInt(arr["P_XDCS"].replace(/\\/g, ""));
-            P_DREQ.innerHTML = parseInt(arr["P_DREQ"].replace(/\\/g, ""));
-            P_ENC0_A.innerHTML = parseInt(arr["P_ENC0_A"].replace(/\\/g, ""));
-            P_ENC0_B.innerHTML = parseInt(arr["P_ENC0_B"].replace(/\\/g, ""));
-            P_ENC0_BTN.innerHTML = parseInt(arr["P_ENC0_BTN"].replace(/\\/g, ""));
-            P_I2C_SCL.innerHTML = parseInt(arr["P_I2C_SCL"].replace(/\\/g, ""));
-            P_I2C_SDA.innerHTML = parseInt(arr["P_I2C_SDA"].replace(/\\/g, ""));
-            P_LCD_CS.innerHTML = parseInt(arr["P_LCD_CS"].replace(/\\/g, ""));
-            P_LCD_A0.innerHTML = parseInt(arr["P_LCD_A0"].replace(/\\/g, ""));
-            P_IR_SIGNAL.innerHTML = parseInt(arr["P_IR_SIGNAL"].replace(/\\/g, ""));
-            P_BACKLIGHT.innerHTML = parseInt(arr["P_BACKLIGHT"].replace(/\\/g, ""));
-            P_TACHOMETER.innerHTML = parseInt(arr["P_TACHOMETER"].replace(/\\/g, ""));
-            P_FAN_SPEED.innerHTML = parseInt(arr["P_FAN_SPEED"].replace(/\\/g, ""));
-            P_DS18B20.innerHTML = parseInt(arr["P_DS18B20"].replace(/\\/g, ""));
-            P_TOUCH_CS.innerHTML = parseInt(arr["P_TOUCH_CS"].replace(/\\/g, ""));
-            P_BUZZER.innerHTML = parseInt(arr["P_BUZZER"].replace(/\\/g, ""));
-            P_RXD.innerHTML = parseInt(arr["P_RXD"].replace(/\\/g, ""));
-            P_TXD.innerHTML = parseInt(arr["P_TXD"].replace(/\\/g, ""));
-            P_LDR.innerHTML = parseInt(arr["P_LDR"].replace(/\\/g, ""));
+            document.getElementById("GPIOsErr").innerHTML = gpio_mode_txt;
+            document.getElementById("K_SPI").innerHTML = parseInt(arr["K_SPI"].replace(/\\/g, ""), 10);
+            document.getElementById("P_MISO").innerHTML = parseInt(arr["P_MISO"].replace(/\\/g, ""), 10);
+            document.getElementById("P_MOSI").innerHTML = parseInt(arr["P_MOSI"].replace(/\\/g, ""), 10);
+            document.getElementById("P_CLK").innerHTML = parseInt(arr["P_CLK"].replace(/\\/g, ""), 10);
+            document.getElementById("P_XCS").innerHTML = parseInt(arr["P_XCS"].replace(/\\/g, ""), 10);
+            document.getElementById("P_XDCS").innerHTML = parseInt(arr["P_XDCS"].replace(/\\/g, ""), 10);
+            document.getElementById("P_DREQ").innerHTML = parseInt(arr["P_DREQ"].replace(/\\/g, ""), 10);
+            document.getElementById("P_ENC0_A").innerHTML = parseInt(arr["P_ENC0_A"].replace(/\\/g, ""), 10);
+            document.getElementById("P_ENC0_B").innerHTML = parseInt(arr["P_ENC0_B"].replace(/\\/g, ""), 10);
+            document.getElementById("P_ENC0_BTN").innerHTML = parseInt(arr["P_ENC0_BTN"].replace(/\\/g, ""), 10);
+            document.getElementById("P_I2C_SCL").innerHTML = parseInt(arr["P_I2C_SCL"].replace(/\\/g, ""), 10);
+            document.getElementById("P_I2C_SDA").innerHTML = parseInt(arr["P_I2C_SDA"].replace(/\\/g, ""), 10);
+            document.getElementById("P_LCD_CS").innerHTML = parseInt(arr["P_LCD_CS"].replace(/\\/g, ""), 10);
+            document.getElementById("P_LCD_A0").innerHTML = parseInt(arr["P_LCD_A0"].replace(/\\/g, ""), 10);
+            document.getElementById("P_IR_SIGNAL").innerHTML = parseInt(arr["P_IR_SIGNAL"].replace(/\\/g, ""), 10);
+            document.getElementById("P_BACKLIGHT").innerHTML = parseInt(arr["P_BACKLIGHT"].replace(/\\/g, ""), 10);
+            document.getElementById("P_TACHOMETER").innerHTML = parseInt(arr["P_TACHOMETER"].replace(/\\/g, ""), 10);
+            document.getElementById("P_FAN_SPEED").innerHTML = parseInt(arr["P_FAN_SPEED"].replace(/\\/g, ""), 10);
+            document.getElementById("P_DS18B20").innerHTML = parseInt(arr["P_DS18B20"].replace(/\\/g, ""), 10);
+            document.getElementById("P_TOUCH_CS").innerHTML = parseInt(arr["P_TOUCH_CS"].replace(/\\/g, ""), 10);
+            document.getElementById("P_BUZZER").innerHTML = parseInt(arr["P_BUZZER"].replace(/\\/g, ""), 10);
+            document.getElementById("P_RXD").innerHTML = parseInt(arr["P_RXD"].replace(/\\/g, ""), 10);
+            document.getElementById("P_TXD").innerHTML = parseInt(arr["P_TXD"].replace(/\\/g, ""), 10);
+            document.getElementById("P_LDR").innerHTML = parseInt(arr["P_LDR"].replace(/\\/g, ""), 10);
         }
     }
     if ((save == 1) && (confirm("Записать зачения GPIO в NVS?"))) {
         //		if (confirm("Записать зачения GPIO в NVS?")) {
         //		alert("Перезагрузка Радиолы. Пожалуйста, подождите.");
         setgpios = "&save=" + save +
-            "&K_SPI=" + K_SPI.innerHTML +
-            "&P_MISO=" + P_MISO.innerHTML +
-            "&P_MOSI=" + P_MOSI.innerHTML +
-            "&P_CLK=" + P_CLK.innerHTML +
-            "&P_XCS=" + P_XCS.innerHTML +
-            "&P_XDCS=" + P_XDCS.innerHTML +
-            "&P_DREQ=" + P_DREQ.innerHTML +
-            "&P_ENC0_A=" + P_ENC0_A.innerHTML +
-            "&P_ENC0_B=" + P_ENC0_B.innerHTML +
-            "&P_ENC0_BTN=" + P_ENC0_BTN.innerHTML +
-            "&P_I2C_SCL=" + P_I2C_SCL.innerHTML +
-            "&P_I2C_SDA=" + P_I2C_SDA.innerHTML +
-            "&P_LCD_CS=" + P_LCD_CS.innerHTML +
-            "&P_LCD_A0=" + P_LCD_A0.innerHTML +
-            "&P_IR_SIGNAL=" + P_IR_SIGNAL.innerHTML +
-            "&P_BACKLIGHT=" + P_BACKLIGHT.innerHTML +
-            "&P_TACHOMETER=" + P_TACHOMETER.innerHTML +
-            "&P_FAN_SPEED=" + P_FAN_SPEED.innerHTML +
-            "&P_DS18B20=" + P_DS18B20.innerHTML +
-            "&P_TOUCH_CS=" + P_TOUCH_CS.innerHTML +
-            "&P_BUZZER=" + P_BUZZER.innerHTML +
-            "&P_RXD=" + P_RXD.innerHTML +
-            "&P_TXD=" + P_TXD.innerHTML +
-            "&P_LDR=" + P_LDR.innerHTML;
+            "&K_SPI=" + document.getElementById("K_SPI").innerHTML +
+            "&P_MISO=" + document.getElementById("P_MISO").innerHTML +
+            "&P_MOSI=" + document.getElementById("P_MOSI").innerHTML +
+            "&P_CLK=" + document.getElementById("P_CLK").innerHTML +
+            "&P_XCS=" + document.getElementById("P_XCS").innerHTML +
+            "&P_XDCS=" + document.getElementById("P_XDCS").innerHTML +
+            "&P_DREQ=" + document.getElementById("P_DREQ").innerHTML +
+            "&P_ENC0_A=" + document.getElementById("P_ENC0_A").innerHTML +
+            "&P_ENC0_B=" + document.getElementById("P_ENC0_B").innerHTML +
+            "&P_ENC0_BTN=" + document.getElementById("P_ENC0_BTN").innerHTML +
+            "&P_I2C_SCL=" + document.getElementById("P_I2C_SCL").innerHTML +
+            "&P_I2C_SDA=" + document.getElementById("P_I2C_SDA").innerHTML +
+            "&P_LCD_CS=" + document.getElementById("P_LCD_CS").innerHTML +
+            "&P_LCD_A0=" + document.getElementById("P_LCD_A0").innerHTML +
+            "&P_IR_SIGNAL=" + document.getElementById("P_IR_SIGNAL").innerHTML +
+            "&P_BACKLIGHT=" + document.getElementById("P_BACKLIGHT").innerHTML +
+            "&P_TACHOMETER=" + document.getElementById("P_TACHOMETER").innerHTML +
+            "&P_FAN_SPEED=" + document.getElementById("P_FAN_SPEED").innerHTML +
+            "&P_DS18B20=" + document.getElementById("P_DS18B20").innerHTML +
+            "&P_TOUCH_CS=" + document.getElementById("P_TOUCH_CS").innerHTML +
+            "&P_BUZZER=" + document.getElementById("P_BUZZER").innerHTML +
+            "&P_RXD=" + document.getElementById("P_RXD").innerHTML +
+            "&P_TXD=" + document.getElementById("P_TXD").innerHTML +
+            "&P_LDR=" + document.getElementById("P_LDR").innerHTML;
     } else save = 0;
     xhr.open("POST", "gpios", false);
     xhr.setRequestHeader(content, ctype);
@@ -1227,7 +1228,7 @@ function gpios(gpio_mode, save, load) {
 }
 
 function hardware(save) {
-    var i, inputnum, loud = 0,
+    var i, inputnum, loud = 0, xhr,
         mute = 1,
         rear = 0,
         sendsave = "";
@@ -1236,7 +1237,7 @@ function hardware(save) {
         if (xhr.readyState == 4 && xhr.status == 200) {
             var arr = JSON.parse(xhr.responseText);
             if (arr['present'] == "1") {
-                tabbis.onClick(1, parseInt(arr['inputnum']) - 1);
+                tabbis.onClick(1, parseInt(arr['inputnum'], 10) - 1);
                 switch (arr['inputnum']) {
                     case '1':
                         document.getElementById('source').innerHTML = "AUX";
@@ -1286,7 +1287,7 @@ function hardware(save) {
                 //                document.getElementById("audioinput1").style.display = "none";
                 //                document.getElementById("audioinput3").style.display = "none";
                 tabbis.onClick(1, 1);
-                document.getElementById("soudBar").style = "pointer-events:none;";
+                document.getElementById("soudBar").style.pointerEvents = "none";
             }
         }
     }
@@ -1324,7 +1325,7 @@ function hardware(save) {
 
 
 function instantPlay() {
-    var curl;
+    var curl, xhr;
     try {
         xhr = new XMLHttpRequest();
         xhr.open("POST", "instant_play", false);
@@ -1388,6 +1389,8 @@ function nextStation() {
 }
 // autoplay checked or unchecked
 function autoplay() {
+    var xhr;
+    xhr = new XMLHttpRequest();
     try {
         xhr.open("POST", "auto", false);
         xhr.setRequestHeader(content, ctype);
@@ -1397,7 +1400,7 @@ function autoplay() {
 
 //ask for the state of autoplay
 function autostart() {
-    xhr = new XMLHttpRequest();
+    var xhr = new XMLHttpRequest();
     xhr.onreadystatechange = function () {
         if (xhr.readyState == 4 && xhr.status == 200) {
             var arr = JSON.parse(xhr.responseText);
@@ -1426,7 +1429,7 @@ function setEditBackground(tr) {
 
 function playEditStation(tr) {
     if (stchanged) stChanged();
-    id = tr.cells[0].innerText;
+    var id = tr.cells[0].innerText;
     if ((editPlaying) && (editIndex == tr)) {
         stopStation();
         tr.style.background = "initial";
@@ -1447,7 +1450,7 @@ function playEditStation(tr) {
 }
 
 function playStation() {
-    var select, id;
+    var select, id, xhr;
     try {
         //	checkwebsocket();
         mpause();
@@ -1464,7 +1467,7 @@ function playStation() {
 }
 
 function stopStation() {
-    var select = document.getElementById('stationsSelect');
+    var select = document.getElementById('stationsSelect'), xhr;
     //	checkwebsocket();
     mstop();
     editPlaying = false;
@@ -1478,7 +1481,7 @@ function stopStation() {
 }
 
 function saveSoundSettings() {
-    xhr = new XMLHttpRequest();
+    var xhr = new XMLHttpRequest();
     xhr.open("POST", "sound", false);
     xhr.setRequestHeader(content, ctype);
     xhr.send(
@@ -1499,7 +1502,7 @@ function fixedEncodeURIComponent(str) {
 function saveStation() {
     var file = document.getElementById('add_path').value,
         url = document.getElementById('add_url').value,
-        jfile;
+        jfile, xhr;
     if (!(file.substring(0, 1) === "/")) file = "/" + file;
     console.log("Path: " + file);
     jfile = fixedEncodeURIComponent(file);
@@ -1535,7 +1538,7 @@ function editInstantStation() {
     var arr, id = 0;
 
     do {
-        idstr = id.toString();
+        var idstr = id.toString();
         try {
             arr = JSON.parse(localStorage.getItem(idstr));
         } catch (e) { console.log("error" + e); }
@@ -1555,7 +1558,7 @@ function editInstantStation() {
 
 
 function editStation(id) {
-    var arr;
+    var arr, xhr;
     document.getElementById('editStationDiv').style.display = "block";
 
     function cpedit(arr) {
@@ -1568,7 +1571,7 @@ function editStation(id) {
         document.getElementById('add_URL').value = "http://" + document.getElementById('add_url').value + ":" + document.getElementById('add_port').value + document.getElementById('add_path').value;
     }
     document.getElementById('add_slot').value = id;
-    idstr = id.toString();
+    var idstr = id.toString();
     if (localStorage.getItem(idstr) != null) {
 
         try {
@@ -1626,7 +1629,7 @@ function refreshListtemp() {
 function clearList() {
     promptworking(working);
     if (confirm("Предупреждение: это сотрет все станции. Обязательно сохраните станции раньше. Стереть сейчас?")) {
-        xhr = new XMLHttpRequest();
+        var xhr = new XMLHttpRequest();
         xhr.open("POST", "clear", false);
         xhr.setRequestHeader(content, ctype);
         xhr.send();
@@ -1636,6 +1639,7 @@ function clearList() {
 }
 
 function ircode(mode) {
+    var xhr;
     try {
         xhr = new XMLHttpRequest();
         xhr.open("POST", "ircode", false);
@@ -1646,6 +1650,7 @@ function ircode(mode) {
 }
 
 function upgrade() {
+    var xhr;
     try {
         xhr = new XMLHttpRequest();
         xhr.open("POST", "upgrade", false);
@@ -1656,7 +1661,7 @@ function upgrade() {
     //	alert("Rebooting to the new release\nPlease refresh the page in few seconds.");
 }
 function getversion() {
-    xhr = new XMLHttpRequest();
+    var xhr = new XMLHttpRequest();
     xhr.onreadystatechange = function () {
         if (xhr.readyState == 4 && xhr.status == 200) {
             var arr = JSON.parse(xhr.responseText);
@@ -1679,6 +1684,7 @@ function getversion() {
 }
 
 function checkhistory() {
+    var xhr;
     if (window.XDomainRequest) {
         xhr = new XDomainRequest();
     } else if (window.XMLHttpRequest) {
@@ -1694,6 +1700,7 @@ function checkhistory() {
 }
 
 function checkinfos() {
+    var xhr;
     if (window.XDomainRequest) {
         xhr = new XDomainRequest();
     } else if (window.XMLHttpRequest) {
@@ -1709,6 +1716,7 @@ function checkinfos() {
 }
 //load the version and history html
 function checkversion() {
+    var xhr;
     getversion();
     if (window.XDomainRequest) {
         xhr = new XDomainRequest();
@@ -1729,7 +1737,7 @@ function checkversion() {
 
 // refresh the stations list by reading a file
 function downloadStations() {
-    var i, indmax, tosend, arr, reader, lines, line, file;
+    var i, indmax, tosend, arr, reader, lines, line, file, xhr;
     if (window.File && window.FileReader && window.FileList && window.Blob) {
         reader = new FileReader();
         xhr = new XMLHttpRequest();
@@ -1817,18 +1825,18 @@ function allowDrop(ev) {
 }
 
 function stChanged() {
-    var i, indmax, tosend, index, tbody = document.getElementById("stationsTable").getElementsByTagName('tbody')[0];
+    var i, xhr, indmax, tosend, index, tbody = document.getElementById("stationsTable").getElementsByTagName('tbody')[0];
 
     function fillInfo(ind) {
         var parser = document.createElement('a');
 
-        id = tbody.rows[ind].cells[0].innerText;
-        name = tbody.rows[ind].cells[1].innerText;
-        furl = tbody.rows[ind].cells[2].innerText;
+        var id = tbody.rows[ind].cells[0].innerText;
+        var name = tbody.rows[ind].cells[1].innerText;
+        var furl = tbody.rows[ind].cells[2].innerText;
         parser.href = "http://" + furl;
-        url = parser.hostname;
-        file = parser.pathname + parser.hash + parser.search;
-        port = parser.port;
+        var url = parser.hostname;
+        var file = parser.pathname + parser.hash + parser.search;
+        var port = parser.port;
         if (!port) port = 80;
         /*				file=tbody.rows[ind].cells[3].innerText;
                         port= tbody.rows[ind].cells[4].innerText;*/
@@ -1874,11 +1882,11 @@ function stChanged() {
 //Load the Stations table
 function loadStations() {
     var new_tbody = document.createElement('tbody'),
-        idlist, select,
-        id = 0;
+        idlist, idstr, select,
+        id, xhr, arr;
 
     function cploadStations(id, arr) {
-        tr = document.createElement('TR'),
+        var tr = document.createElement('TR'),
             td = document.createElement('TD');
         tr.draggable = "true";
         tr.id = "tr" + id.toString();
@@ -1886,19 +1894,23 @@ function loadStations() {
         tr.ondrop = dragDrop;
         tr.ondragover = allowDrop;
         td.appendChild(document.createTextNode(id));
-        td.style = "padding-left: 3px;";
+        td.style.paddingLeft = "3px;";
         td.setAttribute('onclick', 'playEditStation(this.parentNode);');
         tr.appendChild(td);
         // Name
         td = document.createElement('TD');
-        td.style = "word-break: break-all;overflow-wrap: break-word; word-wrap: break-word;";
+        td.style.wordBreak = "break-all";
+        td.style.overflowWrap = "break-word";
+        td.style.wordWrap = "break-word";
         td.setAttribute('onclick', 'playEditStation(this.parentNode);');
         if (arr["Name"].length > 116) arr["Name"] = "Error";
         td.appendChild(document.createTextNode(arr["Name"]));
         tr.appendChild(td);
         // URL
         td = document.createElement('TD');
-        td.style = "word-break: break-all;overflow-wrap: break-word; word-wrap: break-word;";
+        td.style.wordBreak = "break-all";
+        td.style.overflowWrap = "break-word";
+        td.style.wordWrap = "break-word";
         td.setAttribute('onclick', 'playEditStation(this.parentNode);');
         if (arr["Name"].length > 0) {
             if (arr["URL"].length > 116) arr["URL"] = "Error";
@@ -1911,7 +1923,8 @@ function loadStations() {
 
         // edit button			
         td = document.createElement('TD');
-        td.style = "text-align: center; vertical-align: middle;";
+        td.style.textAlign = "center";
+        td.style.verticalAlign = "middle";
         td.innerHTML = "<a class=\"icon-page-edit\" href=\"javascript:void(0)\" onClick=\"editStation(" + id + ")\"></a>";
         tr.appendChild(td);
         if (idlist === idstr) {
@@ -1926,7 +1939,7 @@ function loadStations() {
         idlist = select.options[select.selectedIndex].value.split(":");
         idlist = idlist[0];
     } catch (e) { idlist = 0; }
-    for (id; id < maxStation; id++) {
+    for (id = 0; id < maxStation; id++) {
         idstr = id.toString();
         if (localStorage.getItem(idstr) != null) {
             try {
@@ -1954,15 +1967,14 @@ function loadStations() {
             }
     }
 
-    old_tbody = document.getElementById("stationsTable").getElementsByTagName('tbody')[0];
+    var old_tbody = document.getElementById("stationsTable").getElementsByTagName('tbody')[0];
     old_tbody.parentNode.replaceChild(new_tbody, old_tbody);
 }
 
 //Load the selection with all stations
 function loadStationsList(max) {
     var foundNull = false,
-        id, opt, arr, select, liste = [],
-        i;
+        id, arr, select, i, xhr;
     select = document.getElementById("stationsSelect");
     for (i = select.options.length - 1; i >= 0; i--) {
         select.remove(i);
@@ -1971,7 +1983,7 @@ function loadStationsList(max) {
     function cploadStationsList(id, arr) {
         foundNull = false;
         if (arr["Name"].length > 0) {
-            opt = document.createElement('option');
+            var opt = document.createElement('option');
             opt.appendChild(document.createTextNode(id + ": \t" + arr["Name"]));
             select.add(opt);
         } else foundNull = true;
@@ -1980,7 +1992,7 @@ function loadStationsList(max) {
     select.disabled = true;
     promptworking(working);
     for (id = 0; id < max; id++) {
-        idstr = id.toString();
+        var idstr = id.toString();
         if (localStorage.getItem(idstr) != null) {
             try {
                 arr = JSON.parse(localStorage.getItem(idstr));
@@ -2009,16 +2021,16 @@ function loadStationsList(max) {
 
     promptworking("");
     select.disabled = false;
-    select.options.selectedIndex = parseInt(localStorage.getItem('selindexstore'));
+    select.options.selectedIndex = parseInt(localStorage.getItem('selindexstore'), 10);
 }
 
 function printList() {
     var html = "<html>";
-    id = 0;
+    var id, arr;
     html += "</html>";
     html += "<h1>Список станций Радиолы</h1><br/><hr><br/>";
-    for (id; id < maxStation; id++) {
-        idstr = id.toString();
+    for (id = 0; id < maxStation; id++) {
+        var idstr = id.toString();
         if (localStorage.getItem(idstr) != null) {
             try {
                 arr = JSON.parse(localStorage.getItem(idstr));
@@ -2088,7 +2100,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     nextStation();
                     break;
                 case "ArrowLeft":
-                    vol = parseInt(document.getElementById('vol_range').value);
+                    var vol = parseInt(document.getElementById('vol_range').value, 10);
                     if (vol < 5) vol = 0;
                     else vol = vol - 5;
                     onRangeVolChange(vol, true);
@@ -2097,7 +2109,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     prevStation();
                     break;
                 case "ArrowRight":
-                    vol = parseInt(document.getElementById('vol_range').value);
+                    var vol = parseInt(document.getElementById('vol_range').value, 10);
                     if (vol > 249) vol = 254;
                     else vol = vol + 5;
                     onRangeVolChange(vol, true);
@@ -2108,7 +2120,7 @@ document.addEventListener("DOMContentLoaded", function () {
             event.preventDefault();
         }
         if (curtab == "STATIONS") {
-            ed = editPlaying;
+            var ed = editPlaying;
             loadStations();
             editPlaying = ed;
         }
@@ -2141,5 +2153,5 @@ function ScrollUp() {
     s = document.body.scrollTop || window.pageYOffset;
     t = setInterval(function () { if (s > 0) window.scroll(0, s -= 5); else clearInterval(t) }, 5);
 }
-//
-//
+// 
+// 

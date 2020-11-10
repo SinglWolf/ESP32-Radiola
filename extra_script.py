@@ -1,62 +1,78 @@
-# -*- coding: utf-8 -*-
-import sys
-from importlib import reload
-from os.path import isfile, join
 from sys import platform
-import requests
-import subprocess
-Import("env")
+from os.path import isfile, join
+import os
+import shutil
+import hashlib
 
+Import("env")
 # print(env.Dump())
-# sys.exit()
-filename = ""
-my_flags = env.ParseFlags(env['BUILD_FLAGS'])
-#
-for x in my_flags.get("CPPDEFINES"):
-    # print(x)
-    if isinstance(x, list):
-        # grab as key, value
-        k, v = x
-        if k == "FILENAME":
-            filename = v
-            # no need to iterate further
-            break
-env.Replace(PROGNAME="%s" % str(filename))
-PROJECT_INCLUDE_DIR = env.subst("$PROJECT_INCLUDE_DIR")
-servfile = PROJECT_INCLUDE_DIR + "/servfile.h"
-if not isfile(servfile):
-    DEBUG = "1"
-    if filename == 'ESP32Radiola-release':
-        DEBUG = "0"
-        try:
-            js_file = 'webpage/script.js'
-        except:
-            print("Missing input file")
-            sys.exit()
-        # Grab the file contents
-        with open(js_file, 'r') as c:
-            js = c.read()
-        # Pack it, ship it
-        payload = {'input': js}
-        url = 'https://javascript-minifier.com/raw'
-        print("Requesting mini-me of {}. . .".format(c.name))
-        r = requests.post(url, payload)
-        # Write out minified version
-        minified = js_file.rstrip('.js')+'.min.js'
-        with open(minified, 'w') as m:
-            m.write(r.text)
-        print("Minification complete. See {}".format(m.name))
-    if platform == "linux":
-        # linux
-        subprocess.call("./generate.sh " + PROJECT_INCLUDE_DIR + ' ' + DEBUG, shell=True)
-    elif platform == "darwin":
-        # OS X
-        pass
-    elif platform == "win32":
-        # Windows...
-        subprocess.call('./generate.bat' + PROJECT_INCLUDE_DIR + DEBUG, shell=True)
-else:
-    print("servfile.h present...")
-# if not isfile("${PROJECT_DIR}/webpage/.index"):
-#     before_build
-#env.AddPreAction("${BUILD_DIR}/esp-idf/main/webserver.c.o", before_build)
+# print(env.subst("$PIOENV"))
+# print(env.subst("$TARGET"))
+PIOENV = env.subst("$PIOENV")
+BUILD_DIR = env.subst("$BUILD_DIR")
+PROGNAME = env.subst("$PROGNAME")
+PROJECT_DIR = env.subst("$PROJECT_DIR")
+PROJECT_BIN_DIR = PROJECT_DIR + '/binaries/' + PIOENV + '/'
+frim_bin = PROGNAME + ".bin"
+file_list = [frim_bin, "bootloader.bin", "partitions.bin"]
+
+def get_hash_md5(filename):
+    with open(filename, 'rb') as f:
+        m = hashlib.md5()
+        while True:
+            data = f.read(8192)
+            if not data:
+                break
+            m.update(data)
+        return m.hexdigest()
+
+def check_md5(name):
+    check = True
+    File = PROJECT_BIN_DIR + name
+    File_md5 = File + '.md5'
+    if isfile(File_md5):
+        with open(File_md5, 'r') as file:
+            lst = list()
+            for line in file.readlines():
+                lst.extend(line.rstrip().split(' '))
+    else:
+        print("Checksum file for:", name,
+              "not found.")
+        with open(File_md5, 'w') as fout:
+            f_hash_md5 = get_hash_md5(File)
+            print(f_hash_md5 + ' ' + name, file=fout)
+        print("Checksum file for:", name, "created.")
+        check = False
+        return check
+
+    if lst[0] != get_hash_md5(File):
+        with open(File_md5, 'w') as fout:
+            f_hash_md5 = get_hash_md5(File)
+            print(f_hash_md5 + ' ' + name, file=fout)
+        print("File:", name, "changed. Checksum overwritten.")
+        check = False
+    return check
+
+def del_files():
+    for name in file_list:
+        if isfile(BUILD_DIR + '/' + name):
+            print(name)
+            os.remove(BUILD_DIR + '/' + name)
+
+# exit(0)
+# del_files()
+
+def after_build(source, target, env):
+    for name in file_list:
+        if isfile(BUILD_DIR + '/' + name):
+            shutil.copy(BUILD_DIR + '/' + name, PROJECT_BIN_DIR + name)
+            check_md5(name)
+
+
+# if not check_md5(file_list):
+#     env.AddPreAction("${BUILD_DIR}/esp-idf/main/webserver.c.o", before_build)
+# else:
+#     print("Files not changed.")
+# env.AddPreAction("program", before_build)
+env.AddPostAction('buildprog', after_build)
+# env.AddPostAction("${BUILD_DIR}/${PROGNAME}.bin", after_build)

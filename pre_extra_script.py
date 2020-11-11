@@ -33,8 +33,6 @@ env.Replace(PROGNAME="%s" % str(filename))
 # exit(0)
 
 REMOVE_WS = re.compile(r"\s{2,}").sub
-YUI_COMPRESSOR = 'java -jar tools/yuicompressor.jar '
-CLOSURE_COMPILER = 'java -jar tools/compiler.jar  --compilation_level SIMPLE_OPTIMIZATIONS '
 
 PROJECT_DIR = env.subst("$PROJECT_DIR")
 
@@ -42,44 +40,59 @@ PROJECT_BUILD_DIR = env.subst("$PROJECT_BUILD_DIR")
 
 PROJECT_INCLUDE_DIR = env.subst("$PROJECT_INCLUDE_DIR")
 
-file_list = ["favicon.png", "index.html", "logo.png",
+if platform == "linux":
+    # linux
+    YUI_COMPRESSOR = 'java -jar tools/yuicompressor.jar '
+    CLOSURE_COMPILER = 'java -jar tools/compiler.jar  --compilation_level SIMPLE_OPTIMIZATIONS '
+    XXD = 'tools/xxd.py -i '
+elif platform == "darwin":
+    # OS X
+    pass
+elif platform == "win32":
+    # Windows...
+    YUI_COMPRESSOR = 'java -jar tools\yuicompressor.jar '
+    CLOSURE_COMPILER = 'java -jar tools\compiler.jar  --compilation_level SIMPLE_OPTIMIZATIONS '
+    XXD = 'tools\\xxd.py -i '
+
+
+file_list = ["favicon.png", "mainpage.html", "logo.png",
              "script.js", "style.css", "tabbis.js", "icons.css"]
 
 
-def get_hash_md5(filename):
+def get_hash_sha1(filename):
     with open(filename, 'rb') as f:
-        m = hashlib.md5()
+        m = hashlib.sha1()
         while True:
-            data = f.read(8192)
+            data = f.read(2**16)
             if not data:
                 break
             m.update(data)
         return m.hexdigest()
 
 
-def check_md5(name):
+def check_sha1(name):
     check = True
     File = PROJECT_DIR + "/webpage/" + name
-    File_md5 = File + '.md5'
-    if isfile(File_md5):
-        with open(File_md5, 'r') as file:
+    File_sha1 = File + '.sha1'
+    if isfile(File_sha1):
+        with open(File_sha1, 'r') as file:
             lst = list()
             for line in file.readlines():
                 lst.extend(line.rstrip().split(' '))
     else:
         print("Checksum file for:", name,
               "not found.")
-        with open(File_md5, 'w') as fout:
-            f_hash_md5 = get_hash_md5(File)
-            print(f_hash_md5 + ' ' + name, file=fout)
+        with open(File_sha1, 'w') as fout:
+            f_hash_sha1 = get_hash_sha1(File)
+            print(f_hash_sha1 + ' ' + name, file=fout)
         print("Checksum file for:", name, "created.")
         check = False
         return check
 
-    if lst[0] != get_hash_md5(File):
-        with open(File_md5, 'w') as fout:
-            f_hash_md5 = get_hash_md5(File)
-            print(f_hash_md5 + ' ' + name, file=fout)
+    if lst[0] != get_hash_sha1(File):
+        with open(File_sha1, 'w') as fout:
+            f_hash_sha1 = get_hash_sha1(File)
+            print(f_hash_sha1 + ' ' + name, file=fout)
         print("File:", name, "changed. Checksum overwritten.")
         check = False
     return check
@@ -91,7 +104,7 @@ def build_page():
         dir_build = PROJECT_DIR + "/webpage/"
         f_build = dir_build + name
         name_var = name.rsplit(".", 1)[0]
-        if check_md5(name):
+        if check_sha1(name):
             # print("File ", name, " not changed.")
             pass
         else:
@@ -102,7 +115,7 @@ def build_page():
                     os.remove(file_build)
                     print("File: " + build_mode + "/webserver.c.o removed.")
                 print("Prepare ", name, " for build.")
-                shutil.copy(f_build, f_build + '.bak')
+                shutil.copy(f_build, f_build + '.tmp')
                 if build_mode == "release":
                     if ".html" in name:
                         f = open(f_build, 'r')
@@ -128,12 +141,12 @@ def build_page():
                 elif "tabbis.js" in name:
                     define = name_var
                 header_f = define + '.h'
-                subprocess.call("tools/xxd.py -i" + f_build + ' -v ' + name_var +
+                subprocess.call(XXD + f_build + ' -v ' + name_var +
                                 ' -d ' + define + ' -o ' + PROJECT_INCLUDE_DIR + '/' + header_f, shell=True)
                 print("Header file ", header_f, " created.")
-                if isfile(f_build + '.bak'):
+                if isfile(f_build + '.tmp'):
                     os.remove(f_build)
-                    shutil.move(f_build + '.bak', f_build)
+                    shutil.move(f_build + '.tmp', f_build)
                 if ".png" in name:
                     break
                 elif "tabbis.js" in name:
@@ -149,7 +162,7 @@ build_page()
 # if not isfile(file_build):
 
 
-# if not check_md5(file_list):
+# if not check_sha1(file_list):
 #     env.AddPreAction("${BUILD_DIR}/esp-idf/main/webserver.c.o", before_build)
 # else:
 #     print("Files not changed.")

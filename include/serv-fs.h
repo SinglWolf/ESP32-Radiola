@@ -20,12 +20,12 @@ struct servFile
 #define ICACHE_RAM_ATTR __attribute__((section(".iram0.text")))
 
 #ifdef CONFIG_RELEASE
-#include "index_release.h"
+#include "mainpage_release.h"
 #include "script_release.h"
 #include "style_release.h"
 #include "icons_release.h"
 #else
-#include "index_debug.h"
+#include "mainpage_debug.h"
 #include "script_debug.h"
 #include "style_debug.h"
 #include "icons_debug.h"
@@ -78,7 +78,7 @@ const struct servFile styleIcons = {
 const struct servFile indexFile = {
 	"/",
 	"text/html",
-	sizeof(index_p),
-	(const char *)index_p,
+	sizeof(mainpage),
+	(const char *)mainpage,
 	(struct servFile *)&styleIcons};
 #endif

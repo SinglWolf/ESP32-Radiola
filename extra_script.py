@@ -16,39 +16,39 @@ PROJECT_BIN_DIR = PROJECT_DIR + '/binaries/' + PIOENV + '/'
 frim_bin = PROGNAME + ".bin"
 file_list = [frim_bin, "bootloader.bin", "partitions.bin"]
 
-def get_hash_md5(filename):
+def get_hash_sha1(filename):
     with open(filename, 'rb') as f:
-        m = hashlib.md5()
+        m = hashlib.sha1()
         while True:
-            data = f.read(8192)
+            data = f.read(2**16)
             if not data:
                 break
             m.update(data)
         return m.hexdigest()
 
-def check_md5(name):
+def check_sha1(name):
     check = True
     File = PROJECT_BIN_DIR + name
-    File_md5 = File + '.md5'
-    if isfile(File_md5):
-        with open(File_md5, 'r') as file:
+    File_sha1 = File + '.sha1'
+    if isfile(File_sha1):
+        with open(File_sha1, 'r') as file:
             lst = list()
             for line in file.readlines():
                 lst.extend(line.rstrip().split(' '))
     else:
         print("Checksum file for:", name,
               "not found.")
-        with open(File_md5, 'w') as fout:
-            f_hash_md5 = get_hash_md5(File)
-            print(f_hash_md5 + ' ' + name, file=fout)
+        with open(File_sha1, 'w') as fout:
+            f_hash_sha1 = get_hash_sha1(File)
+            print(f_hash_sha1 + ' ' + name, file=fout)
         print("Checksum file for:", name, "created.")
         check = False
         return check
 
-    if lst[0] != get_hash_md5(File):
-        with open(File_md5, 'w') as fout:
-            f_hash_md5 = get_hash_md5(File)
-            print(f_hash_md5 + ' ' + name, file=fout)
+    if lst[0] != get_hash_sha1(File):
+        with open(File_sha1, 'w') as fout:
+            f_hash_sha1 = get_hash_sha1(File)
+            print(f_hash_sha1 + ' ' + name, file=fout)
         print("File:", name, "changed. Checksum overwritten.")
         check = False
     return check
@@ -66,10 +66,10 @@ def after_build(source, target, env):
     for name in file_list:
         if isfile(BUILD_DIR + '/' + name):
             shutil.copy(BUILD_DIR + '/' + name, PROJECT_BIN_DIR + name)
-            check_md5(name)
+            check_sha1(name)
 
 
-# if not check_md5(file_list):
+# if not check_sha1(file_list):
 #     env.AddPreAction("${BUILD_DIR}/esp-idf/main/webserver.c.o", before_build)
 # else:
 #     print("Files not changed.")

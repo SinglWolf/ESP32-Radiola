@@ -5,8 +5,6 @@ import sys
 
 def bin2header(data, var_name='var', define='header'):
     out = []
-    if var_name == "index":
-        var_name = 'index_p'
     out.append('#ifndef __' + define.upper() + '_H__\n' + '#define __' +
                define.upper() + '_H__\n' + 'const char {var_name}[] = {{'.format(var_name=var_name))
     l = [data[i:i+12] for i in range(0, len(data), 12)]

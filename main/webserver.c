@@ -1998,6 +1998,7 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 				char str_sodes[KEY_MAX][14];
 				for (uint8_t indexKey = KEY_UP; indexKey < KEY_MAX; indexKey++)
 				{
+					get_code(buf_code, IR_Key[indexKey][0], IR_Key[indexKey][1]);
 					strcpy(str_sodes[indexKey], buf_code);
 					ESP_LOGD(TAG, " IrKey for set0: %X, for set1: %X str_sodes: %s", IR_Key[indexKey][0], IR_Key[indexKey][1], str_sodes[indexKey]);
 				}

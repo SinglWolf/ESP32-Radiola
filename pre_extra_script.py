@@ -11,6 +11,7 @@ import re
 import sys
 import shutil
 import gzip
+import io
 
 Import("env")
 
@@ -34,14 +35,13 @@ env.Replace(PROGNAME="%s" % str(filename))
 
 REMOVE_WS = re.compile(r"\s{2,}").sub
 
-PROJECT_DIR = env.subst("$PROJECT_DIR")
-
-PROJECT_BUILD_DIR = env.subst("$PROJECT_BUILD_DIR")
-
-PROJECT_INCLUDE_DIR = env.subst("$PROJECT_INCLUDE_DIR")
-
 if platform == "linux":
     # linux
+    PROJECT_DIR = env.subst("$PROJECT_DIR") + '/'
+    PROJECT_INCLUDE_DIR = env.subst("$PROJECT_INCLUDE_DIR") + '/'
+    PROJECT_BUILD_DIR = env.subst("$PROJECT_BUILD_DIR") + '/'
+    WEBSERWER_C_O = "/esp-idf/main/webserver.c.o"
+    WEBPAGE = "webpage/"
     YUI_COMPRESSOR = 'java -jar tools/yuicompressor.jar '
     CLOSURE_COMPILER = 'java -jar tools/compiler.jar  --compilation_level SIMPLE_OPTIMIZATIONS '
     XXD = 'tools/xxd.py -i '
@@ -50,8 +50,13 @@ elif platform == "darwin":
     pass
 elif platform == "win32":
     # Windows...
-    YUI_COMPRESSOR = 'java -jar tools\yuicompressor.jar '
-    CLOSURE_COMPILER = 'java -jar tools\compiler.jar  --compilation_level SIMPLE_OPTIMIZATIONS '
+    PROJECT_DIR = env.subst("$PROJECT_DIR") + '\\'
+    PROJECT_INCLUDE_DIR = env.subst("$PROJECT_INCLUDE_DIR") + '\\'
+    PROJECT_BUILD_DIR = env.subst("$PROJECT_BUILD_DIR") + '\\'
+    WEBSERWER_C_O = "\\esp-idf\\main\\webserver.c.o"
+    WEBPAGE = "webpage\\"
+    YUI_COMPRESSOR = 'java -jar tools\\yuicompressor.jar '
+    CLOSURE_COMPILER = 'java -jar tools\\compiler.jar  --compilation_level SIMPLE_OPTIMIZATIONS '
     XXD = 'tools\\xxd.py -i '
 
 
@@ -60,19 +65,30 @@ file_list = ["favicon.png", "mainpage.html", "logo.png",
 
 
 def get_hash_sha1(filename):
-    with open(filename, 'rb') as f:
-        m = hashlib.sha1()
-        while True:
-            data = f.read(2**16)
-            if not data:
-                break
-            m.update(data)
+    if ".png" in filename:
+        # with io.open(f_build, 'r', encoding='utf-8') as f:
+        with open(filename, 'rb') as f:
+            m = hashlib.sha1()
+            while True:
+                data = f.read(2**16)
+                if not data:
+                    break
+                m.update(data)
+        return m.hexdigest()
+    else:
+        with io.open(filename, 'r', encoding='utf-8') as f:
+            m = hashlib.sha1()
+            while True:
+                data = f.read(2**16)
+                if not data:
+                    break
+                m.update(data.encode('utf-8'))
         return m.hexdigest()
 
 
 def check_sha1(name):
     check = True
-    File = PROJECT_DIR + "/webpage/" + name
+    File = PROJECT_DIR + WEBPAGE + name
     File_sha1 = File + '.sha1'
     if isfile(File_sha1):
         with open(File_sha1, 'r') as file:
@@ -101,30 +117,31 @@ def check_sha1(name):
 def build_page():
     check = False
     for name in file_list:
-        dir_build = PROJECT_DIR + "/webpage/"
+        dir_build = PROJECT_DIR + WEBPAGE
         f_build = dir_build + name
+        # print(f_build)
+        # exit(0)        
         name_var = name.rsplit(".", 1)[0]
         if check_sha1(name):
             # print("File ", name, " not changed.")
             pass
         else:
             for build_mode in ["debug", "release"]:
-                file_build = PROJECT_BUILD_DIR + '/' + \
-                    build_mode + "/esp-idf/main/webserver.c.o"
+                file_build = PROJECT_BUILD_DIR + build_mode + WEBSERWER_C_O
                 if isfile(file_build):
                     os.remove(file_build)
-                    print("File: " + build_mode + "/webserver.c.o removed.")
+                    print("File webserver.c.o for " + build_mode + " removed.")
                 print("Prepare ", name, " for build.")
-                shutil.copy(f_build, f_build + '.tmp')
+                shutil.copy(f_build, f_build + '.ori')
                 if build_mode == "release":
                     if ".html" in name:
-                        f = open(f_build, 'r')
-                        content = f.read()
+                        with io.open(f_build, 'r', encoding='utf-8') as f:
+                            content = f.read()
                         content = REMOVE_WS(" ", content)
-                        d = open(f_build, 'w+')
-                        d.write(content)
+                        with io.open(f_build, 'w+', encoding='utf-8') as d:
+                            d.write(content)
                     if ".css" in name:
-                        cmd = YUI_COMPRESSOR + f_build + ' -o ' + f_build + '.min'
+                        cmd = YUI_COMPRESSOR + f_build + ' -o ' + WEBPAGE + name + '.min' 
                         subprocess.call(cmd, shell=True)
                     if ".js" in name:
                         cmd = CLOSURE_COMPILER + f_build + ' --js_output_file ' + f_build + '.min'
@@ -142,11 +159,11 @@ def build_page():
                     define = name_var
                 header_f = define + '.h'
                 subprocess.call(XXD + f_build + ' -v ' + name_var +
-                                ' -d ' + define + ' -o ' + PROJECT_INCLUDE_DIR + '/' + header_f, shell=True)
+                                ' -d ' + define + ' -o ' + PROJECT_INCLUDE_DIR + header_f, shell=True)
                 print("Header file ", header_f, " created.")
-                if isfile(f_build + '.tmp'):
+                if isfile(f_build + '.ori'):
                     os.remove(f_build)
-                    shutil.move(f_build + '.tmp', f_build)
+                    shutil.move(f_build + '.ori', f_build)
                 if ".png" in name:
                     break
                 elif "tabbis.js" in name:

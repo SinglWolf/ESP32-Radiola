@@ -9,12 +9,22 @@ Import("env")
 # print(env.subst("$PIOENV"))
 # print(env.subst("$TARGET"))
 PIOENV = env.subst("$PIOENV")
-BUILD_DIR = env.subst("$BUILD_DIR")
 PROGNAME = env.subst("$PROGNAME")
 PROJECT_DIR = env.subst("$PROJECT_DIR")
-PROJECT_BIN_DIR = PROJECT_DIR + '/binaries/' + PIOENV + '/'
 frim_bin = PROGNAME + ".bin"
 file_list = [frim_bin, "bootloader.bin", "partitions.bin"]
+
+if platform == "linux":
+    # linux
+    BUILD_DIR = env.subst("$BUILD_DIR") + '/'
+    PROJECT_BIN_DIR = PROJECT_DIR + '/binaries/' + PIOENV + '/'
+elif platform == "darwin":
+    # OS X
+    pass
+elif platform == "win32":
+    # Windows...
+    BUILD_DIR = env.subst("$BUILD_DIR") + '\\'
+    PROJECT_BIN_DIR = PROJECT_DIR + '\\binaries\\' + PIOENV + '\\'
 
 def get_hash_sha1(filename):
     with open(filename, 'rb') as f:
@@ -55,17 +65,17 @@ def check_sha1(name):
 
 def del_files():
     for name in file_list:
-        if isfile(BUILD_DIR + '/' + name):
+        if isfile(BUILD_DIR + name):
             print(name)
-            os.remove(BUILD_DIR + '/' + name)
+            os.remove(BUILD_DIR + name)
 
 # exit(0)
-# del_files()
+del_files()
 
 def after_build(source, target, env):
     for name in file_list:
-        if isfile(BUILD_DIR + '/' + name):
-            shutil.copy(BUILD_DIR + '/' + name, PROJECT_BIN_DIR + name)
+        if isfile(BUILD_DIR + name):
+            shutil.copy(BUILD_DIR + name, PROJECT_BIN_DIR + name)
             check_sha1(name)
 
 

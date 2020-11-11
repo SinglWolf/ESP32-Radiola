@@ -74,7 +74,6 @@ def get_hash_sha1(filename):
                 if not data:
                     break
                 m.update(data)
-        return m.hexdigest()
     else:
         with io.open(filename, 'r', encoding='utf-8') as f:
             m = hashlib.sha1()
@@ -83,13 +82,13 @@ def get_hash_sha1(filename):
                 if not data:
                     break
                 m.update(data.encode('utf-8'))
-        return m.hexdigest()
+    return m.hexdigest()
 
 
 def check_sha1(name):
     check = True
     File = PROJECT_DIR + WEBPAGE + name
-    File_sha1 = File + '.sha1'
+    File_sha1 = PROJECT_DIR + WEBPAGE + name.rsplit(".", 1)[0] + '.sha'
     if isfile(File_sha1):
         with open(File_sha1, 'r') as file:
             lst = list()
@@ -100,7 +99,7 @@ def check_sha1(name):
               "not found.")
         with open(File_sha1, 'w') as fout:
             f_hash_sha1 = get_hash_sha1(File)
-            print(f_hash_sha1 + ' ' + name, file=fout)
+            print(f_hash_sha1 + ' *' + name, file=fout)
         print("Checksum file for:", name, "created.")
         check = False
         return check

@@ -39,7 +39,7 @@ def get_hash_sha1(filename):
 def check_sha1(name):
     check = True
     File = PROJECT_BIN_DIR + name
-    File_sha1 = File + '.sha1'
+    File_sha1 = PROJECT_BIN_DIR + name.rsplit(".", 1)[0] + '.sha'
     if isfile(File_sha1):
         with open(File_sha1, 'r') as file:
             lst = list()
@@ -50,7 +50,7 @@ def check_sha1(name):
               "not found.")
         with open(File_sha1, 'w') as fout:
             f_hash_sha1 = get_hash_sha1(File)
-            print(f_hash_sha1 + ' ' + name, file=fout)
+            print(f_hash_sha1 + ' *' + name, file=fout)
         print("Checksum file for:", name, "created.")
         check = False
         return check

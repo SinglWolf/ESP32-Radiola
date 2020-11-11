@@ -1,0 +1,34 @@
+# Documents
+ text=lf
+ *.css eol=lf
+ *.js eol=lf
+ *.php eol=lf
+ *.html eol=lf
+ *.c linguist-vendored eol=lf
+ *.cpp eol=lf
+ *.h eol=lf
+ *.py eol=lf
+ *.ini eol=lf
+ *.projbuild eol=lf
+ *.yml eol=lf
+ *.sha eol=lf
+ *.mk eol=lf
+ *.txt eol=lf
+ sdkconfig* eol=lf
+ README eol=lf
+ 
+# Graphics
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.tif binary
+*.tiff binary
+*.ico binary
+*.svg binary
+#*.svg text
+*.eps binary
+#
+*.bin binary
+*.jar binary
+*.zip binary

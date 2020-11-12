@@ -1,5 +1,13 @@
 # ESP32-Radiola
-Форк проекта https://github.com/karawin/Ka-Radio32 на VSCode+PlatformIO
+Форк проекта https://github.com/karawin/Ka-Radio32
+
+**Немного о проекте:**
+
+Проект **ESP32-Radiola** кросс-платформенный, т.е. компиляция и сборка будет работать как на **Linux**-, так **Windows**- совместимых **OS**.
+Для этого нужно скачать и установить среду разработки от MicroSoft по этой ссылке https://code.visualstudio.com/download
+
+вавав
+
 
 **Все вопросы по проекту пишите [ТУТ](https://serverdoma.ru/viewtopic.php?f=70&t=1178).**
 

@@ -10,6 +10,8 @@
 
 Затем в **VS Code** нужно установить необходимые компоненты: **Russian Language Pack for Visual Studio Code** и **PlatformIO IDE**.
 
+**Для полноценной работы необходима подержка Java** Скачать можно по ссылке https://www.java.com/ru/download/
+
 **Инструкция:** [Установка и настройка IDE для программирования ESP32](https://serverdoma.ru/viewtopic.php?f=70&t=1179)
 
 **Все вопросы по проекту пишите в** [ESP32-Radiola - Музыкальный центр с управлением на ESP32 своими руками](https://serverdoma.ru/viewtopic.php?f=70&t=1178).

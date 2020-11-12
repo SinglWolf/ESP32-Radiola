@@ -10,9 +10,9 @@
 
 Затем в **VS Code** нужно установить необходимые компоненты: **Russian Language Pack for Visual Studio Code** и **PlatformIO IDE**.
 
-**Для полноценной работы необходима подержка Java** Скачать можно по ссылке https://www.java.com/ru/download/
-
 **Инструкция:** [Установка и настройка IDE для программирования ESP32](https://serverdoma.ru/viewtopic.php?f=70&t=1179)
+
+**Для полноценной работы необходима подержка Java**. Скачать можно по ссылке https://www.java.com/ru/download/
 
 **Все вопросы по проекту пишите в** [ESP32-Radiola - Музыкальный центр с управлением на ESP32 своими руками](https://serverdoma.ru/viewtopic.php?f=70&t=1178).
 
@@ -42,39 +42,37 @@
 
   **Внешний вид и схему подключения некоторых компонентов можно глянуть в каталоге [pictures](https://github.com/SinglWolf/ESP32-Radiola/tree/master/pictures).**
 
-
 Проект делаю для себя. Никаких хроник изменений не веду. Как только реализую основные задачи, напишу развёрнутый мануал.
 
 **(Прошивать на чистую FLASH!!!)**
 
 **ИНФОРМАЦИЯ**
-  + У Радиолы две прошивки.
-    [**Релизная**](https://github.com/SinglWolf/ESP32-Radiola/tree/master/binaries/release) - для постоянного пользования.
-    [**Отладочная**](https://github.com/SinglWolf/ESP32-Radiola/tree/master/binaries/debug) - для анализа поведения, отадки и поиска возможных ошибок.
+  + У Радиолы две прошивки.<br/>
+    [**Релизная**](https://github.com/SinglWolf/ESP32-Radiola/tree/master/binaries/release) - для постоянного пользования.<br/>
+    [**Отладочная**](https://github.com/SinglWolf/ESP32-Radiola/tree/master/binaries/debug) - для анализа поведения, отадки и поиска возможных ошибок.<br/>
   + Вся забота об отслеживании изменений в файлах, необходимых для работы веб-интерфейса, теперь лежит на PlatformIO. При любом изменени
   в этих файлах, автоматически создаются заголовочные файлы с массивами данных в формате языка С.
+  + Проект Радиола собран на <strong>framework-espidf 4.1.0</strong>.
   + Проект Радиола можно запускать как на Linux, так и на Windows.
+
+  **ПРОШИВКА собрана без поддержки тачскрина!!! Если Вы хотите подключить дисплей с тачскрином:**
+
+  В файле `.platformio\packages\framework-espidf\components\driver\spi_master.c`
+  
+  Строка 147, заменить
+  
+  ```cpp
+  #define NO_CS 3     //Number of CS pins per SPI host
+  ```
+    
+  на
+
+  ```cpp
+  #define NO_CS 5     //Number of CS pins per SPI host
+  ```
  
 **Реализовано сейчас:**
   + **Настройка конфигурации Радиолы доступна через menuconfig из среды PlatformIO**
-  + Радиола переехала на <strong>framework-espidf 4.1.0</strong> без костылей и правок в системных библиотеках.
-
-  Единственная правка касается только файла `C:\Users\\$USER\\.platformio\packages\framework-espidf\components\driver\spi_master.c`
-  
-  Косяк с ограничением количества девайсов на шине SPI так и кочует от старой версии к новой.
-  
-  В строке 147 заменить
-  
-  ```#define NO_CS 3     //Number of CS pins per SPI host```
-    
-  на
-  
- ```#define NO_CS 5     //Number of CS pins per SPI host```
-
- **Делать правку нужно лишь в том случае, если Вы хотите подключить дисплей с тачскрином**
-
- **ПРОШИВКА собрана без поддержки тачскрина!!!**
- 
   + Исправлена ошибка в принципиальной схеме. В схему добавлена разводка питания для BTx01 
   + Реализована тестовая поддержка модуля BTx01, через консоль UART и TELNET.
   + Доступные команды для модуля BTx01 можно посмотреть, набрав в консоли "help".
@@ -166,7 +164,7 @@
  *адреса:*
   + bootloader.bin - 0x1000
   + partitions.bin - 0x8000
-  + ESP32Radiola.bin - 0x10000 и 0x1D0000
+  + ESP32Radiola(-**release** или -**debug**).bin - 0x10000 и 0x1D0000
 
 ![Image alt](https://github.com/SinglWolf/ESP32-Radiola/raw/master/pictures/flash_download_tools.png)
 

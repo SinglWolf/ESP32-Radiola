@@ -4,12 +4,16 @@
 **Немного о проекте:**
 
 Проект **ESP32-Radiola** кросс-платформенный, т.е. компиляция и сборка будет работать как на **Linux**-, так **Windows**- совместимых **OS**.
-Для этого нужно скачать и установить среду разработки от MicroSoft по этой ссылке https://code.visualstudio.com/download
+Для этого нужно скачать и установить для Вашей ОС среду разработки **VS Code** от MicroSoft по этой ссылке https://code.visualstudio.com/download
 
-вавав
+![Image alt](https://github.com/SinglWolf/ESP32-Radiola/raw/master/pictures/vscode.png)
 
+Затем в **VS Code** нужно установить необходимые компоненты: **Russian Language Pack for Visual Studio Code** и **PlatformIO IDE**
+После этого можно запускать проект.
 
-**Все вопросы по проекту пишите [ТУТ](https://serverdoma.ru/viewtopic.php?f=70&t=1178).**
+**Инструкция:** [Установка и настройка IDE для программирования ESP32](https://serverdoma.ru/viewtopic.php?f=70&t=1179)
+
+**Все вопросы по проекту пишите в** [ESP32-Radiola - Музыкальный центр с управлением на ESP32 своими руками](https://serverdoma.ru/viewtopic.php?f=70&t=1178).
 
 **Используемое железо (HARDWARE):**
   + Корпус - старый системный блок компьютера.

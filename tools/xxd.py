@@ -1,15 +1,19 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 import argparse
 import sys
+import io
 
+def bytes_to_c_arr(data):
+    return [format(b, '#04x') for b in data]
 
 def bin2header(data, var_name='var', define='header'):
     out = []
     out.append('#ifndef __' + define.upper() + '_H__\n' + '#define __' +
                define.upper() + '_H__\n' + 'const char {var_name}[] = {{'.format(var_name=var_name))
-    l = [data[i:i+12] for i in range(0, len(data), 12)]
+    l = [data[i:i+16] for i in range(0, len(data), 16)]
     for i, x in enumerate(l):
-        line = ', '.join(['0x{val:02x}'.format(val=ord(c)) for c in x])
+        line = ', '.join(bytes_to_c_arr(x))
         out.append('  {line}{end_comma}'.format(
             line=line, end_comma=',' if i < len(l)-1 else ''))
     out.append('};')
@@ -31,13 +35,12 @@ def main():
     if not args:
         return 1
 
-    with open(args.input, 'r') as f:
+    with open(args.input, 'rb') as f:
         data = f.read()
-
     out = bin2header(data, args.var, args.define) + '\n#endif\n'
 
     if args.out:
-        with open(args.out, 'w') as f:
+        with io.open(args.out, 'w', encoding='utf-8') as f:
             f.write(out)
     else:
         print(out)

@@ -57,7 +57,7 @@ elif platform == "win32":
     WEBPAGE = "webpage\\"
     YUI_COMPRESSOR = 'java -jar tools\\yuicompressor.jar '
     CLOSURE_COMPILER = 'java -jar tools\\compiler.jar  --compilation_level SIMPLE_OPTIMIZATIONS '
-    XXD = 'tools\\xxd.py -i '
+    XXD = 'python tools\\xxd.py -i '
 
 
 file_list = ["favicon.png", "mainpage.html", "logo.png",
@@ -114,7 +114,6 @@ def check_sha1(name):
 
 
 def build_page():
-    check = False
     for name in file_list:
         dir_build = PROJECT_DIR + WEBPAGE
         f_build = dir_build + name
@@ -157,6 +156,8 @@ def build_page():
                 elif "tabbis.js" in name:
                     define = name_var
                 header_f = define + '.h'
+                if isfile(PROJECT_INCLUDE_DIR + header_f):
+                    os.remove(PROJECT_INCLUDE_DIR + header_f)
                 subprocess.call(XXD + f_build + ' -v ' + name_var +
                                 ' -d ' + define + ' -o ' + PROJECT_INCLUDE_DIR + header_f, shell=True)
                 print("Header file ", header_f, " created.")
@@ -167,10 +168,6 @@ def build_page():
                     break
                 elif "tabbis.js" in name:
                     break
-            check = True
-    if check == False:
-        print("Files the web page not changed.")
-
 
 build_page()
 

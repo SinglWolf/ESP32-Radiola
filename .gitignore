@@ -54,3 +54,5 @@ dkms.conf
 .pio
 .vscode
 .directory
+sdkconfig
+sdkconfig.old

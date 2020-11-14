@@ -1,20 +1,458 @@
-menu "Конфигурация ESP32-Радиолы"
+menu "Настройка ESP32-Радиолы"
+    menu "Конфигурация GPIOS"
+        choice
+            prompt "Хост SPI"
+            bool
+            default HARDWARE_HOST
+            help
+                Выбор хоста SPI
+
+            config HARDWARE_HOST
+                bool "Аппаратный хост"
+            config VIRTUAL_HOST
+                bool "Виртуальный хост"
+        endchoice
+ 
+        menu "Шина SPI"
+            config MISO_GPIO
+                int "Номер пина SPI MISO"
+                range 0 33
+                default 19
+                help
+                    Set the GPIO number used by SPI MISO.
+            config MOSI_GPIO
+                int "Номер пина SPI MOSI"
+                range 0 33
+                default 23
+                help
+                    Set the GPIO number used by SPI MOSI.
+            config SCLK_GPIO
+                int "Номер пина SPI SCLK"
+                range 0 33
+                default 18
+                help
+                    Set the GPIO number used by SPI SCLK.
+        endmenu
+
+        menu "Дисплей"
+            config LCD_CS_GPIO
+                int "Номер пина LCD_CS"
+                range 0 39
+                default 27
+                help
+                    Set the GPIO number used by LCD_CS.
+            config LCD_DC_GPIO
+                int "Номер пина LCD_DC"
+                range 0 39
+                default 2
+                help
+                    Set the GPIO number used by LCD_DC.
+            config LCD_BACKLIGHT_GPIO
+                int "Номер пина LCD_BACKLIGHT"
+                range 0 39
+                default 26
+                help
+                    Set the GPIO number used by LCD_BACKLIGHT.
+        endmenu
+
+        menu "VS10xx"
+            config XCS_GPIO
+                int "Номер пина XCS"
+                range 0 39
+                default 5
+                help
+                    Set the GPIO number used by XCS.
+            config XDCS_GPIO
+                int "Номер пина XDCS"
+                range 0 39
+                default 32
+                help
+                    Set the GPIO number used by XDCS.
+            config DREQ_GPIO
+                int "Номер пина DREQ"
+                range 0 39
+                default 4
+                help
+                    Set the GPIO number used by DREQ.
+        endmenu
+
+        choice TOUCH_SENSOR
+            prompt "Тачскрин"
+            default TOUCH_SENSOR_NONE
+            help
+                Тачскрин.
+
+            config TOUCH_SENSOR_NONE
+                bool "Отсутствует"
+            config TOUCH_SENSOR_PRESENT
+                bool "Присутствует"
+        endchoice
+        menu "Пин тачскрина"
+            depends on TOUCH_SENSOR_PRESENT
+            config TOUCH_GPIO
+                int "Номер пина TOUCH_SIG"
+                range 0 39
+                default 0
+                help
+                    Set the GPIO number used by TOUCH_SIG.
+        endmenu
+
+        choice IR_SENSOR
+            prompt "Пульт ДУ"
+            default IR_SENSOR_PRESENT
+            help
+                Пульт ДУ.
+
+            config IR_SENSOR_NONE
+                bool "Отсутствует"
+            config IR_SENSOR_PRESENT
+                bool "Присутствует"
+        endchoice
+        menu "Пин пульта ДУ"
+            depends on IR_SENSOR_PRESENT
+            config IR_SIG_GPIO
+                int "Номер пина IR_SIG"
+                range 0 39
+                default 35
+                help
+                    Set the GPIO number used by IR_SIG.
+        endmenu
+
+        choice TYPE_INPUT
+            prompt "Тип управления Радиолой"
+            default TYPE_INPUT_NONE
+            help
+                Тип управления Радиолой.
+
+            config TYPE_INPUT_NONE
+                bool "Отсутствует"
+            config TYPE_INPUT_ENCODER
+                bool "Управление энкодером"
+                depends on TEMPERATURE_SENSOR_NONE
+            config TYPE_INPUT_KEYBOARD
+                bool "Управление клавиатурой"
+        endchoice
+
+        menu "Клавиатура"
+            depends on TYPE_INPUT_KEYBOARD        
+            config KBD_GPIO
+                int "Номер пина KBD"
+                range 0 39
+                default 34
+                help
+                    Set the GPIO number used by KBD.
+        endmenu
+
+        menu "Энкодер"
+            depends on TYPE_INPUT_ENCODER
+             config ENC_A_GPIO
+                int "Номер пина ENC_A"
+                range 0 39
+                default 14
+                help
+                    Set the GPIO number used by ENC_A.
+            config ENC_B_GPIO
+                int "Номер пина ENC_B"
+                range 0 39
+                default 13
+                help
+                    Set the GPIO number used by ENC_B.
+            config ENC_BTN_GPIO
+                int "Номер пина ENC_BTN"
+                range 0 39
+                default 34
+                help
+                    Set the GPIO number used by ENC_BTN.
+        endmenu
+
+        choice TEMPERATURE_SENSOR
+            prompt "Датчик измерения температуры"
+            default TEMPERATURE_SENSOR_PRESENT
+            help
+                Датчик измерения температуры.
+
+            config TEMPERATURE_SENSOR_NONE
+                bool "Отсутствует"
+            config TEMPERATURE_SENSOR_PRESENT
+                bool "Присутствует"
+        endchoice
+        menu "Пин датчика температуры"
+            depends on TEMPERATURE_SENSOR_PRESENT
+            config DS18B20_GPIO
+            int "Номер пина DS18B20_GPIO"
+            range 0 39
+            default 14
+            help
+                Set the GPIO number used by DS18B20_GPIO.
+        endmenu
+
+        choice COOLER
+            prompt "Вентилятор охлаждения усилителя"
+            default COOLER_PRESENT
+            help
+                Вентилятор охлаждения усилителя.
+
+            config COOLER_NONE
+                bool "Отсутствует"
+            config COOLER_PRESENT
+                bool "Присутствует"
+        endchoice
+        menu "Пины управления вентилятором"
+            depends on COOLER_PRESENT
+            config PWM_GPIO
+            int "Номер пина PWM_GPIO"
+            range 0 39
+            default 13
+            help
+                Set the GPIO number used by PWM_GPIO.
+            config TACH_GPIO
+            int "Номер пина TACH_GPIO"
+            range 0 39
+            default 12
+            help
+                Set the GPIO number used by TACH_GPIO.
+        endmenu
+
+        choice BT201
+            prompt "Блютуз-модуль BTxxx"
+            default BT201_PRESENT
+            help
+                Блютуз-модуль BTxxx.
+            config BT201_NONE
+                bool "Отсутствует"
+            config BT201_PRESENT
+                bool "Присутствует"
+        endchoice
+        menu "Пины управления блютуз-модулем"
+            depends on BT201_PRESENT
+            config RXD_GPIO
+            int "Номер пина RXD_GPIO"
+            range 0 39
+            default 36
+            help
+                Set the GPIO number used by RXD_GPIO.
+            config TXD_GPIO
+            int "Номер пина TXD_GPIO"
+            range 0 39
+            default 15
+            help
+                Set the GPIO number used by TXD_GPIO.
+        endmenu
+
+        choice TDA7313
+            prompt "Аудиопроцессор(ы) TDA73xx"
+            default TDA7313_PRESENT
+            help
+                Аудиопроцессор(ы) TDA73xx.
+            config TDA7313_NONE
+                bool "Отсутствует"
+            config TDA7313_PRESENT
+                bool "Присутствует"
+        endchoice
+        menu "Пины управления аудиопроцессорами TDA73xx"
+            depends on TDA7313_PRESENT
+            config I2C_SDA_GPIO
+            int "Номер пина I2C_SDA_GPIO"
+            range 0 39
+            default 21
+            help
+                Set the GPIO number used by I2C_SDA_GPIO.
+            config I2C_SCL_GPIO
+            int "Номер пина I2C_SCL_GPIO"
+            range 0 39
+            default 22
+            help
+                Set the GPIO number used by I2C_SCL_GPIO.
+        endmenu
+
+       choice BUZZER
+            prompt "Звуковое оповещение"
+            default BUZZER_PRESENT
+            help
+                Звуковое оповещение.
+
+            config BUZZER_NONE
+                bool "Отсутствует"
+            config BUZZER_PRESENT
+                bool "Присутствует"
+        endchoice
+        menu "Пин управления звуком"
+            depends on BUZZER_PRESENT
+            config GPIO_BUZZ
+            int "Номер пина BUZZ_GPIO"
+            range 0 39
+            default 33
+            help
+                Set the GPIO number used by BUZZ_GPIO.
+        endmenu 
+
+        choice LDR_SENSOR
+            prompt "Датчик освещения"
+            default LDR_SENSOR_PRESENT
+            help
+                Датчик освещения.
+
+            config LDR_SENSOR_NONE
+                bool "Отсутствует"
+            config LDR_SENSOR_PRESENT
+                bool "Присутствует"
+        endchoice
+        menu "Пин датчика освещения"
+            depends on LDR_SENSOR_PRESENT
+            config GPIO_LDR
+            int "Номер пина LDR_GPIO"
+            range 0 39
+            default 39
+            help
+                Set the GPIO number used by LDR_GPIO.
+        endmenu
+
+        choice AMPLIFIER_CONTROL
+            prompt "Управление усилителем"
+            default AMPLIFIER_CONTROL_NONE
+            help
+                Управление усилителем.
+
+            config AMPLIFIER_CONTROL_NONE
+                bool "Отсутствует"
+            config AMPLIFIER_CONTROL_PRESENT
+                bool "Присутствует"
+        endchoice
+        menu "Пин управления усилителем"
+            depends on AMPLIFIER_CONTROL_PRESENT
+            config GPIO_STB
+            int "Номер пина STB_GPIO"
+            range 0 39
+            default 25
+            help
+                Set the GPIO number used by STB_GPIO.
+        endmenu
+
+    choice STAND_BY
+        prompt "сигнал STAND BY"
+        depends on AMPLIFIER_CONTROL_PRESENT
+        default STAND_BY_HIGH
+        help
+            Управление усилителем.
+
+        config STAND_BY_HIGH
+            bool "Высокий"
+        config STAND_BY_LOW
+            bool "Низкий"
+    endchoice
+
+    choice BUTTON_RESET
+        prompt "Сброс настроек Радиолы кнопкой энкодера или клавиатуры"
+        default BUTTON_RESET_NONE
+        help
+            Тачскрин.
+
+        config BUTTON_RESET_NONE
+            bool "НЕТ"
+        config BUTTON_RESET_PRESENT
+            bool "ДА"
+    endchoice
+
+    endmenu
 
 menu "Конфигурация Wifi"
 
-config WIFI_SSID
-    string "Название Wi-Fi сети"
-	default "OpenWrt"
-	help
-		SSID (network name) to connect to.
+    choice WIWI1
+        prompt "Сеть Wi-Fi №1"
+        default WIWI1_PRESENT
+        help
+            Сеть Wi-Fi №1.
+        config WIWI1_PRESENT
+            bool "Включена"
+        config WIWI1_NONE
+            bool "Выключена"
+    endchoice
+    menu "Настройка Wi-Fi №1"
+        depends on WIWI1_PRESENT
+        choice DHCP1
+            prompt "Автоматическое получение IP"
+            default DHCP1_PRESENT
+            help
+                Автоматическое получение IP.
+            config DHCP1_PRESENT
+                bool "ДА"
+            config DHCP1_NONE
+                bool "НЕТ"
+        endchoice
+        config WIFI_SSID1
+            string "Название Wi-Fi сети №1"
+            default "OpenWrt"
+            help
+                SSID 1 (network name) to connect to.
+        config WIFI_PASSWORD1
+            string "Пароль WiFi сети №1"
+            default "1234567890"
+            help
+                WiFi password (WPA or WPA2) to use.
 
-config WIFI_PASSWORD
-    string "Пароль WiFi"
-	default "1234567890"
-	help
-		WiFi password (WPA or WPA2) to use.
+                Can be left blank if the network has no security set.
+        config IPADDRESS1
+            string "IP Радиолы сети №1"
+            depends on DHCP1_NONE
+            default "192.168.1.254"
+        config GATEWAY1
+            string "IP Шлюза роутера сети №1"
+            depends on DHCP1_NONE
+            default "192.168.1.1"
+        config MASK1
+            string "Маска сети сети №1"
+            depends on DHCP1_NONE
+            default "255.255.255.0"
+    endmenu
 
-		Can be left blank if the network has no security set.
+    choice WIWI2
+        prompt "Сеть Wi-Fi №2"
+        default WIWI2_NONE
+        help
+            Сеть Wi-Fi №2.
+        config WIWI2_PRESENT
+            bool "Включена"
+        config WIWI2_NONE
+            bool "Выключена"
+    endchoice
+
+    menu "Настройка Wi-Fi №2"
+        depends on WIWI1_PRESENT
+        choice DHCP2
+            prompt "Автоматическое получение IP"
+            default DHCP2_PRESENT
+            help
+                Автоматическое получение IP.
+            config DHCP2_PRESENT
+                bool "ДА"
+            config DHCP2_NONE
+                bool "НЕТ"
+        endchoice
+        config WIFI_SSID2
+            string "Название Wi-Fi сети №2"
+            default "OpenWrt1"
+            help
+                SSID 2 (network name) to connect to.
+        config WIFI_PASSWORD2
+            string "Пароль WiFi сети №2"
+            default "1234567890"
+            help
+                WiFi password (WPA or WPA2) to use.
+
+                Can be left blank if the network has no security set.
+        config IPADDRESS2
+            string "IP Радиолы сети №2"
+            depends on DHCP2_NONE
+            default "192.168.1.250"
+        config GATEWAY2
+            string "IP Шлюза роутера сети №2"
+            depends on DHCP2_NONE
+            default "192.168.1.1"
+        config MASK2
+            string "Маска сети сети №2"
+            depends on DHCP2_NONE
+            default "255.255.255.0"
+    endmenu
 
 endmenu
 

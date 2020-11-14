@@ -962,9 +962,39 @@ void app_main()
 			g_device->options |= Y_ROTAT;
 			g_device->options |= Y_DDMM;
 			g_device->current_ap = STA1;
-			strcpy(g_device->ssid1, CONFIG_WIFI_SSID);
-			strcpy(g_device->pass1, CONFIG_WIFI_PASSWORD);
+#ifdef CONFIG_WIWI1_PRESENT
+			strcpy(g_device->ssid1, CONFIG_WIFI_SSID1);
+			strcpy(g_device->pass1, CONFIG_WIFI_PASSWORD1);
+#ifdef CONFIG_DHCP1_PRESENT
 			g_device->dhcpEn1 = 1;
+#else
+			g_device->dhcpEn1 = 0;
+			ip_addr_t tempIP1;
+			ipaddr_aton(CONFIG_IPADDRESS1, &tempIP1);
+			memcpy(g_device->ipAddr1, &tempIP1, sizeof(uint32_t));
+			ipaddr_aton(CONFIG_GATEWAY1, &tempIP1);
+			memcpy(g_device->gate1, &tempIP1, sizeof(uint32_t));
+			ipaddr_aton(CONFIG_MASK1, &tempIP1);
+			memcpy(g_device->mask1, &tempIP1, sizeof(uint32_t));
+#endif
+#endif
+#ifdef CONFIG_WIWI2_PRESENT
+			strcpy(g_device->ssid2, CONFIG_WIFI_SSID2);
+			strcpy(g_device->pass2, CONFIG_WIFI_PASSWORD2);
+#ifdef CONFIG_DHCP2_PRESENT
+			g_device->dhcpEn2 = 1;
+#else
+			g_device->dhcpEn2 = 0;
+			ip_addr_t tempIP2;
+			ipaddr_aton(CONFIG_IPADDRESS2, &tempIP2);
+			memcpy(g_device->ipAddr2, &tempIP2, sizeof(uint32_t));
+			ipaddr_aton(CONFIG_GATEWAY2, &tempIP2);
+			memcpy(g_device->gate2, &tempIP2, sizeof(uint32_t));
+			ipaddr_aton(CONFIG_MASK2, &tempIP2);
+			memcpy(g_device->mask2, &tempIP2, sizeof(uint32_t));
+#endif
+#endif
+
 			g_device->lcd_out = 0;
 			g_device->backlight_mode = BY_LIGHTING;		  // по-умолчанию подсветка регулируемая
 			g_device->backlight_level = 255;			  // по-умолчанию подсветка максимальная

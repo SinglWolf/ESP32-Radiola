@@ -19,56 +19,84 @@
 //-------------------------------------------------------------//
 
 //-------------------------
-#define PIN_NUM_PWM GPIO_NUM_13     //пин управления оборотами вентилятора
-#define PIN_NUM_TACH GPIO_NUM_12    //Пин контроля оборотов вентилятора
-#define PIN_NUM_DS18B20 GPIO_NUM_14 //пин датчика температуры
-#define PIN_NUM_BUZZ GPIO_NUM_33    //пин BUZZER
-#define PIN_NUM_LDR GPIO_NUM_39     //пин фоторезистора
-#define PIN_NUM_KBD GPIO_NONE       //пин клавиатуры GPIO_NUM_34 // 255 GPIO_NONE (255), если не используется
-#define PIN_NUM_STB GPIO_NUM_25     //пин STAND BY
-
+#ifdef CONFIG_COOLER_PRESENT
+#define PIN_NUM_PWM CONFIG_PWM_GPIO   //пин управления оборотами вентилятора
+#define PIN_NUM_TACH CONFIG_TACH_GPIO //Пин контроля оборотов вентилятора
+#else
+#define PIN_NUM_PWM GPIO_NONE
+#define PIN_NUM_TACH GPIO_NONE
+#endif
+#ifdef CONFIG_TEMPERATURE_SENSOR_PRESENT
+#define PIN_NUM_DS18B20 CONFIG_DS18B20_GPIO //пин датчика температуры
+#else
+#define PIN_NUM_DS18B20 GPIO_NONE
+#endif
+#ifdef CONFIG_BUZZER_PRESENT
+#define PIN_NUM_BUZZ CONFIG_GPIO_BUZZ //пин BUZZER
+#else
+#define PIN_NUM_BUZZ GPIO_NONE
+#endif
+#ifdef CONFIG_LDR_SENSOR_PRESENT
+#define PIN_NUM_LDR CONFIG_GPIO_LDR //пин фоторезистора
+#else
+#define PIN_NUM_LDR GPIO_NONE
+#endif
+#ifdef CONFIG_TYPE_INPUT_KEYBOARD
+#define PIN_NUM_KBD CONFIG_KBD_GPIO
+#else
+#define PIN_NUM_KBD GPIO_NONE //пин клавиатуры GPIO_NUM_34 // 255 GPIO_NONE (255), если не используется
+#endif
+#ifdef CONFIG_AMPLIFIER_CONTROL_PRESENT
+#define PIN_NUM_STB CONFIG_GPIO_STB //пин STAND BY
+#else
+#define PIN_NUM_STB GPIO_NONE
+#endif
 // I2C
-//------------------------------------------------
-#define PIN_I2C_SDA GPIO_NUM_21
-#define PIN_I2C_SCL GPIO_NUM_22
-
+#ifdef CONFIG_TDA7313_PRESENT
+#define PIN_I2C_SDA CONFIG_I2C_SDA_GPIO
+#define PIN_I2C_SCL CONFIG_I2C_SCL_GPIO
+#else
+#define PIN_I2C_SDA GPIO_NONE
+#define PIN_I2C_SCL GPIO_NONE
+#endif
 // SOFTUART
-#define PIN_NUM_RXD GPIO_NUM_36 // RXD BT201
-#define PIN_NUM_TXD GPIO_NUM_15 // TXD BT201
-
-// KSPI pins of the SPI bus
+#ifdef CONFIG_BT201_PRESENT
+#define PIN_NUM_RXD CONFIG_RXD_GPIO // RXD BT201
+#define PIN_NUM_TXD CONFIG_TXD_GPIO // TXD BT201
+#else
+#define PIN_NUM_RXD GPIO_NONE
+#define PIN_NUM_TXD GPIO_NONE
+#endif
+// KSPI
 //-------------------------
-#define KSPI HSPI_HOST           // Must be HSPI or VSPI
-#define PIN_NUM_MISO GPIO_NUM_19 // Master Input, Slave Output
-#define PIN_NUM_MOSI GPIO_NUM_23 // Master Output, Slave Input
-#define PIN_NUM_CLK GPIO_NUM_18  // Master clock
+#ifdef CONFIG_HARDWARE_HOST
+#define KSPI HSPI_HOST // HSPI
+#else
+#define KSPI VSPI_HOST // VSPI
+#endif
 
-// gpio of the vs1053
-//-------------------
-#define PIN_NUM_XCS GPIO_NUM_5
-#define PIN_NUM_XDCS GPIO_NUM_32
-#define PIN_NUM_DREQ GPIO_NUM_4
-
-// Encoder knob
-//-------------
-#define PIN_ENC0_A GPIO_NONE   //14	// CLK // 255 GPIO_NONE (255), если не используется
-#define PIN_ENC0_B GPIO_NONE   //13	// DT
-#define PIN_ENC0_BTN GPIO_NONE //34 // SW
-
-// SPI lcd
-//---------
-#define PIN_LCD_CS GPIO_NUM_27 //CS
-#define PIN_LCD_A0 GPIO_NUM_2  //A0 or D/C
-
-// IR Signal
-//-----------
-#define PIN_IR_SIGNAL GPIO_NUM_35 // Remote IR source
-
-// Пин регулировки подсветки дисплея
-#define PIN_LCD_BACKLIGHT GPIO_NUM_26 // 255 GPIO_NONE (255), если не используется
-
-// touch screen  T_DO is MISO, T_DIN is MOSI, T_CLK is CLk of the spi bus
-#define PIN_TOUCH_CS GPIO_NONE //Chip select T_CS  GPIO_NUM_0
+// Энкодер
+#ifdef CONFIG_TYPE_INPUT_ENCODER
+#define PIN_ENC_A CONFIG_ENC_A_GPIO     //14
+#define PIN_ENC_B CONFIG_ENC_B_GPIO     //13
+#define PIN_ENC_BTN CONFIG_ENC_BTN_GPIO //34
+#else
+#define PIN_ENC_A GPIO_NONE
+#define PIN_ENC_B GPIO_NONE
+#define PIN_ENC_BTN GPIO_NONE
+#endif
+// Пульт ДУ
+#ifdef CONFIG_IR_SENSOR_PRESENT
+#define PIN_IR_SIGNAL CONFIG_IR_SIG_GPIO // Remote IR source
+#else
+#define PIN_IR_SIGNAL GPIO_NONE // Remote IR source
+#endif
+// Тачскрин
+#ifdef CONFIG_TOUCH_SENSOR_PRESENT
+#define PIN_TOUCH_CS CONFIG_TOUCH_GPIO
+#else
+#define PIN_TOUCH_CS GPIO_NONE //Chip select T_CS
+#endif
 
 esp_err_t gpio_set_nvs(const char *name_pin, gpio_num_t gpio_num);
 esp_err_t gpio_get_nvs(const char *name_pin, gpio_num_t *gpio_num);

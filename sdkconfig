@@ -119,14 +119,144 @@ CONFIG_PARTITION_TABLE_MD5=y
 # end of Partition Table
 
 #
-# Конфигурация ESP32-Радиолы
+# Настройка ESP32-Радиолы
 #
+
+#
+# Конфигурация GPIOS
+#
+CONFIG_HARDWARE_HOST=y
+# CONFIG_VIRTUAL_HOST is not set
+
+#
+# Шина SPI
+#
+CONFIG_MISO_GPIO=19
+CONFIG_MOSI_GPIO=23
+CONFIG_SCLK_GPIO=18
+# end of Шина SPI
+
+#
+# Дисплей
+#
+CONFIG_LCD_CS_GPIO=27
+CONFIG_LCD_DC_GPIO=2
+CONFIG_LCD_BACKLIGHT_GPIO=26
+# end of Дисплей
+
+#
+# VS10xx
+#
+CONFIG_XCS_GPIO=5
+CONFIG_XDCS_GPIO=32
+CONFIG_DREQ_GPIO=4
+# end of VS10xx
+
+CONFIG_TOUCH_SENSOR_NONE=y
+# CONFIG_TOUCH_SENSOR_PRESENT is not set
+# CONFIG_IR_SENSOR_NONE is not set
+CONFIG_IR_SENSOR_PRESENT=y
+
+#
+# Пин пульта ДУ
+#
+CONFIG_IR_SIG_GPIO=35
+# end of Пин пульта ДУ
+
+CONFIG_TYPE_INPUT_NONE=y
+# CONFIG_TYPE_INPUT_KEYBOARD is not set
+# CONFIG_TEMPERATURE_SENSOR_NONE is not set
+CONFIG_TEMPERATURE_SENSOR_PRESENT=y
+
+#
+# Пин датчика температуры
+#
+CONFIG_DS18B20_GPIO=14
+# end of Пин датчика температуры
+
+# CONFIG_COOLER_NONE is not set
+CONFIG_COOLER_PRESENT=y
+
+#
+# Пины управления вентилятором
+#
+CONFIG_PWM_GPIO=13
+CONFIG_TACH_GPIO=12
+# end of Пины управления вентилятором
+
+# CONFIG_BT201_NONE is not set
+CONFIG_BT201_PRESENT=y
+
+#
+# Пины управления блютуз-модулем
+#
+CONFIG_RXD_GPIO=36
+CONFIG_TXD_GPIO=15
+# end of Пины управления блютуз-модулем
+
+# CONFIG_TDA7313_NONE is not set
+CONFIG_TDA7313_PRESENT=y
+
+#
+# Пины управления аудиопроцессорами TDA73xx
+#
+CONFIG_I2C_SDA_GPIO=21
+CONFIG_I2C_SCL_GPIO=22
+# end of Пины управления аудиопроцессорами TDA73xx
+
+# CONFIG_BUZZER_NONE is not set
+CONFIG_BUZZER_PRESENT=y
+
+#
+# Пин управления звуком
+#
+CONFIG_GPIO_BUZZ=33
+# end of Пин управления звуком
+
+# CONFIG_LDR_SENSOR_NONE is not set
+CONFIG_LDR_SENSOR_PRESENT=y
+
+#
+# Пин датчика освещения
+#
+CONFIG_GPIO_LDR=39
+# end of Пин датчика освещения
+
+CONFIG_AMPLIFIER_CONTROL_NONE=y
+# CONFIG_AMPLIFIER_CONTROL_PRESENT is not set
+CONFIG_BUTTON_RESET_NONE=y
+# CONFIG_BUTTON_RESET_PRESENT is not set
+# end of Конфигурация GPIOS
 
 #
 # Конфигурация Wifi
 #
-CONFIG_WIFI_SSID="OpenWrt"
-CONFIG_WIFI_PASSWORD="1234567890"
+CONFIG_WIWI1_PRESENT=y
+# CONFIG_WIWI1_NONE is not set
+
+#
+# Настройка Wi-Fi №1
+#
+# CONFIG_DHCP1_PRESENT is not set
+CONFIG_DHCP1_NONE=y
+CONFIG_WIFI_SSID1="OpenWrt"
+CONFIG_WIFI_PASSWORD1="1234567890"
+CONFIG_IPADDRESS1="192.168.1.254"
+CONFIG_GATEWAY1="192.168.1.1"
+CONFIG_MASK1="255.255.255.0"
+# end of Настройка Wi-Fi №1
+
+# CONFIG_WIWI2_PRESENT is not set
+CONFIG_WIWI2_NONE=y
+
+#
+# Настройка Wi-Fi №2
+#
+CONFIG_DHCP2_PRESENT=y
+# CONFIG_DHCP2_NONE is not set
+CONFIG_WIFI_SSID2="OpenWrt1"
+CONFIG_WIFI_PASSWORD2="1234567890"
+# end of Настройка Wi-Fi №2
 # end of Конфигурация Wifi
 
 #
@@ -165,7 +295,7 @@ CONFIG_DATAFORMAT_0=y
 # CONFIG_DATAFORMAT_1 is not set
 CONFIG_DATAFORMAT=0xFE
 # end of Формат вывода даты
-# end of Конфигурация ESP32-Радиолы
+# end of Настройка ESP32-Радиолы
 
 #
 # Compiler options

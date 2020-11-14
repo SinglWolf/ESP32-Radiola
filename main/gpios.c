@@ -120,11 +120,11 @@ esp_err_t gpio_get_spi_bus(uint8_t *spi_no, gpio_num_t *miso, gpio_num_t *mosi, 
 	if (!get_gpio_mode())
 	{
 		if (miso != NULL)
-			*miso = PIN_NUM_MISO;
+			*miso = CONFIG_MISO_GPIO;
 		if (mosi != NULL)
-			*mosi = PIN_NUM_MOSI;
+			*mosi = CONFIG_MOSI_GPIO;
 		if (sclk != NULL)
-			*sclk = PIN_NUM_CLK;
+			*sclk = CONFIG_SCLK_GPIO;
 		if (spi_no != NULL)
 			*spi_no = KSPI;
 		return err;
@@ -158,9 +158,9 @@ esp_err_t gpio_get_vs1053(gpio_num_t *xcs, gpio_num_t *xdcs, gpio_num_t *dreq)
 	esp_err_t err = ESP_OK;
 	if (!get_gpio_mode())
 	{
-		*xcs = PIN_NUM_XCS;
-		*xdcs = PIN_NUM_XDCS;
-		*dreq = PIN_NUM_DREQ;
+		*xcs = CONFIG_XCS_GPIO;
+		*xdcs = CONFIG_XDCS_GPIO;
+		*dreq = CONFIG_DREQ_GPIO;
 		return err;
 	}
 
@@ -278,9 +278,9 @@ esp_err_t gpio_get_encoders(gpio_num_t *enca, gpio_num_t *encb, gpio_num_t *encb
 	esp_err_t err = ESP_OK;
 	if (!get_gpio_mode())
 	{
-		*enca = PIN_ENC0_A;
-		*encb = PIN_ENC0_B;
-		*encbtn = PIN_ENC0_BTN;
+		*enca = PIN_ENC_A;
+		*encb = PIN_ENC_B;
+		*encbtn = PIN_ENC_BTN;
 		return err;
 	}
 
@@ -390,8 +390,8 @@ esp_err_t gpio_get_spi_lcd(gpio_num_t *cs, gpio_num_t *a0)
 	// init default
 	if (!get_gpio_mode())
 	{
-		*cs = PIN_LCD_CS;
-		*a0 = PIN_LCD_A0;
+		*cs = CONFIG_LCD_CS_GPIO;
+		*a0 = CONFIG_LCD_DC_GPIO;
 		return err;
 	}
 
@@ -461,7 +461,7 @@ esp_err_t gpio_get_backlightl(gpio_num_t *led)
 	// init default
 	if (!get_gpio_mode())
 	{
-		*led = PIN_LCD_BACKLIGHT;
+		*led = CONFIG_LCD_BACKLIGHT_GPIO;
 		return err;
 	}
 

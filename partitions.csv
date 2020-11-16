@@ -4,14 +4,14 @@ nvs,        data, nvs,     0x009000,  0x004000
 otadata,    data, ota,     0x00d000,  0x002000
 phy_init,   data, phy,     0x00f000,  0x001000
 # factory,  0,    0,       0x010000,  0x120000
-ota_0,      0,    ota_0,   0x010000,  0x1C0000
-ota_1,      0,    ota_1,   0x1D0000,  0x1C0000
+ota_0,      0,    ota_0,   0x010000,  0x1F0000
+ota_1,      0,    ota_1,   0x200000,  0x1F0000
 # the partition for configuration device
-device,	   0x40,  ,        ,          0x001000
+device,	   0x40,  ,        ,          0x003000
 # the copy partition for device
-device1,   0x42,  ,        ,          0x001000
+device1,   0x42,  ,        ,          0x003000
 # the partition for stations
-stations,  0x41,  ,	       ,	      0x010000
+stations,  0x41,  ,	       ,	      0x008000
 # the partition for hardware configuration
 hardware,  data,  nvs,     ,          0x002000 
 

@@ -21,7 +21,6 @@
 
 #include "interface.h"
 
-#define NBSTATIONS 255
 const static char *TAG = "eeprom";
 static xSemaphoreHandle muxDevice;
 
@@ -108,7 +107,7 @@ void eeEraseAll()
 			buffer[i] = 0;
 		ESP_ERROR_CHECK(esp_partition_write(DEVICE, 0, buffer, 4096));	//clear device
 		ESP_ERROR_CHECK(esp_partition_write(DEVICE1, 0, buffer, 4096)); //clear device1
-		for (i = 0; i < 16; i++)
+		for (i = 0; i < (NBSTATIONS / 16); i++)
 		{
 			//			printf("erase from %x \n",4096*i);
 			ESP_ERROR_CHECK(esp_partition_write(STATIONS, 4096 * i, buffer, 4096)); //clear stations
@@ -148,7 +147,7 @@ void eeEraseStations()
 	{
 		for (i = 0; i < 4096; i++)
 			buffer[i] = 0;
-		for (i = 0; i < 16; i++)
+		for (i = 0; i < (NBSTATIONS / 16); i++)
 		{
 			//			printf("erase from %x \n",4096*i);
 			ESP_ERROR_CHECK(esp_partition_write(STATIONS, 4096 * i, buffer, 4096)); //clear stations

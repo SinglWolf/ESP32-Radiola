@@ -28,10 +28,6 @@ for x in my_flags.get("CPPDEFINES"):
             # no need to iterate further
             break
 env.Replace(PROGNAME="%s" % str(filename))
-# print(env.Dump())
-# print(env.subst("$PIOENV"))
-# print(env.subst("$TARGET"))
-# exit(0)
 
 REMOVE_WS = re.compile(r"\s{2,}").sub
 
@@ -66,7 +62,6 @@ file_list = ["favicon.png", "mainpage.html", "logo.png",
 
 def get_hash_sha1(filename):
     if ".png" in filename:
-        # with io.open(f_build, 'r', encoding='utf-8') as f:
         with open(filename, 'rb') as f:
             m = hashlib.sha1()
             while True:
@@ -117,11 +112,8 @@ def build_page():
     for name in file_list:
         dir_build = PROJECT_DIR + WEBPAGE
         f_build = dir_build + name
-        # print(f_build)
-        # exit(0)        
         name_var = name.rsplit(".", 1)[0]
         if check_sha1(name):
-            # print("File ", name, " not changed.")
             pass
         else:
             for build_mode in ["debug", "release"]:
@@ -161,9 +153,7 @@ def build_page():
                 subprocess.call(XXD + f_build + ' -v ' + name_var +
                                 ' -d ' + define + ' -o ' + PROJECT_INCLUDE_DIR + header_f, shell=True)
                 print("Header file ", header_f, " created.")
-                if isfile(f_build + '.ori'):
-                    os.remove(f_build)
-                    shutil.move(f_build + '.ori', f_build)
+                shutil.move(f_build + '.ori', f_build)
                 if ".png" in name:
                     break
                 elif "tabbis.js" in name:
@@ -171,12 +161,3 @@ def build_page():
 
 build_page()
 
-# exit(0)
-# if not isfile(file_build):
-
-
-# if not check_sha1(file_list):
-#     env.AddPreAction("${BUILD_DIR}/esp-idf/main/webserver.c.o", before_build)
-# else:
-#     print("Files not changed.")
-# env.AddPreAction("program", before_build)

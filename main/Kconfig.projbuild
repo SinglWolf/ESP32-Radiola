@@ -19,40 +19,19 @@ menu "Настройка ESP32-Радиолы"
                 range 0 33
                 default 19
                 help
-                    Set the GPIO number used by SPI MISO.
+                    Установите номер GPIO, используемый SPI MISO.
             config MOSI_GPIO
                 int "Номер пина SPI MOSI"
                 range 0 33
                 default 23
                 help
-                    Set the GPIO number used by SPI MOSI.
+                    Установите номер GPIO, используемый SPI MOSI.
             config SCLK_GPIO
                 int "Номер пина SPI SCLK"
                 range 0 33
                 default 18
                 help
-                    Set the GPIO number used by SPI SCLK.
-        endmenu
-
-        menu "Дисплей"
-            config LCD_CS_GPIO
-                int "Номер пина LCD_CS"
-                range 0 39
-                default 27
-                help
-                    Set the GPIO number used by LCD_CS.
-            config LCD_DC_GPIO
-                int "Номер пина LCD_DC"
-                range 0 39
-                default 2
-                help
-                    Set the GPIO number used by LCD_DC.
-            config LCD_BACKLIGHT_GPIO
-                int "Номер пина LCD_BACKLIGHT"
-                range 0 39
-                default 26
-                help
-                    Set the GPIO number used by LCD_BACKLIGHT.
+                    Установите номер GPIO, используемый SPI SCLK.
         endmenu
 
         menu "VS10xx"
@@ -61,22 +40,43 @@ menu "Настройка ESP32-Радиолы"
                 range 0 39
                 default 5
                 help
-                    Set the GPIO number used by XCS.
+                    Установите номер GPIO, используемый XCS.
             config XDCS_GPIO
                 int "Номер пина XDCS"
                 range 0 39
                 default 32
                 help
-                    Set the GPIO number used by XDCS.
+                    Установите номер GPIO, используемый XDCS.
             config DREQ_GPIO
                 int "Номер пина DREQ"
                 range 0 39
                 default 4
                 help
-                    Set the GPIO number used by DREQ.
+                    Установите номер GPIO, используемый DREQ.
         endmenu
 
-        choice TOUCH_SENSOR
+        menu "Дисплей"
+            config LCD_CS_GPIO
+                int "Номер пина LCD_CS"
+                range 0 39
+                default 27
+                help
+                    Установите номер GPIO, используемый LCD_CS.
+            config LCD_DC_GPIO
+                int "Номер пина LCD_DC"
+                range 0 39
+                default 2
+                help
+                    Установите номер GPIO, используемый LCD_DC.
+            config LCD_BACKLIGHT_GPIO
+                int "Номер пина LCD_BACKLIGHT"
+                range 0 39
+                default 26
+                help
+                    Установите номер GPIO, используемый LCD_BACKLIGHT.
+        endmenu
+
+        choice
             prompt "Тачскрин"
             default TOUCH_SENSOR_NONE
             help
@@ -94,15 +94,40 @@ menu "Настройка ESP32-Радиолы"
                 range 0 39
                 default 0
                 help
-                    Set the GPIO number used by TOUCH_SIG.
+                    Установите номер GPIO, используемый TOUCH_SIG.
         endmenu
 
-        choice IR_SENSOR
+        choice
+            prompt "Шина I2C"
+            default BUS_I2C_PRESENT
+            help
+                Шина I2C.
+            config BUS_I2C_NONE
+                bool "Отсутствует"
+            config BUS_I2C_PRESENT
+                bool "Присутствует"
+        endchoice
+        menu "Пины управления шиной I2C"
+            depends on BUS_I2C_PRESENT
+            config I2C_SDA_GPIO
+            int "Номер пина I2C_SDA"
+            range 0 39
+            default 21
+            help
+                Установите номер GPIO, используемый I2C_SDA.
+            config I2C_SCL_GPIO
+            int "Номер пина I2C_SCL"
+            range 0 39
+            default 22
+            help
+                Установите номер GPIO, используемый I2C_SCL.
+        endmenu
+
+        choice
             prompt "Пульт ДУ"
             default IR_SENSOR_PRESENT
             help
                 Пульт ДУ.
-
             config IR_SENSOR_NONE
                 bool "Отсутствует"
             config IR_SENSOR_PRESENT
@@ -115,15 +140,14 @@ menu "Настройка ESP32-Радиолы"
                 range 0 39
                 default 35
                 help
-                    Set the GPIO number used by IR_SIG.
+                    Установите номер GPIO, используемый IR_SIG.
         endmenu
 
-        choice TYPE_INPUT
+        choice
             prompt "Тип управления Радиолой"
             default TYPE_INPUT_NONE
             help
                 Тип управления Радиолой.
-
             config TYPE_INPUT_NONE
                 bool "Отсутствует"
             config TYPE_INPUT_ENCODER
@@ -140,7 +164,7 @@ menu "Настройка ESP32-Радиолы"
                 range 0 39
                 default 34
                 help
-                    Set the GPIO number used by KBD.
+                    Установите номер GPIO, используемый KBD.
         endmenu
 
         menu "Энкодер"
@@ -150,27 +174,26 @@ menu "Настройка ESP32-Радиолы"
                 range 0 39
                 default 14
                 help
-                    Set the GPIO number used by ENC_A.
+                    Установите номер GPIO, используемый ENC_A.
             config ENC_B_GPIO
                 int "Номер пина ENC_B"
                 range 0 39
                 default 13
                 help
-                    Set the GPIO number used by ENC_B.
+                    Установите номер GPIO, используемый ENC_B.
             config ENC_BTN_GPIO
                 int "Номер пина ENC_BTN"
                 range 0 39
                 default 34
                 help
-                    Set the GPIO number used by ENC_BTN.
+                    Установите номер GPIO, используемый ENC_BTN.
         endmenu
 
-        choice TEMPERATURE_SENSOR
+        choice
             prompt "Датчик измерения температуры"
             default TEMPERATURE_SENSOR_PRESENT
             help
                 Датчик измерения температуры.
-
             config TEMPERATURE_SENSOR_NONE
                 bool "Отсутствует"
             config TEMPERATURE_SENSOR_PRESENT
@@ -179,19 +202,18 @@ menu "Настройка ESP32-Радиолы"
         menu "Пин датчика температуры"
             depends on TEMPERATURE_SENSOR_PRESENT
             config DS18B20_GPIO
-            int "Номер пина DS18B20_GPIO"
+            int "Номер пина DS18B20"
             range 0 39
             default 14
             help
-                Set the GPIO number used by DS18B20_GPIO.
+                Установите номер GPIO, используемый DS18B20.
         endmenu
 
-        choice COOLER
+        choice
             prompt "Вентилятор охлаждения усилителя"
             default COOLER_PRESENT
             help
                 Вентилятор охлаждения усилителя.
-
             config COOLER_NONE
                 bool "Отсутствует"
             config COOLER_PRESENT
@@ -200,20 +222,20 @@ menu "Настройка ESP32-Радиолы"
         menu "Пины управления вентилятором"
             depends on COOLER_PRESENT
             config PWM_GPIO
-            int "Номер пина PWM_GPIO"
+            int "Номер пина PWM"
             range 0 39
             default 13
             help
-                Set the GPIO number used by PWM_GPIO.
+                Установите номер GPIO, используемый PWM.
             config TACH_GPIO
-            int "Номер пина TACH_GPIO"
+            int "Номер пина TACH"
             range 0 39
             default 12
             help
-                Set the GPIO number used by TACH_GPIO.
+                Установите номер GPIO, используемый TACH.
         endmenu
 
-        choice BT201
+        choice
             prompt "Блютуз-модуль BTxxx"
             default BT201_PRESENT
             help
@@ -226,51 +248,24 @@ menu "Настройка ESP32-Радиолы"
         menu "Пины управления блютуз-модулем"
             depends on BT201_PRESENT
             config RXD_GPIO
-            int "Номер пина RXD_GPIO"
+            int "Номер пина RXD"
             range 0 39
             default 36
             help
-                Set the GPIO number used by RXD_GPIO.
+                Установите номер GPIO, используемый RXD.
             config TXD_GPIO
-            int "Номер пина TXD_GPIO"
+            int "Номер пина TXD"
             range 0 39
             default 15
             help
-                Set the GPIO number used by TXD_GPIO.
+                Установите номер GPIO, используемый TXD.
         endmenu
 
-        choice TDA7313
-            prompt "Аудиопроцессор(ы) TDA73xx"
-            default TDA7313_PRESENT
-            help
-                Аудиопроцессор(ы) TDA73xx.
-            config TDA7313_NONE
-                bool "Отсутствует"
-            config TDA7313_PRESENT
-                bool "Присутствует"
-        endchoice
-        menu "Пины управления аудиопроцессорами TDA73xx"
-            depends on TDA7313_PRESENT
-            config I2C_SDA_GPIO
-            int "Номер пина I2C_SDA_GPIO"
-            range 0 39
-            default 21
-            help
-                Set the GPIO number used by I2C_SDA_GPIO.
-            config I2C_SCL_GPIO
-            int "Номер пина I2C_SCL_GPIO"
-            range 0 39
-            default 22
-            help
-                Set the GPIO number used by I2C_SCL_GPIO.
-        endmenu
-
-       choice BUZZER
+       choice
             prompt "Звуковое оповещение"
             default BUZZER_PRESENT
             help
                 Звуковое оповещение.
-
             config BUZZER_NONE
                 bool "Отсутствует"
             config BUZZER_PRESENT
@@ -278,20 +273,19 @@ menu "Настройка ESP32-Радиолы"
         endchoice
         menu "Пин управления звуком"
             depends on BUZZER_PRESENT
-            config GPIO_BUZZ
-            int "Номер пина BUZZ_GPIO"
+            config BUZZ_GPIO
+            int "Номер пина BUZZ"
             range 0 39
             default 33
             help
-                Set the GPIO number used by BUZZ_GPIO.
+                Установите номер GPIO, используемый BUZZ.
         endmenu 
 
-        choice LDR_SENSOR
+        choice
             prompt "Датчик освещения"
             default LDR_SENSOR_PRESENT
             help
                 Датчик освещения.
-
             config LDR_SENSOR_NONE
                 bool "Отсутствует"
             config LDR_SENSOR_PRESENT
@@ -299,20 +293,19 @@ menu "Настройка ESP32-Радиолы"
         endchoice
         menu "Пин датчика освещения"
             depends on LDR_SENSOR_PRESENT
-            config GPIO_LDR
-            int "Номер пина LDR_GPIO"
+            config LDR_GPIO
+            int "Номер пина LDR"
             range 0 39
             default 39
             help
-                Set the GPIO number used by LDR_GPIO.
+                Установите номер GPIO, используемый LDR.
         endmenu
 
-        choice AMPLIFIER_CONTROL
+        choice
             prompt "Управление усилителем"
             default AMPLIFIER_CONTROL_NONE
             help
                 Управление усилителем.
-
             config AMPLIFIER_CONTROL_NONE
                 bool "Отсутствует"
             config AMPLIFIER_CONTROL_PRESENT
@@ -320,243 +313,227 @@ menu "Настройка ESP32-Радиолы"
         endchoice
         menu "Пин управления усилителем"
             depends on AMPLIFIER_CONTROL_PRESENT
-            config GPIO_STB
-            int "Номер пина STB_GPIO"
+            config STB_GPIO
+            int "Номер пина STB"
             range 0 39
             default 25
             help
-                Set the GPIO number used by STB_GPIO.
+                Установите номер GPIO, используемый STB.
         endmenu
 
-    choice STAND_BY
-        prompt "сигнал STAND BY"
-        depends on AMPLIFIER_CONTROL_PRESENT
-        default STAND_BY_HIGH
-        help
-            Управление усилителем.
-
-        config STAND_BY_HIGH
-            bool "Высокий"
-        config STAND_BY_LOW
-            bool "Низкий"
-    endchoice
-
-    choice BUTTON_RESET
-        prompt "Сброс настроек Радиолы кнопкой энкодера или клавиатуры"
-        default BUTTON_RESET_NONE
-        help
-            Тачскрин.
-
-        config BUTTON_RESET_NONE
-            bool "НЕТ"
-        config BUTTON_RESET_PRESENT
-            bool "ДА"
-    endchoice
-
-    endmenu
-
-menu "Конфигурация Wifi"
-
-    choice WIWI1
-        prompt "Сеть Wi-Fi №1"
-        default WIWI1_PRESENT
-        help
-            Сеть Wi-Fi №1.
-        config WIWI1_PRESENT
-            bool "Включена"
-        config WIWI1_NONE
-            bool "Выключена"
-    endchoice
-    menu "Настройка Wi-Fi №1"
-        depends on WIWI1_PRESENT
-        choice DHCP1
-            prompt "Автоматическое получение IP"
-            default DHCP1_PRESENT
+        choice
+            prompt "сигнал STAND BY"
+            depends on AMPLIFIER_CONTROL_PRESENT
+            default STAND_BY_HIGH
             help
-                Автоматическое получение IP.
-            config DHCP1_PRESENT
-                bool "ДА"
-            config DHCP1_NONE
-                bool "НЕТ"
+                Управление усилителем.
+            config STAND_BY_HIGH
+                bool "Высокий"
+            config STAND_BY_LOW
+                bool "Низкий"
         endchoice
-        config WIFI_SSID1
-            string "Название Wi-Fi сети №1"
-            default "OpenWrt"
-            help
-                SSID 1 (network name) to connect to.
-        config WIFI_PASSWORD1
-            string "Пароль WiFi сети №1"
-            default "1234567890"
-            help
-                WiFi password (WPA or WPA2) to use.
 
-                Can be left blank if the network has no security set.
-        config IPADDRESS1
-            string "IP Радиолы сети №1"
-            depends on DHCP1_NONE
-            default "192.168.1.254"
-        config GATEWAY1
-            string "IP Шлюза роутера сети №1"
-            depends on DHCP1_NONE
-            default "192.168.1.1"
-        config MASK1
-            string "Маска сети сети №1"
-            depends on DHCP1_NONE
-            default "255.255.255.0"
-    endmenu
-
-    choice WIWI2
-        prompt "Сеть Wi-Fi №2"
-        default WIWI2_NONE
-        help
-            Сеть Wi-Fi №2.
-        config WIWI2_PRESENT
-            bool "Включена"
-        config WIWI2_NONE
-            bool "Выключена"
-    endchoice
-
-    menu "Настройка Wi-Fi №2"
-        depends on WIWI1_PRESENT
-        choice DHCP2
-            prompt "Автоматическое получение IP"
-            default DHCP2_PRESENT
+        choice
+            prompt "Кнопка сброса настроек Радиолы."
+            default BUTTON_RESET_NONE
             help
-                Автоматическое получение IP.
-            config DHCP2_PRESENT
-                bool "ДА"
-            config DHCP2_NONE
+                Сброс настроек Радиолы кнопкой энкодера или клавиатуры
+            config BUTTON_RESET_NONE
                 bool "НЕТ"
+            config BUTTON_RESET_PRESENT
+                bool "ДА"
         endchoice
-        config WIFI_SSID2
-            string "Название Wi-Fi сети №2"
-            default "OpenWrt1"
-            help
-                SSID 2 (network name) to connect to.
-        config WIFI_PASSWORD2
-            string "Пароль WiFi сети №2"
-            default "1234567890"
-            help
-                WiFi password (WPA or WPA2) to use.
-
-                Can be left blank if the network has no security set.
-        config IPADDRESS2
-            string "IP Радиолы сети №2"
-            depends on DHCP2_NONE
-            default "192.168.1.250"
-        config GATEWAY2
-            string "IP Шлюза роутера сети №2"
-            depends on DHCP2_NONE
-            default "192.168.1.1"
-        config MASK2
-            string "Маска сети сети №2"
-            depends on DHCP2_NONE
-            default "255.255.255.0"
     endmenu
 
-endmenu
+    menu "Конфигурация Wifi"
+        choice
+            prompt "Сеть Wi-Fi №1"
+            default WIWI1_PRESENT
+            help
+                Сеть Wi-Fi №1.
+            config WIWI1_PRESENT
+                bool "Включена"
+            config WIWI1_NONE
+                bool "Выключена"
+        endchoice
+        menu "Настройка Wi-Fi №1"
+            depends on WIWI1_PRESENT
+            choice
+                prompt "Автоматическое получение IP"
+                default DHCP1_PRESENT
+                help
+                    Автоматическое получение IP.
+                config DHCP1_PRESENT
+                    bool "ДА"
+                config DHCP1_NONE
+                    bool "НЕТ"
+            endchoice
+            config WIFI_SSID1
+                string "Название Wi-Fi сети №1"
+                default "OpenWrt"
+                help
+                    SSID №1 (имя сети) для подключения.
+            config WIFI_PASSWORD1
+                string "Пароль WiFi сети №1"
+                default "1234567890"
+                help
+                    Пароль Wi-Fi №1 (WPA или WPA2) для использования.
+                    Может быть оставлено пустым, если для сети не настроена безопасность.
+            config IPADDRESS1
+                string "IP Радиолы сети №1"
+                depends on DHCP1_NONE
+                default "192.168.1.254"
+            config GATEWAY1
+                string "IP Шлюза роутера сети №1"
+                depends on DHCP1_NONE
+                default "192.168.1.1"
+            config MASK1
+                string "Маска сети сети №1"
+                depends on DHCP1_NONE
+                default "255.255.255.0"
+        endmenu
 
-menu "Серверы точного времени"
+        choice
+            prompt "Сеть Wi-Fi №2"
+            default WIWI2_NONE
+            help
+                Сеть Wi-Fi №2.
+            config WIWI2_PRESENT
+                bool "Включена"
+            config WIWI2_NONE
+                bool "Выключена"
+        endchoice
+        menu "Настройка Wi-Fi №2"
+            depends on WIWI1_PRESENT
+            choice
+                prompt "Автоматическое получение IP"
+                default DHCP2_PRESENT
+                help
+                    Автоматическое получение IP.
+                config DHCP2_PRESENT
+                    bool "ДА"
+                config DHCP2_NONE
+                    bool "НЕТ"
+            endchoice
+            config WIFI_SSID2
+                string "Название Wi-Fi сети №2"
+                default "OpenWrt1"
+                help
+                    SSID №2 (имя сети) для подключения.
+            config WIFI_PASSWORD2
+                string "Пароль WiFi сети №2"
+                default "1234567890"
+                help
+                    Пароль Wi-Fi №2 (WPA или WPA2) для использования.
+                    Может быть оставлено пустым, если для сети не настроена безопасность.
+            config IPADDRESS2
+                string "IP Радиолы сети №2"
+                depends on DHCP2_NONE
+                default "192.168.1.250"
+            config GATEWAY2
+                string "IP Шлюза роутера сети №2"
+                depends on DHCP2_NONE
+                default "192.168.1.1"
+            config MASK2
+                string "Маска сети сети №2"
+                depends on DHCP2_NONE
+                default "255.255.255.0"
+        endmenu
+    endmenu
 
-config NTP0
-	string "NTP №0"
-	default "0.pool.ntp.org"
+    menu "Серверы точного времени"
+        config NTP0
+            string "NTP №0"
+            default "0.pool.ntp.org"
 
-config NTP1
-	string "NTP №1"
-	default "1.pool.ntp.org"
+        config NTP1
+            string "NTP №1"
+            default "1.pool.ntp.org"
 
-config NTP2
-	string "NTP №2"
-	default "2.pool.ntp.org"
+        config NTP2
+            string "NTP №2"
+            default "2.pool.ntp.org"
 
-config NTP3
-	string "NTP №3"
-	default "3.pool.ntp.org"
+        config NTP3
+            string "NTP №3"
+            default "3.pool.ntp.org"
 
-choice SNTP_TIME_SYNC_METHOD
-    prompt "Метод синхронизации времени"
-    default SNTP_TIME_SYNC_METHOD_IMMED
-    help
-        Метод синхронизации времени.
+        choice
+            prompt "Метод синхронизации времени"
+            default SNTP_TIME_SYNC_METHOD_IMMED
+            help
+                Метод синхронизации времени.
 
-    config SNTP_TIME_SYNC_METHOD_IMMED
-        bool "время обновляется сразу после получения"
-    config SNTP_TIME_SYNC_METHOD_SMOOTH
-        bool "время обновляется плавно, методом (adjtime)"
-endchoice
+            config SNTP_TIME_SYNC_METHOD_IMMED
+                bool "время обновляется сразу после получения"
+            config SNTP_TIME_SYNC_METHOD_SMOOTH
+                bool "время обновляется плавно, методом (adjtime)"
+        endchoice
+    endmenu 
 
-endmenu 
+    menu "Настройка часового пояса"
+        choice
+            prompt "Выберите свой часовой пояс"
+            default TZONE_5
+            help
+                Выбор часового пояса
 
-menu "Настройка часового пояса"
+            config TZONE_1
+                bool "Киев, София"
+            config TZONE_2
+                bool "Калинингад"
+            config TZONE_3
+                bool "Москва"
+            config TZONE_4
+                bool "Самара"
+            config TZONE_5
+                bool "Екатеринбург"
+            config TZONE_6
+                bool "Омск"
+            config TZONE_7
+                bool "Красноярск"
+            config TZONE_8
+                bool "Иркутск"
+            config TZONE_9
+                bool "Чита"
+            config TZONE_10
+                bool "Владивосток"
+            config TZONE_11
+                bool "Южно-Сахалинск"
+            config TZONE_12
+                bool "Петропавловск-Камчатский"
+        endchoice
+        config TZONE
+            string
+            default "EET-2EEST,M3.5.0/3,M10.5.0/4" if TZONE_1
+            default "EET-2" if TZONE_2
+            default "MSK-3" if TZONE_3
+            default "SAMT-4" if TZONE_4
+            default "YEKT-5" if TZONE_5
+            default "OMST-6" if TZONE_6
+            default "KRAT-7" if TZONE_7
+            default "IRKT-8" if TZONE_8
+            default "YAKT-9" if TZONE_9
+            default "VLAT-10" if TZONE_10
+            default "SAKT-11" if TZONE_11
+            default "PETT-12" if TZONE_12
+    endmenu
 
-choice
-    prompt "Выберите свой часовой пояс"
-    default TZONE_5
-    help
-        Выбор часового пояса
+    menu "Формат вывода даты"
+        choice
+            prompt "Выберите формат вывода даты"
+            default DATAFORMAT_0
+            help
+                Выбор часового пояса
 
-    config TZONE_1
-        bool "Киев, София"
-    config TZONE_2
-        bool "Калинингад"
-    config TZONE_3
-        bool "Москва"
-    config TZONE_4
-        bool "Самара"
-	config TZONE_5
-        bool "Екатеринбург"
-	config TZONE_6
-        bool "Омск"
-	config TZONE_7
-        bool "Красноярск"
-	config TZONE_8
-        bool "Иркутск"
-	config TZONE_9
-        bool "Чита"
-	config TZONE_10
-        bool "Владивосток"
-	config TZONE_11
-        bool "Южно-Сахалинск"
-	config TZONE_12
-        bool "Петропавловск-Камчатский"
-endchoice
-
-config TZONE
-    string
-    default "EET-2EEST,M3.5.0/3,M10.5.0/4" if TZONE_1
-    default "EET-2" if TZONE_2
-    default "MSK-3" if TZONE_3
-    default "SAMT-4" if TZONE_4
-	default "YEKT-5" if TZONE_5
-	default "OMST-6" if TZONE_6
-	default "KRAT-7" if TZONE_7
-	default "IRKT-8" if TZONE_8
-	default "YAKT-9" if TZONE_9
-	default "VLAT-10" if TZONE_10
-	default "SAKT-11" if TZONE_11
-	default "PETT-12" if TZONE_12
-
-endmenu
-
-menu "Формат вывода даты"
-
-choice
-    prompt "Выберите формат вывода даты"
-    default DATAFORMAT_0
-    help
-        Выбор часового пояса
-
-    config DATAFORMAT_0
-        bool "4 ноября, СР. 2020 г."
-    config DATAFORMAT_1
-        bool "4 ноября, среда"
-endchoice
-
-config DATAFORMAT
-    hex
-    default 0xFE if DATAFORMAT_0
-    default 0x01 if DATAFORMAT_1
-endmenu
-
+            config DATAFORMAT_0
+                bool "4 ноября, СР. 2020 г."
+            config DATAFORMAT_1
+                bool "4 ноября, среда"
+        endchoice
+        config DATAFORMAT
+            hex
+            default 0xFE if DATAFORMAT_0
+            default 0x01 if DATAFORMAT_1
+    endmenu
 endmenu

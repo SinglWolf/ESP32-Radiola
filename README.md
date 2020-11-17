@@ -158,7 +158,7 @@
 Например, если у Вас не подключены TDA7313, TDA7317 и DS3231, к этим GPIO можно подключить термометр, если у Вас подключен энкодер.
 
 
-**[flash_download_tools_v3.6.8](https://www.espressif.com/sites/default/files/tools/flash_download_tools_v3.6.8.zip)**
+**[flash_download_tools_v3.8.5](https://www.espressif.com/sites/default/files/tools/flash_download_tool_v3.8.5.zip)**
 
 **!!!!Перед прошивкой обязательно проверьте контрольные суммы всех трёх бинарных файлов!!!!**
 

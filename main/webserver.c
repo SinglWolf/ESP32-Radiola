@@ -819,7 +819,7 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 			char id[6];
 			if (getSParameterFromResponse(id, 6, "idgp=", data, data_size))
 			{
-				if ((atoi(id) >= 0) && (atoi(id) < 255))
+				if ((atoi(id) >= 0) && (atoi(id) < (NBSTATIONS)))
 				{
 					char ibuf[10];
 					char *buf;
@@ -924,11 +924,11 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 				Name = getParameterFromResponse("name=", data, data_size);
 				if (getSParameterFromResponse(id, 6, "id=", data, data_size))
 				{
-					//					ESP_LOGW(TAG,"nb:%d,si:%x,nsi:%x,id:%s,url:%s,file:%s",i,(int)si,(int)nsi,id,url,file);
+					// ESP_LOGD(TAG, "nb:%d,si:%x,nsi:%x,id:%s,url:%s,file:%s", i, (int)si, (int)nsi, id, url, file);
 					ESP_LOGV(TAG, "nb:%d, id:%s", i, id);
 					if (i == 0)
 						uid = atoi(id);
-					if ((atoi(id) >= 0) && (atoi(id) < 255))
+					if ((atoi(id) >= 0) && (atoi(id) < NBSTATIONS))
 					{
 						if (url && file && Name && getSParameterFromResponse(port, 6, "port=", data, data_size))
 						{
@@ -1599,6 +1599,10 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 			get_lcd_rotat(&LCD_ROTA);
 			get_ddmm(&TIME_FORMAT);
 			char *NTP0 = CONFIG_NTP0, *NTP1 = CONFIG_NTP1, *NTP2 = CONFIG_NTP2, *NTP3 = CONFIG_NTP3;
+			char *TZONE = g_device->tzone;
+			bool reboot = false;
+			bool erase = false;
+			char val_1[1];
 			if (NTP == 1)
 			{
 				NTP0 = g_device->ntp_server[0];
@@ -1606,12 +1610,16 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 				NTP2 = g_device->ntp_server[2];
 				NTP3 = g_device->ntp_server[3];
 			}
-			char *TZONE = g_device->tzone;
-			bool reboot = false;
-			char val_1[1];
 			if (getSParameterFromResponse(val_1, 1, "save=", data, data_size))
 				if (strcmp(val_1, "1") == 0)
+				{
 					changed = true;
+				}
+			if (strcmp(val_1, "2") == 0)
+			{
+				erase = true;
+				reboot = true;
+			}
 			if (changed)
 			{
 				if (getSParameterFromResponse(val_1, 1, "ESPLOG=", data, data_size))
@@ -1674,7 +1682,16 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 				}
 				saveDeviceSettings(g_device);
 			}
-
+			if (reboot)
+			{
+				if (erase)
+					eeEraseAll(); // стереть все настройки NVS
+				else
+					copyDeviceSettings(); // сохранить текущие настройки в NVS
+				fflush(stdout);
+				vTaskDelay(100);
+				esp_restart();
+			}
 			char *buf = inmalloc(1024);
 			if (buf == NULL)
 			{
@@ -1706,13 +1723,6 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 				infree(buf);
 			}
 
-			if (reboot)
-			{
-				copyDeviceSettings(); // save the current one
-				fflush(stdout);
-				vTaskDelay(100);
-				esp_restart();
-			}
 			return;
 		}
 	}

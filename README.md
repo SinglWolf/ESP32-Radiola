@@ -169,7 +169,7 @@
   + bootloader.bin - 0x1000
   + partitions.bin - 0x8000
   
-  + ESP32Radiola(-**release** или -**debug**).bin - **0x10000** и **0x200000 Адресация прошивки изменилась, на картинке старая адресация!**
+  + ESP32Radiola(-**release** или -**debug**).bin - **0x10000** и **0x200000**
 
 ![Image alt](https://github.com/SinglWolf/ESP32-Radiola/raw/master/pictures/flash_download_tools.png)
 

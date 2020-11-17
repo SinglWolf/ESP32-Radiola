@@ -317,12 +317,12 @@ void drawStation()
 			{
 				futurNum--;
 				if (futurNum < 0)
-					futurNum = 254;
+					futurNum = NBSTATIONS - 1;
 			}
 			else
 			{
 				futurNum++;
-				if (futurNum > 254)
+				if (futurNum > (NBSTATIONS - 1))
 					futurNum = 0;
 			}
 		}

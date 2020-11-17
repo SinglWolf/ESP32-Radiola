@@ -1756,7 +1756,7 @@ function downloadStations() {
             }
             // Entire file
             console.log('File read.');
-            lines = this.result.split('\n');
+            lines = this.result.split(/\r?\n/);
             if (lines[0].includes("#EXTM3U")) {
                 console.log("File header found!");
                 var tempurl, nameSt, hostname, pathname, port;
@@ -1780,6 +1780,8 @@ function downloadStations() {
                             tosend = "nb=1";
                             tempurl = new URL(lines[line]);
                             port = tempurl.port;
+                            hostname = tempurl.hostname;
+                            pathname = tempurl.pathname;
                             if (tempurl.port == "") {
                                 port = "80";
                             } else if (parseInt(tempurl.port) > 65535) {
@@ -1787,16 +1789,12 @@ function downloadStations() {
                                 errAll = true;
                                 count--;
                                 continue;
-                            }
-                            hostname = tempurl.hostname;
-                            if (hostname.length > 73) {
+                            } else if (hostname.length > 73) {
                                 errUrl++;
                                 errAll = true;
                                 count--;
                                 continue;
-                            }
-                            pathname = tempurl.pathname;
-                            if (pathname.length > 116) {
+                            } else if (pathname.length > 116) {
                                 errPath++;
                                 errAll = true;
                                 count--;
@@ -1810,7 +1808,6 @@ function downloadStations() {
                         } catch (err) {
                             console.log("URL err!! Counter: " + count + "Всего строк: " + lines.length);
                             continue;
-
                         }
                         try {
                             xhr.open("POST", "setStation", false);
@@ -1820,6 +1817,10 @@ function downloadStations() {
                         } catch (e) {
                             console.log("error " + e + " " + tosend);
                         }
+                    }
+                    if (count = 129) {
+                        alert("Достигнут порог ограничения количества радиостанций: " + count - 1 + " !");
+                        break;
                     }
                 }
                 if (errAll) {

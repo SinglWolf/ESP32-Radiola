@@ -551,13 +551,13 @@ void clientPlay(char *s)
 }
 
 const char strilLIST[] = {"##CLI.LIST#\n"};
-const char strilINFO[] = {"#CLI.LISTINFO#: %3d: %s, %s:%d%s%%d\n"};
-const char strilNUM[] = {"#CLI.LISTNUM#: %3d: %s, %s:%d%s%%d\n"};
+const char strilINFO[] = {"#CLI.LISTINFO#: %3d: %s, %s:%d%s\n"};
+const char strilNUM[] = {"#CLI.LISTNUM#: %3d: %s, %s:%d%s\n"};
 const char strilDLIST[] = {"\n#CLI.LIST#\n"};
 
 void clientList(char *s)
 {
-	uint16_t i = 0, j = 255;
+	uint16_t i = 0, j = NBSTATIONS;
 	bool onlyOne = false;
 
 	char *t = strstr(s, parslashquote);
@@ -570,7 +570,7 @@ void clientList(char *s)
 			return;
 		}
 		i = atoi(t + 2);
-		if (i > 254)
+		if (i > (NBSTATIONS - 1))
 			i = 0;
 		j = i + 1;
 		onlyOne = true;
@@ -1263,7 +1263,6 @@ void checkCommand(int size, char *s)
 		else if (strcmp(tmp + 4, "erase") == 0)
 		{
 			eeEraseAll();
-			tda7313_init_nvs(1);
 			fflush(stdout);
 			vTaskDelay(100);
 			esp_restart();

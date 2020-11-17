@@ -20,6 +20,8 @@
 #define TZONELEN 30
 #define NTP_LEN 20
 
+#define NBSTATIONS 128 // Максимальное количество станций
+
 // константы для маски флагов опций
 #define Y_DDMM 0x01 // bit 0: Формат отображения даты на дисплее 0 = MMDD, 1 = DDMM
 #define N_DDMM 0xFE

@@ -6,7 +6,7 @@ var auto, intervalid, intervalrssi, timeid, websocket, urlmonitor, monitor, e, m
     editIndex = 0,
     curtab = "PLAYER",
     stchanged = false,
-    maxStation = 255;
+    maxStation = 128;
 const mediacentre = "Радиола";
 const working = "Работаю... Пожалуйста, подождите.";
 const _ERR = "ОШИБКА ", _default = "ПО УМОЛЧАНИЮ", _loadNVS = "СЧИТАНО ИЗ NVS", _saveNVS = "ЗАПИСАНО В NVS", _noNVS = "Записей в NVS ещё нет!!!";
@@ -440,12 +440,27 @@ function promptworking(label) {
 }
 
 function saveTextAsFile() {
-    var output = '',
-        id, textFileAsBlob, downloadLink, fileName;
+    var output = '#EXTM3U\n',
+        id, port, textFileAsBlob, downloadLink, fileName;
     //	for (var key in localStorage) {
     for (id = 0; id < maxStation; id++) {
-        //	output = output+(localStorage[key])+'\n';
-        output = output + (localStorage[id]) + '\n';
+        try {
+            var obj = JSON.parse(localStorage[id]);
+            if (obj["Port"] == "80") {
+                port = '';
+            } else if (obj["Port"] == "0") {
+                break;
+            } else {
+                port = ':' + obj["Port"];
+            }
+            output = output + '#EXTINF:-1,' + obj["Name"] + '\n';
+            output = output + 'http://' + obj["URL"] + obj["File"] + port + '\n';
+            // output = output + (localStorage[id]) + '\n';
+        } catch (err) {
+
+            console.log("err!! ");
+
+        }
     }
     fileName = document.getElementById('filesave').value;
     if (fileName == "")
@@ -984,14 +999,6 @@ function mute() {
     hardware(1);
 }
 
-function loadCSV() {
-    alert("Ещё не реализовано...");
-}
-
-function saveCSV() {
-    alert("Ещё не реализовано...");
-}
-
 function control(save) {
     var set_control = "", set_option;
     var xhr = new XMLHttpRequest();
@@ -1044,9 +1051,7 @@ function devoptions(save) {
     }
     if (save == 0) {
         NTPservers();
-        TimeZone();
-    }
-    else if ((save == 1) && (confirm("Сохранить настройки в NVS?\nДля вступления в силу некоторых настроек, Радиола может быть перезагружена."))) {
+    } else if ((save == 1) && (confirm("Сохранить настройки в NVS?\nДля вступления в силу некоторых настроек, Радиола может быть перезагружена."))) {
         set_option = "&ESPLOG=" + document.getElementById('ESPLOG').value +
             "&NTP=" + document.getElementById('NTP').value +
             "&NTP0=" + document.getElementById('NTP0').value +
@@ -1056,10 +1061,16 @@ function devoptions(save) {
             "&TZONE=" + document.getElementById('TZONE').value +
             "&TIME_FORMAT=" + document.getElementById('TIME_FORMAT').value +
             "&LCD_ROTA=" + document.getElementById('LCD_ROTA').value;
+    } else if ((save == 2) && (confirm("Вернуть заводские настройки Радиолы?\nВсе сохранённые настройки в NVS будут удалены безвозвратно!!!"))) {
+        set_option = "";
+        localStorage.clear();
+        tabbis.init();
+        tabbis.onClick(0, 0);
     } else {
         save = 0;
         set_option = "";
     }
+
     xhr.open("POST", "devoptions", false);
     xhr.setRequestHeader(content, ctype);
     xhr.send("save=" + save +
@@ -1089,15 +1100,6 @@ function NTPservers() {
         document.getElementById("custom_NTP").style.display = "none";
     } else {
         document.getElementById("custom_NTP").style.display = "contents";
-    }
-
-}
-
-function TimeZone() {
-    if (document.getElementById('TZONE').value == "CUSTOMTZ") {
-        document.getElementById("edit_TZ").style.display = "contents";
-    } else {
-        document.getElementById("edit_TZ").style.display = "none";
     }
 
 }
@@ -1726,6 +1728,9 @@ function checkversion() {
     xhr.onload = function () {
         document.getElementById('Version').innerHTML = xhr.responseText;
         document.getElementById('newrelease').innerHTML = document.getElementById('firmware_last').innerHTML;
+        if (document.getElementById('newrelease').innerHTML != document.getElementById('currentrelease').innerHTML) {
+            document.getElementById('upd').style.backgroundColor = "red";
+        }
     }
     xhr.open("GET", "https://serverdoma.ru/esp32/version32.php", false);
     try {
@@ -1737,7 +1742,7 @@ function checkversion() {
 
 // refresh the stations list by reading a file
 function downloadStations() {
-    var i, indmax, tosend, arr, reader, lines, line, file, xhr;
+    var tosend, arr, reader, lines, errName = 0, errUrl = 0, errPath = 0, errPort = 0, errAll = false, file, xhr;
     if (window.File && window.FileReader && window.FileList && window.Blob) {
         reader = new FileReader();
         xhr = new XMLHttpRequest();
@@ -1750,40 +1755,87 @@ function downloadStations() {
                 localStorage.setItem(ind, "{\"Name\":\"" + arri["Name"] + "\",\"URL\":\"" + arri["URL"] + "\",\"File\":\"" + arri["File"] + "\",\"Port\":\"" + arri["Port"] + "\"}");
             }
             // Entire file
-            //console.log(this.result);
-            // By lines
+            console.log('File read.');
             lines = this.result.split('\n');
-            localStorage.clear();
-            indmax = 3;
-            line = 0;
-            try {
-                tosend = "nb=" + indmax;
-                for (i = 0; i < indmax; i++) {
-                    arr = JSON.parse(lines[i]);
-                    fillInfo(i, arr);
-                }
-                xhr.open("POST", "setStation", false);
-                xhr.setRequestHeader(content, ctype);
-                //				console.log("post "+tosend);
-                xhr.send(tosend);
-            } catch (e) { console.log("error " + e + " " + tosend); }
-            //			}
-            indmax = 2;
-            for (line = 3; line < lines.length; line += indmax) {
-                //				console.log(lines[line]);
-                try {
-                    tosend = "nb=" + indmax;
-                    for (i = 0; i < indmax; i++) {
-                        arr = JSON.parse(lines[line + i]);
-                        fillInfo(line + i, arr);
-                    }
-                    xhr.open("POST", "setStation", false);
-                    xhr.setRequestHeader(content, ctype);
-                    xhr.send(tosend);
-                } catch (e) { console.log("error " + e + " " + tosend); }
-            }
-            loadStationsList(maxStation);
+            if (lines[0].includes("#EXTM3U")) {
+                console.log("File header found!");
+                var tempurl, nameSt, hostname, pathname, port;
+                var ListSt = [];
+                var count = 0;
+                var arr;
+                localStorage.clear();
+                //
+                for (var line = 1; line < lines.length; line++) {
+                    //
+                    if (lines[line].includes("#EXTINF")) {
+                        nameSt = lines[line].slice(lines[line].indexOf(',') + 1).trim();
+                        if (nameSt.length > 64) {
+                            nameSt = nameSt.substring(64);
+                            errName++;
+                            errAll = true;
+                        }
+                    } else {
 
+                        try {
+                            tosend = "nb=1";
+                            tempurl = new URL(lines[line]);
+                            port = tempurl.port;
+                            if (tempurl.port == "") {
+                                port = "80";
+                            } else if (parseInt(tempurl.port) > 65535) {
+                                errPort++;
+                                errAll = true;
+                                count--;
+                                continue;
+                            }
+                            hostname = tempurl.hostname;
+                            if (hostname.length > 73) {
+                                errUrl++;
+                                errAll = true;
+                                count--;
+                                continue;
+                            }
+                            pathname = tempurl.pathname;
+                            if (pathname.length > 116) {
+                                errPath++;
+                                errAll = true;
+                                count--;
+                                continue;
+                            }
+                            ListSt[count] = "{\"Name\":\"" + nameSt + "\",\"URL\":\"" + hostname + "\",\"File\":\"" + pathname + "\",\"Port\":\"" + port + "\"}";
+                            console.log(ListSt[count]);
+                            arr = JSON.parse(ListSt[count]);
+                            fillInfo(count, arr);
+                            count++
+                        } catch (err) {
+                            console.log("URL err!! Counter: " + count + "Всего строк: " + lines.length);
+                            continue;
+
+                        }
+                        try {
+                            xhr.open("POST", "setStation", false);
+                            xhr.setRequestHeader(content, ctype);
+                            console.log("post " + tosend);
+                            xhr.send(tosend);
+                        } catch (e) {
+                            console.log("error " + e + " " + tosend);
+                        }
+                    }
+                }
+                if (errAll) {
+                    alert("Плейлист содержит ошибки!!\n\n" +
+                        "Обрезано названий станций: " + errName +
+                        "\nПревышена допустимая длина\n" +
+                        "\nДомен:" + errUrl +
+                        "\nURL: " + errPath +
+                        "\n\nКорретных станций загружено: " + count);
+                }
+                refreshList();
+            } else {
+                alert("Пожалуйста, выберите файл с данными M3U.");
+                console.log("Not m3u file...");
+                return;
+            }
         };
         file = document.getElementById('fileload').files[0];
         if (file == null) alert("Пожалуйста, выберите файл.");
@@ -1899,18 +1951,18 @@ function loadStations() {
         tr.appendChild(td);
         // Name
         td = document.createElement('TD');
-        td.style.wordBreak = "break-all";
-        td.style.overflowWrap = "break-word";
-        td.style.wordWrap = "break-word";
+        td.style.whiteSpace = "nowrap";
+        td.style.overflow = "hidden";
+        td.style.textOverflow = "ellipsis";
         td.setAttribute('onclick', 'playEditStation(this.parentNode);');
         if (arr["Name"].length > 116) arr["Name"] = "Error";
         td.appendChild(document.createTextNode(arr["Name"]));
         tr.appendChild(td);
         // URL
         td = document.createElement('TD');
-        td.style.wordBreak = "break-all";
-        td.style.overflowWrap = "break-word";
-        td.style.wordWrap = "break-word";
+        td.style.whiteSpace = "nowrap";
+        td.style.overflow = "hidden";
+        td.style.textOverflow = "ellipsis";
         td.setAttribute('onclick', 'playEditStation(this.parentNode);');
         if (arr["Name"].length > 0) {
             if (arr["URL"].length > 116) arr["URL"] = "Error";

@@ -17,7 +17,7 @@
 
 <body>
   <div id="HEADER" onclick="ScrollUp();return!1;">
-    <div class="LEFT">
+    <div id="upd" class="LEFT">
       <img src="logo.png" alt="">
     </div>
     <div class="RIGHT">
@@ -276,18 +276,18 @@
         <h1>МЕНЕДЖЕР СТАНЦИЙ</h1>
         <div class="section">
           <p>
-            <input type="button" onclick="saveTextAsFile()" value="Сохранить станции из Радиолы">
+            <input type="button" onclick="saveTextAsFile()" value="Выгрузить станции из Радиолы" accept=".m3u">
             <span style="display:inline-block;"> &nbsp;&nbsp;в &nbsp;&nbsp;&nbsp;<input type="text"
-                style="width:300px;color:black;" value="RadiolaStations.txt" id="filesave"> </span>
+                style="width:300px;color:black;" value="RadiolaStations.m3u" id="filesave"> </span>
             <br>
             <br>
             <input type="button" onclick="downloadStations()" value="Загрузить станции в Радиолу">
             <span style="display:inline-block;"> &nbsp;&nbsp;из &nbsp;&nbsp;&nbsp;<input type="file"
-                style="width:300px;color:black;" id="fileload"> </span> <br><br>
+                style="width:300px;color:black;" id="fileload" accept=".m3u"> </span> <br><br>
             <input type="button" id="refresh" title="Это перезагрузит станции в Радиоле" onclick="refreshList()"
               value="Обновить локальный список"> <input type="button" id="stsave" disabled=""
               title="Это сохранит все станции в Радиоле" onclick="stChanged()" value="Сохранить список"> <input
-              type="button" id="clear" title="Предупреждение: Это удалит все станции. Обязательно сохраните их раньше."
+              type="button" id="clear" title="Предупреждение: Это удалит все станции. Обязательно выгрузите их раньше."
               onclick="clearList()" value="Удалить всё"> <input type="button" id="print"
               title="Печать всего списка станций на принтере" onclick="printList()" value="Печатать всё">
           </p>
@@ -297,8 +297,8 @@
             <thead>
               <tr>
                 <td style="width:5%;text-align: center; vertical-align: middle;">№</td>
-                <td style="width:25%; ">Имя</td>
-                <td style="width:65%; ">URL</td>
+                <td style="width:45%; ">Имя</td>
+                <td style="width:45%; ">URL</td>
                 <td class="icon-page-edit" style="width:5%;text-align: center; vertical-align: middle;"></td>
               </tr>
             </thead>
@@ -940,11 +940,8 @@
                         <option value="VLAT-10">Владивосток</option>
                         <option value="SAKT-11">Южно-Сахалинск</option>
                         <option value="PETT-12">Петропавловск-Камчатский</option>
-                        <!-- <option value="CUSTOMTZ">Своя зона</option> -->
-                      </select></td>
-                  </tr>
-                  <tr id="edit_TZ">
-                    <td colspan="2">Зона пользователя<input id="custom_TZ" style="margin-left: 67px;" type="text"></td>
+                      </select>
+                    </td>
                   </tr>
                   <tr>
                     <td>Формат вывода даты</td>
@@ -1054,20 +1051,20 @@
                     </tr>
                     <tr id="brg_sun">
                       <td colspan="1"><i class="icons icons8 icon-brightness-darken"></i></td>
-                      <td style="text-align: center;"><i class="icons icon-sun-o"></i><input id="day_brg"
-                          max="254" min="0" name="day_brg" type="range" value="127"></td>
+                      <td style="text-align: center;"><i class="icons icon-sun-o"></i><input id="day_brg" max="254"
+                          min="0" name="day_brg" type="range" value="127"></td>
                       <td><i class="icons icons8 icon-brightness-brighten"></i></td>
                     </tr>
                     <tr id="brg">
                       <td><i class="icons icons8 icon-brightness-darken"></i></td>
-                      <td style="text-align: center;"><i class="icons icon-moon-o"></i><input id="night_brg"
-                          max="254" min="0" name="night_brg" type="range" value="127"></td>
+                      <td style="text-align: center;"><i class="icons icon-moon-o"></i><input id="night_brg" max="254"
+                          min="0" name="night_brg" type="range" value="127"></td>
                       <td><i class="icons icons8 icon-brightness-brighten"></i></td>
                     </tr>
                     <tr id="by_lighting">
                       <td style=" text-align: center;"><i class="icons icons8 icon-brightness-darken"></i></td>
-                      <td style=" text-align: center;"><i class="icons icon-ios-lightbulb"></i><input
-                          id="brg_lvl" max="255" min="0" name="brg_lvl" type="range" value="127">
+                      <td style=" text-align: center;"><i class="icons icon-ios-lightbulb"></i><input id="brg_lvl"
+                          max="255" min="0" name="brg_lvl" type="range" value="127">
                       </td>
                       <td><i class="icons icons8 icon-brightness-brighten"></i></td>
                     </tr>
@@ -1127,24 +1124,9 @@
               </table>
             </div>
 
-            <h1>ЗАГРУЗКА\СОХРАНЕНИЕ НАСТРОЕК</h1>
-            <div class="section">
-              <button class="icon-download" onclick="loadCSV()" title="Загрузить настройки из файла"></button>
-              <button class="icon-floppy-o" onclick="saveCSV()" title="Сохранить настройки в файл"></button>
-              <table id="CSVname">
-                <tbody>
-                  <tr>
-                    <td>ИМЯ ФАЙЛА</td>
-                    <td contenteditable="true" id="L_LABEL">new_psram.csv</td>
-                  </tr>
-                  <tr>
-                    <td>ОПИСАНИЕ</td>
-                    <td contenteditable="true" id="L_COMMENT">Это стандартная конфигурация для
-                      ESP32-WROVER.
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
+            <h1>СБРОС ДО ЗАВОДСКИХ НАСТРОЕК</h1>
+            <div class="section" style="text-align: center;">
+              <button class="icon-trash-bin" onclick="devoptions(2)" title="Сброс всех настроек Радиолы"></button>
               <br>
             </div>
             <h1>ДРУГОЕ</h1>

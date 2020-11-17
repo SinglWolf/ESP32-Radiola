@@ -32,27 +32,27 @@
 #define PIN_NUM_DS18B20 GPIO_NONE
 #endif
 #ifdef CONFIG_BUZZER_PRESENT
-#define PIN_NUM_BUZZ CONFIG_GPIO_BUZZ //пин BUZZER
+#define PIN_NUM_BUZZ CONFIG_BUZZ_GPIO //пин BUZZER
 #else
 #define PIN_NUM_BUZZ GPIO_NONE
 #endif
 #ifdef CONFIG_LDR_SENSOR_PRESENT
-#define PIN_NUM_LDR CONFIG_GPIO_LDR //пин фоторезистора
+#define PIN_NUM_LDR CONFIG_LDR_GPIO //пин фоторезистора
 #else
 #define PIN_NUM_LDR GPIO_NONE
 #endif
 #ifdef CONFIG_TYPE_INPUT_KEYBOARD
-#define PIN_NUM_KBD CONFIG_KBD_GPIO
+#define PIN_NUM_KBD CONFIG_KBD_GPIO //пин клавиатуры 34
 #else
-#define PIN_NUM_KBD GPIO_NONE //пин клавиатуры GPIO_NUM_34 // 255 GPIO_NONE (255), если не используется
+#define PIN_NUM_KBD GPIO_NONE // GPIO_NONE (255), если не используется
 #endif
 #ifdef CONFIG_AMPLIFIER_CONTROL_PRESENT
-#define PIN_NUM_STB CONFIG_GPIO_STB //пин STAND BY
+#define PIN_NUM_STB CONFIG_STB_GPIO //пин STAND BY
 #else
 #define PIN_NUM_STB GPIO_NONE
 #endif
 // I2C
-#ifdef CONFIG_TDA7313_PRESENT
+#ifdef CONFIG_BUS_I2C_PRESENT
 #define PIN_I2C_SDA CONFIG_I2C_SDA_GPIO
 #define PIN_I2C_SCL CONFIG_I2C_SCL_GPIO
 #else

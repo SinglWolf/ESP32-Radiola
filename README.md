@@ -73,7 +73,9 @@
   ```cpp
   #define NO_CS 5     //Number of CS pins per SPI host
   ```
-  и определить пин тачскрина через задачу `Run Menuconfig`
+  и определить пин тачскрина через задачу `Run Menuconfig -> Настройка ESP32-Радиолы  --> Конфигурация GPIOS  --->`
+  
+  ![Image alt](https://github.com/SinglWolf/ESP32-Radiola/raw/master/pictures/menuconfig_gpios.png)  
 
 **Реализовано сейчас:**
   + Радиола поддерживает загрузку и выгрузку плейлистов радиостанций в стандартном формате **M3U**.

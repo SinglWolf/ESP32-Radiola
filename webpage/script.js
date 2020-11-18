@@ -454,8 +454,7 @@ function saveTextAsFile() {
                 port = ':' + obj["Port"];
             }
             output = output + '#EXTINF:-1,' + obj["Name"] + '\n';
-            output = output + 'http://' + obj["URL"] + obj["File"] + port + '\n';
-            // output = output + (localStorage[id]) + '\n';
+            output = output + 'http://' + obj["URL"] + port + obj["File"] + '\n';
         } catch (err) {
 
             console.log("err!! ");
@@ -1740,29 +1739,29 @@ function checkversion() {
     //checkhistory();
 }
 
-// refresh the stations list by reading a file
+/// refresh the stations list by reading a file
 function downloadStations() {
-    var tosend, arr, reader, lines, errName = 0, errUrl = 0, errPath = 0, errPort = 0, errAll = false, file, xhr;
+    var tosend, reader, lines, errTxt = '\n', errName = 0, errUrl = 0, errPath = 0, errPort = 0, errAll = false, file, xhr, txt;
     if (window.File && window.FileReader && window.FileList && window.Blob) {
         reader = new FileReader();
         xhr = new XMLHttpRequest();
         xhr.onreadystatechange = function () {
             promptworking(working); // some time to display promptworking
         }
-        reader.onload = function (e) {
-            function fillInfo(ind, arri) {
-                tosend = tosend + "&id=" + ind + "&url=" + arri["URL"] + "&name=" + arri["Name"] + "&file=" + fixedEncodeURIComponent(arri["File"]) + "&port=" + arri["Port"] + "&";
-                localStorage.setItem(ind, "{\"Name\":\"" + arri["Name"] + "\",\"URL\":\"" + arri["URL"] + "\",\"File\":\"" + arri["File"] + "\",\"Port\":\"" + arri["Port"] + "\"}");
+        
+        reader.onload = function () {
+            function fillInfo(ind, arri, NmSt, port) {
+                tosend = tosend + "&id=" + ind + "&url=" + arri.hostname + "&name=" + NmSt +
+                    "&file=" + fixedEncodeURIComponent(arri.pathname) + "&port=" + port + "&";
+                localStorage.setItem(ind, "{\"Name\":\"" + NmSt + "\",\"URL\":\"" + arri.hostname +
+                    "\",\"File\":\"" + arri.pathname + "\",\"Port\":\"" + port + "\"}");
             }
             // Entire file
             console.log('File read.');
             lines = this.result.split(/\r?\n/);
             if (lines[0].includes("#EXTM3U")) {
-                console.log("File header found!");
-                var tempurl, nameSt, hostname, pathname, port;
-                var ListSt = [];
+                var getURL, nameSt, port;
                 var count = 0;
-                var arr;
                 localStorage.clear();
                 //
                 for (var line = 1; line < lines.length; line++) {
@@ -1778,33 +1777,33 @@ function downloadStations() {
 
                         try {
                             tosend = "nb=1";
-                            tempurl = new URL(lines[line]);
-                            port = tempurl.port;
-                            hostname = tempurl.hostname;
-                            pathname = tempurl.pathname;
-                            if (tempurl.port == "") {
+                            getURL = new URL(lines[line]);
+                            port=getURL.port;
+                            if (getURL.port == "") {
                                 port = "80";
-                            } else if (parseInt(tempurl.port) > 65535) {
+                            } else if (parseInt(getURL.port) > 65535) {
                                 errPort++;
                                 errAll = true;
                                 count--;
                                 continue;
-                            } else if (hostname.length > 73) {
+                            } else if (getURL.hostname.length > 73) {
                                 errUrl++;
                                 errAll = true;
                                 count--;
                                 continue;
-                            } else if (pathname.length > 116) {
+                            } else if (getURL.pathname.length > 116) {
                                 errPath++;
                                 errAll = true;
                                 count--;
                                 continue;
                             }
-                            ListSt[count] = "{\"Name\":\"" + nameSt + "\",\"URL\":\"" + hostname + "\",\"File\":\"" + pathname + "\",\"Port\":\"" + port + "\"}";
-                            console.log(ListSt[count]);
-                            arr = JSON.parse(ListSt[count]);
-                            fillInfo(count, arr);
+                            fillInfo(count, getURL, nameSt, port);
                             count++
+                            if (count == maxStation) {
+                                errTxt = "\nДостигнут порог ограничения количества радиостанций: " + count + " !";
+                                errAll = true;
+                                break;
+                            }
                         } catch (err) {
                             console.log("URL err!! Counter: " + count + "Всего строк: " + lines.length);
                             continue;
@@ -1818,23 +1817,24 @@ function downloadStations() {
                             console.log("error " + e + " " + tosend);
                         }
                     }
-                    if (count = 129) {
-                        alert("Достигнут порог ограничения количества радиостанций: " + count - 1 + " !");
-                        break;
-                    }
                 }
+                txt = "Корретных станций загружено: " + count;
                 if (errAll) {
-                    alert("Плейлист содержит ошибки!!\n\n" +
-                        "Обрезано названий станций: " + errName +
+                    alert("Плейлист содержит ошибки!!\n" + errTxt +
+                        "\nОбрезано названий станций: " + errName +
                         "\nПревышена допустимая длина\n" +
                         "\nДомен:" + errUrl +
                         "\nURL: " + errPath +
-                        "\n\nКорретных станций загружено: " + count);
+                        "\n\n" + txt);
                 }
                 refreshList();
+                promptworking(txt);
             } else {
-                alert("Пожалуйста, выберите файл с данными M3U.");
-                console.log("Not m3u file...");
+                {
+                    txt = "Пожалуйста, выберите файл с данными M3U.";
+                    alert(txt);
+                    promptworking(txt)
+                }
                 return;
             }
         };
@@ -1846,6 +1846,7 @@ function downloadStations() {
         }
     }
 }
+
 
 function dragStart(ev) {
     ev.dataTransfer.setData("Text", ev.target.id);

@@ -83,17 +83,17 @@ static uint16_t HHeader = 40;
 static char TTitleStr[16];
 static char TTimeStr[16];
 
-typedef enum Lang
+typedef enum
 {
 	Latin,
 	Cyrillic,
 	Greek
-} LANG;
-static LANG charset = Cyrillic; // latin or other
+} lang_e;
+static lang_e charset = Cyrillic; // latin or other
 
 ////////////////////////////////////////
 
-void setfont(sizefont size)
+void setfont(sizefont_e size)
 {
 	int inX = x;
 	if (yy <= 80)
@@ -369,14 +369,45 @@ void ucEraseSlashes(char *str)
 //-Max
 
 // non linear cyrillic conversion
-struct _utf8To1251_t
+typedef struct
 {
 	uint16_t utf8;
 	uint8_t c1251;
-};
-typedef struct _utf8To1251_t utf8To1251_t;
+} utf8To1251_s;
+
 #define UTF8TO1251 30
-const utf8To1251_t utf8To1251[UTF8TO1251] = {{0x401, 0x45 /*0xa8*/}, {0x402, 0x80}, {0x403, 0x81}, {0x404, 0xaa}, {0x405, 0xbd}, {0x406, 0x49 /*0xb2*/}, {0x407, 0xaf}, {0x408, 0xa3}, {0x409, 0x8a}, {0x40a, 0x8c}, {0x40b, 0x8e}, {0x40c, 0x8d}, {0x40e, 0xa1}, {0x40f, 0x8f}, {0x452, 0x90}, {0x451, 0x65 /*0xb8*/}, {0x453, 0x83}, {0x454, 0xba}, {0x455, 0xbe}, {0x456, 0x69 /*0xb3*/}, {0x457, 0xbf}, {0x458, 0x6a /*0xbc*/}, {0x459, 0x9a}, {0x45a, 0x9c}, {0x45b, 0x9e}, {0x45c, 0x9d}, {0x45f, 0x9f}, {0x490, 0xa5}, {0x491, 0xb4}, {0, 0}};
+
+const utf8To1251_s utf8To1251[UTF8TO1251] = {
+	{0x401, 0x45 /*0xa8*/},
+	{0x402, 0x80},
+	{0x403, 0x81},
+	{0x404, 0xaa},
+	{0x405, 0xbd},
+	{0x406, 0x49 /*0xb2*/},
+	{0x407, 0xaf},
+	{0x408, 0xa3},
+	{0x409, 0x8a},
+	{0x40a, 0x8c},
+	{0x40b, 0x8e},
+	{0x40c, 0x8d},
+	{0x40e, 0xa1},
+	{0x40f, 0x8f},
+	{0x452, 0x90},
+	{0x451, 0x65 /*0xb8*/},
+	{0x453, 0x83},
+	{0x454, 0xba},
+	{0x455, 0xbe},
+	{0x456, 0x69 /*0xb3*/},
+	{0x457, 0xbf},
+	{0x458, 0x6a /*0xbc*/},
+	{0x459, 0x9a},
+	{0x45a, 0x9c},
+	{0x45b, 0x9e},
+	{0x45c, 0x9d},
+	{0x45f, 0x9f},
+	{0x490, 0xa5},
+	{0x491, 0xb4},
+	{0, 0}};
 
 //Cyrillic
 uint8_t to1251(uint16_t utf8)
@@ -426,7 +457,7 @@ void removeUtf8(char *characters)
 {
 	int Rindex = 0;
 	uint16_t utf8;
-	ESP_LOGV(TAG, "removeUtf8 in : %s", characters);
+	// ESP_LOGV(TAG, "removeUtf8 in : %s", characters);
 	ucEraseSlashes(characters);
 	while (characters[Rindex])
 	{
@@ -473,7 +504,7 @@ void removeUtf8(char *characters)
 		Rindex++;
 	}
 
-	ESP_LOGV(TAG, "removeUtf8 out: %s", characters);
+	// ESP_LOGV(TAG, "removeUtf8 out: %s", characters);
 }
 
 // Mark the lines to draw
@@ -1141,7 +1172,6 @@ void lcd_initUcg()
 	gpio_num_t miso;
 	gpio_num_t mosi;
 	gpio_num_t sclk;
-	uint8_t spi_no;
 
 	gpio_num_t cs;
 	gpio_num_t a0;
@@ -1152,9 +1182,9 @@ void lcd_initUcg()
 	ESP_LOGI(TAG, "lcd init  Rotat: %d", rotat);
 
 	ucg_esp32_hal_t ucg_esp32_hal = UCG_ESP32_HAL_DEFAULT;
-	gpio_get_spi_bus(&spi_no, &miso, &mosi, &sclk);
+	gpio_get_spi_bus(&miso, &mosi, &sclk);
 	gpio_get_spi_lcd(&cs, &a0);
-	ucg_esp32_hal.spi_no = spi_no;
+	ucg_esp32_hal.spi_no = KSPI;
 	ucg_esp32_hal.clk = sclk;
 	ucg_esp32_hal.mosi = mosi;
 	ucg_esp32_hal.cs = cs;

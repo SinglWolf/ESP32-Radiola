@@ -32,8 +32,8 @@
 #define TAG "addon"
 
 static void evtClearScreen();
-// second before time display in stop state
-#define DTIDLE 60
+// время в секундах до отбражения часов после остановки проигрывания мелодий
+#define TO_TIME_SCREEN 60
 long map(long x, long in_min, long in_max, long out_min, long out_max)
 {
 	return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
@@ -50,23 +50,24 @@ xQueueHandle event_lcd = NULL;
 ucg_t ucg;
 static xTaskHandle pxTaskLcd;
 // list of screen
-typedef enum typeScreen
+typedef enum
 {
-	smain,
-	svolume,
-	sstation,
-	snumber,
-	stime,
-	snull
-} typeScreen;
-static typeScreen stateScreen = snull;
-static typeScreen defaultStateScreen = smain;
+	EmptyScreen,
+	MainScreen,
+	VolumeScreen,
+	StationScreen,
+	NumberScreen,
+	TimeScreen,
+
+} typeScreen_e;
+static typeScreen_e stateScreen = EmptyScreen;
+static typeScreen_e defaultStateScreen = MainScreen;
 // state of the transient screen
 static uint8_t mTscreen = MTNEW; // 0 dont display, 1 display full, 2 display variable part
 
 static bool playable = true;
 bool ir_training = false;
-static uint16_t volume;
+static uint8_t volume;
 static int16_t futurNum = 0; // the number of the wanted station
 
 static unsigned timerScreen = 0;
@@ -87,11 +88,11 @@ static uint32_t IR_Key[KEY_MAX][2];
 
 static bool isEncoder = true;
 
-void Screen(typeScreen st);
+void Screen(typeScreen_e st);
 void drawScreen();
-static void evtScreen(typelcmd value);
+static void evtScreen(typelcmd_e value);
 
-Encoder_t *encoder = NULL;
+encoder_s *encoder = NULL;
 
 static adc1_channel_t ldr_channel, kbd_channel = GPIO_NONE;
 static bool inside = false;
@@ -147,48 +148,47 @@ void sleepLcd()
 {
 	itLcdOut = 2; // in sleep
 	// add the gpio switch off here
-	g_device->backlight_level = 0;
+	MainConfig->backlight_level = 0;
 	SetLedBacklight();
 	evtClearScreen();
 }
 
 void lcd_init()
 {
-
+	uint8_t rt = get_lcd_rotat();
+	ESP_LOGI(TAG, "LCD Rotat %d", rt);
+	//lcd rotation
+	setRotat(rt);
 	// init the gpio for backlight
 	LedBacklightInit();
 	lcd_initUcg();
+	setVolumeUcg(MainConfig->vol);
 	vTaskDelay(1);
 }
 
-void in_welcome(const char *ip, const char *state, int y, char *Version)
+void lcd_welcome(char *ip, char *state)
 {
-	DrawString(2, 2 * y, Version);
-	DrawColor(0, 0, 0, 0);
-	DrawBox(2, 4 * y, GetWidth() - 2, y);
-	DrawColor(1, 255, 255, 255);
-	DrawString(2, 4 * y, state);
-	if (strlen(ip) != 0)
-		DrawString(DrawString(2, 5 * y, "IP:") + 18, 5 * y, ip);
-}
-
-void lcd_welcome(const char *ip, const char *state)
-{
-	char text[30 + strlen(RELEASE) + strlen(REVISION)];
+	char verInfo[30 + strlen(RELEASE) + strlen(REVISION)];
 	char *text1 = strdup(state);
-
 	removeUtf8(text1);
 	if ((strlen(ip) == 0) && (strlen(state) == 0))
 		ClearBuffer();
 	setfont(2);
 	int y = -ucg_GetFontDescent(&ucg) + ucg_GetFontAscent(&ucg) + 3; //interline
-	sprintf(text, "ESP32-РАДИОЛА");
-	removeUtf8(text);
-	DrawString((GetWidth() / 2) - (ucg_GetStrWidth(&ucg, text) / 2), 5, text);
+	sprintf(verInfo, "ESP32-РАДИОЛА");
+	removeUtf8(verInfo);
+	DrawString((GetWidth() / 2) - (ucg_GetStrWidth(&ucg, verInfo) / 2), 5, verInfo);
 	setfont(1);
-	sprintf(text, "ВЕРСИЯ: %s Rev: %s\n", RELEASE, REVISION);
-	removeUtf8(text);
-	in_welcome(ip, text1, y, text);
+	sprintf(verInfo, "ВЕРСИЯ: %s Rev: %s\n", RELEASE, REVISION);
+	removeUtf8(verInfo);
+
+	DrawString(2, 2 * y, verInfo);
+	DrawColor(0, 0, 0, 0);
+	DrawBox(2, 4 * y, GetWidth() - 2, y);
+	DrawColor(1, 255, 255, 255);
+	DrawString(2, 4 * y, text1);
+	if (strlen(ip) != 0)
+		DrawString(DrawString(2, 5 * y, "IP:") + 18, 5 * y, ip);
 }
 
 // ----------------------------------------------------------------------------
@@ -206,13 +206,13 @@ IRAM_ATTR void ServiceAddon(void)
 			timerLcdOut--; //
 		timein++;
 
-		if (((timein % DTIDLE) == 0) && (!state))
+		if (((timein % TO_TIME_SCREEN) == 0) && (!state))
 		{
-			{
-				itAskStime = true;
-				timein = 0;
-			} // start the time display when paused
-		}
+
+			itAskStime = true;
+			timein = 0;
+		} // start the time display when paused
+
 		if (timerLcdOut == 1)
 			itLcdOut = 1; // ask to go to sleep
 
@@ -243,7 +243,7 @@ void scroll()
 ////////////////////////////
 // Change the current screen
 ////////////////////////////
-void Screen(typeScreen st)
+void Screen(typeScreen_e st)
 {
 	// printf("Screen: st: %d, stateScreen: %d, mTscreen: %d, default: %d\n", st, stateScreen, mTscreen, defaultStateScreen);
 	if (stateScreen != st)
@@ -294,7 +294,7 @@ void drawStation()
 {
 	char sNum[7];
 	char *ddot;
-	struct shoutcast_info *si;
+	station_slot_s *si;
 
 	//ClearBuffer();
 
@@ -317,12 +317,12 @@ void drawStation()
 			{
 				futurNum--;
 				if (futurNum < 0)
-					futurNum = NBSTATIONS - 1;
+					futurNum = MAXSTATIONS - 1;
 			}
 			else
 			{
 				futurNum++;
-				if (futurNum > (NBSTATIONS - 1))
+				if (futurNum > (MAXSTATIONS - 1))
 					futurNum = 0;
 			}
 		}
@@ -358,19 +358,19 @@ void drawScreen()
 	{
 		switch (stateScreen)
 		{
-		case smain: //
+		case MainScreen: //
 			drawFrame();
 			break;
-		case svolume:
+		case VolumeScreen:
 			drawVolume();
 			break;
-		case sstation:
+		case StationScreen:
 			drawStation();
 			break;
-		case stime:
+		case TimeScreen:
 			drawTime();
 			break;
-		case snumber:
+		case NumberScreen:
 			drawNumber();
 			break;
 		default:
@@ -438,23 +438,23 @@ void nbStation(char nb)
 	uint8_t id = strlen(irStr);
 	irStr[id] = nb;
 	irStr[id + 1] = 0;
-	evtScreen(snumber);
+	evtScreen(NumberScreen);
 }
 
 //
 static void evtClearScreen()
 {
 	//	ucg_ClearScreen(&ucg);
-	event_lcd_t evt;
+	event_lcd_s evt;
 	evt.lcmd = eclrs;
 	evt.lline = NULL;
 	//	xQueueSendToFront(event_lcd,&evt, 0);
 	xQueueSend(event_lcd, &evt, 0);
 }
 
-static void evtScreen(typelcmd value)
+static void evtScreen(typelcmd_e value)
 {
-	event_lcd_t evt;
+	event_lcd_s evt;
 	evt.lcmd = escreen;
 	evt.lline = (char *)((uint32_t)value);
 	xQueueSend(event_lcd, &evt, 0);
@@ -463,7 +463,7 @@ static void evtScreen(typelcmd value)
 static void evtStation(int16_t value)
 { // value +1 or -1
 	beep(10);
-	event_lcd_t evt;
+	event_lcd_s evt;
 	evt.lcmd = estation;
 	evt.lline = (char *)((uint32_t)value);
 	xQueueSend(event_lcd, &evt, 0);
@@ -473,7 +473,7 @@ static void evtStation(int16_t value)
 static void toggletime()
 {
 	beep(10);
-	event_lcd_t evt;
+	event_lcd_s evt;
 	evt.lcmd = etoggle;
 	evt.lline = NULL;
 	xQueueSend(event_lcd, &evt, 0);
@@ -483,17 +483,17 @@ static void toggletime()
 // Compute the encoder
 //----------------------
 
-void encoderCompute(Encoder_t *enc, bool role)
+void encoderCompute(encoder_s *enc, bool role)
 {
 	int16_t newValue = -getValue(enc);
 	if (newValue != 0)
 		ESP_LOGD(TAG, "encoder value: %d, stateScreen: %d", newValue, stateScreen);
-	Button newButton = getButton(enc);
-	typeScreen estate;
+	button_e newButton = getButton(enc);
+	typeScreen_e estate;
 	if (role)
-		estate = sstation;
+		estate = StationScreen;
 	else
-		estate = svolume;
+		estate = VolumeScreen;
 	// if an event on encoder switch
 	if (newButton != Open)
 	{
@@ -509,7 +509,7 @@ void encoderCompute(Encoder_t *enc, bool role)
 		// switch held and rotated then change station
 		if ((newButton == Held) && (getPinState(enc) == getpinsActive(enc)))
 		{
-			if (stateScreen != (role ? sstation : svolume))
+			if (stateScreen != (role ? StationScreen : VolumeScreen))
 				role ? evtStation(newValue) : setRelVolume(newValue);
 		}
 	}
@@ -556,7 +556,7 @@ uint32_t get_ir_code()
 void irLoop()
 {
 	// IR
-	event_ir_t evt;
+	event_ir_s evt;
 	while (xQueueReceive(event_ir, &evt, 0))
 	{
 		wakeLcd();
@@ -659,7 +659,7 @@ void irLoop()
 
 void initButtonDevices()
 {
-	//	struct device_settings *device;
+	//	radiola_config_s *device;
 	gpio_num_t enca0;
 	gpio_num_t encb0;
 	gpio_num_t encbtn0;
@@ -667,13 +667,13 @@ void initButtonDevices()
 	if (enca0 == GPIO_NONE)
 		isEncoder = false; //no encoder
 	if (isEncoder)
-		encoder = ClickEncoderInit(enca0, encb0, encbtn0, ((g_device->options & Y_ENC) == 0) ? false : true);
+		encoder = ClickEncoderInit(enca0, encb0, encbtn0, ((MainConfig->options & Y_ENC) == 0) ? false : true);
 }
 
 // custom ir code init from hardware nvs partition
 esp_err_t ir_key_init()
 {
-	ir_key_t indexKey;
+	ir_key_e indexKey;
 	nvs_handle handle;
 	const char *klab[] = {
 		"K_UP",
@@ -715,7 +715,7 @@ esp_err_t ir_key_init()
 	};
 	esp_err_t err = ESP_OK;
 	memset(&IR_Key, 0, sizeof(uint32_t) * 2 * KEY_MAX); // clear custom
-	if (g_device->ir_mode == IR_DEFAULD)
+	if (MainConfig->ir_mode == IR_DEFAULD)
 	{
 		for (indexKey = KEY_UP; indexKey < KEY_MAX; indexKey++)
 		{
@@ -727,21 +727,21 @@ esp_err_t ir_key_init()
 	}
 	else
 	{
-		err = open_partition("hardware", "gpio_space", NVS_READONLY, &handle);
+		err = open_storage(IRCODE_SPACE, NVS_READONLY, &handle);
 		if (err != ESP_OK)
 		{
-			close_partition(handle, "hardware");
-			g_device->ir_mode = IR_DEFAULD;
-			saveDeviceSettings(g_device);
+			close_storage(handle);
+			MainConfig->ir_mode = IR_DEFAULD;
+			SaveConfig();
 			return err;
 		}
 		for (indexKey = KEY_UP; indexKey < KEY_MAX; indexKey++)
 		{
 			// get the key in the nvs
-			err |= gpio_get_ir_key(handle, klab[indexKey], (uint32_t *)&(IR_Key[indexKey][0]), (uint32_t *)&(IR_Key[indexKey][1]));
+			err |= nvs_get_ir_key(handle, klab[indexKey], (uint32_t *)&(IR_Key[indexKey][0]), (uint32_t *)&(IR_Key[indexKey][1]));
 			taskYIELD();
 		}
-		close_partition(handle, "hardware");
+		close_storage(handle);
 	}
 	return err;
 }
@@ -803,36 +803,36 @@ void adcLoop()
 	if (ldr_channel != GPIO_NONE) //пин фоторезистора определён
 	{
 
-		if (g_device->backlight_mode == NOT_ADJUSTABLE)
+		if (MainConfig->backlight_mode == NOT_ADJUSTABLE)
 		{
-			g_device->backlight_level = 255;
+			MainConfig->backlight_level = 255;
 		}
-		else if (g_device->backlight_mode == BY_TIME)
+		else if (MainConfig->backlight_mode == BY_TIME)
 		{
 			// Уровень подсветки в зависимости от времени суток
 		}
-		else if (g_device->backlight_mode == BY_LIGHTING)
+		else if (MainConfig->backlight_mode == BY_LIGHTING)
 		{
-			g_device->night_brightness = 55; // Временные установки
-			g_device->day_brightness = 255;	 // Временные установки
+			MainConfig->night_brightness = 55; // Временные установки
+			MainConfig->day_brightness = 255;  // Временные установки
 			adc1_config_width(ADC_WIDTH_9Bit);
 			adc1_config_channel_atten(ldr_channel, ADC_ATTEN_11db);
 			uint32_t voltage = 0;
 			// Снимаем напряжение.
 			voltage = (adc1_get_raw(ldr_channel));
 			// vTaskDelay(1);
-			g_device->backlight_level = map(voltage, 0, 511, g_device->day_brightness, g_device->night_brightness);
+			MainConfig->backlight_level = map(voltage, 0, 511, MainConfig->day_brightness, MainConfig->night_brightness);
 			// ESP_LOGD(TAG, "LDR voltage: %d\n", voltage);
-			// ESP_LOGD(TAG, "backlight_level: %d\n", g_device->backlight_level);
+			// ESP_LOGD(TAG, "backlight_level: %d\n", MainConfig->backlight_level);
 		}
-		else if (g_device->backlight_mode == BY_HAND)
+		else if (MainConfig->backlight_mode == BY_HAND)
 		{
 			// Ручная регулировка уровня подсветки
 		}
-		if (g_device->backlight_level != old_backlight_level) // Если уровень изменился, применяем к дисплею
+		if (MainConfig->backlight_level != old_backlight_level) // Если уровень изменился, применяем к дисплею
 		{
 			SetLedBacklight();
-			old_backlight_level = g_device->backlight_level; // Запоминаем текущий уровень подсветки
+			old_backlight_level = MainConfig->backlight_level; // Запоминаем текущий уровень подсветки
 		}
 	}
 	if (kbd_channel == GPIO_NONE)
@@ -915,10 +915,10 @@ void adcLoop()
 
 void task_lcd(void *pvParams)
 {
-	event_lcd_t evt;  // lcd event
-	event_lcd_t evt1; // lcd event
+	event_lcd_s evt;  // lcd event
+	event_lcd_s evt1; // lcd event
 	ESP_LOGD(TAG, "task_lcd Started, LCD Type");
-	defaultStateScreen = (g_device->options & Y_TOGGLETIME) ? stime : smain;
+	defaultStateScreen = (MainConfig->options & Y_TOGGLETIME) ? TimeScreen : MainScreen;
 	drawFrame();
 
 	while (1)
@@ -928,11 +928,11 @@ void task_lcd(void *pvParams)
 			sleepLcd();
 		}
 
-		if (stateScreen == smain)
+		if (stateScreen == MainScreen)
 		{
 			scroll();
 		}
-		if ((stateScreen == stime) || (stateScreen == smain))
+		if ((stateScreen == TimeScreen) || (stateScreen == MainScreen))
 		{
 			mTscreen = MTREFRESH;
 		} // display time
@@ -949,7 +949,7 @@ void task_lcd(void *pvParams)
 				{
 				case lmeta:
 					metaUcg(evt.lline);
-					Screen(smain);
+					Screen(MainScreen);
 					wakeLcd();
 					break;
 				case licy4:
@@ -960,13 +960,13 @@ void task_lcd(void *pvParams)
 					break;
 				case lstop:
 					statusUcg(stopped);
-					Screen(smain);
+					Screen(MainScreen);
 					wakeLcd();
 					break;
 				case lnameset:
 					namesetUcg(evt.lline);
 					statusUcg(starting);
-					Screen(smain);
+					Screen(MainScreen);
 					wakeLcd();
 					break;
 				case lplay:
@@ -980,7 +980,7 @@ void task_lcd(void *pvParams)
 					setVolumeUcg(volume);
 					if (dvolume)
 					{
-						Screen(svolume);
+						Screen(VolumeScreen);
 						wakeLcd();
 					}
 					dvolume = true;
@@ -995,7 +995,7 @@ void task_lcd(void *pvParams)
 						}
 					ESP_LOGD(TAG, "estation val: %d", (uint32_t)evt.lline);
 					changeStation((uint32_t)evt.lline);
-					Screen(sstation);
+					Screen(StationScreen);
 					evt.lline = NULL; // just a number
 					break;
 				case eclrs:
@@ -1007,10 +1007,10 @@ void task_lcd(void *pvParams)
 					evt.lline = NULL; // just a number Don't free
 					break;
 				case etoggle:
-					defaultStateScreen = (stateScreen == smain) ? stime : smain;
-					(stateScreen == smain) ? Screen(stime) : Screen(smain);
-					g_device->options = (defaultStateScreen == smain) ? g_device->options & N_TOGGLETIME : g_device->options | Y_TOGGLETIME;
-					saveDeviceSettings(g_device);
+					defaultStateScreen = (stateScreen == MainScreen) ? TimeScreen : MainScreen;
+					(stateScreen == MainScreen) ? Screen(TimeScreen) : Screen(MainScreen);
+					MainConfig->options = (defaultStateScreen == MainScreen) ? MainConfig->options & N_TOGGLETIME : MainConfig->options | Y_TOGGLETIME;
+					SaveConfig();
 					break;
 				default:;
 				}
@@ -1071,15 +1071,15 @@ void task_addon(void *pvParams)
 		if (ldr_channel != GPIO_NONE)
 		{
 			ESP_LOGD(TAG, "Channel for GPIO: %d defined, number: %i", ldr, ldr_channel);
-			g_device->ldr = true;
+			MainConfig->ldr = true;
 			// adc1_config_width(ADC_WIDTH_9Bit);
 			// adc1_config_channel_atten(ldr_channel, ADC_ATTEN_11db);
 		}
 		else
 		{
-			g_device->ldr = false;
+			MainConfig->ldr = false;
 		}
-		saveDeviceSettings(g_device);
+		SaveConfig();
 	}
 	if (PIN_NUM_KBD == GPIO_NUM_34) // Инициализация клавиатуры
 	{
@@ -1096,17 +1096,16 @@ void task_addon(void *pvParams)
 	ir_key_init();
 	initButtonDevices();
 
-
 	serviceAddon = &multiService;
 	; // connect the 1ms interruption
 	futurNum = getCurrentStation();
 
 	//ir
 	// queue for events of the IR nec rx
-	event_ir = xQueueCreate(5, sizeof(event_ir_t));
+	event_ir = xQueueCreate(5, sizeof(event_ir_s));
 	ESP_LOGD(TAG, "event_ir: %x", (int)event_ir);
 	// queue for events of the lcd
-	event_lcd = xQueueCreate(20, sizeof(event_lcd_t));
+	event_lcd = xQueueCreate(20, sizeof(event_lcd_s));
 	ESP_LOGD(TAG, "event_lcd: %x", (int)event_lcd);
 
 	xTaskCreatePinnedToCore(rmt_nec_rx_task, "rmt_nec_rx_task", 2148, NULL, PRIO_RMT, &pxCreatedTask, CPU_RMT);
@@ -1126,10 +1125,10 @@ void task_addon(void *pvParams)
 		touchLoop();		  // Опрос тачскрина
 		if (timerScreen >= 3) //  sec timeout transient screen
 		{
-			//			if ((stateScreen != smain)&&(stateScreen != stime)&&(stateScreen != snull))
+			//			if ((stateScreen != MainScreen)&&(stateScreen != TimeScreen)&&(stateScreen != EmptyScreen))
 			//printf("timerScreen: %d, stateScreen: %d, defaultStateScreen: %d\n",timerScreen,stateScreen,defaultStateScreen);
 			timerScreen = 0;
-			if ((stateScreen != defaultStateScreen) && (stateScreen != snull))
+			if ((stateScreen != defaultStateScreen) && (stateScreen != EmptyScreen))
 			{
 				// Play the changed station on return to main screen
 				// if a number is entered, play it.
@@ -1149,16 +1148,16 @@ void task_addon(void *pvParams)
 				}
 				if (!itAskStime)
 				{
-					if ((defaultStateScreen == stime) && (stateScreen != smain))
-						evtScreen(smain);
-					else if ((defaultStateScreen == stime) && (stateScreen == smain))
-						evtScreen(stime);
+					if ((defaultStateScreen == TimeScreen) && (stateScreen != MainScreen))
+						evtScreen(MainScreen);
+					else if ((defaultStateScreen == TimeScreen) && (stateScreen == MainScreen))
+						evtScreen(TimeScreen);
 					else if (stateScreen != defaultStateScreen)
 						evtScreen(defaultStateScreen); //Back to the old screen
 				}
 			}
-			if (itAskStime && (stateScreen != stime)) // time start the time display. Don't do that in interrupt.
-				evtScreen(stime);
+			if (itAskStime && (stateScreen != TimeScreen)) // time start the time display. Don't do that in interrupt.
+				evtScreen(TimeScreen);
 		}
 
 		vTaskDelay(20);
@@ -1170,7 +1169,7 @@ void task_addon(void *pvParams)
 // parse the esp32media received line and do the job
 void addonParse(const char *fmt, ...)
 {
-	event_lcd_t evt;
+	event_lcd_s evt;
 	char *line = NULL;
 	//	char* lfmt;
 	int rlen;

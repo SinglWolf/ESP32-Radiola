@@ -29,19 +29,16 @@
 #include "lwip/sockets.h"
 
 #define TAG "webserver"
+#define SOCKETFAIL "WebServer Socket fails %s errno: %d\n"
 
 xSemaphoreHandle semfile = NULL;
 
 const char HTTP_header[] = {"HTTP/1.1 200 OK\r\nContent-Type:application/json\r\nContent-Length:%d\r\n\r\n"};
 
 const char strsROK[] = {"HTTP/1.1 200 OK\r\nContent-Type: %s\r\nContent-Length: %lu\r\nConnection: keep-alive\r\n\r\n%s"};
-const char tryagain[] = {"try again"};
 
 const char lowmemory[] = {"HTTP/1.1 500 Internal Server Error\r\nContent-Type: text/plain\r\nContent-Length: 11\r\n\r\nlow memory\n"};
-const char strsMALLOC[] = {"WebServer inmalloc fails for %d\n"};
-const char strsMALLOC1[] = {"WebServer %s malloc fails\n"};
-const char strsSOCKET[] = {"WebServer Socket fails %s errno: %d\n"};
-const char strsID[] = {"getstation, no id or Wrong id %d\n"};
+
 const char RAUTO[] = {"\
 {\"rauto\":\"%c\"\
 }"};
@@ -84,18 +81,20 @@ const char strsWIFI[] = {"\
 \"host\":\"%s\"\
 }"};
 
-const char strsGSTAT[] = {"\
+const char STATION[] = {"\
 {\
 \"Name\":\"%s\",\
 \"URL\":\"%s\",\
 \"File\":\"%s\",\
-\"Port\":\"%d\"\
+\"Port\":\"%d\",\
+\"fav\":\"%u\",\
+\"Total\":\"%u\"\
 }"};
 
 const char HARDWARE[] = {"\
 {\
 \"present\":\"%u\",\
-\"inputnum\":\"%u\",\
+\"audioinput\":\"%u\",\
 \"Volume\":\"%02u\",\
 \"Treble\":\"%02u\",\
 \"Bass\":\"%02u\",\
@@ -125,7 +124,6 @@ const char GPIOS[] = {"\
 {\
 \"GPIO_MODE\":\"%u\",\
 \"ERROR\":\"%04X\",\
-\"K_SPI\":\"%u\",\
 \"P_MISO\":\"%03u\",\
 \"P_MOSI\":\"%03u\",\
 \"P_CLK\":\"%03u\",\
@@ -230,7 +228,7 @@ char *concat(const char *s1, const char *s2)
 static uint32_t IR_Key[KEY_MAX][2];
 esp_err_t get_ir_key(bool ir_mode)
 {
-	ir_key_t indexKey;
+	ir_key_e indexKey;
 	nvs_handle handle;
 	const char *klab[] = {
 		"K_UP",
@@ -284,19 +282,22 @@ esp_err_t get_ir_key(bool ir_mode)
 	}
 	else
 	{
-		err = open_partition("hardware", "gpio_space", NVS_READONLY, &handle);
-		if (err != ESP_OK)
+		err = open_storage(IRCODE_SPACE, NVS_READONLY, &handle);
+		if (err == ESP_OK)
 		{
-			close_partition(handle, "hardware");
-			return err;
+
+			for (indexKey = KEY_UP; indexKey < KEY_MAX; indexKey++)
+			{
+				// get the key in the nvs
+				err |= nvs_get_ir_key(handle, klab[indexKey], (uint32_t *)&(IR_Key[indexKey][0]), (uint32_t *)&(IR_Key[indexKey][1]));
+				taskYIELD();
+			}
 		}
-		for (indexKey = KEY_UP; indexKey < KEY_MAX; indexKey++)
+		else
 		{
-			// get the key in the nvs
-			err |= gpio_get_ir_key(handle, klab[indexKey], (uint32_t *)&(IR_Key[indexKey][0]), (uint32_t *)&(IR_Key[indexKey][1]));
-			taskYIELD();
+			ESP_LOGE(TAG, "get ir_key fail, err No: 0x%x", err);
 		}
-		close_partition(handle, "hardware");
+		close_storage(handle);
 	}
 	return err;
 }
@@ -311,19 +312,16 @@ uint8_t get_code(char *buf, uint32_t arg1, uint32_t arg2)
 	return strlen(buf);
 }
 //
-void *inmalloc(size_t n)
+void *incalloc(size_t n)
 {
-	void *ret;
-	//	ESP_LOGV(TAG, "server Malloc of %d %d,  Heap size: %d",n,((n / 32) + 1) * 32,xPortGetFreeHeapSize( ));
-	ret = malloc(n);
-	ESP_LOGV(TAG, "server Malloc of %x : %u bytes Heap size: %u", (int)ret, n, xPortGetFreeHeapSize());
-	//	if (n <4) printf("Server: incmalloc size:%d\n",n);
+	void *ret = calloc(1, n);
+	ESP_LOGV(TAG, "server Calloc of %x : %u bytes Heap size: %u", (int)ret, n, xPortGetFreeHeapSize());
 	return ret;
 }
 
 void infree(void *p)
 {
-	ESP_LOGV(TAG, "server free of   %x,            Heap size: %u", (int)p, xPortGetFreeHeapSize());
+	ESP_LOGV(TAG, "server free of %x, Heap size: %u", (int)p, xPortGetFreeHeapSize());
 	if (p != NULL)
 		free(p);
 }
@@ -347,13 +345,13 @@ static void respOk(int conn, const char *message)
 	char rempty[] = {""};
 	if (message == NULL)
 		message = rempty;
-	char fresp[strlen(strsROK) + strlen(message) + 15]; // = inmalloc(strlen(strsROK)+strlen(message)+15);
+	char fresp[strlen(strsROK) + strlen(message) + 15];
 	sprintf(fresp, strsROK, "text/plain", (unsigned long)strlen(message), message);
 	ESP_LOGV(TAG, "respOk %s", fresp);
 	write(conn, fresp, strlen(fresp));
 }
 
-static void respKo(int conn)
+static void resp_low_memory(int conn)
 {
 	write(conn, lowmemory, strlen(lowmemory));
 }
@@ -362,13 +360,13 @@ static void serveFile(char *name, int conn)
 {
 #define PART 1460
 	int length;
-	int gpart;
+	int gpart = PART;
 
 	char *content;
 	struct servFile *f = findFile(name);
 	ESP_LOGV(TAG, "find %s at %x", name, (int)f);
 	ESP_LOGV(TAG, "Heap size: %u", xPortGetFreeHeapSize());
-	gpart = PART;
+
 	if (f != NULL)
 	{
 		length = f->size;
@@ -387,7 +385,7 @@ static void serveFile(char *name, int conn)
 			vTaskDelay(1); // why i need it? Don't know.
 			if (write(conn, buf, strlen(buf)) == -1)
 			{
-				respKo(conn);
+				resp_low_memory(conn);
 				ESP_LOGE(TAG, "semfile fails 0 errno:%d", errno);
 				xSemaphoreGive(semfile);
 				return;
@@ -400,13 +398,13 @@ static void serveFile(char *name, int conn)
 			{
 				if (write(conn, content, part) == -1)
 				{
-					respKo(conn);
+					resp_low_memory(conn);
 					ESP_LOGE(TAG, "semfile fails 1 errno:%d", errno);
 					xSemaphoreGive(semfile);
 					return;
 				}
 
-				//				ESP_LOGV(TAG,"serveFile socket:%d,  read at %x len: %d",conn,(int)content,(int)part);
+				// ESP_LOGV(TAG,"serveFile socket:%d,  read at %x len: %d",conn,(int)content,(int)part);
 				content += part;
 				progress -= part;
 				if (progress <= part)
@@ -417,7 +415,7 @@ static void serveFile(char *name, int conn)
 		}
 		else
 		{
-			respKo(conn);
+			resp_low_memory(conn);
 			ESP_LOGE(TAG, "semfile fails 2 errno:%d", errno);
 			xSemaphoreGive(semfile);
 			return;
@@ -425,7 +423,7 @@ static void serveFile(char *name, int conn)
 	}
 	else
 	{
-		respKo(conn);
+		resp_low_memory(conn);
 	}
 	//	ESP_LOGV(TAG,"serveFile socket:%d, end",conn);
 }
@@ -477,10 +475,10 @@ static char *getParameter(const char *sep, const char *param, char *data, uint16
 		{
 			if (p_end == p)
 				return NULL;
-			char *t = inmalloc(p_end - p + 1);
+			char *t = incalloc(p_end - p + 1);
 			if (t == NULL)
 			{
-				printf("getParameterF fails\n");
+				ESP_LOGE(TAG, "getParameterF fails\n");
 				return NULL;
 			}
 			ESP_LOGV(TAG, "getParameter malloc of %d  for %s", p_end - p + 1, param);
@@ -551,23 +549,8 @@ void setRelVolume(int8_t vol)
 	wsVol(Vol);
 }
 
-// send the rssi
-static void rssi(int socket)
-{
-	char answer[20];
-	int8_t rssi = -30;
-	wifi_ap_record_t wifidata;
-	esp_wifi_sta_get_ap_info(&wifidata);
-	if (wifidata.primary != 0)
-	{
-		rssi = wifidata.rssi;
-	}
-	sprintf(answer, "{\"wsrssi\":\"%d\"}", rssi);
-	websocketwrite(socket, answer, strlen(answer));
-}
-
 // treat the received message of the websocket
-void websockethandle(int socket, wsopcode_t opcode, uint8_t *payload, size_t length)
+void websockethandle(int socket, wsopcode_e opcode, uint8_t *payload, size_t length)
 {
 	//wsvol
 	ESP_LOGV(TAG, "websocketHandle: %s", payload);
@@ -611,16 +594,12 @@ void websockethandle(int socket, wsopcode_t opcode, uint8_t *payload, size_t len
 	{
 		wsMonitor();
 	}
-	else if (strstr((char *)payload, "wsrssi") != NULL)
-	{
-		rssi(socket);
-	}
 }
 
 void playStationInt(int sid)
 {
 	beep(20);
-	struct shoutcast_info *si;
+	station_slot_s *si;
 	char answer[24];
 	si = getStation(sid);
 
@@ -635,7 +614,7 @@ void playStationInt(int sid)
 		clientSetPath(si->file);
 		clientSetPort(si->port);
 
-		//printf("Name: %s, url: %s, path: %s\n",	si->name,	si->domain, si->file);
+		//ESP_LOGI(TAG, "Name: %s, url: %s, path: %s\n",	si->name,	si->domain, si->file);
 
 		clientConnect();
 		for (i = 0; i < 100; i++)
@@ -648,22 +627,18 @@ void playStationInt(int sid)
 	infree(si);
 	sprintf(answer, "{\"wsstation\":\"%d\"}", sid);
 	websocketbroadcast(answer, strlen(answer));
-	ESP_LOGI(TAG, "playstationInt: %d, g_device: %u", sid, g_device->currentstation);
-	if (g_device->currentstation != sid)
+	ESP_LOGV(TAG, "playstationInt: %d, MainConfig: %u", sid, MainConfig->CurrentStation);
+	if (MainConfig->CurrentStation != sid)
 	{
-		g_device->currentstation = sid;
+		MainConfig->CurrentStation = sid;
 		setCurrentStation(sid);
-		saveDeviceSettings(g_device);
+		SaveConfig();
 	}
 }
 
 void playStation(char *id)
 {
-
-	int uid;
-	uid = atoi(id);
-	ESP_LOGV(TAG, "playstation: %d", uid);
-	if (uid < 255)
+	if (atoi(id) < MainConfig->TotalStations)
 		setCurrentStation(atoi(id));
 	playStationInt(getCurrentStation());
 }
@@ -707,307 +682,244 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 	int i;
 
 	bool changed;
-	if (strcmp(name, "/instant_play") == 0)
+	if (strcmp(name, "/local_play") == 0)
 	{
-		if (data_size > 0)
+		bool tst;
+		char url[100];
+		tst = getSParameterFromResponse(url, 100, "url=", data, data_size);
+		char path[200];
+		tst &= getSParameterFromResponse(path, 200, "path=", data, data_size);
+		pathParse(path);
+		char port[10];
+		tst &= getSParameterFromResponse(port, 10, "port=", data, data_size);
+		if (tst)
 		{
-			bool tst;
-			char url[100];
-			tst = getSParameterFromResponse(url, 100, "url=", data, data_size);
-			char path[200];
-			tst &= getSParameterFromResponse(path, 200, "path=", data, data_size);
-			pathParse(path);
-			char port[10];
-			tst &= getSParameterFromResponse(port, 10, "port=", data, data_size);
-			if (tst)
+			clientDisconnect("Post local_play");
+			for (i = 0; i < 100; i++)
 			{
-				clientDisconnect("Post instant_play");
-				for (i = 0; i < 100; i++)
-				{
-					if (!clientIsConnected())
-						break;
-					vTaskDelay(4);
-				}
-				clientSetURL(url);
-				clientSetPath(path);
-				clientSetPort(atoi(port));
-				clientConnectOnce();
-				for (i = 0; i < 100; i++)
-				{
-					if (clientIsConnected())
-						break;
-					vTaskDelay(5);
-				}
+				if (!clientIsConnected())
+					break;
+				vTaskDelay(4);
+			}
+			clientSetURL(url);
+			clientSetPath(path);
+			clientSetPort(atoi(port));
+			clientConnectOnce();
+			for (i = 0; i < 100; i++)
+			{
+				if (clientIsConnected())
+					break;
+				vTaskDelay(5);
 			}
 		}
 	}
 	else if (strcmp(name, "/soundvol") == 0)
 	{
-		if (data_size > 0)
-		{
-			char *vol = data + 4;
-			data[data_size - 1] = 0;
-			ESP_LOGD(TAG, "/sounvol vol: %s num:%d", vol, atoi(vol));
-			setVolume(vol);
-			respOk(conn, NULL);
-			return;
-		}
+		char *vol = data + 4;
+		data[data_size - 1] = 0;
+		ESP_LOGD(TAG, "/sounvol vol: %s num:%d", vol, atoi(vol));
+		setVolume(vol);
+		respOk(conn, NULL);
+		return;
 	}
 	else if (strcmp(name, "/sound") == 0)
 	{
-		if (data_size > 0)
+		char bass[6];
+		char treble[6];
+		char bassfreq[6];
+		char treblefreq[6];
+		char spacial[6];
+		changed = false;
+		if (getSParameterFromResponse(bass, 6, "bass=", data, data_size))
 		{
-			char bass[6];
-			char treble[6];
-			char bassfreq[6];
-			char treblefreq[6];
-			char spacial[6];
-			changed = false;
-			if (getSParameterFromResponse(bass, 6, "bass=", data, data_size))
+			if (MainConfig->bass != atoi(bass))
 			{
-				if (g_device->bass != atoi(bass))
-				{
-					VS1053_SetBass(atoi(bass));
-					changed = true;
-					g_device->bass = atoi(bass);
-				}
+				VS1053_SetBass(atoi(bass));
+				changed = true;
+				MainConfig->bass = atoi(bass);
 			}
-			if (getSParameterFromResponse(treble, 6, "treble=", data, data_size))
-			{
-				if (g_device->treble != atoi(treble))
-				{
-					VS1053_SetTreble(atoi(treble));
-					changed = true;
-					g_device->treble = atoi(treble);
-				}
-			}
-			if (getSParameterFromResponse(bassfreq, 6, "bassfreq=", data, data_size))
-			{
-				if (g_device->freqbass != atoi(bassfreq))
-				{
-					VS1053_SetBassFreq(atoi(bassfreq));
-					changed = true;
-					g_device->freqbass = atoi(bassfreq);
-				}
-			}
-			if (getSParameterFromResponse(treblefreq, 6, "treblefreq=", data, data_size))
-			{
-				if (g_device->freqtreble != atoi(treblefreq))
-				{
-					VS1053_SetTrebleFreq(atoi(treblefreq));
-					changed = true;
-					g_device->freqtreble = atoi(treblefreq);
-				}
-			}
-			if (getSParameterFromResponse(spacial, 6, "spacial=", data, data_size))
-			{
-				if (g_device->spacial != atoi(spacial))
-				{
-					VS1053_SetSpatial(atoi(spacial));
-					changed = true;
-					g_device->spacial = atoi(spacial);
-				}
-			}
-			if (changed)
-				saveDeviceSettings(g_device);
 		}
+		if (getSParameterFromResponse(treble, 6, "treble=", data, data_size))
+		{
+			if (MainConfig->treble != atoi(treble))
+			{
+				VS1053_SetTreble(atoi(treble));
+				changed = true;
+				MainConfig->treble = atoi(treble);
+			}
+		}
+		if (getSParameterFromResponse(bassfreq, 6, "bassfreq=", data, data_size))
+		{
+			if (MainConfig->freqbass != atoi(bassfreq))
+			{
+				VS1053_SetBassFreq(atoi(bassfreq));
+				changed = true;
+				MainConfig->freqbass = atoi(bassfreq);
+			}
+		}
+		if (getSParameterFromResponse(treblefreq, 6, "treblefreq=", data, data_size))
+		{
+			if (MainConfig->freqtreble != atoi(treblefreq))
+			{
+				VS1053_SetTrebleFreq(atoi(treblefreq));
+				changed = true;
+				MainConfig->freqtreble = atoi(treblefreq);
+			}
+		}
+		if (getSParameterFromResponse(spacial, 6, "spacial=", data, data_size))
+		{
+			if (MainConfig->spacial != atoi(spacial))
+			{
+				VS1053_SetSpatial(atoi(spacial));
+				changed = true;
+				MainConfig->spacial = atoi(spacial);
+			}
+		}
+		if (changed)
+			SaveConfig();
 	}
 	else if (strcmp(name, "/getStation") == 0)
 	{
-		if (data_size > 0)
+		char id[3];
+		if (getSParameterFromResponse(id, 3, "ID=", data, data_size))
 		{
-			char id[6];
-			if (getSParameterFromResponse(id, 6, "idgp=", data, data_size))
+			if ((atoi(id) >= 0) && (atoi(id) < (MAXSTATIONS)))
 			{
-				if ((atoi(id) >= 0) && (atoi(id) < (NBSTATIONS)))
+				station_slot_s *si = getStation(atoi(id));
+				if (si == NULL)
 				{
-					char ibuf[10];
-					char *buf;
-					for (i = 0; i < sizeof(ibuf); i++)
-						ibuf[i] = 0;
-					struct shoutcast_info *si;
-					si = getStation(atoi(id));
-					if (strlen(si->domain) > sizeof(si->domain))
-						si->domain[sizeof(si->domain) - 1] = 0; //truncate if any (rom crash)
-					if (strlen(si->file) > sizeof(si->file))
-						si->file[sizeof(si->file) - 1] = 0; //truncate if any (rom crash)
-					if (strlen(si->name) > sizeof(si->name))
-						si->name[sizeof(si->name) - 1] = 0; //truncate if any (rom crash)
-					sprintf(ibuf, "%u", si->port);
-					buf = inmalloc(1024);
+					si = incalloc(sizeof(station_slot_s));
+				}
+				char *buf = incalloc(1024);
 
-					if (buf == NULL)
-					{
-						ESP_LOGE(TAG, " %s malloc fails", "getStation");
-						respKo(conn);
-						//return;
-					}
-					else
-					{
-
-						for (i = 0; i < sizeof(buf); i++)
-							buf[i] = 0;
-						sprintf(buf, strsGSTAT,
-								si->name,
-								si->domain,
-								si->file,
-								si->port);
-						// ESP_LOGI(TAG, "TEST getStation\njson_length len:%u\n%s", strlen(buf), buf);
-						int json_length = strlen(buf);
-						char *s = concat(HTTP_header, buf);
-
-						sprintf(buf, s, json_length);
-						free(s);
-
-						write(conn, buf, strlen(buf));
-						infree(buf);
-					}
-					infree(si);
-					return;
+				if (buf == NULL)
+				{
+					ESP_LOGE(TAG, " %s malloc fails", "getStation");
+					resp_low_memory(conn);
 				}
 				else
-					printf(strsID, atoi(id));
-				//				infree (id);
+				{
+					sprintf(buf, STATION,
+							si->name,
+							si->domain,
+							si->file,
+							si->port,
+							si->fav,
+							MainConfig->TotalStations);
+					// ESP_LOGI(TAG, "TEST getStation\njson_length len:%u\n%s", strlen(buf), buf);
+					int json_length = strlen(buf);
+					char *s = concat(HTTP_header, buf);
+
+					sprintf(buf, s, json_length);
+					free(s);
+
+					write(conn, buf, strlen(buf));
+				}
+				infree(buf);
+				infree(si);
+				return;
 			}
+			else
+				ESP_LOGE(TAG, "getstation, no id or Wrong id %d\n", atoi(id));
 		}
 	}
 	else if (strcmp(name, "/setStation") == 0)
 	{
-		if (data_size > 0)
+		char save[1];
+		if (getSParameterFromResponse(save, 1, "save=", data, data_size))
 		{
-			//printf("data:%s\n",data);
-			char nb[6];
-			bool res;
-			uint16_t unb, uid = 0;
-			bool pState = getState(); // remember if we are playing
-			res = getSParameterFromResponse(nb, 6, "nb=", data, data_size);
-			if (res)
+			if (strcmp(save, "1") == 0)
 			{
-				ESP_LOGV(TAG, "Setstation: nb init:%s", nb);
-				unb = atoi(nb);
+				MainConfig->TotalStations = GetTotalStations();
+				SaveConfig();
 			}
-			else
-				unb = 1;
-
-			if (!res)
-			{
-				ESP_LOGE(TAG, " %s nb null", "setStation");
-				respKo(conn);
-				return;
-			}
-			ESP_LOGV(TAG, "unb init:%u", unb);
-
-			struct shoutcast_info *si = inmalloc(sizeof(struct shoutcast_info) * unb);
-
-			if (si == NULL)
-			{
-				ESP_LOGE(TAG, " %s malloc fails", "setStation");
-				respKo(conn);
-				return;
-			}
-			char *bsi = (char *)si;
-			int j;
-			for (j = 0; j < sizeof(struct shoutcast_info) * unb; j++)
-				bsi[j] = 0; //clean
-
-			char id[6];
-			char port[6];
-			for (i = 0; i < unb; i++)
-			{
-				char *url;
-				char *file;
-				char *Name;
-				struct shoutcast_info *nsi = si + i;
-				url = getParameterFromResponse("url=", data, data_size);
-				file = getParameterFromResponse("file=", data, data_size);
-				pathParse(file);
-				Name = getParameterFromResponse("name=", data, data_size);
-				if (getSParameterFromResponse(id, 6, "id=", data, data_size))
-				{
-					// ESP_LOGD(TAG, "nb:%d,si:%x,nsi:%x,id:%s,url:%s,file:%s", i, (int)si, (int)nsi, id, url, file);
-					ESP_LOGV(TAG, "nb:%d, id:%s", i, id);
-					if (i == 0)
-						uid = atoi(id);
-					if ((atoi(id) >= 0) && (atoi(id) < NBSTATIONS))
-					{
-						if (url && file && Name && getSParameterFromResponse(port, 6, "port=", data, data_size))
-						{
-							if (strlen(url) > sizeof(nsi->domain))
-								url[sizeof(nsi->domain) - 1] = 0; //truncate if any
-							strcpy(nsi->domain, url);
-							if (strlen(file) > sizeof(nsi->file))
-								url[sizeof(nsi->file) - 1] = 0; //truncate if any
-							strcpy(nsi->file, file);
-							if (strlen(Name) > sizeof(nsi->name))
-								url[sizeof(nsi->name) - 1] = 0; //truncate if any
-							strcpy(nsi->name, Name);
-							nsi->port = atoi(port);
-						}
-					}
-				}
-				infree(Name);
-				infree(file);
-				infree(url);
-
-				data = strstr(data, "&&") + 2;
-				ESP_LOGV(TAG, "si:%x, nsi:%x, addr:%x", (int)si, (int)nsi, (int)data);
-			}
-
-			ESP_LOGV(TAG, "save station: %u, unb:%u, addr:%x", uid, unb, (int)si);
-			saveMultiStation(si, uid, unb);
-			ESP_LOGV(TAG, "save station return: %u, unb:%u, addr:%x", uid, unb, (int)si);
-			infree(si);
-			if (pState != getState())
-				if (pState)
-				{
-					clientConnect();
-					vTaskDelay(200);
-				} //we was playing so start again the play
+			respOk(conn, NULL);
+			return;
 		}
+		//ESP_LOGI(TAG, "data:%s\n",data);
+		bool pState = getState(); // remember if we are playing
+
+		station_slot_s *slot = incalloc(sizeof(station_slot_s));
+
+		if (slot == NULL)
+		{
+			ESP_LOGE(TAG, " %s malloc fails", "setStation");
+			resp_low_memory(conn);
+			return;
+		}
+		// char *fillslot = (char *)slot;
+		// int j;
+		// for (j = 0; j < sizeof(station_slot_s); j++)
+		// 	fillslot[j] = 0; //clean
+
+		char FAV[1];
+		char ID[3];
+		char port[5];
+
+		char *url = getParameterFromResponse("url=", data, data_size);
+		char *file = getParameterFromResponse("file=", data, data_size);
+		pathParse(file);
+		char *Name = getParameterFromResponse("name=", data, data_size);
+		getSParameterFromResponse(FAV, 1, "fav=", data, data_size);
+		getSParameterFromResponse(ID, 3, "ID=", data, data_size);
+		getSParameterFromResponse(port, 5, "port=", data, data_size);
+
+		// if (strlen(url) > sizeof(slot->domain))
+		// 	url[sizeof(slot->domain) - 1] = 0; //truncate if any
+		strcpy(slot->domain, url);
+		// if (strlen(file) > sizeof(slot->file))
+		// 	url[sizeof(slot->file) - 1] = 0; //truncate if any
+		strcpy(slot->file, file);
+		// if (strlen(Name) > sizeof(slot->name))
+		// 	url[sizeof(slot->name) - 1] = 0; //truncate if any
+		strcpy(slot->name, Name);
+		slot->port = atoi(port);
+		slot->fav = atoi(FAV);
+
+		saveStation(slot, atoi(ID));
+		infree(slot);
+		if (pState != getState())
+			if (pState)
+			{
+				clientConnect();
+				vTaskDelay(200);
+			} //we was playing so start again the play
 	}
 	else if (strcmp(name, "/play") == 0)
 	{
-		if (data_size > 4)
-		{
-			char *id = data + 3;
-			data[data_size - 1] = 0;
-			playStation(id);
-		}
+		char *id = data + 3;
+		data[data_size - 1] = 0;
+		playStation(id);
 	}
 	else if (strcmp(name, "/auto") == 0)
 	{
-		if (data_size > 4)
+		char *id = data + 3;
+		data[data_size - 1] = 0;
+		if ((strcmp(id, "true")) && (MainConfig->autostart == 1))
 		{
-			char *id = data + 3;
-			data[data_size - 1] = 0;
-			if ((strcmp(id, "true")) && (g_device->autostart == 1))
-			{
-				g_device->autostart = 0;
-				ESP_LOGV(TAG, "autostart: %s, num:%u", id, g_device->autostart);
-				saveDeviceSettings(g_device);
-			}
-			else if ((strcmp(id, "false")) && (g_device->autostart == 0))
-			{
-				g_device->autostart = 1;
-				ESP_LOGV(TAG, "autostart: %s, num:%u", id, g_device->autostart);
-				saveDeviceSettings(g_device);
-			}
+			MainConfig->autostart = 0;
+			ESP_LOGV(TAG, "autostart: %s, num:%u", id, MainConfig->autostart);
+			SaveConfig();
+		}
+		else if ((strcmp(id, "false")) && (MainConfig->autostart == 0))
+		{
+			MainConfig->autostart = 1;
+			ESP_LOGV(TAG, "autostart: %s, num:%u", id, MainConfig->autostart);
+			SaveConfig();
 		}
 	}
 	else if (strcmp(name, "/rauto") == 0)
 	{
-		char *buf = inmalloc(1024);
+		char *buf = incalloc(1024);
 		if (buf == NULL)
 		{
 			ESP_LOGE(TAG, " %s malloc fails", "post RAUTO");
-			infree(buf);
-			respKo(conn);
-			return;
+			resp_low_memory(conn);
 		}
 		else
 		{
 			sprintf(buf, RAUTO,
-					(g_device->autostart) ? '1' : '0');
+					(MainConfig->autostart) ? '1' : '0');
 
 			// ESP_LOGI(TAG, "TEST RAUTO\njson_length len:%u\n%s", strlen(buf), buf);
 			int json_length = strlen(buf);
@@ -1017,8 +929,8 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 			free(s);
 
 			write(conn, buf, strlen(buf));
-			infree(buf);
 		}
+		infree(buf);
 		return;
 	}
 	else if (strcmp(name, "/stop") == 0)
@@ -1040,13 +952,11 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 	}
 	else if (strcmp(name, "/version") == 0)
 	{
-		char *buf = inmalloc(1024);
+		char *buf = incalloc(1024);
 		if (buf == NULL)
 		{
 			ESP_LOGE(TAG, " %s malloc fails", "post VERSION");
-			infree(buf);
-			respKo(conn);
-			return;
+			resp_low_memory(conn);
 		}
 		else
 		{
@@ -1063,22 +973,19 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 			free(s);
 
 			write(conn, buf, strlen(buf));
-			infree(buf);
 		}
+		infree(buf);
 		return;
 	}
 	else if (strcmp(name, "/ircode") == 0) // start the IR TRAINING
 	{
-		if (data_size > 0)
+		char mode[1];
+		if (getSParameterFromResponse(mode, 1, "mode=", data, data_size))
 		{
-			char mode[1];
-			if (getSParameterFromResponse(mode, 1, "mode=", data, data_size))
-			{
-				if (strcmp(mode, "1") == 0)
-					set_ir_training(true);
-				else
-					set_ir_training(false); //возвращаем режим работы пульта
-			}
+			if (strcmp(mode, "1") == 0)
+				set_ir_training(true);
+			else
+				set_ir_training(false); //возвращаем режим работы пульта
 		}
 	}
 	else if (strcmp(name, "/icy") == 0)
@@ -1107,18 +1014,16 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 			not2 = header->members.single.audioinfo;
 		//if ((header->members.single.notice2 != NULL)&&(strlen(header->members.single.notice2)==0)) not2=header->members.single.audioinfo;
 
-		char *buf = inmalloc(1024);
+		char *buf = incalloc(1024);
 		if (buf == NULL)
 		{
 			ESP_LOGE(TAG, " %s malloc fails", "post ICY");
-			infree(buf);
-			respKo(conn);
-			return;
+			resp_low_memory(conn);
 		}
 		else
 		{
 			uint8_t vauto = 0;
-			vauto = (g_device->autostart) ? '1' : '0';
+			vauto = (MainConfig->autostart) ? '1' : '0';
 			sprintf(buf, strsICY,
 					currentSt,
 					(header->members.single.description == NULL) ? "" : header->members.single.description,
@@ -1140,307 +1045,294 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 			free(s);
 
 			write(conn, buf, strlen(buf));
-			infree(buf);
 			wsMonitor();
-			return;
 		}
+		infree(buf);
+		return;
 	}
 	else if (strcmp(name, "/hardware") == 0)
 	{
 		changed = false;
-		if (data_size > 0)
+		char save[1];
+		if (getSParameterFromResponse(save, 1, "save=", data, data_size))
+			if (strcmp(save, "1") == 0)
+				changed = true;
+		if (changed && tda7313_get_present())
 		{
-			char save[1];
-			if (getSParameterFromResponse(save, 1, "save=", data, data_size))
-				if (strcmp(save, "1") == 0)
-					changed = true;
-			if (changed && tda7313_get_present())
+			char arg[2];
+			getSParameterFromResponse(arg, 2, "audioinput=", data, data_size);
+			if (tda7313_get_input() != atoi(arg))
 			{
-				char arg[2];
-				getSParameterFromResponse(arg, 2, "inputnum=", data, data_size);
-				if (tda7313_get_input() != atoi(arg))
-				{
-					ESP_ERROR_CHECK(tda7313_set_input(atoi(arg)));
-					g_device->audio_input_num = atoi(arg);
-				}
-				getSParameterFromResponse(arg, 2, "Volume=", data, data_size);
-				if (tda7313_get_volume() != atoi(arg))
-					ESP_ERROR_CHECK(tda7313_set_volume(atoi(arg)));
-				getSParameterFromResponse(arg, 2, "Treble=", data, data_size);
-				if (tda7313_get_treble() != atoi(arg))
-					ESP_ERROR_CHECK(tda7313_set_treble(atoi(arg)));
-				getSParameterFromResponse(arg, 2, "Bass=", data, data_size);
-				if (tda7313_get_bass() != atoi(arg))
-					ESP_ERROR_CHECK(tda7313_set_bass(atoi(arg)));
-				getSParameterFromResponse(arg, 2, "rear_on=", data, data_size);
-				if (tda7313_get_rear() != atoi(arg))
-					ESP_ERROR_CHECK(tda7313_set_rear(atoi(arg)));
-				getSParameterFromResponse(arg, 2, "attlf=", data, data_size);
-				if (tda7313_get_attlf() != atoi(arg))
-					ESP_ERROR_CHECK(tda7313_set_attlf(atoi(arg)));
-				getSParameterFromResponse(arg, 2, "attrf=", data, data_size);
-				if (tda7313_get_attrf() != atoi(arg))
-					ESP_ERROR_CHECK(tda7313_set_attrf(atoi(arg)));
-				getSParameterFromResponse(arg, 2, "attlr=", data, data_size);
-				if (tda7313_get_attlr() != atoi(arg))
-					ESP_ERROR_CHECK(tda7313_set_attlr(atoi(arg)));
-				getSParameterFromResponse(arg, 2, "attrr=", data, data_size);
-				if (tda7313_get_attrr() != atoi(arg))
-					ESP_ERROR_CHECK(tda7313_set_attrr(atoi(arg)));
-				getSParameterFromResponse(arg, 2, "loud=", data, data_size);
-				if (tda7313_get_loud(g_device->audio_input_num) != atoi(arg))
-					ESP_ERROR_CHECK(tda7313_set_loud(atoi(arg)));
-				getSParameterFromResponse(arg, 2, "sla=", data, data_size);
-				if (tda7313_get_sla(g_device->audio_input_num) != atoi(arg))
-					ESP_ERROR_CHECK(tda7313_set_sla(atoi(arg)));
-				getSParameterFromResponse(arg, 2, "mute=", data, data_size);
-				if (tda7313_get_mute() != atoi(arg))
-					ESP_ERROR_CHECK(tda7313_set_mute(atoi(arg)));
-				saveDeviceSettings(g_device);
+				(tda7313_set_input(atoi(arg)));
+				MainConfig->audio_input_num = atoi(arg);
 			}
-			char *buf = inmalloc(1024);
-			if (buf == NULL)
-			{
-				ESP_LOGE(TAG, " %s malloc fails", "post HARDWARE");
-				infree(buf);
-				respKo(conn);
-				return;
-			}
-			else
-			{
-
-				sprintf(buf, HARDWARE,
-						tda7313_get_present(),
-						(uint8_t)g_device->audio_input_num,
-						tda7313_get_volume(),
-						tda7313_get_treble(),
-						tda7313_get_bass(),
-						tda7313_get_rear(),
-						tda7313_get_attlf(),
-						tda7313_get_attrf(),
-						tda7313_get_attlr(),
-						tda7313_get_attrr(),
-						tda7313_get_loud(1),
-						tda7313_get_loud(2),
-						tda7313_get_loud(3),
-						tda7313_get_sla(1),
-						tda7313_get_sla(2),
-						tda7313_get_sla(3),
-						tda7313_get_mute());
-				// ESP_LOGI(TAG, "TEST HARDWARE\njson_length len:%u\n%s", strlen(buf), buf);
-				int json_length = strlen(buf);
-				char *s = concat(HTTP_header, buf);
-
-				sprintf(buf, s, json_length);
-				free(s);
-
-				write(conn, buf, strlen(buf));
-				infree(buf);
-			}
-			return;
+			getSParameterFromResponse(arg, 2, "Volume=", data, data_size);
+			if (tda7313_get_volume() != atoi(arg))
+				(tda7313_set_volume(atoi(arg)));
+			getSParameterFromResponse(arg, 2, "Treble=", data, data_size);
+			if (tda7313_get_treble() != atoi(arg))
+				(tda7313_set_treble(atoi(arg)));
+			getSParameterFromResponse(arg, 2, "Bass=", data, data_size);
+			if (tda7313_get_bass() != atoi(arg))
+				(tda7313_set_bass(atoi(arg)));
+			getSParameterFromResponse(arg, 2, "rear_on=", data, data_size);
+			if (tda7313_get_rear() != atoi(arg))
+				(tda7313_set_rear(atoi(arg)));
+			getSParameterFromResponse(arg, 2, "attlf=", data, data_size);
+			if (tda7313_get_attlf() != atoi(arg))
+				(tda7313_set_attlf(atoi(arg)));
+			getSParameterFromResponse(arg, 2, "attrf=", data, data_size);
+			if (tda7313_get_attrf() != atoi(arg))
+				(tda7313_set_attrf(atoi(arg)));
+			getSParameterFromResponse(arg, 2, "attlr=", data, data_size);
+			if (tda7313_get_attlr() != atoi(arg))
+				(tda7313_set_attlr(atoi(arg)));
+			getSParameterFromResponse(arg, 2, "attrr=", data, data_size);
+			if (tda7313_get_attrr() != atoi(arg))
+				(tda7313_set_attrr(atoi(arg)));
+			getSParameterFromResponse(arg, 2, "loud=", data, data_size);
+			if (tda7313_get_loud(MainConfig->audio_input_num) != atoi(arg))
+				(tda7313_set_loud(atoi(arg)));
+			getSParameterFromResponse(arg, 2, "sla=", data, data_size);
+			if (tda7313_get_sla(MainConfig->audio_input_num) != atoi(arg))
+				(tda7313_set_sla(atoi(arg)));
+			getSParameterFromResponse(arg, 2, "mute=", data, data_size);
+			if (tda7313_get_mute() != atoi(arg))
+				(tda7313_set_mute(atoi(arg)));
+			SaveConfig();
 		}
+		char *buf = incalloc(1024);
+		if (buf == NULL)
+		{
+			ESP_LOGE(TAG, " %s malloc fails", "post HARDWARE");
+			resp_low_memory(conn);
+		}
+		else
+		{
+
+			sprintf(buf, HARDWARE,
+					tda7313_get_present(),
+					(uint8_t)MainConfig->audio_input_num,
+					tda7313_get_volume(),
+					tda7313_get_treble(),
+					tda7313_get_bass(),
+					tda7313_get_rear(),
+					tda7313_get_attlf(),
+					tda7313_get_attrf(),
+					tda7313_get_attlr(),
+					tda7313_get_attrr(),
+					tda7313_get_loud(1),
+					tda7313_get_loud(2),
+					tda7313_get_loud(3),
+					tda7313_get_sla(1),
+					tda7313_get_sla(2),
+					tda7313_get_sla(3),
+					tda7313_get_mute());
+			// ESP_LOGI(TAG, "TEST HARDWARE\njson_length len:%u\n%s", strlen(buf), buf);
+			int json_length = strlen(buf);
+			char *s = concat(HTTP_header, buf);
+
+			sprintf(buf, s, json_length);
+			free(s);
+
+			write(conn, buf, strlen(buf));
+		}
+		infree(buf);
+		return;
 	}
 	else if (strcmp(name, "/wifi") == 0)
 	{
 		changed = false;
-		if (data_size > 0)
+		bool val = false;
+		char valid[5];
+		if (getSParameterFromResponse(valid, 5, "valid=", data, data_size))
+			if (strcmp(valid, "1") == 0)
+				val = true;
+		char *aua = getParameterFromResponse("ua=", data, data_size);
+		pathParse(aua);
+		char *host = getParameterFromResponse("host=", data, data_size);
+		pathParse(host);
+
+		//			ESP_LOGV(TAG,"wifi received  valid:%s,val:%d, ssid:%s, pasw:%s, aip:%s, amsk:%s, agw:%s, adhcp:%s, aua:%s",valid,val,ssid,pasw,aip,amsk,agw,adhcp,aua);
+		if (val)
 		{
-			bool val = false;
-			char valid[5];
-			if (getSParameterFromResponse(valid, 5, "valid=", data, data_size))
-				if (strcmp(valid, "1") == 0)
-					val = true;
-			char *aua = getParameterFromResponse("ua=", data, data_size);
-			pathParse(aua);
-			char *host = getParameterFromResponse("host=", data, data_size);
-			pathParse(host);
+			char adhcp[4], adhcp2[4];
+			char *ssid = getParameterFromResponse("ssid=", data, data_size);
+			pathParse(ssid);
+			char *pasw = getParameterFromResponse("pasw=", data, data_size);
+			pathParse(pasw);
+			char *ssid2 = getParameterFromResponse("ssid2=", data, data_size);
+			pathParse(ssid2);
+			char *pasw2 = getParameterFromResponse("pasw2=", data, data_size);
+			pathParse(pasw2);
+			char *aip = getParameterFromResponse("ip=", data, data_size);
+			char *amsk = getParameterFromResponse("msk=", data, data_size);
+			char *agw = getParameterFromResponse("gw=", data, data_size);
+			char *aip2 = getParameterFromResponse("ip2=", data, data_size);
+			char *amsk2 = getParameterFromResponse("msk2=", data, data_size);
+			char *agw2 = getParameterFromResponse("gw2=", data, data_size);
 
-			//			ESP_LOGV(TAG,"wifi received  valid:%s,val:%d, ssid:%s, pasw:%s, aip:%s, amsk:%s, agw:%s, adhcp:%s, aua:%s",valid,val,ssid,pasw,aip,amsk,agw,adhcp,aua);
-			if (val)
+			changed = true;
+			ip_addr_t valu;
+			if (aip != NULL)
 			{
-				char adhcp[4], adhcp2[4];
-				char *ssid = getParameterFromResponse("ssid=", data, data_size);
-				pathParse(ssid);
-				char *pasw = getParameterFromResponse("pasw=", data, data_size);
-				pathParse(pasw);
-				char *ssid2 = getParameterFromResponse("ssid2=", data, data_size);
-				pathParse(ssid2);
-				char *pasw2 = getParameterFromResponse("pasw2=", data, data_size);
-				pathParse(pasw2);
-				char *aip = getParameterFromResponse("ip=", data, data_size);
-				char *amsk = getParameterFromResponse("msk=", data, data_size);
-				char *agw = getParameterFromResponse("gw=", data, data_size);
-				char *aip2 = getParameterFromResponse("ip2=", data, data_size);
-				char *amsk2 = getParameterFromResponse("msk2=", data, data_size);
-				char *agw2 = getParameterFromResponse("gw2=", data, data_size);
+				ipaddr_aton(aip, &valu);
+				memcpy(MainConfig->ipAddr1, &valu, sizeof(uint32_t));
+				ipaddr_aton(amsk, &valu);
+				memcpy(MainConfig->mask1, &valu, sizeof(uint32_t));
+				ipaddr_aton(agw, &valu);
+				memcpy(MainConfig->gate1, &valu, sizeof(uint32_t));
+			}
+			if (aip2 != NULL)
+			{
+				ipaddr_aton(aip2, &valu);
+				memcpy(MainConfig->ipAddr2, &valu, sizeof(uint32_t));
+				ipaddr_aton(amsk2, &valu);
+				memcpy(MainConfig->mask2, &valu, sizeof(uint32_t));
+				ipaddr_aton(agw2, &valu);
+				memcpy(MainConfig->gate2, &valu, sizeof(uint32_t));
+			}
+			if (getSParameterFromResponse(adhcp, 4, "dhcp=", data, data_size))
+				if (strlen(adhcp) != 0)
+				{
+					if (strcmp(adhcp, "true") == 0)
+						MainConfig->dhcpEn1 = 1;
+					else
+						MainConfig->dhcpEn1 = 0;
+				}
+			if (getSParameterFromResponse(adhcp2, 4, "dhcp2=", data, data_size))
+				if (strlen(adhcp2) != 0)
+				{
+					if (strcmp(adhcp2, "true") == 0)
+						MainConfig->dhcpEn2 = 1;
+					else
+						MainConfig->dhcpEn2 = 0;
+				}
 
+			strcpy(MainConfig->ssid1, (ssid == NULL) ? "" : ssid);
+			strcpy(MainConfig->pass1, (pasw == NULL) ? "" : pasw);
+			strcpy(MainConfig->ssid2, (ssid2 == NULL) ? "" : ssid2);
+			strcpy(MainConfig->pass2, (pasw2 == NULL) ? "" : pasw2);
+
+			infree(ssid);
+			infree(pasw);
+			infree(ssid2);
+			infree(pasw2);
+			infree(aip);
+			infree(amsk);
+			infree(agw);
+			infree(aip2);
+			infree(amsk2);
+			infree(agw2);
+		}
+
+		if ((MainConfig->ua != NULL) && (strlen(MainConfig->ua) == 0))
+		{
+			if (aua == NULL)
+			{
+				aua = incalloc(17);
+				strcpy(aua, "ESP32Radiola/1.5");
+			}
+		}
+		if (aua != NULL)
+		{
+			if ((strcmp(MainConfig->ua, aua) != 0) && (strcmp(aua, "undefined") != 0))
+			{
+				strcpy(MainConfig->ua, aua);
 				changed = true;
-				ip_addr_t valu;
-				if (aip != NULL)
-				{
-					ipaddr_aton(aip, &valu);
-					memcpy(g_device->ipAddr1, &valu, sizeof(uint32_t));
-					ipaddr_aton(amsk, &valu);
-					memcpy(g_device->mask1, &valu, sizeof(uint32_t));
-					ipaddr_aton(agw, &valu);
-					memcpy(g_device->gate1, &valu, sizeof(uint32_t));
-				}
-				if (aip2 != NULL)
-				{
-					ipaddr_aton(aip2, &valu);
-					memcpy(g_device->ipAddr2, &valu, sizeof(uint32_t));
-					ipaddr_aton(amsk2, &valu);
-					memcpy(g_device->mask2, &valu, sizeof(uint32_t));
-					ipaddr_aton(agw2, &valu);
-					memcpy(g_device->gate2, &valu, sizeof(uint32_t));
-				}
-				if (getSParameterFromResponse(adhcp, 4, "dhcp=", data, data_size))
-					if (strlen(adhcp) != 0)
-					{
-						if (strcmp(adhcp, "true") == 0)
-							g_device->dhcpEn1 = 1;
-						else
-							g_device->dhcpEn1 = 0;
-					}
-				if (getSParameterFromResponse(adhcp2, 4, "dhcp2=", data, data_size))
-					if (strlen(adhcp2) != 0)
-					{
-						if (strcmp(adhcp2, "true") == 0)
-							g_device->dhcpEn2 = 1;
-						else
-							g_device->dhcpEn2 = 0;
-					}
-
-				strcpy(g_device->ssid1, (ssid == NULL) ? "" : ssid);
-				strcpy(g_device->pass1, (pasw == NULL) ? "" : pasw);
-				strcpy(g_device->ssid2, (ssid2 == NULL) ? "" : ssid2);
-				strcpy(g_device->pass2, (pasw2 == NULL) ? "" : pasw2);
-
-				infree(ssid);
-				infree(pasw);
-				infree(ssid2);
-				infree(pasw2);
-				infree(aip);
-				infree(amsk);
-				infree(agw);
-				infree(aip2);
-				infree(amsk2);
-				infree(agw2);
 			}
+			infree(aua);
+		}
 
-			if ((g_device->ua != NULL) && (strlen(g_device->ua) == 0))
+		if (host != NULL)
+		{
+			if (strlen(host) > 0)
 			{
-				if (aua == NULL)
+				if ((strcmp(MainConfig->hostname, host) != 0) && (strcmp(host, "undefined") != 0))
 				{
-					aua = inmalloc(12);
-					strcpy(aua, "ESP32Radiola/1.5");
-				}
-			}
-			if (aua != NULL)
-			{
-				if ((strcmp(g_device->ua, aua) != 0) && (strcmp(aua, "undefined") != 0))
-				{
-					strcpy(g_device->ua, aua);
+					strncpy(MainConfig->hostname, host, HOSTLEN - 1);
+					setHostname(MainConfig->hostname);
 					changed = true;
 				}
-				infree(aua);
 			}
-
-			if (host != NULL)
-			{
-				if (strlen(host) > 0)
-				{
-					if ((strcmp(g_device->hostname, host) != 0) && (strcmp(host, "undefined") != 0))
-					{
-						strncpy(g_device->hostname, host, HOSTLEN - 1);
-						setHostname(g_device->hostname);
-						changed = true;
-					}
-				}
-				infree(host);
-			}
-
-			if (changed)
-			{
-				saveDeviceSettings(g_device);
-			}
-			uint8_t macaddr[10]; // = inmalloc(10*sizeof(uint8_t));
-			char macstr[20];	 // = inmalloc(20*sizeof(char));
-			char adhcp[4], adhcp2[4];
-			char tmpip[16], tmpmsk[16], tmpgw[16];
-			char tmpip2[16], tmpmsk2[16], tmpgw2[16];
-			esp_wifi_get_mac(WIFI_IF_STA, macaddr);
-			sprintf(tmpip, "%u.%u.%u.%u", g_device->ipAddr1[0], g_device->ipAddr1[1], g_device->ipAddr1[2], g_device->ipAddr1[3]);
-			sprintf(tmpmsk, "%u.%u.%u.%u", g_device->mask1[0], g_device->mask1[1], g_device->mask1[2], g_device->mask1[3]);
-			sprintf(tmpgw, "%u.%u.%u.%u", g_device->gate1[0], g_device->gate1[1], g_device->gate1[2], g_device->gate1[3]);
-			sprintf(adhcp, "%u", g_device->dhcpEn1);
-			sprintf(tmpip2, "%u.%u.%u.%u", g_device->ipAddr2[0], g_device->ipAddr2[1], g_device->ipAddr2[2], g_device->ipAddr2[3]);
-			sprintf(tmpmsk2, "%u.%u.%u.%u", g_device->mask2[0], g_device->mask2[1], g_device->mask2[2], g_device->mask2[3]);
-			sprintf(tmpgw2, "%u.%u.%u.%u", g_device->gate2[0], g_device->gate2[1], g_device->gate2[2], g_device->gate2[3]);
-			sprintf(adhcp2, "%u", g_device->dhcpEn2);
-			sprintf(macstr, MACSTR, MAC2STR(macaddr));
-			char *buf = inmalloc(1024);
-			if (buf == NULL)
-			{
-				ESP_LOGE(TAG, " %s malloc fails", "post WIFI");
-				respKo(conn);
-				//return;
-			}
-			else
-			{
-				sprintf(buf, strsWIFI,
-						g_device->ssid1,
-						g_device->pass1,
-						g_device->ssid2,
-						g_device->pass2,
-						tmpip,
-						tmpmsk,
-						tmpgw,
-						tmpip2,
-						tmpmsk2,
-						tmpgw2,
-						g_device->ua,
-						adhcp,
-						adhcp2,
-						macstr,
-						g_device->hostname);
-				// ESP_LOGI(TAG, "TEST WIFI\njson_length len:%u\n%s", strlen(buf), buf);
-				int json_length = strlen(buf);
-				char *s = concat(HTTP_header, buf);
-
-				sprintf(buf, s, json_length);
-				free(s);
-				write(conn, buf, strlen(buf));
-				infree(buf);
-			}
-
-			if (val)
-			{
-				// set current_ap to the first filled ssid
-				ESP_LOGD(TAG, "currentAP: %u", g_device->current_ap);
-				if (g_device->current_ap == APMODE)
-				{
-					if (strlen(g_device->ssid1) != 0)
-						g_device->current_ap = STA1;
-					else if (strlen(g_device->ssid2) != 0)
-						g_device->current_ap = STA2;
-					saveDeviceSettings(g_device);
-				}
-				ESP_LOGD(TAG, "currentAP: %u", g_device->current_ap);
-				copyDeviceSettings(); // save the current one
-				fflush(stdout);
-				vTaskDelay(100);
-				esp_restart();
-			}
-			return;
+			infree(host);
 		}
+
+		if (changed)
+		{
+			SaveConfig();
+		}
+		uint8_t macaddr[10];
+		char macstr[20];
+		char adhcp[4], adhcp2[4];
+		char tmpip[16], tmpmsk[16], tmpgw[16];
+		char tmpip2[16], tmpmsk2[16], tmpgw2[16];
+		esp_wifi_get_mac(WIFI_IF_STA, macaddr);
+		sprintf(tmpip, "%u.%u.%u.%u", MainConfig->ipAddr1[0], MainConfig->ipAddr1[1], MainConfig->ipAddr1[2], MainConfig->ipAddr1[3]);
+		sprintf(tmpmsk, "%u.%u.%u.%u", MainConfig->mask1[0], MainConfig->mask1[1], MainConfig->mask1[2], MainConfig->mask1[3]);
+		sprintf(tmpgw, "%u.%u.%u.%u", MainConfig->gate1[0], MainConfig->gate1[1], MainConfig->gate1[2], MainConfig->gate1[3]);
+		sprintf(adhcp, "%u", MainConfig->dhcpEn1);
+		sprintf(tmpip2, "%u.%u.%u.%u", MainConfig->ipAddr2[0], MainConfig->ipAddr2[1], MainConfig->ipAddr2[2], MainConfig->ipAddr2[3]);
+		sprintf(tmpmsk2, "%u.%u.%u.%u", MainConfig->mask2[0], MainConfig->mask2[1], MainConfig->mask2[2], MainConfig->mask2[3]);
+		sprintf(tmpgw2, "%u.%u.%u.%u", MainConfig->gate2[0], MainConfig->gate2[1], MainConfig->gate2[2], MainConfig->gate2[3]);
+		sprintf(adhcp2, "%u", MainConfig->dhcpEn2);
+		sprintf(macstr, MACSTR, MAC2STR(macaddr));
+		char *buf = incalloc(1024);
+		if (buf == NULL)
+		{
+			ESP_LOGE(TAG, " %s malloc fails", "post WIFI");
+			resp_low_memory(conn);
+		}
+		else
+		{
+			sprintf(buf, strsWIFI,
+					MainConfig->ssid1,
+					MainConfig->pass1,
+					MainConfig->ssid2,
+					MainConfig->pass2,
+					tmpip,
+					tmpmsk,
+					tmpgw,
+					tmpip2,
+					tmpmsk2,
+					tmpgw2,
+					MainConfig->ua,
+					adhcp,
+					adhcp2,
+					macstr,
+					MainConfig->hostname);
+			// ESP_LOGI(TAG, "TEST WIFI\njson_length len:%u\n%s", strlen(buf), buf);
+			int json_length = strlen(buf);
+			char *s = concat(HTTP_header, buf);
+
+			sprintf(buf, s, json_length);
+			free(s);
+			write(conn, buf, strlen(buf));
+		}
+		infree(buf);
+		if (val)
+		{
+			// set current_ap to the first filled ssid
+			ESP_LOGD(TAG, "currentAP: %u", MainConfig->current_ap);
+			if (MainConfig->current_ap == APMODE)
+			{
+				if (strlen(MainConfig->ssid1) != 0)
+					MainConfig->current_ap = STA1;
+				else if (strlen(MainConfig->ssid2) != 0)
+					MainConfig->current_ap = STA2;
+			}
+			ESP_LOGD(TAG, "currentAP: %u", MainConfig->current_ap);
+			SaveConfig(); // save the current one
+			fflush(stdout);
+			vTaskDelay(100);
+			esp_restart();
+		}
+		return;
 	}
 	else if (strcmp(name, "/control") == 0)
 	{
 		changed = false;
-		if (data_size > 0)
-		{
-			/*
+		/*
 \"lcd_brg\":\"%u\",\
 \"begin_h\":\"%02u\",\
 \"begin_m\":\"%02u\",\
@@ -1460,312 +1352,324 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 
  */
 
-			u_int8_t lcd_brg = g_device->backlight_mode;
-			u_int8_t begin_h = g_device->begin_h;
-			u_int8_t begin_m = g_device->begin_m;
-			u_int8_t end_h = g_device->end_h;
-			u_int8_t end_m = g_device->end_m;
-			u_int8_t day_brg = g_device->day_brightness;
-			u_int8_t night_brg = g_device->night_brightness;
-			u_int8_t hand_brg = g_device->hand_brightness;
-			u_int8_t fan_control = 0, min_temp = 0, max_temp = 0, min_pwm = 0, hand_pwm = 0;
-			u_int8_t BRG_ON;
-			u_int8_t FAN_ON;
-			u_int8_t LDR = g_device->ldr;
+		u_int8_t lcd_brg = MainConfig->backlight_mode;
+		u_int8_t begin_h = MainConfig->begin_h;
+		u_int8_t begin_m = MainConfig->begin_m;
+		u_int8_t end_h = MainConfig->end_h;
+		u_int8_t end_m = MainConfig->end_m;
+		u_int8_t day_brg = MainConfig->day_brightness;
+		u_int8_t night_brg = MainConfig->night_brightness;
+		u_int8_t hand_brg = MainConfig->hand_brightness;
+		u_int8_t fan_control = 0, min_temp = 0, max_temp = 0, min_pwm = 0, hand_pwm = 0;
+		u_int8_t BRG_ON;
+		u_int8_t FAN_ON;
+		u_int8_t LDR = MainConfig->ldr;
 
-			get_bright(&BRG_ON);
-			get_fan(&FAN_ON);
-			char val_1[1];
-			if (getSParameterFromResponse(val_1, 1, "save=", data, data_size))
-				if (strcmp(val_1, "1") == 0)
-					changed = true;
-			if (changed)
+		get_bright(&BRG_ON);
+		get_fan(&FAN_ON);
+		char val_1[1];
+		if (getSParameterFromResponse(val_1, 1, "save=", data, data_size))
+			if (strcmp(val_1, "1") == 0)
+				changed = true;
+		if (changed)
+		{
+			if (getSParameterFromResponse(val_1, 1, "lcd_brg=", data, data_size))
 			{
-				if (getSParameterFromResponse(val_1, 1, "lcd_brg=", data, data_size))
-				{
-					lcd_brg = atoi(val_1);
-					if (g_device->backlight_mode != lcd_brg)
-						g_device->backlight_mode = lcd_brg;
-				}
-				if (getSParameterFromResponse(val_1, 1, "begin_h=", data, data_size))
-				{
-					begin_h = atoi(val_1);
-				}
-				if (getSParameterFromResponse(val_1, 1, "begin_m=", data, data_size))
-				{
-					begin_m = atoi(val_1);
-				}
-
-				if (getSParameterFromResponse(val_1, 1, "end_h=", data, data_size))
-				{
-					end_h = atoi(val_1);
-				}
-
-				if (getSParameterFromResponse(val_1, 1, "end_m=", data, data_size))
-				{
-					end_m = atoi(val_1);
-				}
-
-				if (getSParameterFromResponse(val_1, 1, "day_brg=", data, data_size))
-				{
-					day_brg = atoi(val_1);
-				}
-
-				if (getSParameterFromResponse(val_1, 1, "night_brg=", data, data_size))
-				{
-					night_brg = atoi(val_1);
-				}
-
-				if (getSParameterFromResponse(val_1, 1, "hand_brg=", data, data_size))
-				{
-					hand_brg = atoi(val_1);
-				}
-
-				if (getSParameterFromResponse(val_1, 1, "fan_control=", data, data_size))
-				{
-					fan_control = atoi(val_1);
-				}
-
-				if (getSParameterFromResponse(val_1, 1, "min_temp=", data, data_size))
-				{
-					min_temp = atoi(val_1);
-				}
-
-				if (getSParameterFromResponse(val_1, 1, "max_temp=", data, data_size))
-				{
-					max_temp = atoi(val_1);
-				}
-
-				if (getSParameterFromResponse(val_1, 1, "min_pwm=", data, data_size))
-				{
-					min_pwm = atoi(val_1);
-				}
-
-				if (getSParameterFromResponse(val_1, 1, "hand_pwm=", data, data_size))
-				{
-					hand_pwm = atoi(val_1);
-				}
-
-				saveDeviceSettings(g_device);
+				lcd_brg = atoi(val_1);
+				if (MainConfig->backlight_mode != lcd_brg)
+					MainConfig->backlight_mode = lcd_brg;
+			}
+			if (getSParameterFromResponse(val_1, 1, "begin_h=", data, data_size))
+			{
+				begin_h = atoi(val_1);
+			}
+			if (getSParameterFromResponse(val_1, 1, "begin_m=", data, data_size))
+			{
+				begin_m = atoi(val_1);
 			}
 
-			char *buf = inmalloc(1024);
-			if (buf == NULL)
+			if (getSParameterFromResponse(val_1, 1, "end_h=", data, data_size))
 			{
-				ESP_LOGE(TAG, " %s malloc fails", "post CONTROL");
-				respKo(conn);
+				end_h = atoi(val_1);
 			}
-			else
+
+			if (getSParameterFromResponse(val_1, 1, "end_m=", data, data_size))
 			{
-				sprintf(buf, CONTROL,
-						lcd_brg,
-						begin_h,
-						begin_m,
-						end_h,
-						end_m,
-						day_brg,
-						night_brg,
-						hand_brg,
-						fan_control,
-						min_temp,
-						max_temp,
-						min_pwm,
-						hand_pwm,
-						BRG_ON,
-						FAN_ON,
-						LDR);
-				// ESP_LOGI(TAG, "TEST CONTROL\njson_length len:%u\n%s", strlen(buf), buf);
-				int json_length = strlen(buf);
-				char *s = concat(HTTP_header, buf);
-
-				sprintf(buf, s, json_length);
-				free(s);
-
-				write(conn, buf, strlen(buf));
-				infree(buf);
+				end_m = atoi(val_1);
 			}
-			return;
+
+			if (getSParameterFromResponse(val_1, 1, "day_brg=", data, data_size))
+			{
+				day_brg = atoi(val_1);
+			}
+
+			if (getSParameterFromResponse(val_1, 1, "night_brg=", data, data_size))
+			{
+				night_brg = atoi(val_1);
+			}
+
+			if (getSParameterFromResponse(val_1, 1, "hand_brg=", data, data_size))
+			{
+				hand_brg = atoi(val_1);
+			}
+
+			if (getSParameterFromResponse(val_1, 1, "fan_control=", data, data_size))
+			{
+				fan_control = atoi(val_1);
+			}
+
+			if (getSParameterFromResponse(val_1, 1, "min_temp=", data, data_size))
+			{
+				min_temp = atoi(val_1);
+			}
+
+			if (getSParameterFromResponse(val_1, 1, "max_temp=", data, data_size))
+			{
+				max_temp = atoi(val_1);
+			}
+
+			if (getSParameterFromResponse(val_1, 1, "min_pwm=", data, data_size))
+			{
+				min_pwm = atoi(val_1);
+			}
+
+			if (getSParameterFromResponse(val_1, 1, "hand_pwm=", data, data_size))
+			{
+				hand_pwm = atoi(val_1);
+			}
+
+			SaveConfig();
 		}
+
+		char *buf = incalloc(1024);
+		if (buf == NULL)
+		{
+			ESP_LOGE(TAG, " %s malloc fails", "post CONTROL");
+			resp_low_memory(conn);
+		}
+		else
+		{
+			sprintf(buf, CONTROL,
+					lcd_brg,
+					begin_h,
+					begin_m,
+					end_h,
+					end_m,
+					day_brg,
+					night_brg,
+					hand_brg,
+					fan_control,
+					min_temp,
+					max_temp,
+					min_pwm,
+					hand_pwm,
+					BRG_ON,
+					FAN_ON,
+					LDR);
+			// ESP_LOGI(TAG, "TEST CONTROL\njson_length len:%u\n%s", strlen(buf), buf);
+			int json_length = strlen(buf);
+			char *s = concat(HTTP_header, buf);
+
+			sprintf(buf, s, json_length);
+			free(s);
+
+			write(conn, buf, strlen(buf));
+		}
+		infree(buf);
+		return;
 	}
 	else if (strcmp(name, "/devoptions") == 0)
 	{
 		changed = false;
-		if (data_size > 0)
+		esp_log_level_t log_level = MainConfig->trace_level;
+		uint8_t NTP = MainConfig->ntp_mode;
+		uint8_t LCD_ROTA = get_lcd_rotat();
+		uint8_t TIME_FORMAT = getDataFormat();
+		char *NTP0 = CONFIG_NTP0, *NTP1 = CONFIG_NTP1, *NTP2 = CONFIG_NTP2, *NTP3 = CONFIG_NTP3;
+		char *TZONE = MainConfig->tzone;
+		bool reboot = false;
+		bool erase = false;
+		char val_1[1];
+		if (NTP == 1)
 		{
-			esp_log_level_t log_level = g_device->trace_level;
-			uint8_t NTP = g_device->ntp_mode;
-			uint8_t TIME_FORMAT;
-			uint8_t LCD_ROTA;
-			get_lcd_rotat(&LCD_ROTA);
-			get_ddmm(&TIME_FORMAT);
-			char *NTP0 = CONFIG_NTP0, *NTP1 = CONFIG_NTP1, *NTP2 = CONFIG_NTP2, *NTP3 = CONFIG_NTP3;
-			char *TZONE = g_device->tzone;
-			bool reboot = false;
-			bool erase = false;
-			char val_1[1];
+			NTP0 = MainConfig->ntp_server[0];
+			NTP1 = MainConfig->ntp_server[1];
+			NTP2 = MainConfig->ntp_server[2];
+			NTP3 = MainConfig->ntp_server[3];
+		}
+		if (getSParameterFromResponse(val_1, 1, "save=", data, data_size))
+			if (strcmp(val_1, "1") == 0)
+			{
+				changed = true;
+			}
+		if (strcmp(val_1, "2") == 0)
+		{
+			erase = true;
+			reboot = true;
+		}
+		if (changed)
+		{
+			if (getSParameterFromResponse(val_1, 1, "ESPLOG=", data, data_size))
+			{
+				log_level = atoi(val_1);
+				if (MainConfig->trace_level != log_level)
+					setLogLevel(log_level);
+			}
+			if (getSParameterFromResponse(val_1, 1, "NTP=", data, data_size))
+			{
+				NTP = atoi(val_1);
+				if (MainConfig->ntp_mode != NTP)
+					MainConfig->ntp_mode = NTP;
+			}
 			if (NTP == 1)
 			{
-				NTP0 = g_device->ntp_server[0];
-				NTP1 = g_device->ntp_server[1];
-				NTP2 = g_device->ntp_server[2];
-				NTP3 = g_device->ntp_server[3];
-			}
-			if (getSParameterFromResponse(val_1, 1, "save=", data, data_size))
-				if (strcmp(val_1, "1") == 0)
-				{
-					changed = true;
-				}
-			if (strcmp(val_1, "2") == 0)
-			{
-				erase = true;
+				NTP0 = getParameterFromResponse("NTP0=", data, data_size);
+				pathParse(NTP0);
+				strcpy(MainConfig->ntp_server[0], NTP0);
+				NTP1 = getParameterFromResponse("NTP1=", data, data_size);
+				pathParse(NTP1);
+				strcpy(MainConfig->ntp_server[1], NTP1);
+				NTP2 = getParameterFromResponse("NTP2=", data, data_size);
+				pathParse(NTP2);
+				strcpy(MainConfig->ntp_server[2], NTP2);
+				NTP3 = getParameterFromResponse("NTP3=", data, data_size);
+				pathParse(NTP3);
+				strcpy(MainConfig->ntp_server[3], NTP3);
 				reboot = true;
 			}
-			if (changed)
+			TZONE = getParameterFromResponse("TZONE=", data, data_size);
+			pathParse(TZONE);
+			if (TZONE != MainConfig->tzone)
 			{
-				if (getSParameterFromResponse(val_1, 1, "ESPLOG=", data, data_size))
+				strcpy(MainConfig->tzone, TZONE);
+				reboot = true;
+			}
+
+			if (getSParameterFromResponse(val_1, 1, "TIME_FORMAT=", data, data_size))
+			{
+				if (TIME_FORMAT != atoi(val_1))
 				{
-					log_level = atoi(val_1);
-					if (g_device->trace_level != log_level)
-						setLogLevel(log_level);
-				}
-				if (getSParameterFromResponse(val_1, 1, "NTP=", data, data_size))
-				{
-					NTP = atoi(val_1);
-					if (g_device->ntp_mode != NTP)
-						g_device->ntp_mode = NTP;
-				}
-				if (NTP == 1)
-				{
-					NTP0 = getParameterFromResponse("NTP0=", data, data_size);
-					pathParse(NTP0);
-					strcpy(g_device->ntp_server[0], NTP0);
-					NTP1 = getParameterFromResponse("NTP1=", data, data_size);
-					pathParse(NTP1);
-					strcpy(g_device->ntp_server[1], NTP1);
-					NTP2 = getParameterFromResponse("NTP2=", data, data_size);
-					pathParse(NTP2);
-					strcpy(g_device->ntp_server[2], NTP2);
-					NTP3 = getParameterFromResponse("NTP3=", data, data_size);
-					pathParse(NTP3);
-					strcpy(g_device->ntp_server[3], NTP3);
+					if (atoi(val_1) == 0)
+						MainConfig->options &= N_DDMM;
+					else
+						MainConfig->options |= Y_DDMM;
 					reboot = true;
 				}
-				TZONE = getParameterFromResponse("TZONE=", data, data_size);
-				pathParse(TZONE);
-				if (TZONE != g_device->tzone)
+			}
+			if (getSParameterFromResponse(val_1, 1, "LCD_ROTA=", data, data_size))
+			{
+				if (LCD_ROTA != atoi(val_1))
 				{
-					strcpy(g_device->tzone, TZONE);
+					if (atoi(val_1) == 0)
+						MainConfig->options &= N_ROTAT;
+					else
+						MainConfig->options |= Y_ROTAT;
 					reboot = true;
 				}
-
-				if (getSParameterFromResponse(val_1, 1, "TIME_FORMAT=", data, data_size))
-				{
-					if (TIME_FORMAT != atoi(val_1))
-					{
-						if (atoi(val_1) == 0)
-							g_device->options &= N_DDMM;
-						else
-							g_device->options |= Y_DDMM;
-						reboot = true;
-					}
-				}
-				if (getSParameterFromResponse(val_1, 1, "LCD_ROTA=", data, data_size))
-				{
-					if (LCD_ROTA != atoi(val_1))
-					{
-						if (atoi(val_1) == 0)
-							g_device->options &= N_ROTAT;
-						else
-							g_device->options |= Y_ROTAT;
-						reboot = true;
-					}
-				}
-				saveDeviceSettings(g_device);
 			}
-			if (reboot)
-			{
-				if (erase)
-					eeEraseAll(); // стереть все настройки NVS
-				else
-					copyDeviceSettings(); // сохранить текущие настройки в NVS
-				fflush(stdout);
-				vTaskDelay(100);
-				esp_restart();
-			}
-			char *buf = inmalloc(1024);
-			if (buf == NULL)
-			{
-				ESP_LOGE(TAG, " %s malloc fails", "post DEVOPTIONS");
-				respKo(conn);
-				//return;
-			}
-			else
-			{
-				sprintf(buf, DEVOPTIONS,
-						log_level,
-						NTP,
-						NTP0,
-						NTP1,
-						NTP2,
-						NTP3,
-						TZONE,
-						TIME_FORMAT,
-						LCD_ROTA);
-
-				// ESP_LOGI(TAG, "TEST devoptions\njson_length len:%u\n%s", strlen(buf), buf);
-				int json_length = strlen(buf);
-				char *s = concat(HTTP_header, buf);
-
-				sprintf(buf, s, json_length);
-				free(s);
-
-				write(conn, buf, strlen(buf));
-				infree(buf);
-			}
-
-			return;
+			SaveConfig();
 		}
+		char *buf = incalloc(1024);
+		if (buf == NULL)
+		{
+			ESP_LOGE(TAG, " %s malloc fails", "post DEVOPTIONS");
+			resp_low_memory(conn);
+		}
+		else
+		{
+			sprintf(buf, DEVOPTIONS,
+					log_level,
+					NTP,
+					NTP0,
+					NTP1,
+					NTP2,
+					NTP3,
+					TZONE,
+					TIME_FORMAT,
+					LCD_ROTA);
+			// ESP_LOGI(TAG, "TEST devoptions\njson_length len:%u\n%s", strlen(buf), buf);
+			int json_length = strlen(buf);
+			char *s = concat(HTTP_header, buf);
+
+			sprintf(buf, s, json_length);
+			free(s);
+			write(conn, buf, strlen(buf));
+		}
+		infree(buf);
+		if (reboot)
+		{
+			if (erase)
+				eeEraseAll(); // стереть все настройки NVS
+			else
+				SaveConfig(); // сохранить текущие настройки в NVS
+			fflush(stdout);
+			vTaskDelay(100);
+			esp_restart();
+		}
+		return;
 	}
 	else if (strcmp(name, "/clear") == 0)
 	{
-		eeEraseStations(); //clear all stations
+		// clear all stations
+		EraseNameSpace(STATION_SPACE);
 	}
 	else if (strcmp(name, "/gpios") == 0)
 	{
-		if (data_size > 0)
-		{
-			changed = false;
-			char arg[4];
-			bool gpio_mode = false;
-			g_device->options &= N_GPIOMODE;
-			nvs_handle hardware_handle;
-			esp_err_t err = ESP_OK;
+		changed = false;
+		char arg[4];
+		bool gpio_mode = get_gpio_mode();
+		set_gpio_mode(false);
+		nvs_handle gpio_handle;
+		esp_err_t err = ESP_OK;
 
-			uint8_t spi_no;
-			gpio_num_t miso, mosi, sclk, xcs, xdcs, dreq, enca, encb, encbtn, sda, scl, cs, a0, ir, led, tach, fanspeed, ds18b20, touch, buzzer, rxd, txd, ldr;
-			if (getSParameterFromResponse(arg, 4, "save=", data, data_size))
-				if (strcmp(arg, "1") == 0)
-					changed = true;
-			if (getSParameterFromResponse(arg, 4, "gpio_mode=", data, data_size))
-				if ((strcmp(arg, "1") == 0))
-				{
-					gpio_mode = true;
-					g_device->options |= Y_GPIOMODE;
-				}
-			if (gpio_mode)
+		gpio_num_t miso, mosi, sclk, xcs, xdcs, dreq, enca, encb, encbtn, sda, scl, cs, a0, ir, led, tach, fanspeed, ds18b20, touch, buzzer, rxd, txd, ldr;
+
+		if (getSParameterFromResponse(arg, 4, "gpio_mode=", data, data_size))
+			if ((strcmp(arg, "1") == 0))
 			{
-				err = open_partition("hardware", "gpio_space", (changed == false ? NVS_READONLY : NVS_READWRITE), &hardware_handle);
-				if (err != ESP_OK)
-				{
-					g_device->options &= N_GPIOMODE;
-				}
-				else
-					close_partition(hardware_handle, "hardware");
+				set_gpio_mode(true);
 			}
 
-			if (!changed)
+		if (getSParameterFromResponse(arg, 4, "save=", data, data_size))
+			if (strcmp(arg, "1") == 0)
+				changed = true;
+
+		if (getSParameterFromResponse(arg, 4, "load=", data, data_size))
+			if (strcmp(arg, "1") == 0)
+				set_gpio_mode(gpio_mode);
+
+		if (get_gpio_mode())
+		{
+			err = open_storage(GPIOS_SPACE, (changed == false ? NVS_READONLY : NVS_READWRITE), &gpio_handle);
+			if (err != ESP_OK)
 			{
-				err |= gpio_get_spi_bus(&spi_no, &miso, &mosi, &sclk);
+				set_gpio_mode(false);
+			}
+			else
+				close_storage(gpio_handle);
+		}
+
+		if (!changed)
+		{
+			err |= gpio_get_spi_bus(&miso, &mosi, &sclk);
+			err |= gpio_get_vs1053(&xcs, &xdcs, &dreq);
+			err |= gpio_get_encoders(&enca, &encb, &encbtn);
+			err |= gpio_get_i2c(&sda, &scl);
+			err |= gpio_get_spi_lcd(&cs, &a0);
+			err |= gpio_get_ir_signal(&ir);
+			err |= gpio_get_backlightl(&led);
+			err |= gpio_get_tachometer(&tach);
+			err |= gpio_get_fanspeed(&fanspeed);
+			err |= gpio_get_ds18b20(&ds18b20);
+			err |= gpio_get_touch(&touch);
+			err |= gpio_get_buzzer(&buzzer);
+			err |= gpio_get_uart(&rxd, &txd);
+			err |= gpio_get_ldr(&ldr);
+			if (err == 0x1102)
+			{
+				set_gpio_mode(false);
+
+				err |= gpio_get_spi_bus(&miso, &mosi, &sclk);
 				err |= gpio_get_vs1053(&xcs, &xdcs, &dreq);
 				err |= gpio_get_encoders(&enca, &encb, &encbtn);
 				err |= gpio_get_i2c(&sda, &scl);
@@ -1779,280 +1683,257 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 				err |= gpio_get_buzzer(&buzzer);
 				err |= gpio_get_uart(&rxd, &txd);
 				err |= gpio_get_ldr(&ldr);
-				if (err == 0x1102)
-				{
-					g_device->options &= N_GPIOMODE;
-
-					err |= gpio_get_spi_bus(&spi_no, &miso, &mosi, &sclk);
-					err |= gpio_get_vs1053(&xcs, &xdcs, &dreq);
-					err |= gpio_get_encoders(&enca, &encb, &encbtn);
-					err |= gpio_get_i2c(&sda, &scl);
-					err |= gpio_get_spi_lcd(&cs, &a0);
-					err |= gpio_get_ir_signal(&ir);
-					err |= gpio_get_backlightl(&led);
-					err |= gpio_get_tachometer(&tach);
-					err |= gpio_get_fanspeed(&fanspeed);
-					err |= gpio_get_ds18b20(&ds18b20);
-					err |= gpio_get_touch(&touch);
-					err |= gpio_get_buzzer(&buzzer);
-					err |= gpio_get_uart(&rxd, &txd);
-					err |= gpio_get_ldr(&ldr);
-				}
 			}
-			else
-			{
-				getSParameterFromResponse(arg, 4, "K_SPI=", data, data_size);
-				spi_no = atoi(arg);
-				getSParameterFromResponse(arg, 4, "P_MISO=", data, data_size);
-				miso = atoi(arg);
-				getSParameterFromResponse(arg, 4, "P_MOSI=", data, data_size);
-				mosi = atoi(arg);
-				getSParameterFromResponse(arg, 4, "P_CLK=", data, data_size);
-				sclk = atoi(arg);
-				err |= gpio_set_spi_bus(spi_no, miso, mosi, sclk);
-				getSParameterFromResponse(arg, 4, "P_XCS=", data, data_size);
-				xcs = atoi(arg);
-				getSParameterFromResponse(arg, 4, "P_XDCS=", data, data_size);
-				xdcs = atoi(arg);
-				getSParameterFromResponse(arg, 4, "P_DREQ=", data, data_size);
-				dreq = atoi(arg);
-				err |= gpio_set_vs1053(xcs, xdcs, dreq);
-				getSParameterFromResponse(arg, 4, "P_ENC0_A=", data, data_size);
-				enca = atoi(arg);
-				getSParameterFromResponse(arg, 4, "P_ENC0_B=", data, data_size);
-				encb = atoi(arg);
-				getSParameterFromResponse(arg, 4, "P_ENC0_BTN=", data, data_size);
-				encbtn = atoi(arg);
-				err |= gpio_set_encoders(enca, encb, encbtn);
-				getSParameterFromResponse(arg, 4, "P_I2C_SCL=", data, data_size);
-				sda = atoi(arg);
-				getSParameterFromResponse(arg, 4, "P_I2C_SDA=", data, data_size);
-				scl = atoi(arg);
-				err |= gpio_set_i2c(sda, scl);
-				getSParameterFromResponse(arg, 4, "P_LCD_CS=", data, data_size);
-				cs = atoi(arg);
-				getSParameterFromResponse(arg, 4, "P_LCD_A0=", data, data_size);
-				a0 = atoi(arg);
-				err |= gpio_set_spi_lcd(cs, a0);
-				getSParameterFromResponse(arg, 4, "P_IR_SIGNAL=", data, data_size);
-				ir = atoi(arg);
-				err |= gpio_set_ir_signal(ir);
-				getSParameterFromResponse(arg, 4, "P_BACKLIGHT=", data, data_size);
-				led = atoi(arg);
-				err |= gpio_set_backlightl(led);
-				getSParameterFromResponse(arg, 4, "P_TACHOMETER=", data, data_size);
-				tach = atoi(arg);
-				err |= gpio_set_tachometer(tach);
-				getSParameterFromResponse(arg, 4, "P_FAN_SPEED=", data, data_size);
-				fanspeed = atoi(arg);
-				err |= gpio_set_fanspeed(fanspeed);
-				getSParameterFromResponse(arg, 4, "P_DS18B20=", data, data_size);
-				ds18b20 = atoi(arg);
-				err |= gpio_set_ds18b20(ds18b20);
-				getSParameterFromResponse(arg, 4, "P_TOUCH_CS=", data, data_size);
-				touch = atoi(arg);
-				err |= gpio_set_touch(touch);
-				getSParameterFromResponse(arg, 4, "P_BUZZER=", data, data_size);
-				buzzer = atoi(arg);
-				err |= gpio_set_buzzer(buzzer);
-				getSParameterFromResponse(arg, 4, "P_RXD=", data, data_size);
-				rxd = atoi(arg);
-				getSParameterFromResponse(arg, 4, "P_TXD=", data, data_size);
-				txd = atoi(arg);
-				err |= gpio_set_uart(rxd, txd);
-				getSParameterFromResponse(arg, 4, "P_LDR=", data, data_size);
-				ldr = atoi(arg);
-				err |= gpio_set_ldr(ldr);
-				if (err != ESP_OK)
-				{
-					changed = false;
-				}
-			}
-			char *buf = inmalloc(1024);
-			if (buf == NULL)
-			{
-				ESP_LOGE(TAG, " %s malloc fails", "post GPIOS");
-				infree(buf);
-				respKo(conn);
-				return;
-			}
-			else
-			{
-				sprintf(buf, GPIOS,
-						get_gpio_mode(),
-						err,
-						spi_no, (uint8_t)miso, (uint8_t)mosi, (uint8_t)sclk,
-						(uint8_t)xcs, (uint8_t)xdcs, (uint8_t)dreq,
-						(uint8_t)enca, (uint8_t)encb, (uint8_t)encbtn,
-						(uint8_t)sda, (uint8_t)scl,
-						(uint8_t)cs, (uint8_t)a0,
-						(uint8_t)ir,
-						(uint8_t)led,
-						(uint8_t)tach,
-						(uint8_t)fanspeed,
-						(uint8_t)ds18b20,
-						(uint8_t)touch,
-						(uint8_t)buzzer,
-						(uint8_t)rxd, (uint8_t)txd,
-						(uint8_t)ldr);
-				// ESP_LOGI(TAG, "TEST GPIOS\njson_length len:%u\n%s", strlen(buf), buf);
-				int json_length = strlen(buf);
-				char *s = concat(HTTP_header, buf);
-
-				sprintf(buf, s, json_length);
-				free(s);
-
-				write(conn, buf, strlen(buf));
-				infree(buf);
-			}
-			if (changed)
-			{
-				set_gpio_mode(true);
-				fflush(stdout);
-				vTaskDelay(100);
-				esp_restart();
-			}
-			return;
 		}
+		else
+		{
+			getSParameterFromResponse(arg, 4, "P_MISO=", data, data_size);
+			miso = atoi(arg);
+			getSParameterFromResponse(arg, 4, "P_MOSI=", data, data_size);
+			mosi = atoi(arg);
+			getSParameterFromResponse(arg, 4, "P_CLK=", data, data_size);
+			sclk = atoi(arg);
+			err |= gpio_set_spi_bus(miso, mosi, sclk);
+			getSParameterFromResponse(arg, 4, "P_XCS=", data, data_size);
+			xcs = atoi(arg);
+			getSParameterFromResponse(arg, 4, "P_XDCS=", data, data_size);
+			xdcs = atoi(arg);
+			getSParameterFromResponse(arg, 4, "P_DREQ=", data, data_size);
+			dreq = atoi(arg);
+			err |= gpio_set_vs1053(xcs, xdcs, dreq);
+			getSParameterFromResponse(arg, 4, "P_ENC0_A=", data, data_size);
+			enca = atoi(arg);
+			getSParameterFromResponse(arg, 4, "P_ENC0_B=", data, data_size);
+			encb = atoi(arg);
+			getSParameterFromResponse(arg, 4, "P_ENC0_BTN=", data, data_size);
+			encbtn = atoi(arg);
+			err |= gpio_set_encoders(enca, encb, encbtn);
+			getSParameterFromResponse(arg, 4, "P_I2C_SCL=", data, data_size);
+			sda = atoi(arg);
+			getSParameterFromResponse(arg, 4, "P_I2C_SDA=", data, data_size);
+			scl = atoi(arg);
+			err |= gpio_set_i2c(sda, scl);
+			getSParameterFromResponse(arg, 4, "P_LCD_CS=", data, data_size);
+			cs = atoi(arg);
+			getSParameterFromResponse(arg, 4, "P_LCD_A0=", data, data_size);
+			a0 = atoi(arg);
+			err |= gpio_set_spi_lcd(cs, a0);
+			getSParameterFromResponse(arg, 4, "P_IR_SIGNAL=", data, data_size);
+			ir = atoi(arg);
+			err |= gpio_set_ir_signal(ir);
+			getSParameterFromResponse(arg, 4, "P_BACKLIGHT=", data, data_size);
+			led = atoi(arg);
+			err |= gpio_set_backlightl(led);
+			getSParameterFromResponse(arg, 4, "P_TACHOMETER=", data, data_size);
+			tach = atoi(arg);
+			err |= gpio_set_tachometer(tach);
+			getSParameterFromResponse(arg, 4, "P_FAN_SPEED=", data, data_size);
+			fanspeed = atoi(arg);
+			err |= gpio_set_fanspeed(fanspeed);
+			getSParameterFromResponse(arg, 4, "P_DS18B20=", data, data_size);
+			ds18b20 = atoi(arg);
+			err |= gpio_set_ds18b20(ds18b20);
+			getSParameterFromResponse(arg, 4, "P_TOUCH_CS=", data, data_size);
+			touch = atoi(arg);
+			err |= gpio_set_touch(touch);
+			getSParameterFromResponse(arg, 4, "P_BUZZER=", data, data_size);
+			buzzer = atoi(arg);
+			err |= gpio_set_buzzer(buzzer);
+			getSParameterFromResponse(arg, 4, "P_RXD=", data, data_size);
+			rxd = atoi(arg);
+			getSParameterFromResponse(arg, 4, "P_TXD=", data, data_size);
+			txd = atoi(arg);
+			err |= gpio_set_uart(rxd, txd);
+			getSParameterFromResponse(arg, 4, "P_LDR=", data, data_size);
+			ldr = atoi(arg);
+			err |= gpio_set_ldr(ldr);
+			if (err != ESP_OK)
+			{
+				changed = false;
+			}
+		}
+		char *buf = incalloc(1024);
+		if (buf == NULL)
+		{
+			ESP_LOGE(TAG, " %s malloc fails", "post GPIOS");
+			changed = false;
+			resp_low_memory(conn);
+		}
+		else
+		{
+			set_gpio_mode(gpio_mode);
+			sprintf(buf, GPIOS,
+					gpio_mode,
+					err,
+					(uint8_t)miso, (uint8_t)mosi, (uint8_t)sclk,
+					(uint8_t)xcs, (uint8_t)xdcs, (uint8_t)dreq,
+					(uint8_t)enca, (uint8_t)encb, (uint8_t)encbtn,
+					(uint8_t)sda, (uint8_t)scl,
+					(uint8_t)cs, (uint8_t)a0,
+					(uint8_t)ir,
+					(uint8_t)led,
+					(uint8_t)tach,
+					(uint8_t)fanspeed,
+					(uint8_t)ds18b20,
+					(uint8_t)touch,
+					(uint8_t)buzzer,
+					(uint8_t)rxd, (uint8_t)txd,
+					(uint8_t)ldr);
+			// ESP_LOGI(TAG, "TEST GPIOS\njson_length len:%u\n%s", strlen(buf), buf);
+			int json_length = strlen(buf);
+			char *s = concat(HTTP_header, buf);
+
+			sprintf(buf, s, json_length);
+			free(s);
+
+			write(conn, buf, strlen(buf));
+		}
+		infree(buf);
+		if (changed)
+		{
+			set_gpio_mode(true);
+			SaveConfig();
+			fflush(stdout);
+			vTaskDelay(100);
+			esp_restart();
+		}
+		return;
 	}
 	else if (strcmp(name, "/ircodes") == 0)
 	{
-		if (data_size > 0)
-		{
-			changed = false;
-			char buf_code[14];
-			bool ir_mode = false;
-			nvs_handle hardware_handle;
-			esp_err_t err = ESP_OK;
-			if (getSParameterFromResponse(buf_code, 14, "save=", data, data_size))
-				if (strcmp(buf_code, "1") == 0)
-					changed = true;
-			if (getSParameterFromResponse(buf_code, 14, "ir_mode=", data, data_size))
-				if ((strcmp(buf_code, "1") == 0))
-				{
-					ir_mode = true;
-				}
-
-			if (ir_mode)
+		changed = false;
+		char buf_code[14];
+		bool ir_mode = false;
+		nvs_handle gpio_handle;
+		esp_err_t err = ESP_OK;
+		if (getSParameterFromResponse(buf_code, 14, "save=", data, data_size))
+			if (strcmp(buf_code, "1") == 0)
+				changed = true;
+		if (getSParameterFromResponse(buf_code, 14, "ir_mode=", data, data_size))
+			if ((strcmp(buf_code, "1") == 0))
 			{
-				err = open_partition("hardware", "gpio_space", (changed == false ? NVS_READONLY : NVS_READWRITE), &hardware_handle);
-				if (err != ESP_OK)
-				{
-					ir_mode = false;
-				}
-				else
-					close_partition(hardware_handle, "hardware");
+				ir_mode = true;
 			}
-			if (changed)
+		if (getSParameterFromResponse(buf_code, 14, "load=", data, data_size))
+			if (strcmp(buf_code, "1") == 0)
+				ir_mode = MainConfig->ir_mode;
+		if (ir_mode)
+		{
+			err = open_storage(IRCODE_SPACE, (changed == false ? NVS_READONLY : NVS_READWRITE), &gpio_handle);
+			if (err != ESP_OK)
 			{
 				ir_mode = false;
 			}
+			else
+				close_storage(gpio_handle);
+		}
+		if (changed)
+		{
+			ir_mode = false;
+		}
+		err |= get_ir_key(ir_mode);
+		if (err == 0x1102)
+		{
+			err |= get_ir_key(false);
+			changed = false;
+		}
+		if (changed)
+		{
+			getSParameterFromResponse(buf_code, 14, "K_0=", data, data_size);
+			nvs_set_ir_key("K_UP", buf_code);
+			getSParameterFromResponse(buf_code, 14, "K_1=", data, data_size);
+			nvs_set_ir_key("K_LEFT", buf_code);
+			getSParameterFromResponse(buf_code, 14, "K_2=", data, data_size);
+			nvs_set_ir_key("K_OK", buf_code);
+			getSParameterFromResponse(buf_code, 14, "K_3=", data, data_size);
+			nvs_set_ir_key("K_RIGHT", buf_code);
+			getSParameterFromResponse(buf_code, 14, "K_4=", data, data_size);
+			nvs_set_ir_key("K_DOWN", buf_code);
+			getSParameterFromResponse(buf_code, 14, "K_5=", data, data_size);
+			nvs_set_ir_key("K_0", buf_code);
+			getSParameterFromResponse(buf_code, 14, "K_6=", data, data_size);
+			nvs_set_ir_key("K_1", buf_code);
+			getSParameterFromResponse(buf_code, 14, "K_7=", data, data_size);
+			nvs_set_ir_key("K_2", buf_code);
+			getSParameterFromResponse(buf_code, 14, "K_8=", data, data_size);
+			nvs_set_ir_key("K_3", buf_code);
+			getSParameterFromResponse(buf_code, 14, "K_9=", data, data_size);
+			nvs_set_ir_key("K_4", buf_code);
+			getSParameterFromResponse(buf_code, 14, "K_10=", data, data_size);
+			nvs_set_ir_key("K_5", buf_code);
+			getSParameterFromResponse(buf_code, 14, "K_11=", data, data_size);
+			nvs_set_ir_key("K_6", buf_code);
+			getSParameterFromResponse(buf_code, 14, "K_12=", data, data_size);
+			nvs_set_ir_key("K_7", buf_code);
+			getSParameterFromResponse(buf_code, 14, "K_13=", data, data_size);
+			nvs_set_ir_key("K_8", buf_code);
+			getSParameterFromResponse(buf_code, 14, "K_14=", data, data_size);
+			nvs_set_ir_key("K_9", buf_code);
+			getSParameterFromResponse(buf_code, 14, "K_15=", data, data_size);
+			nvs_set_ir_key("K_STAR", buf_code);
+			getSParameterFromResponse(buf_code, 14, "K_16=", data, data_size);
+			nvs_set_ir_key("K_DIESE", buf_code);
 			err |= get_ir_key(ir_mode);
-			if (err == 0x1102)
+			if (err != ESP_OK)
 			{
-				err |= get_ir_key(false);
 				changed = false;
 			}
-			if (changed)
-			{
-				getSParameterFromResponse(buf_code, 14, "K_0=", data, data_size);
-				gpio_set_ir_key("K_UP", buf_code);
-				getSParameterFromResponse(buf_code, 14, "K_1=", data, data_size);
-				gpio_set_ir_key("K_LEFT", buf_code);
-				getSParameterFromResponse(buf_code, 14, "K_2=", data, data_size);
-				gpio_set_ir_key("K_OK", buf_code);
-				getSParameterFromResponse(buf_code, 14, "K_3=", data, data_size);
-				gpio_set_ir_key("K_RIGHT", buf_code);
-				getSParameterFromResponse(buf_code, 14, "K_4=", data, data_size);
-				gpio_set_ir_key("K_DOWN", buf_code);
-				getSParameterFromResponse(buf_code, 14, "K_5=", data, data_size);
-				gpio_set_ir_key("K_0", buf_code);
-				getSParameterFromResponse(buf_code, 14, "K_6=", data, data_size);
-				gpio_set_ir_key("K_1", buf_code);
-				getSParameterFromResponse(buf_code, 14, "K_7=", data, data_size);
-				gpio_set_ir_key("K_2", buf_code);
-				getSParameterFromResponse(buf_code, 14, "K_8=", data, data_size);
-				gpio_set_ir_key("K_3", buf_code);
-				getSParameterFromResponse(buf_code, 14, "K_9=", data, data_size);
-				gpio_set_ir_key("K_4", buf_code);
-				getSParameterFromResponse(buf_code, 14, "K_10=", data, data_size);
-				gpio_set_ir_key("K_5", buf_code);
-				getSParameterFromResponse(buf_code, 14, "K_11=", data, data_size);
-				gpio_set_ir_key("K_6", buf_code);
-				getSParameterFromResponse(buf_code, 14, "K_12=", data, data_size);
-				gpio_set_ir_key("K_7", buf_code);
-				getSParameterFromResponse(buf_code, 14, "K_13=", data, data_size);
-				gpio_set_ir_key("K_8", buf_code);
-				getSParameterFromResponse(buf_code, 14, "K_14=", data, data_size);
-				gpio_set_ir_key("K_9", buf_code);
-				getSParameterFromResponse(buf_code, 14, "K_15=", data, data_size);
-				gpio_set_ir_key("K_STAR", buf_code);
-				getSParameterFromResponse(buf_code, 14, "K_16=", data, data_size);
-				gpio_set_ir_key("K_DIESE", buf_code);
-				err |= get_ir_key(ir_mode);
-				if (err != ESP_OK)
-				{
-					changed = false;
-				}
-			}
-			char *buf = inmalloc(1024);
-			if (buf == NULL)
-			{
-				ESP_LOGE(TAG, " %s malloc fails", "post IRCODES");
-				infree(buf);
-				respKo(conn);
-				return;
-			}
-			else
-			{
-				char str_sodes[KEY_MAX][14];
-				for (uint8_t indexKey = KEY_UP; indexKey < KEY_MAX; indexKey++)
-				{
-					get_code(buf_code, IR_Key[indexKey][0], IR_Key[indexKey][1]);
-					strcpy(str_sodes[indexKey], buf_code);
-					ESP_LOGD(TAG, " IrKey for set0: %X, for set1: %X str_sodes: %s", IR_Key[indexKey][0], IR_Key[indexKey][1], str_sodes[indexKey]);
-				}
-				ir_mode = g_device->ir_mode;
-				sprintf(buf, IRCODES,
-						ir_mode,
-						err,
-						str_sodes[KEY_UP],
-						str_sodes[KEY_LEFT],
-						str_sodes[KEY_OK],
-						str_sodes[KEY_RIGHT],
-						str_sodes[KEY_DOWN],
-						str_sodes[KEY_0],
-						str_sodes[KEY_1],
-						str_sodes[KEY_2],
-						str_sodes[KEY_3],
-						str_sodes[KEY_4],
-						str_sodes[KEY_5],
-						str_sodes[KEY_6],
-						str_sodes[KEY_7],
-						str_sodes[KEY_8],
-						str_sodes[KEY_9],
-						str_sodes[KEY_STAR],
-						str_sodes[KEY_DIESE]);
-
-				// ESP_LOGI(TAG, "TEST IRCODES\njson_length len:%u\n%s", strlen(buf), buf);
-				int json_length = strlen(buf);
-				char *s = concat(HTTP_header, buf);
-
-				sprintf(buf, s, json_length);
-				free(s);
-				write(conn, buf, strlen(buf));
-				infree(buf);
-			}
-			if (changed)
-			{
-				g_device->ir_mode = IR_CUSTOM;
-				saveDeviceSettings(g_device);
-				fflush(stdout);
-				vTaskDelay(100);
-				esp_restart();
-			}
-			return;
 		}
+		char *buf = incalloc(1024);
+		if (buf == NULL)
+		{
+			ESP_LOGE(TAG, " %s malloc fails", "post IRCODES");
+			resp_low_memory(conn);
+		}
+		else
+		{
+			char str_sodes[KEY_MAX][14];
+			for (uint8_t indexKey = KEY_UP; indexKey < KEY_MAX; indexKey++)
+			{
+				get_code(buf_code, IR_Key[indexKey][0], IR_Key[indexKey][1]);
+				strcpy(str_sodes[indexKey], buf_code);
+				ESP_LOGD(TAG, " IrKey for set0: %X, for set1: %X str_sodes: %s", IR_Key[indexKey][0], IR_Key[indexKey][1], str_sodes[indexKey]);
+			}
+			ir_mode = MainConfig->ir_mode;
+			sprintf(buf, IRCODES,
+					ir_mode,
+					err,
+					str_sodes[KEY_UP],
+					str_sodes[KEY_LEFT],
+					str_sodes[KEY_OK],
+					str_sodes[KEY_RIGHT],
+					str_sodes[KEY_DOWN],
+					str_sodes[KEY_0],
+					str_sodes[KEY_1],
+					str_sodes[KEY_2],
+					str_sodes[KEY_3],
+					str_sodes[KEY_4],
+					str_sodes[KEY_5],
+					str_sodes[KEY_6],
+					str_sodes[KEY_7],
+					str_sodes[KEY_8],
+					str_sodes[KEY_9],
+					str_sodes[KEY_STAR],
+					str_sodes[KEY_DIESE]);
+
+			// ESP_LOGI(TAG, "TEST IRCODES\njson_length len:%u\n%s", strlen(buf), buf);
+			int json_length = strlen(buf);
+			char *s = concat(HTTP_header, buf);
+
+			sprintf(buf, s, json_length);
+			free(s);
+			write(conn, buf, strlen(buf));
+		}
+		infree(buf);
+		if (changed)
+		{
+			MainConfig->ir_mode = IR_CUSTOM;
+			SaveConfig();
+			fflush(stdout);
+			vTaskDelay(100);
+			esp_restart();
+		}
+		return;
 	}
 	respOk(conn, NULL);
 }
@@ -2062,7 +1943,7 @@ static bool httpServerHandleConnection(int conn, char *buf, uint16_t buflen)
 	char *c;
 
 	ESP_LOGD(TAG, "Heap size: %u", xPortGetFreeHeapSize());
-	//printf("httpServerHandleConnection  %20c \n",&buf);
+	//ESP_LOGI(TAG, "httpServerHandleConnection  %20c \n",&buf);
 	if ((c = strstr(buf, "GET ")) != NULL)
 	{
 		char *d = strstr(buf, "Connection:"), *d1 = strstr(d, " Upgrade");
@@ -2087,7 +1968,7 @@ static bool httpServerHandleConnection(int conn, char *buf, uint16_t buflen)
 			if (c_end != NULL) // commands api
 			{
 				char *param;
-				//printf("GET commands  socket:%d command:%s\n",conn,c);
+				//ESP_LOGI(TAG, "GET commands  socket:%d command:%s\n",conn,c);
 				// uart command
 				param = strstr(c, "uart");
 				if (param != NULL)
@@ -2165,11 +2046,24 @@ static bool httpServerHandleConnection(int conn, char *buf, uint16_t buflen)
 				}
 				// list command	 ?list=1 to list the name of the station 1
 				param = getParameterFromResponse("list=", c, strlen(c));
-				if ((param != NULL) && (atoi(param) >= 0) && (atoi(param) <= 254))
+
+				if ((param != NULL) && (atoi(param) >= 0) && (atoi(param) <= MainConfig->TotalStations))
 				{
-					char *vr = webList(atoi(param));
-					respOk(conn, vr);
-					infree(vr);
+					station_slot_s *si = incalloc(sizeof(station_slot_s));
+					si = getStation(atoi(param));
+					char *name = incalloc(64);
+					if (si != NULL)
+					{
+						name = si->name;
+						respOk(conn, name);
+					}
+					else
+					{
+						resp_low_memory(conn);
+					}
+
+					infree(si);
+					infree(name);
 					return true;
 				}
 				respOk(conn, NULL); // response OK to the origin
@@ -2179,7 +2073,7 @@ static bool httpServerHandleConnection(int conn, char *buf, uint16_t buflen)
 			{
 				if (strlen(c) > 32)
 				{
-					respKo(conn);
+					resp_low_memory(conn);
 					return true;
 				}
 				ESP_LOGV(TAG, "GET file  socket:%d file:%s", conn, c);
@@ -2224,13 +2118,13 @@ static bool httpServerHandleConnection(int conn, char *buf, uint16_t buflen)
 void serverclientTask(void *pvParams)
 {
 	struct timeval timeout;
-	timeout.tv_sec = 6;
+	timeout.tv_sec = 10;
 	timeout.tv_usec = 0;
 
 	char buf[DRECLEN];
 	portBASE_TYPE uxHighWaterMark;
 	int client_sock = (int)pvParams;
-	//   char *buf = (char *)inmalloc(reclen);
+
 	bool result = true;
 
 	if (buf != NULL)
@@ -2238,7 +2132,7 @@ void serverclientTask(void *pvParams)
 		int recbytes, recb;
 		memset(buf, 0, DRECLEN);
 		if (setsockopt(client_sock, SOL_SOCKET, SO_RCVTIMEO, (char *)&timeout, sizeof(timeout)) < 0)
-			printf(strsSOCKET, "setsockopt", errno);
+			ESP_LOGE(TAG, SOCKETFAIL, "setsockopt", errno);
 
 		while (((recbytes = read(client_sock, buf, RECLEN)) != 0))
 		{ // For now we assume max. RECLEN bytes for request
@@ -2246,13 +2140,14 @@ void serverclientTask(void *pvParams)
 			{
 				if (errno != EAGAIN)
 				{
-					printf(strsSOCKET, "client_sock", errno);
+					ESP_LOGE(TAG, SOCKETFAIL, "client_sock", errno);
 					vTaskDelay(10);
 					break;
 				}
 				else
 				{
-					printf(strsSOCKET, tryagain, errno);
+					ESP_LOGI(TAG, SOCKETFAIL, "try again", errno);
+					// ESP_LOGW(TAG, "buf:\n%s\n", buf);
 					break;
 				}
 				break;
@@ -2270,20 +2165,20 @@ void serverclientTask(void *pvParams)
 						vTaskDelay(1);
 						if ((bend - buf + cl) > recbytes)
 						{
-							//printf ("Server: try receive more:%d bytes. , must be %d\n", recbytes,bend - buf +cl);
+							// ESP_LOGI(TAG, "Server: try receive more:%d bytes. , must be %d\n", recbytes,bend - buf +cl);
 							while (((recb = read(client_sock, buf + recbytes, cl)) == 0) || (errno == EAGAIN))
 							{
 								vTaskDelay(1);
 								if ((recb < 0) && (errno != EAGAIN))
 								{
 									ESP_LOGE(TAG, "read fails 0  errno:%d", errno);
-									respKo(client_sock);
+									resp_low_memory(client_sock);
 									break;
 								}
 								else
 									recb = 0;
 							}
-							//							printf ("Server: received more for end now: %d bytes\n", recbytes+recb);
+							// ESP_LOGI(TAG, "Server: received more for end now: %d bytes\n", recbytes+recb);
 							buf[recbytes + recb] = 0;
 							recbytes += recb;
 						}
@@ -2292,15 +2187,15 @@ void serverclientTask(void *pvParams)
 				else
 				{
 
-					//					printf ("Server: try receive more for end:%d bytes\n", recbytes);
+					// ESP_LOGI(TAG, "Server: try receive more for end:%d bytes\n", recbytes);
 					while (((recb = read(client_sock, buf + recbytes, DRECLEN - recbytes)) == 0) || (errno == EAGAIN))
 					{
 						vTaskDelay(1);
-						//						printf ("Server: received more for end now: %d bytes\n", recbytes+recb);
+						// ESP_LOGI(TAG, "Server: received more for end now: %d bytes\n", recbytes+recb);
 						if ((recb < 0) && (errno != EAGAIN))
 						{
 							ESP_LOGE(TAG, "read fails 1  errno:%d", errno);
-							respKo(client_sock);
+							resp_low_memory(client_sock);
 							break;
 						}
 						else
@@ -2321,7 +2216,7 @@ void serverclientTask(void *pvParams)
 		//		infree(buf);
 	}
 	else
-		printf(strsMALLOC1, "buf");
+		ESP_LOGE(TAG, "WebServer buf malloc fails\n");
 	if (result)
 	{
 		int err;

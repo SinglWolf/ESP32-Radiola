@@ -67,14 +67,12 @@ void VS1053_spi_init()
 	gpio_num_t mosi;
 	gpio_num_t sclk;
 
-	uint8_t spi_no; // the spi bus to use
-	//	if(!vsSPI) vSemaphoreCreateBinary(vsSPI);
 	if (!vsSPI)
 		vsSPI = xSemaphoreCreateMutex();
 	if (!hsSPI)
 		hsSPI = xSemaphoreCreateMutex();
-	gpio_get_spi_bus(&spi_no, &miso, &mosi, &sclk);
-	if (spi_no > 2)
+	gpio_get_spi_bus(&miso, &mosi, &sclk);
+	if (KSPI > 2)
 		return; //Only VSPI and HSPI are valid spi modules.
 
 	spi_bus_config_t buscfg = {
@@ -87,7 +85,7 @@ void VS1053_spi_init()
 		.flags = SPICOMMON_BUSFLAG_MASTER
 		//		.max_transfer_sz = 1024
 	};
-	ret = spi_bus_initialize(spi_no, &buscfg, 1); // dma
+	ret = spi_bus_initialize(KSPI, &buscfg, 1); // dma
 	assert(ret == ESP_OK);
 }
 
@@ -101,9 +99,7 @@ bool VS1053_HW_init()
 	gpio_num_t xcs;
 	gpio_num_t xdcs;
 
-	uint8_t spi_no; // the spi bus to use
-
-	gpio_get_spi_bus(&spi_no, &miso, &mosi, &sclk);
+	gpio_get_spi_bus(&miso, &mosi, &sclk);
 	gpio_get_vs1053(&xcs, &xdcs, &dreq);
 
 	// if xcs = 0 the vs1053 is not used
@@ -133,7 +129,7 @@ bool VS1053_HW_init()
 		.post_cb = NULL};
 
 	//slow speed
-	ESP_ERROR_CHECK(spi_bus_add_device(spi_no, &devcfg, &vsspi));
+	ESP_ERROR_CHECK(spi_bus_add_device(KSPI, &devcfg, &vsspi));
 
 	//high speed
 	//freq = spi_cal_clock(APB_CLK_FREQ, 6100000, 128, NULL);
@@ -143,7 +139,7 @@ bool VS1053_HW_init()
 	devcfg.spics_io_num = xdcs; //XDCS pin
 	devcfg.command_bits = 0;
 	devcfg.address_bits = 0;
-	ESP_ERROR_CHECK(spi_bus_add_device(spi_no, &devcfg, &hvsspi));
+	ESP_ERROR_CHECK(spi_bus_add_device(KSPI, &devcfg, &hvsspi));
 
 	//Initialize non-SPI GPIOs
 	gpio_config_t gpio_conf;
@@ -372,7 +368,7 @@ void VS1053_Start()
 
 		VS1053_WriteRegister16(SPI_WRAMADDR, 0xc017); //
 		VS1053_WriteRegister16(SPI_WRAM, 0x00F0);	  //
-		VS1053_I2SRate(g_device->i2sspeed);
+		VS1053_I2SRate(MainConfig->i2sspeed);
 
 		// plugin patch
 		LoadUserCodes(); // vs1053b patch and admix
@@ -747,25 +743,25 @@ void vsTask(void *pvParams)
 	uint8_t b[VSTASKBUF];
 	uint16_t s;
 
-	player_t *player = pvParams;
-	ESP_LOGI(TAG, "volume: %d", g_device->vol);
-	setIvol(g_device->vol);
-	VS1053_SetVolume(g_device->vol);
-	VS1053_SetTreble(g_device->treble);
-	VS1053_SetBass(g_device->bass);
-	VS1053_SetTrebleFreq(g_device->freqtreble);
-	VS1053_SetBassFreq(g_device->freqbass);
-	VS1053_SetSpatial(g_device->spacial);
-	g_device->audio_input_num = RADIO;
-	ESP_ERROR_CHECK(tda7313_set_input(g_device->audio_input_num));
+	player_s *player = pvParams;
+	ESP_LOGV(TAG, "volume: %d", MainConfig->vol);
+	setIvol(MainConfig->vol);
+	VS1053_SetVolume(MainConfig->vol);
+	VS1053_SetTreble(MainConfig->treble);
+	VS1053_SetBass(MainConfig->bass);
+	VS1053_SetTrebleFreq(MainConfig->freqtreble);
+	VS1053_SetBassFreq(MainConfig->freqbass);
+	VS1053_SetSpatial(MainConfig->spacial);
+	MainConfig->audio_input_num = RADIO;
+	ESP_ERROR_CHECK(tda7313_set_input(MainConfig->audio_input_num));
 
 	while (1)
 	{
 		// stop requested, terminate immediately
 		if (player->decoder_command == CMD_STOP)
 		{
-			g_device->audio_input_num = COMPUTER;
-			ESP_ERROR_CHECK(tda7313_set_input(g_device->audio_input_num));
+			MainConfig->audio_input_num = COMPUTER;
+			ESP_ERROR_CHECK(tda7313_set_input(MainConfig->audio_input_num));
 			break;
 		}
 		//size = bufferRead(b, VSTASKBUF);

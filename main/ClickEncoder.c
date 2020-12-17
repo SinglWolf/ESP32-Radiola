@@ -51,12 +51,12 @@
 
 // ----------------------------------------------------------------------------
 
-bool getpinsActive(Encoder_t *enc) { return enc->pinsActive; }
+bool getpinsActive(encoder_s *enc) { return enc->pinsActive; }
 
-Encoder_t *ClickEncoderInit(int8_t A, int8_t B, int8_t BTN, bool initHalfStep)
+encoder_s *ClickEncoderInit(int8_t A, int8_t B, int8_t BTN, bool initHalfStep)
 {
 
-  Encoder_t *enc = malloc(sizeof(Encoder_t));
+  encoder_s *enc = malloc(sizeof(encoder_s));
   enc->pinA = A;
   enc->pinB = B;
   if (BTN == -1)
@@ -119,14 +119,14 @@ Encoder_t *ClickEncoderInit(int8_t A, int8_t B, int8_t BTN, bool initHalfStep)
 }
 
 // number of steps per notch
-void setHalfStep(Encoder_t *enc, bool value)
+void setHalfStep(encoder_s *enc, bool value)
 {
   if (value)
     enc->steps = 2;
   else
     enc->steps = 4;
 }
-bool getHalfStep(Encoder_t *enc)
+bool getHalfStep(encoder_s *enc)
 {
   //	return enc->halfStep ;
   if (enc->steps == 2)
@@ -137,7 +137,7 @@ bool getHalfStep(Encoder_t *enc)
 // call this every 1 millisecond via timer ISR
 //
 //void (*serviceEncoder)() = NULL;
-IRAM_ATTR void service(Encoder_t *enc)
+IRAM_ATTR void service(encoder_s *enc)
 {
   volatile bool moved = false;
 
@@ -248,7 +248,7 @@ IRAM_ATTR void service(Encoder_t *enc)
 
 // ----------------------------------------------------------------------------
 
-int16_t getValue(Encoder_t *enc)
+int16_t getValue(encoder_s *enc)
 {
   int16_t val;
 
@@ -297,10 +297,10 @@ int16_t getValue(Encoder_t *enc)
 }
 
 // ----------------------------------------------------------------------------
-Button getButton(Encoder_t *enc)
+button_e getButton(encoder_s *enc)
 {
   noInterrupts();
-  Button ret = enc->button;
+  button_e ret = enc->button;
   if (enc->button != Held && ret != Open)
   {
     enc->button = Open; // reset
@@ -309,7 +309,7 @@ Button getButton(Encoder_t *enc)
   return ret;
 }
 
-bool getPinState(Encoder_t *enc)
+bool getPinState(encoder_s *enc)
 {
   bool pinState = digitalRead(enc->pinBTN);
   return pinState;

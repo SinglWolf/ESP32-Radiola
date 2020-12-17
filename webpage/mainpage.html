@@ -10,8 +10,8 @@
   <link rel=icon type="image/png" href=favicon.png />
   <link rel=stylesheet title=base href=icons.css type="text/css" />
   <link rel=stylesheet title=base href=style.css type="text/css" />
-  <style></style>
   <script src=script.js></script>
+  <script src="tabbis.js"></script>
   <title>РАДИОЛА</title>
 </head>
 
@@ -27,7 +27,7 @@
       <br>
       <div id="_fan" style="display: none;"><i class="icon icon-fan"></i> <span id="rpmfan"></span></div>
       <div id="_temp" style="display: none;"><i class="icon-thermometer"></i> <span id="curtemp"></span></div>
-      <div><i class="icon icon-wificonnection"></i> <span id="rssi">-30 дБм</span></div>
+      <div><i class="icon icon-wificonnection"></i> <span id="rssi"></span></div>
       <br>
     </div>
     <div id="HEAD">
@@ -36,8 +36,8 @@
       </span>
     </div>
   </div>
-  <div id="MAIN">
-    <!-- The Modal Edit window-->
+  <div class="MAIN">
+    <!--The Modal Edit window-->
     <div id="editStationDiv" class="modal">
       <div class="modal-content">
         <h1>Редактирование станции</h1>
@@ -64,8 +64,8 @@
             <br>
             <br>
             <input type="button" onclick="saveStation()" value="сохранить"> &nbsp;
-            <input type="button" onclick="eraseStation()" value="стереть"> &nbsp;
-            <input type="button" onclick="abortStation()" value="выйти">
+            <input type="button" onclick="eraseStation()" value="очистить"> &nbsp;
+            <input type="button" onclick="abortStation()" value="отмена">
           </p>
           <br>
         </div>
@@ -115,25 +115,82 @@
         <!-- PLAY РАДИО -->
         <h1>ВОСПРОИЗВЕДЕНИЕ СТАНЦИИ</h1>
         <div class="section">
-          <div class="bold2">Автовоспроизведение
-            <div class="OffOn">
-              <input type="checkbox" id="aplay" onclick="autoplay()" class="OffOn">
-              <label for="aplay"></label>
+
+          <div data-tabs>
+            <div id="list_common" class="icon-list active"></div>
+            <div id="list_favorites" class="icon-heart"></div>
+          </div>
+          <div data-panes>
+            <div class="active">
+              <br>
+              <h1>ОБЩИЙ</h1>
+              <div class="section" style="display: flex;">
+                <br>
+                <div>
+                  <div class="bold2"
+                    style="display: flex;margin-top: 20px;margin-bottom: 10px;padding-left: 10px;padding-right: 15px;">
+                    Автовоспроизведение
+                    <div class="OffOn">
+                      <input type="checkbox" id="auto_common" onclick="autoplay('common')" class="OffOn">
+                      <label for="auto_common"></label>
+                    </div>
+                  </div>
+                  <select style="margin-left: 15px;" id="select_common" onchange="Select('common')"></select>
+                </div>
+                <div class="icons">
+                  <div class="icons8" title="Предыдущая станция" onclick="prevStation('common')"> <i
+                      class="icon-previous"></i>
+                  </div>
+                  <div class="icons8" title="Воспроизведение станции" onclick="playStation('common')"> <i
+                      class="icon-play"></i>
+                  </div>
+                  <div class="icons8" title="Остановить воспроизведение" onclick="stopStation('common')"> <i
+                      class="icon-stop"></i>
+                  </div>
+                  <div class="icons8" title="Следующая станция" onclick="nextStation('common')"> <i
+                      class="icon-next"></i>
+                  </div>
+                  <br>
+                </div>
+                <br>
+              </div>
+            </div>
+            <div>
+              <br>
+              <h1>ИЗБРАННОЕ</h1>
+              <div class="section" style="display: flex;">
+                <br>
+                <div>
+                  <div class="bold2"
+                    style="display: flex;margin-top: 20px;margin-bottom: 10px;padding-left: 10px;padding-right: 15px;">
+                    Автовоспроизведение
+                    <div class="OffOn">
+                      <input type="checkbox" id="auto_favorites" onclick="autoplay('favorites')" class="OffOn">
+                      <label for="auto_favorites"></label>
+                    </div>
+                  </div>
+                  <select style="margin-left: 15px;" id="select_favorites" onchange="Select('favorites')"></select>
+                </div>
+                <div class="icons">
+                  <div class="icons8" title="Предыдущая станция" onclick="prevStation('favorites')"> <i
+                      class="icon-previous"></i>
+                  </div>
+                  <div class="icons8" title="Воспроизведение станции" onclick="playStation('favorites')"> <i
+                      class="icon-play"></i>
+                  </div>
+                  <div class="icons8" title="Остановить воспроизведение" onclick="stopStation('favorites')"> <i
+                      class="icon-stop"></i>
+                  </div>
+                  <div class="icons8" title="Следующая станция" onclick="nextStation('favorites')"> <i
+                      class="icon-next"></i></div>
+                  <br>
+                </div>
+                <br>
+              </div>
             </div>
           </div>
-          <br>
-          <p>
-            <select id="stationsSelect" onchange="Select()"></select>
-          </p>
-          <div class="icons">
-            <div class="icons8" title="Предыдущая станция" onclick="prevStation()"> <i class="icon-previous"></i> </div>
-            <div class="icons8" title="Воспроизведение станции" onclick="playStation()"> <i class="icon-play"></i>
-            </div>
-            <div class="icons8" title="Остановить воспроизведение" onclick="stopStation()"> <i class="icon-stop"></i>
-            </div>
-            <div class="icons8" title="Следующая станция" onclick="nextStation()"> <i class="icon-next"></i></div> <br>
-          </div>
-          <br>
+
+
           <table>
             <tbody>
               <tr>
@@ -199,22 +256,22 @@
           БЫСТРОЕ ВОСПРОИЗВЕДЕНИЕ</h1>
         <div class="section">
           <p> <span class="bold1">Полный URL: </span>
-            <input type="text" id="instant_URL" name="URL" onkeyup="parseURL()" onmouseup="parseEditURL()">
+            <input type="text" id="loc_URL" name="URL" onkeyup="parseURL()" onmouseup="parseEditURL()">
             <br>
             <span class="bold1">Короткий URL: </span>
-            <input type="text" id="instant_url" name="url" onkeyup="buildURL()">
+            <input type="text" id="loc_url" name="url" onkeyup="buildURL()">
             <br>
             <span class="bold1">Порт: </span>
-            <input type="text" id="instant_port" name="port" value="80" onkeyup="buildURL()">
+            <input type="text" id="loc_port" name="port" value="80" onkeyup="buildURL()">
             <br>
             <span class="bold1">Путь: </span>
-            <input type="text" id="instant_path" name="path" value="/" onkeyup="buildURL()">
-            <button class="icon-page-edit" onclick="editInstantStation()" title="Добавить и править"></button>
+            <input type="text" id="loc_path" name="path" value="/" onkeyup="buildURL()">
+            <button class="icon-page-edit" onclick="editLocalStation()" title="Добавить и править"></button>
           </p>
 
           <br>
           <div class="icons">
-            <div class="icons8" title="Быстрое воспроизведение станции" onclick="instantPlay()">
+            <div class="icons8" title="Быстрое воспроизведение станции" onclick="LocalPlay()">
               <i class="icon-play"></i>
             </div>
             <div class="icons8" title="Остановить быстрое воспроизведение станции" onclick="stopStation()">
@@ -272,47 +329,94 @@
       </div>
       <!-- END PLAY РАДИО -->
       <div>
-        <!-- СТАНЦИИ -->
-        <h1>МЕНЕДЖЕР СТАНЦИЙ</h1>
+        <!-- ПЛЕЙЛИСТЫ -->
+        <h1>МЕНЕДЖЕР ПЛЕЙЛИСТОВ</h1>
         <div class="section">
-          <p>
-            <input type="button" onclick="saveTextAsFile()" value="Выгрузить станции из Радиолы" accept=".m3u">
-            <span style="display:inline-block;"> &nbsp;&nbsp;в &nbsp;&nbsp;&nbsp;<input type="text"
-                style="width:300px;color:black;" value="RadiolaStations.m3u" id="filesave"> </span>
-            <br>
-            <br>
-            <input type="button" onclick="downloadStations()" value="Загрузить станции в Радиолу">
-            <span style="display:inline-block;"> &nbsp;&nbsp;из &nbsp;&nbsp;&nbsp;<input type="file"
-                style="width:300px;color:black;" id="fileload" accept=".m3u"> </span> <br><br>
-            <input type="button" id="refresh" title="Это перезагрузит станции в Радиоле" onclick="refreshList()"
-              value="Обновить локальный список"> <input type="button" id="stsave" disabled=""
-              title="Это сохранит все станции в Радиоле" onclick="stChanged()" value="Сохранить список"> <input
-              type="button" id="clear" title="Предупреждение: Это удалит все станции. Обязательно выгрузите их раньше."
-              onclick="clearList()" value="Удалить всё"> <input type="button" id="print"
-              title="Печать всего списка станций на принтере" onclick="printList()" value="Печатать всё">
-          </p>
-          <br>
-          <p>Вы можете перетаскивать любую строку, чтобы отсортировать список</p>
-          <table id="stationsTable" style="table-layout: fixed; width: 100%;">
-            <thead>
-              <tr>
-                <td style="width:5%;text-align: center; vertical-align: middle;">№</td>
-                <td style="width:45%; ">Имя</td>
-                <td style="width:45%; ">URL</td>
-                <td class="icon-page-edit" style="width:5%;text-align: center; vertical-align: middle;"></td>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
+
+
+          <div data-tabs>
+            <div id="pls_common" class="icon-list active"></div>
+            <div id="pls_favorites" class="icon-heart"></div>
+          </div>
+          <div data-panes>
+            <div class='active'>
+              <br>
+              <p>
+                <input type="button" onclick="saveTextAsFile('common')" value="Выгрузить плейлист" accept=".m3u">
+                <span style="display:inline-block;"> &nbsp;&nbsp;в &nbsp;&nbsp;&nbsp;<input type="text"
+                    style="width:300px;color:black;" value="RadiolaStations.m3u" id="filesave"> </span>
+                <br>
+                <br>
+                <input type="button" id='download_common' onclick="downloadStations('common')"
+                  value="Загрузить плейлист">
+                <span style="display:inline-block;"> &nbsp;&nbsp;из &nbsp;&nbsp;&nbsp;<input type="file"
+                    style="width:300px;color:black;" id="file_common" accept=".m3u"> </span> <br><br>
+                <input type="button" id="clear_common" title="Предупреждение: Это удалит все станции из этого списка."
+                  onclick="clearList('common')" value="Удалить">
+                <input type="button" id='stsave' disabled='true' onclick="stChanged()" value="СОХРАНИТЬ"
+                  title="Предупреждение: Список будет сохранён в РАДИОЛУ."> &nbsp;
+
+
+                <input type="button" id="print_common" title="Печать всего списка станций на принтере"
+                  onclick="printList('common')" value="Печатать всё">
+              </p>
+              <br>
+              <table id="table_common" style="table-layout: fixed; width: 100%;">
+                <caption>
+                  <h1>ОБЩИЙ</h1><br>
+                </caption>
+                <tr>
+                  <thead id="head_common">
+                    <tr>
+                      <td style="width:5%">№</td>
+                      <td style="width:45%">НАЗВАНИЕ СТАНЦИИ</td>
+                      <td style="width:45%; display: none;">URL</td>
+                      <td class="lst" style="width:5%;"><i class="icon-heart"></i></td>
+                      <td style="width:10%">ДЕЙСТВИЯ</td>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+              </table>
+            </div>
+
+            <div>
+              <p>
+                <br>
+                <input type="button" id="clear_favorites"
+                  title="Предупреждение: Это удалит все станции из этого списка." onclick="clearList('favorites')"
+                  value="Удалить">&nbsp;
+
+                <input type="button" id="print_favorites" title="Печать этого списка станций на принтере"
+                  onclick="printList('favorites')" value="Печатать всё">
+              </p>
+              <br>
+              <table id="table_favorites" style="table-layout: fixed; width: 100%;">
+                <caption>
+                  <h1>ИЗБРАННОЕ</h1><br>
+                </caption>
+                <tr>
+                  <thead id="head_favorites">
+                    <tr>
+                      <td style="width:5%">№</td>
+                      <td style="width:45%">НАЗВАНИЕ СТАНЦИИ</td>
+                      <td style="width:10%">ДЕЙСТВИЯ</td>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+              </table>
+            </div>
+
+          </div>
+
         </div>
       </div>
-      <!-- END СТАНЦИИ -->
+      <!-- END ПЛЕЙЛИСТЫ -->
       <div>
         <!-- ЗВУК -->
         <div id="soudBar" data-tabs>
-          <div onclick="tabbis.onClick(1,0);hardware(1)" class="icon-audio-jack active"></div>
-          <div class="icon-radio" onclick="tabbis.onClick(1,1);hardware(1)"></div>
-          <div class="icon-bluetooth" onclick="tabbis.onClick(1,2);hardware(1)"></div>
+          <div id="AUX" class="icon-audio-jack active"></div>
+          <div id="VS1053" class="icon-radio"></div>
+          <div id="BT201" class="icon-bluetooth"></div>
         </div>
         <br>
         <h1 style="border-radius: 14px;margin-top: -5px;">ИСТОЧНИК: <span id="source">VS1053</span></h1><br><br>
@@ -410,8 +514,8 @@
         </div>
 
         <div data-panes>
-          <div id="audioinput1" style="border: none;" class="active">
-            <!-- КОМП -->
+          <!-- КОМП -->
+          <div id="audioinput_1" style="border: none;" class="active">
             <div class="section">
               <div class="bold2">ТОНКОМПЕНСАЦИЯ
                 <div class="OffOn">
@@ -434,8 +538,8 @@
             </div>
           </div>
           <!-- END КОМП -->
-          <div id="audioinput2" style="border: none;">
-            <!-- РАДИО -->
+          <!-- РАДИО -->
+          <div id="audioinput_2" style="border: none;">
             <div id="barTDA7313radio">
               <div class="section">
                 <div class="bold2">ТОНКОМПЕНСАЦИЯ
@@ -524,8 +628,8 @@
             </div>
           </div>
           <!-- END РАДИО -->
-          <div id="audioinput3" style="border: none;">
-            <!-- БЛЮТУЗ -->
+          <!-- БЛЮТУЗ -->
+          <div id="audioinput_3" style="border: none;">
             <div class="section">
               <div class="bold2">ТОНКОМПЕНСАЦИЯ
                 <div class="OffOn">
@@ -583,13 +687,15 @@
                     <td>1: <div class="bold2">
                         <div class="OffOn" style="top: 4px;">
                           <input id="dhcp" onclick="clickdhcp()" type="checkbox" class="OffOn">
-                          <label for="dhcp"></label></div>
+                          <label for="dhcp"></label>
+                        </div>
                       </div>
                     </td>
                     <td>2: <div class="bold2">
                         <div class="OffOn" style="top: 4px;">
                           <input id="dhcp2" onclick="clickdhcp()" type="checkbox" class="OffOn">
-                          <label for="dhcp2"></label></div>
+                          <label for="dhcp2"></label>
+                        </div>
                       </div>
                     </td>
                   </tr>
@@ -654,10 +760,6 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr>
-                    <td>SPI</td>
-                    <td contenteditable="true" id="K_SPI"></td>
-                  </tr>
                   <tr>
                     <td>MISO</td>
                     <td contenteditable="true" id="P_MISO"></td>
@@ -949,14 +1051,6 @@
                         <option value="0" id="q1"></option>
                         <option value="1" id="q2"></option>
                       </select>
-                      <script type="text/javascript">
-                        var day = new Date();
-                        let days_f = ['воскресенье', 'понедельник', 'вторник', 'среда', 'четверг', 'пятница', 'суббота'];
-                        let days = ['ВС', 'ПН', 'ВТ', 'СР', 'ЧТ', 'ПТ', 'СБ'];
-                        let months = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
-                        document.getElementById('q1').innerHTML = day.getDate() + ' ' + months[day.getMonth()] + ', ' + days[day.getDay()] + '. ' + day.getFullYear() + ' г.';
-                        document.getElementById('q2').innerHTML = day.getDate() + ' ' + months[day.getMonth()] + ', ' + days_f[day.getDay()];
-                      </script>
                     </td>
                   </tr>
                   <tr>
@@ -1109,7 +1203,8 @@
                             <option value="95">95</option>
                             <option value="100">100</option>
                             <option value="105">105</option>
-                          </select>&nbsp;℃</div><br>
+                          </select>&nbsp;℃
+                        </div><br>
                         <div>Минимальные обороты</div>
                         <div><input id="min_pwm" max="255" min="0" name="min_pwm" type="range" value="127">
                         </div>
@@ -1128,16 +1223,6 @@
             <div class="section" style="text-align: center;">
               <button class="icon-trash-bin" onclick="devoptions(2)" title="Сброс всех настроек Радиолы"></button>
               <br>
-            </div>
-            <h1>ДРУГОЕ</h1>
-            <div class="section">
-              <p></p>
-              <div class="bold2">WEB-КОНСОЛЬ:
-                <div class="OffOn">
-                  <input id="consON" type="checkbox" onclick="consoleON()" class="OffOn">
-                  <label for="consON"></label></div>
-              </div>
-              <p></p>
             </div>
           </div>
           <!-- END ОПЦИИ -->
@@ -1176,25 +1261,6 @@
   <div id="footer"><a href="https://github.com/SinglWolf/ESP32-Radiola" target="_blank">РАДИОЛА by SinglWolf © 2020
       Все права защищены.</a>
   </div>
-
-  <script src="tabbis.js"></script>
-  <script>
-    localStorage.removeItem("tabbis");
-    // var tabs = tabbis.init({
-    //   tabGroup: "[data-tabs]",
-    //   paneGroup: "[data-panes]",
-    //   tabActive: "active",
-    //   paneActive: "active",
-    //   callback: function (tab, pane) {
-    //     console.log(tab);
-    //     console.log(pane);
-    //   }
-    // });
-    tabbis.init();
-
-  </script>
-
 </body>
-
 
 </html>

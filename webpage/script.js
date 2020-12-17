@@ -1,27 +1,35 @@
-var content = "Content-type",
-    ctype = "application/x-www-form-urlencoded",
-    cjson = "application/json";
-var auto, intervalid, intervalrssi, timeid, websocket, urlmonitor, monitor, e, moniPlaying = false,
+const mediacentre = "Радиола",
+    COMMON = "common",
+    FAVORITES = "favorites",
+    maxStation = 128,
+    working = "Работаю... Пожалуйста, подождите.",
+    _ERR = "ОШИБКА ", _default = "ПО УМОЛЧАНИЮ", _loadNVS = "СЧИТАНО ИЗ NVS", _saveNVS = "ЗАПИСАНО В NVS", _noNVS = "Записей в NVS ещё нет!!!",
+    AUX = 1, VS1053 = 2, BT201 = 3;
+
+var auto, intervalid, timeid, websocket, urlmonitor, monitor, e, tblEvn,
+    moniPlaying = false,
     editPlaying = false,
+    current_total = 0,
+    PlayList = COMMON,
+    audioinput = AUX,
     editIndex = 0,
     curtab = "PLAYER",
     stchanged = false,
-    maxStation = 128;
-const mediacentre = "Радиола";
-const working = "Работаю... Пожалуйста, подождите.";
-const _ERR = "ОШИБКА ", _default = "ПО УМОЛЧАНИЮ", _loadNVS = "СЧИТАНО ИЗ NVS", _saveNVS = "ЗАПИСАНО В NVS", _noNVS = "Записей в NVS ещё нет!!!";
-const backupConsole = console;
-
+    RadiolaStorage = {
+        "common": [],
+        "common_select": 0,
+        "favorites": [],
+        "favorites_select": 0
+    };
 function openwebsocket() {
-    //	autoplay(); //to force the server socket to accept and open the web server client.
     websocket = new WebSocket("ws://" + window.location.host + "/");
-    console.log("url:" + "ws://" + window.location.host + "/");
+    // console.log("url:" + "ws://" + window.location.host + "/");
 
 
     websocket.onmessage = function (event) {
         try {
             var arr = JSON.parse(event.data);
-            console.log("onmessage:" + event.data);
+            // console.log("onmessage:" + event.data);
             if (arr["meta"] == "") {
                 document.getElementById('meta').innerHTML = mediacentre;
             }
@@ -37,20 +45,19 @@ function openwebsocket() {
             if (arr["ircode"]) { document.getElementById('new_key').innerHTML = arr["ircode"]; }
             if (arr["upgrade"]) { document.getElementById('updatefb').innerHTML = arr["upgrade"]; }
             if (arr["iurl"]) {
-                document.getElementById('instant_url').value = arr["iurl"];
+                document.getElementById('loc_url').value = arr["iurl"];
                 buildURL();
             }
             if (arr["ipath"]) {
-                document.getElementById('instant_path').value = arr["ipath"];
+                document.getElementById('loc_path').value = arr["ipath"];
                 buildURL();
             }
             if (arr["iport"]) {
-                document.getElementById('instant_port').value = arr["iport"];
+                document.getElementById('loc_port').value = arr["iport"];
                 buildURL();
             }
             if (arr["wsrssi"]) {
                 document.getElementById('rssi').innerHTML = arr["wsrssi"] + ' дБм';
-                setTimeout(wsaskrssi, 5000);
             }
             if (arr["wscurtemp"]) {
                 document.getElementById('curtemp').innerHTML = arr["wscurtemp"] + ' ℃';
@@ -58,7 +65,7 @@ function openwebsocket() {
             if (arr["wsrpmfan"]) {
                 document.getElementById('rpmfan').innerHTML = arr["wsrpmfan"] + ' Об/м';
             }
-        } catch (e) { console.log("error" + e); }
+        } catch (e) { console.log("err: " + e); }
     }
 
     websocket.onopen = function (event) {
@@ -67,7 +74,6 @@ function openwebsocket() {
             window.clearInterval(window.timerID);
             window.timerID = 0;
         }
-        setTimeout(wsaskrssi, 5000); // start the rssi display
         websocket.send("opencheck");
     }
     websocket.onclose = function (event) {
@@ -85,33 +91,26 @@ function openwebsocket() {
 }
 
 // Change the title of the page
-function changeTitle($arr) {
-    window.parent.document.title = $arr; // on change l'attribut <title>
+function changeTitle(arr) {
+    window.parent.document.title = arr; // on change l'attribut <title>
 }
 
-// ask for the rssi and restart the timer
-function wsaskrssi() {
-    try {
-        websocket.send("wsrssi &");
-    } catch (e) { console.log("error" + e); }
-}
-
-function wsplayStation($arr) {
+function wsplayStation(arg) {
     var i;
-    var select = document.getElementById('stationsSelect');
+    var select = document.getElementById('select_' + PlayList);
     var opt = select.options;
-    for (i = 0; i < maxStation; i++) {
-        var id = opt[i].value.split(":");
+    for (i = 0; i < select.options.length; i++) {
+        var id = opt[i].value;
         id = id[0];
-        if (id == $arr) break;
+        if (id == arg) break;
     }
-    if (i == maxStation) i = 0;
+
     select.selectedIndex = i;
 }
 
-function playMonitor($arr) {
+function playMonitor(arr) {
     urlmonitor = "";
-    urlmonitor = $arr;
+    urlmonitor = arr;
     if (moniPlaying) {
         monitor = document.getElementById("audio");
         if (urlmonitor.endsWith("/"))
@@ -152,12 +151,12 @@ function mpause() {
     monitor.pause();
 }
 
-function mvol($name, $step) {
-    var val = parseInt(document.getElementById($name + '_range').value, 10) + $step;
+function mvol(name, step) {
+    var val = parseInt(document.getElementById(name + '_range').value, 10) + step;
     if (val < 0) val = 0;
     if (val > 100) val = 100;
-    document.getElementById($name + '_range').value = val;
-    document.getElementById($name + '_span').innerHTML = val + "%";
+    document.getElementById(name + '_range').value = val;
+    document.getElementById(name + '_span').innerHTML = val + "%";
     monitor = document.getElementById("audio");
     monitor.volume = val / 100;
 }
@@ -171,9 +170,9 @@ function checkwebsocket() {
 }
 
 //check for a valid ip	
-function chkip($this) {
-    if (/^([0-9]+\.){3}[0-9]+$/.test($this.value)) $this.style.color = "green";
-    else $this.style.color = "red";
+function chkip(ip) {
+    if (/^([0-9]+\.){3}[0-9]+$/.test(ip.value)) ip.style.color = "green";
+    else ip.style.color = "red";
 }
 
 function clickdhcp() {
@@ -185,18 +184,6 @@ function clickdhcp() {
         document.getElementById("ip").removeAttribute("disabled");
         document.getElementById("mask").removeAttribute("disabled");
         document.getElementById("gw").removeAttribute("disabled");
-    }
-}
-
-function consoleON() {
-    if (document.getElementById("consON").checked) {
-        console = backupConsole;
-    } else {
-        console = {
-            log: () => { },
-            error: () => { },
-            warn: () => { }
-        };
     }
 }
 
@@ -227,7 +214,6 @@ function saveIrKey(num) {
         }
 
         if (checkIR >= 1) checkir = true;
-        console.log(checkir);
         if (document.getElementById('current_key').innerHTML == val) {
             checkir = true;
         }
@@ -237,7 +223,6 @@ function saveIrKey(num) {
         }
         else {
             document.getElementById('K_' + num).innerHTML = val;
-            // document.getElementById('K_' + num).style = "color:red;";
             document.getElementById('K_' + num).style.color = "red";
             abortIrKey();
         }
@@ -262,52 +247,44 @@ function training(key, num) {
 }
 
 function ircodes(ir_mode, save, load) {
-    var setircodes = "", ir_mode_txt, err, style_color, xhr;
-    xhr = new XMLHttpRequest();
-    xhr.onreadystatechange = function () {
-        if (xhr.readyState == 4 && xhr.status == 200) {
-            var arr = JSON.parse(xhr.responseText);
-            if (load == 1) {
-                ir_mode = parseInt(arr["IR_MODE"].replace(/\\/g, ""), 10);
-            }
-            err = arr["ERROR"].replace(/\\/g, "");
-            if (err != "0000") {
-                ir_mode_txt = _ERR + err + "<br>";
-                if (err == "1102")
-                    ir_mode_txt = ir_mode_txt + _noNVS;
-                style_color = "red";
+    var setircodes = "", ir_mode_txt, err, style_color;
+    var arr = JSON.parse(PostData("ircodes", "ir_mode=" + ir_mode + "&load=" + load));
+    if (load) {
+        ir_mode = parseInt(arr["IR_MODE"], 10);
+    }
+    err = arr["ERROR"];
+    if (err != "0000") {
+        ir_mode_txt = _ERR + err + "<br>";
+        if (err == "1102")
+            ir_mode_txt = ir_mode_txt + _noNVS;
+        style_color = "red";
+    } else {
+        if (ir_mode == 0) {
+            ir_mode_txt = _default;
+            style_color = "blue";
+        } else {
+            if (save == 0) {
+                ir_mode_txt = _loadNVS;
             } else {
-                if (ir_mode == 0) {
-                    ir_mode_txt = _default;
-                    style_color = "blue";
-                } else {
-                    if (save == 0) {
-                        ir_mode_txt = _loadNVS;
-                    } else {
-                        ir_mode_txt = _saveNVS;
-                    }
-                    style_color = "green";
-                }
+                ir_mode_txt = _saveNVS;
             }
-            document.getElementById("IrErr").style.color = style_color;
-            document.getElementById("IrErr").innerHTML = ir_mode_txt;
-            for (var i = 0; i < 17; i++) {
-                document.getElementById('K_' + i).innerHTML = arr["K_" + i];
-            }
+            style_color = "green";
+        }
+    }
+    document.getElementById("IrErr").style.color = style_color;
+    document.getElementById("IrErr").innerHTML = ir_mode_txt;
+    if (!save) {
+        for (var i = 0; i < 17; i++) {
+            document.getElementById('K_' + i).innerHTML = arr["K_" + i];
         }
     }
     if ((save == 1) && (confirm("Записать коды пульта в NVS?"))) {
         for (var i = 0; i < 17; i++) {
             setircodes += "&K_" + i + "=" + document.getElementById('K_' + i).innerHTML;
         }
+        PostData("ircodes", "ir_mode=" + ir_mode + "&save=" + save + setircodes);
     } else save = 0;
 
-    xhr.open("POST", "ircodes", false);
-    xhr.setRequestHeader(content, ctype);
-    xhr.send("ir_mode=" + ir_mode +
-        "&save=" + save +
-        setircodes +
-        "&");
 }
 
 
@@ -429,21 +406,17 @@ function stopWake() {
     labelWake("0");
 }
 
-
-
 function promptworking(label) {
     document.getElementById('meta').innerHTML = label;
     if (label == "") {
         document.getElementById('meta').innerHTML = mediacentre;
-        //		refresh();
     }
 }
 
-function saveTextAsFile() {
+function saveTextAsFile(storage) {
     var output = '#EXTM3U\n',
         id, port, textFileAsBlob, downloadLink, fileName;
-    //	for (var key in localStorage) {
-    for (id = 0; id < maxStation; id++) {
+    for (id = 0; id < current_total; id++) {
         try {
             var obj = JSON.parse(localStorage[id]);
             if (obj["Port"] == "80") {
@@ -455,9 +428,9 @@ function saveTextAsFile() {
             }
             output = output + '#EXTINF:-1,' + obj["Name"] + '\n';
             output = output + 'http://' + obj["URL"] + port + obj["File"] + '\n';
-        } catch (err) {
+        } catch (e) {
 
-            console.log("err!! ");
+            console.log("err: " + e);
 
         }
     }
@@ -510,15 +483,17 @@ function full() {
 }
 
 function icyResp(arr) {
-    document.getElementById('curst').innerHTML = arr["curst"].replace(/\\/g, "");
-    var select = document.getElementById('stationsSelect');
+    var curSt = parseInt(arr["curst"], 10) + 1;
+    document.getElementById('curst').innerHTML = curSt;
+    var select = document.getElementById('select_' + PlayList);
     var opt = select.options, i;
-    for (i = 0; i < maxStation; i++) {
-        var id = opt[i].value.split(":");
+    current_total = RadiolaStorage[PlayList].length;
+    for (i = 0; i < current_total; i++) {
+        var id = opt[i].value;
         id = id[0];
-        if (id == document.getElementById('curst').innerHTML) break;
+        if (id == arr["curst"]) break;
     }
-    if (i == maxStation) i = 0;
+    if (i == current_total) i = 0;
     select.selectedIndex = i;
     if ((arr["descr"] == "") || (!document.getElementById('Full').checked))
         document.getElementById('ldescr').style.display = "none";
@@ -526,7 +501,7 @@ function icyResp(arr) {
     document.getElementById('descr').innerHTML = arr["descr"].replace(/\\/g, "");
     document.getElementById('name').innerHTML = arr["name"].replace(/\\/g, "");
     if ((arr["bitr"] == "") || (!document.getElementById('Full').checked)) { document.getElementById('lbitr').style.display = "none"; } else document.getElementById('lbitr').style.display = "inline-block";
-    document.getElementById('bitr').innerHTML = arr["bitr"].replace(/\\/g, "") + " кБ/с";
+    document.getElementById('bitr').innerHTML = arr["bitr"].replace(/\\/g, "");
     if (arr["bitr"] == "") document.getElementById('bitr').innerHTML = "";
     if (((arr["not1"] == "") && (arr["not2"] == "")) || (!document.getElementById('Full').checked)) document.getElementById('lnot1').style.display = "none";
     else document.getElementById('lnot1').style.display = "inline-block";
@@ -542,33 +517,37 @@ function icyResp(arr) {
     } else {
         document.getElementById('lurl').style.display = "inline-block";
         document.getElementById('icon').style.display = "inline-block";
-        var $url = arr["url1"].replace(/\\/g, "").replace(/ /g, "");
-        if ($url == 'http://www.icecast.org/')
+        var url = arr["url1"].replace(/\\/g, "").replace(/ /g, "");
+        if (url == 'http://www.icecast.org/')
             document.getElementById('icon').src = "/logo.png";
-        else document.getElementById('icon').src = "http://www.google.com/s2/favicons?domain_url=" + $url;
+        else document.getElementById('icon').src = "http://www.google.com/s2/favicons?domain_url=" + url;
     }
-    $url = arr["url1"].replace(/\\/g, "");
-    document.getElementById('url1').innerHTML = $url;
-    document.getElementById('url2').href = $url;
+    url = arr["url1"].replace(/\\/g, "");
+    document.getElementById('url1').innerHTML = url;
+    document.getElementById('url2').href = url;
     if (arr["meta"] == "") {
         document.getElementById('meta').innerHTML = mediacentre;
     }
     if (arr["meta"]) document.getElementById('meta').innerHTML = arr["meta"].replace(/\\/g, "");
     changeTitle(document.getElementById('meta').innerHTML);
     if (typeof arr["auto"] != 'undefined') // undefined for websocket
-        if (arr["auto"] == "1")
-            document.getElementById("aplay").setAttribute("checked", "");
-        else
-            document.getElementById("aplay").removeAttribute("checked");
+        if (arr["auto"] == "1") {
+            // document.getElementById("aplay").setAttribute("checked", "");
+            document.getElementById("auto_common").setAttribute("checked", "");
+        }
+        else {
+            // document.getElementById("aplay").removeAttribute("checked");
+            document.getElementById("auto_common").removeAttribute("checked");
+        }
 }
 
 function soundResp(arr) {
-    document.getElementById('vol_range').value = arr["vol"].replace(/\\/g, "");
-    document.getElementById('treble_range').value = arr["treb"].replace(/\\/g, "");
-    document.getElementById('bass_range').value = arr["bass"].replace(/\\/g, "");
-    document.getElementById('treblefreq_range').value = arr["tfreq"].replace(/\\/g, "");
-    document.getElementById('bassfreq_range').value = arr["bfreq"].replace(/\\/g, "");
-    document.getElementById('spacial_range').value = arr["spac"].replace(/\\/g, "");
+    document.getElementById('vol_range').value = arr["vol"];
+    document.getElementById('treble_range').value = arr["treb"];
+    document.getElementById('bass_range').value = arr["bass"];
+    document.getElementById('treblefreq_range').value = arr["tfreq"];
+    document.getElementById('bassfreq_range').value = arr["bfreq"];
+    document.getElementById('spacial_range').value = arr["spac"];
     onRangeVolChange(document.getElementById('vol_range').value, false);
     onRangeChange('treble_range', 'treble_span', 1.5, false, true);
     onRangeChange('bass_range', 'bass_span', 1, false, true);
@@ -578,22 +557,13 @@ function soundResp(arr) {
 }
 
 function refresh() {
-    var xhr = new XMLHttpRequest();
-    xhr.onreadystatechange = function () {
-        if (xhr.readyState == 4 && xhr.status == 200) {
-            try {
-                var arr = JSON.parse(xhr.responseText);
-                icyResp(arr);
-                soundResp(arr);
-            } catch (e) { console.log("error" + e); }
-        }
-    }
+    var arr = JSON.parse(PostData("icy"));
+    icyResp(arr);
+    soundResp(arr);
+
     try {
-        xhr.open("POST", "icy", false);
-        xhr.setRequestHeader(content, cjson);
-        xhr.send();
         websocket.send("monitor");
-    } catch (e) { console.log("error" + e); }
+    } catch (e) { console.log("err: " + e); }
 }
 
 function resetEQ() {
@@ -609,29 +579,29 @@ function resetEQ() {
     onRangeChangeSpatial('spacial_range', 'spacial_span');
 }
 
-function onRangeChange($range, $spanid, $mul, $rotate, $nosave) {
-    var val = document.getElementById($range).value;
-    if ($rotate) val = document.getElementById($range).max - val;
-    document.getElementById($spanid).innerHTML = (val * $mul) + " дБ";
-    if (typeof ($nosave) == 'undefined') saveSoundSettings();
+function onRangeChange(range, spanid, mul, rotate, nosave) {
+    var val = document.getElementById(range).value;
+    if (rotate) val = document.getElementById(range).max - val;
+    document.getElementById(spanid).innerHTML = (val * mul) + " дБ";
+    if (typeof (nosave) == 'undefined') saveSoundSettings();
 }
 
-function onRangeChangeFreqTreble($range, $spanid, $mul, $rotate, $nosave) {
-    var val = document.getElementById($range).value;
-    if ($rotate) val = document.getElementById($range).max - val;
-    document.getElementById($spanid).innerHTML = "От " + (val * $mul) + " кГц";
-    if (typeof ($nosave) == 'undefined') saveSoundSettings();
+function onRangeChangeFreqTreble(range, spanid, mul, rotate, nosave) {
+    var val = document.getElementById(range).value;
+    if (rotate) val = document.getElementById(range).max - val;
+    document.getElementById(spanid).innerHTML = "От " + (val * mul) + " кГц";
+    if (typeof (nosave) == 'undefined') saveSoundSettings();
 }
 
-function onRangeChangeFreqBass($range, $spanid, $mul, $rotate, $nosave) {
-    var val = document.getElementById($range).value;
-    if ($rotate) val = document.getElementById($range).max - val;
-    document.getElementById($spanid).innerHTML = "До " + (val * $mul) + " Гц";
-    if (typeof ($nosave) == 'undefined') saveSoundSettings();
+function onRangeChangeFreqBass(range, spanid, mul, rotate, nosave) {
+    var val = document.getElementById(range).value;
+    if (rotate) val = document.getElementById(range).max - val;
+    document.getElementById(spanid).innerHTML = "До " + (val * mul) + " Гц";
+    if (typeof (nosave) == 'undefined') saveSoundSettings();
 }
 
-function onRangeChangeSpatial($range, $spanid, $nosave) {
-    var val = document.getElementById($range).value,
+function onRangeChangeSpatial(range, spanid, nosave) {
+    var val = document.getElementById(range).value,
         label;
     switch (val) {
         case '0':
@@ -647,13 +617,13 @@ function onRangeChangeSpatial($range, $spanid, $nosave) {
             label = "Максимум";
             break;
     }
-    document.getElementById($spanid).innerHTML = label;
-    if (typeof ($nosave) == 'undefined') saveSoundSettings();
+    document.getElementById(spanid).innerHTML = label;
+    if (typeof (nosave) == 'undefined') saveSoundSettings();
 }
 
-function btnTDA($name, $step) {
-    var val = parseInt(document.getElementById($name + '_range').value, 10) + $step;
-    switch ($name) {
+function btnTDA(name, step) {
+    var val = parseInt(document.getElementById(name + '_range').value, 10) + step;
+    switch (name) {
         case 'Volume':
             if (val < 0) val = 0;
             if (val > 17) val = 17;
@@ -677,14 +647,14 @@ function btnTDA($name, $step) {
             if (val > 3) val = 3;
             break;
     }
-    document.getElementById($name + '_range').value = val;
-    onTDAchange($name);
+    document.getElementById(name + '_range').value = val;
+    onTDAchange(name);
 }
 
-function onTDAchange($name, $nosave) {
-    var val = document.getElementById($name + '_range').value,
+function onTDAchange(name, nosave) {
+    var val = document.getElementById(name + '_range').value,
         label;
-    switch ($name) {
+    switch (name) {
         case 'Volume':
             switch (val) {
                 case '0':
@@ -861,8 +831,8 @@ function onTDAchange($name, $nosave) {
             };
             break;
     }
-    document.getElementById($name + '_span').innerHTML = label + " дБ";
-    if (typeof ($nosave) == 'undefined') hardware(1);
+    document.getElementById(name + '_span').innerHTML = label + " дБ";
+    if (typeof (nosave) == 'undefined') hardware(1);
 }
 
 function logValue(value) {
@@ -871,41 +841,41 @@ function logValue(value) {
     var val = Math.round((Math.log10(255 / log) * 105.54571334));
     return val;
 }
-function VolumeBtn($element, $step) {
-    var Volume = parseInt(document.getElementById($element).value, 10) + $step;
+function VolumeBtn(element, step) {
+    var Volume = parseInt(document.getElementById(element).value, 10) + step;
     if (Volume < 5) Volume = 0;
     if (Volume > 249) Volume = 254;
     onRangeVolChange(Volume, true);
 
 }
-function ToneBtn($element, $step) {
-    var value = parseInt(document.getElementById($element).value, 10) + $step;
-    if ($element != "spacial_range")
-        document.getElementById($element).value = value;
-    if ($element == "treble_range") {
+function ToneBtn(element, step) {
+    var value = parseInt(document.getElementById(element).value, 10) + step;
+    if (element != "spacial_range")
+        document.getElementById(element).value = value;
+    if (element == "treble_range") {
         if (value < -8) value = -8;
         if (value > 7) value = 7;
         document.getElementById('treble_span').innerHTML = (value * 1.5) + " дБ";
     }
-    if ($element == "treblefreq_range") {
+    if (element == "treblefreq_range") {
         if (value < 1) value = 1;
         if (value > 15) value = 15;
         document.getElementById('treblefreq_span').innerHTML = "От " + value + " кГц";
     }
-    if ($element == "bass_range") {
+    if (element == "bass_range") {
         if (value < 0) value = 0;
         if (value > 15) value = 15;
         document.getElementById('bass_span').innerHTML = value + " дБ";
     }
-    if ($element == "bassfreq_range") {
+    if (element == "bassfreq_range") {
         if (value < 2) value = 2;
         if (value > 15) value = 15;
         document.getElementById('bassfreq_span').innerHTML = "До " + (value * 10) + " Гц";
     }
-    if ($element == "spacial_range") {
+    if (element == "spacial_range") {
         if (value < 0) value = 0;
         if (value > 3) value = 3;
-        document.getElementById($element).value = value;
+        document.getElementById(element).value = value;
         onRangeChangeSpatial('spacial_range', 'spacial_span', false);
     }
     saveSoundSettings();
@@ -914,80 +884,73 @@ function ToneBtn($element, $step) {
 
 
 
-function onRangeVolChange($value, $local) {
-    var value = logValue($value);
+function onRangeVolChange(val, local) {
+    var value = logValue(val);
     document.getElementById('vol1_span').innerHTML = (value * -0.5) + " дБ";
     document.getElementById('vol_span').innerHTML = (value * -0.5) + " дБ";
-    document.getElementById('vol_range').value = $value;
-    document.getElementById('vol1_range').value = $value;
-    if ($local) {
-        var xhr = new XMLHttpRequest();
-        xhr.open("POST", "soundvol", false);
-        xhr.setRequestHeader(content, ctype);
-        xhr.send("vol=" + $value + "&");
+    document.getElementById('vol_range').value = val;
+    document.getElementById('vol1_range').value = val;
+    if (local) {
+        PostData("soundvol", "vol=" + val + "&");
     }
 }
 
 function wifi(valid) {
-    var xhr = new XMLHttpRequest();
-    xhr.onreadystatechange = function () {
-        if (xhr.readyState == 4 && xhr.status == 200) {
-            var arr = JSON.parse(xhr.responseText);
-            document.getElementById('ssid').value = arr["ssid"];
-            document.getElementById('passwd').value = arr["pasw"];
-            document.getElementById('ssid2').value = arr["ssid2"];
-            document.getElementById('passwd2').value = arr["pasw2"];
-            document.getElementById('ip').value = arr["ip"];
-            chkip(document.getElementById('ip'));
-            document.getElementById('mask').value = arr["msk"];
-            chkip(document.getElementById('mask'));
-            document.getElementById('gw').value = arr["gw"];
-            chkip(document.getElementById('gw'));
-            document.getElementById('ip2').value = arr["ip2"];
-            chkip(document.getElementById('ip2'));
-            document.getElementById('mask2').value = arr["msk2"];
-            chkip(document.getElementById('mask2'));
-            document.getElementById('gw2').value = arr["gw2"];
-            chkip(document.getElementById('gw2'));
-            document.getElementById('ua').value = arr["ua"];
-            document.getElementById('host').value = arr["host"];
-            if (arr["dhcp"] == "1")
-                document.getElementById("dhcp").setAttribute("checked", "");
-            else
-                document.getElementById("dhcp").removeAttribute("checked");
-            if (arr["dhcp2"] == "1")
-                document.getElementById("dhcp2").setAttribute("checked", "");
-            else
-                document.getElementById("dhcp2").removeAttribute("checked");
-            document.getElementById('Mac').innerHTML = arr["mac"];
-            clickdhcp();
-        }
+    if (!valid) {
+        var arr = JSON.parse(PostData("wifi"));
+        document.getElementById('ssid').value = arr["ssid"];
+        document.getElementById('passwd').value = arr["pasw"];
+        document.getElementById('ssid2').value = arr["ssid2"];
+        document.getElementById('passwd2').value = arr["pasw2"];
+        document.getElementById('ip').value = arr["ip"];
+        chkip(document.getElementById('ip'));
+        document.getElementById('mask').value = arr["msk"];
+        chkip(document.getElementById('mask'));
+        document.getElementById('gw').value = arr["gw"];
+        chkip(document.getElementById('gw'));
+        document.getElementById('ip2').value = arr["ip2"];
+        chkip(document.getElementById('ip2'));
+        document.getElementById('mask2').value = arr["msk2"];
+        chkip(document.getElementById('mask2'));
+        document.getElementById('gw2').value = arr["gw2"];
+        chkip(document.getElementById('gw2'));
+        document.getElementById('ua').value = arr["ua"];
+        document.getElementById('host').value = arr["host"];
+        if (arr["dhcp"] == "1")
+            document.getElementById("dhcp").setAttribute("checked", "");
+        else
+            document.getElementById("dhcp").removeAttribute("checked");
+        if (arr["dhcp2"] == "1")
+            document.getElementById("dhcp2").setAttribute("checked", "");
+        else
+            document.getElementById("dhcp2").removeAttribute("checked");
+        document.getElementById('Mac').innerHTML = arr["mac"];
+        clickdhcp();
+    } else {
+        PostData("wifi", "valid=" + valid +
+            "&ssid=" + encodeURIComponent(document.getElementById('ssid').value) +
+            "&pasw=" + encodeURIComponent(document.getElementById('passwd').value) +
+            "&ssid2=" + encodeURIComponent(document.getElementById('ssid2').value) +
+            "&pasw2=" + encodeURIComponent(document.getElementById('passwd2').value) +
+            "&ip=" + document.getElementById('ip').value +
+            "&msk=" + document.getElementById('mask').value +
+            "&gw=" + document.getElementById('gw').value +
+            "&ip2=" + document.getElementById('ip2').value +
+            "&msk2=" + document.getElementById('mask2').value +
+            "&gw2=" + document.getElementById('gw2').value +
+            "&ua=" + encodeURIComponent(document.getElementById('ua').value) +
+            "&host=" + encodeURIComponent(document.getElementById('host').value) +
+            "&dhcp=" + document.getElementById('dhcp').checked +
+            "&dhcp2=" + document.getElementById('dhcp2').checked + "&");
     }
-    xhr.open("POST", "wifi", false);
-    xhr.setRequestHeader(content, ctype);
-    xhr.send("valid=" + valid +
-        "&ssid=" + encodeURIComponent(document.getElementById('ssid').value) +
-        "&pasw=" + encodeURIComponent(document.getElementById('passwd').value) +
-        "&ssid2=" + encodeURIComponent(document.getElementById('ssid2').value) +
-        "&pasw2=" + encodeURIComponent(document.getElementById('passwd2').value) +
-        "&ip=" + document.getElementById('ip').value +
-        "&msk=" + document.getElementById('mask').value +
-        "&gw=" + document.getElementById('gw').value +
-        "&ip2=" + document.getElementById('ip2').value +
-        "&msk2=" + document.getElementById('mask2').value +
-        "&gw2=" + document.getElementById('gw2').value +
-        "&ua=" + encodeURIComponent(document.getElementById('ua').value) +
-        "&host=" + encodeURIComponent(document.getElementById('host').value) +
-        "&dhcp=" + document.getElementById('dhcp').checked +
-        "&dhcp2=" + document.getElementById('dhcp2').checked + "&");
 }
 
-function clickrear($nosave) {
+function clickrear(nosave) {
     if (document.getElementById("rearON").checked)
         document.getElementById("Rear").style.display = "table";
     else
         document.getElementById("Rear").style.display = "none";
-    if (typeof ($nosave) == 'undefined') hardware(1);
+    if (typeof (nosave) == 'undefined') hardware(1);
 }
 
 function clickloud() {
@@ -1000,14 +963,10 @@ function mute() {
 
 function control(save) {
     var set_control = "", set_option;
-    var xhr = new XMLHttpRequest();
-    xhr.onreadystatechange = function () {
-        if (xhr.readyState == 4 && xhr.status == 200) {
-            var arr = JSON.parse(xhr.responseText);
-            document.getElementById('LCD_BRG').value = arr["lcd_brg"];
-        }
-    }
+
     if (save == 0) {
+        var arr = JSON.parse(PostData("control"));
+        document.getElementById('LCD_BRG').value = arr["lcd_brg"];
         displaybright();
         FanControl();
     }
@@ -1023,32 +982,26 @@ function control(save) {
             "&LCD_ROTA=" + document.getElementById('LCD_ROTA').value;
         save = 0;
         set_option = "";
+        PostData("control", "save=" + save + set_control + "&");
     }
-    xhr.open("POST", "control", false);
-    xhr.setRequestHeader(content, ctype);
-    xhr.send("save=" + save +
-        set_control +
-        "&");
 }
 
 function devoptions(save) {
     var set_option = "";
-    var xhr = new XMLHttpRequest();
-    xhr.onreadystatechange = function () {
-        if (xhr.readyState == 4 && xhr.status == 200) {
-            var arr = JSON.parse(xhr.responseText);
-            document.getElementById('ESPLOG').value = arr["ESPLOG"];
-            document.getElementById('NTP').value = arr["NTP"];
-            document.getElementById('NTP0').value = arr["NTP0"];
-            document.getElementById('NTP1').value = arr["NTP1"];
-            document.getElementById('NTP2').value = arr["NTP2"];
-            document.getElementById('NTP3').value = arr["NTP3"];
-            document.getElementById('TZONE').value = arr["TZONE"];
-            document.getElementById('TIME_FORMAT').value = arr["TIME_FORMAT"];
-            document.getElementById('LCD_ROTA').value = arr["LCD_ROTA"];
-        }
-    }
     if (save == 0) {
+        var arr = JSON.parse(PostData("devoptions"));
+        document.getElementById('ESPLOG').value = arr["ESPLOG"];
+        document.getElementById('NTP').value = arr["NTP"];
+        document.getElementById('NTP0').value = arr["NTP0"];
+        document.getElementById('NTP1').value = arr["NTP1"];
+        document.getElementById('NTP2').value = arr["NTP2"];
+        document.getElementById('NTP3').value = arr["NTP3"];
+        document.getElementById('TZONE').value = arr["TZONE"];
+        document.getElementById('TIME_FORMAT').value = arr["TIME_FORMAT"];
+        document.getElementById('LCD_ROTA').value = arr["LCD_ROTA"];
+
+
+
         NTPservers();
     } else if ((save == 1) && (confirm("Сохранить настройки в NVS?\nДля вступления в силу некоторых настроек, Радиола может быть перезагружена."))) {
         set_option = "&ESPLOG=" + document.getElementById('ESPLOG').value +
@@ -1062,19 +1015,15 @@ function devoptions(save) {
             "&LCD_ROTA=" + document.getElementById('LCD_ROTA').value;
     } else if ((save == 2) && (confirm("Вернуть заводские настройки Радиолы?\nВсе сохранённые настройки в NVS будут удалены безвозвратно!!!"))) {
         set_option = "";
-        localStorage.clear();
-        tabbis.init();
-        tabbis.onClick(0, 0);
     } else {
         save = 0;
         set_option = "";
     }
-
-    xhr.open("POST", "devoptions", false);
-    xhr.setRequestHeader(content, ctype);
-    xhr.send("save=" + save +
-        set_option +
-        "&");
+    if (save != 0) {
+        PostData("devoptions", "save=" + save +
+            set_option +
+            "&");
+    }
 }
 
 function FanControl() {
@@ -1137,66 +1086,60 @@ function displaybright() {
 
 function gpios(gpio_mode, save, load) {
     var setgpios = "",
-        gpio_mode_txt, err, style_color, xhr;
-    xhr = new XMLHttpRequest();
-    xhr.onreadystatechange = function () {
-        if (xhr.readyState == 4 && xhr.status == 200) {
-            var arr = JSON.parse(xhr.responseText);
-            if (load == 1) {
-                gpio_mode = parseInt(arr["GPIO_MODE"].replace(/\\/g, ""), 10);
-            }
-            err = arr["ERROR"].replace(/\\/g, "");
-            if (err != "0000") {
-                gpio_mode_txt = _ERR + err + "<br>";
-                if (err == "1102")
-                    gpio_mode_txt = gpio_mode_txt + _noNVS;
-                style_color = "red";
+        gpio_mode_txt, err, style_color;
+    var arr = JSON.parse(PostData("gpios", "&gpio_mode=" + gpio_mode + "&load=" + load));
+    if (load) {
+        gpio_mode = parseInt(arr["GPIO_MODE"], 10);
+    }
+    err = arr["ERROR"];
+    if (err != "0000") {
+        gpio_mode_txt = _ERR + err + "<br>";
+        if (err == "1102")
+            gpio_mode_txt = gpio_mode_txt + _noNVS;
+        style_color = "red";
+    } else {
+        if (gpio_mode == 0) {
+            gpio_mode_txt = _default;
+            style_color = "blue";
+        } else {
+            if (save == 0) {
+                gpio_mode_txt = _loadNVS;
             } else {
-                if (gpio_mode == 0) {
-                    gpio_mode_txt = _default;
-                    style_color = "blue";
-                } else {
-                    if (save == 0) {
-                        gpio_mode_txt = _loadNVS;
-                    } else {
-                        gpio_mode_txt = _saveNVS;
-                    }
-                    style_color = "green";
-                }
+                gpio_mode_txt = _saveNVS;
             }
-            document.getElementById("GPIOsErr").style.color = style_color;
-            document.getElementById("GPIOsErr").innerHTML = gpio_mode_txt;
-            document.getElementById("K_SPI").innerHTML = parseInt(arr["K_SPI"].replace(/\\/g, ""), 10);
-            document.getElementById("P_MISO").innerHTML = parseInt(arr["P_MISO"].replace(/\\/g, ""), 10);
-            document.getElementById("P_MOSI").innerHTML = parseInt(arr["P_MOSI"].replace(/\\/g, ""), 10);
-            document.getElementById("P_CLK").innerHTML = parseInt(arr["P_CLK"].replace(/\\/g, ""), 10);
-            document.getElementById("P_XCS").innerHTML = parseInt(arr["P_XCS"].replace(/\\/g, ""), 10);
-            document.getElementById("P_XDCS").innerHTML = parseInt(arr["P_XDCS"].replace(/\\/g, ""), 10);
-            document.getElementById("P_DREQ").innerHTML = parseInt(arr["P_DREQ"].replace(/\\/g, ""), 10);
-            document.getElementById("P_ENC0_A").innerHTML = parseInt(arr["P_ENC0_A"].replace(/\\/g, ""), 10);
-            document.getElementById("P_ENC0_B").innerHTML = parseInt(arr["P_ENC0_B"].replace(/\\/g, ""), 10);
-            document.getElementById("P_ENC0_BTN").innerHTML = parseInt(arr["P_ENC0_BTN"].replace(/\\/g, ""), 10);
-            document.getElementById("P_I2C_SCL").innerHTML = parseInt(arr["P_I2C_SCL"].replace(/\\/g, ""), 10);
-            document.getElementById("P_I2C_SDA").innerHTML = parseInt(arr["P_I2C_SDA"].replace(/\\/g, ""), 10);
-            document.getElementById("P_LCD_CS").innerHTML = parseInt(arr["P_LCD_CS"].replace(/\\/g, ""), 10);
-            document.getElementById("P_LCD_A0").innerHTML = parseInt(arr["P_LCD_A0"].replace(/\\/g, ""), 10);
-            document.getElementById("P_IR_SIGNAL").innerHTML = parseInt(arr["P_IR_SIGNAL"].replace(/\\/g, ""), 10);
-            document.getElementById("P_BACKLIGHT").innerHTML = parseInt(arr["P_BACKLIGHT"].replace(/\\/g, ""), 10);
-            document.getElementById("P_TACHOMETER").innerHTML = parseInt(arr["P_TACHOMETER"].replace(/\\/g, ""), 10);
-            document.getElementById("P_FAN_SPEED").innerHTML = parseInt(arr["P_FAN_SPEED"].replace(/\\/g, ""), 10);
-            document.getElementById("P_DS18B20").innerHTML = parseInt(arr["P_DS18B20"].replace(/\\/g, ""), 10);
-            document.getElementById("P_TOUCH_CS").innerHTML = parseInt(arr["P_TOUCH_CS"].replace(/\\/g, ""), 10);
-            document.getElementById("P_BUZZER").innerHTML = parseInt(arr["P_BUZZER"].replace(/\\/g, ""), 10);
-            document.getElementById("P_RXD").innerHTML = parseInt(arr["P_RXD"].replace(/\\/g, ""), 10);
-            document.getElementById("P_TXD").innerHTML = parseInt(arr["P_TXD"].replace(/\\/g, ""), 10);
-            document.getElementById("P_LDR").innerHTML = parseInt(arr["P_LDR"].replace(/\\/g, ""), 10);
+            style_color = "green";
         }
     }
+    if (!save) {
+        document.getElementById("GPIOsErr").style.color = style_color;
+        document.getElementById("GPIOsErr").innerHTML = gpio_mode_txt;
+        document.getElementById("P_MISO").innerHTML = parseInt(arr["P_MISO"], 10);
+        document.getElementById("P_MOSI").innerHTML = parseInt(arr["P_MOSI"], 10);
+        document.getElementById("P_CLK").innerHTML = parseInt(arr["P_CLK"], 10);
+        document.getElementById("P_XCS").innerHTML = parseInt(arr["P_XCS"], 10);
+        document.getElementById("P_XDCS").innerHTML = parseInt(arr["P_XDCS"], 10);
+        document.getElementById("P_DREQ").innerHTML = parseInt(arr["P_DREQ"], 10);
+        document.getElementById("P_ENC0_A").innerHTML = parseInt(arr["P_ENC0_A"], 10);
+        document.getElementById("P_ENC0_B").innerHTML = parseInt(arr["P_ENC0_B"], 10);
+        document.getElementById("P_ENC0_BTN").innerHTML = parseInt(arr["P_ENC0_BTN"], 10);
+        document.getElementById("P_I2C_SCL").innerHTML = parseInt(arr["P_I2C_SCL"], 10);
+        document.getElementById("P_I2C_SDA").innerHTML = parseInt(arr["P_I2C_SDA"], 10);
+        document.getElementById("P_LCD_CS").innerHTML = parseInt(arr["P_LCD_CS"], 10);
+        document.getElementById("P_LCD_A0").innerHTML = parseInt(arr["P_LCD_A0"], 10);
+        document.getElementById("P_IR_SIGNAL").innerHTML = parseInt(arr["P_IR_SIGNAL"], 10);
+        document.getElementById("P_BACKLIGHT").innerHTML = parseInt(arr["P_BACKLIGHT"], 10);
+        document.getElementById("P_TACHOMETER").innerHTML = parseInt(arr["P_TACHOMETER"], 10);
+        document.getElementById("P_FAN_SPEED").innerHTML = parseInt(arr["P_FAN_SPEED"], 10);
+        document.getElementById("P_DS18B20").innerHTML = parseInt(arr["P_DS18B20"], 10);
+        document.getElementById("P_TOUCH_CS").innerHTML = parseInt(arr["P_TOUCH_CS"], 10);
+        document.getElementById("P_BUZZER").innerHTML = parseInt(arr["P_BUZZER"], 10);
+        document.getElementById("P_RXD").innerHTML = parseInt(arr["P_RXD"], 10);
+        document.getElementById("P_TXD").innerHTML = parseInt(arr["P_TXD"], 10);
+        document.getElementById("P_LDR").innerHTML = parseInt(arr["P_LDR"], 10);
+    }
     if ((save == 1) && (confirm("Записать зачения GPIO в NVS?"))) {
-        //		if (confirm("Записать зачения GPIO в NVS?")) {
-        //		alert("Перезагрузка Радиолы. Пожалуйста, подождите.");
-        setgpios = "&save=" + save +
-            "&K_SPI=" + document.getElementById("K_SPI").innerHTML +
+
+        setgpios = "&save=1" +
             "&P_MISO=" + document.getElementById("P_MISO").innerHTML +
             "&P_MOSI=" + document.getElementById("P_MOSI").innerHTML +
             "&P_CLK=" + document.getElementById("P_CLK").innerHTML +
@@ -1220,87 +1163,76 @@ function gpios(gpio_mode, save, load) {
             "&P_RXD=" + document.getElementById("P_RXD").innerHTML +
             "&P_TXD=" + document.getElementById("P_TXD").innerHTML +
             "&P_LDR=" + document.getElementById("P_LDR").innerHTML;
-    } else save = 0;
-    xhr.open("POST", "gpios", false);
-    xhr.setRequestHeader(content, ctype);
-    xhr.send("gpio_mode=" + gpio_mode +
-        setgpios +
-        "&");
+        PostData("gpios", "gpio_mode=" + gpio_mode +
+            setgpios +
+            "&");
+    }
 }
 
 function hardware(save) {
-    var i, inputnum, loud = 0, xhr,
-        mute = 1,
+    var i, loud = 0, mute = 1,
         rear = 0,
         sendsave = "";
-    xhr = new XMLHttpRequest();
-    xhr.onreadystatechange = function () {
-        if (xhr.readyState == 4 && xhr.status == 200) {
-            var arr = JSON.parse(xhr.responseText);
-            if (arr['present'] == "1") {
-                tabbis.onClick(1, parseInt(arr['inputnum'], 10) - 1);
-                switch (arr['inputnum']) {
-                    case '1':
-                        document.getElementById('source').innerHTML = "AUX";
-                        break;
-                    case '2':
-                        document.getElementById('source').innerHTML = "VS1053";
-                        break;
-                    case '3':
-                        document.getElementById('source').innerHTML = "BT201";
-                        break;
-                }
-                document.getElementById('Volume_range').value = arr["Volume"].replace(/\\/g, "");
-                onTDAchange('Volume', false);
-                document.getElementById('Treble_range').value = arr["Treble"].replace(/\\/g, "");
-                onTDAchange('Treble', false);
-                document.getElementById('Bass_range').value = arr["Bass"].replace(/\\/g, "");
-                onTDAchange('Bass', false);
-                if (arr["rear_on"] == "1") {
-                    document.getElementById('rearON').setAttribute("checked", "");
-                    document.getElementById('AttLR_range').value = arr["attlr"].replace(/\\/g, "");
-                    onTDAchange('AttLR', false);
-                    document.getElementById('AttRR_range').value = arr["attrr"].replace(/\\/g, "");
-                    onTDAchange('AttRR', false);
-                } else
-                    document.getElementById('rearON').removeAttribute("checked");
-                clickrear(false);
-                document.getElementById('AttLF_range').value = arr["attlf"].replace(/\\/g, "");
-                onTDAchange('AttLF', false);
-                document.getElementById('AttRF_range').value = arr["attrf"].replace(/\\/g, "");
-                onTDAchange('AttRF', false);
-
-                for (i = 1; i < 4; i++) {
-                    if (arr["loud" + i] == "1")
-                        document.getElementById('loud' + i).setAttribute("checked", "");
-                    else
-                        document.getElementById('loud' + i).removeAttribute("checked");
-                    document.getElementById('sla' + i + '_range').value = arr["sla" + i].replace(/\\/g, "");
-                    onTDAchange('sla' + i, false);
-                }
-                if (arr["mute"] == "0")
-                    document.getElementById('mute').setAttribute("checked", "");
-                else
-                    document.getElementById('mute').removeAttribute("checked");
-            } else {
-                document.getElementById("barTDA7313").style.display = "none";
-                document.getElementById("barTDA7313radio").style.display = "none";
-                //                document.getElementById("audioinput1").style.display = "none";
-                //                document.getElementById("audioinput3").style.display = "none";
-                tabbis.onClick(1, 1);
-                document.getElementById("soudBar").style.pointerEvents = "none";
+    if (!save) {
+        var arr = JSON.parse(PostData("hardware", "save=" + save + "&"));
+        if (arr['present'] == "1") {
+            switch (arr['audioinput']) {
+                case '1':
+                    document.getElementById('source').innerHTML = "AUX";
+                    break;
+                case '2':
+                    document.getElementById('source').innerHTML = "VS1053";
+                    break;
+                case '3':
+                    document.getElementById('source').innerHTML = "BT201";
+                    break;
             }
+            gotoTAB(document.getElementById('source').innerHTML);
+            document.getElementById('Volume_range').value = arr["Volume"];
+            onTDAchange('Volume', false);
+            document.getElementById('Treble_range').value = arr["Treble"];
+            onTDAchange('Treble', false);
+            document.getElementById('Bass_range').value = arr["Bass"];
+            onTDAchange('Bass', false);
+            if (arr["rear_on"] == "1") {
+                document.getElementById('rearON').setAttribute("checked", "");
+                document.getElementById('AttLR_range').value = arr["attlr"];
+                onTDAchange('AttLR', false);
+                document.getElementById('AttRR_range').value = arr["attrr"];
+                onTDAchange('AttRR', false);
+            } else
+                document.getElementById('rearON').removeAttribute("checked");
+            clickrear(false);
+            document.getElementById('AttLF_range').value = arr["attlf"];
+            onTDAchange('AttLF', false);
+            document.getElementById('AttRF_range').value = arr["attrf"];
+            onTDAchange('AttRF', false);
+
+            for (i = 1; i < 4; i++) {
+                if (arr["loud" + i] == "1")
+                    document.getElementById('loud' + i).setAttribute("checked", "");
+                else
+                    document.getElementById('loud' + i).removeAttribute("checked");
+                document.getElementById('sla' + i + '_range').value = arr["sla" + i];
+                onTDAchange('sla' + i, false);
+            }
+            if (arr["mute"] == "0")
+                document.getElementById('mute').setAttribute("checked", "");
+            else
+                document.getElementById('mute').removeAttribute("checked");
+        } else {
+            document.getElementById("barTDA7313").style.display = "none";
+            document.getElementById("barTDA7313radio").style.display = "none";
+            gotoTAB("SOUND", "VS1053");
+            document.getElementById("soudBar").style.pointerEvents = "none";
         }
     }
-    if (document.getElementById("barTDA7313").style.display == "") {
-        for (inputnum = 1; inputnum < 4; inputnum++)
-            if (document.getElementById('audioinput' + inputnum).className == "active") break;
-        if (inputnum == 4) inputnum = 1;
 
+    if (document.getElementById("barTDA7313").style.display == "") {
         if (document.getElementById('rearON').checked) rear = 1;
-        if (document.getElementById('loud' + inputnum).checked) loud = 1;
+        if (document.getElementById('loud' + audioinput).checked) loud = 1;
         if (document.getElementById('mute').checked) mute = 0;
-        sendsave = "&inputnum=" + inputnum +
+        sendsave = "&audioinput=" + audioinput +
             "&Volume=" + document.getElementById('Volume_range').value +
             "&Treble=" + document.getElementById('Treble_range').value +
             "&Bass=" + document.getElementById('Bass_range').value +
@@ -1310,12 +1242,10 @@ function hardware(save) {
             "&attlr=" + document.getElementById('AttLR_range').value +
             "&attrr=" + document.getElementById('AttRR_range').value +
             "&loud=" + loud +
-            "&sla=" + document.getElementById('sla' + inputnum + '_range').value +
+            "&sla=" + document.getElementById('sla' + audioinput + '_range').value +
             "&mute=" + mute;
     } else save = 0;
-    xhr.open("POST", "hardware", false);
-    xhr.setRequestHeader(content, ctype);
-    xhr.send("save=" + save +
+    PostData("hardware", "save=" + save +
         sendsave +
         "&");
 
@@ -1325,18 +1255,17 @@ function hardware(save) {
 
 
 
-function instantPlay() {
-    var curl, xhr;
+function LocalPlay() {
+    var curl;
     try {
-        xhr = new XMLHttpRequest();
-        xhr.open("POST", "instant_play", false);
-        xhr.setRequestHeader(content, ctype);
-        curl = document.getElementById('instant_path').value;
+
+        curl = document.getElementById('loc_path').value;
         if (!(curl.substring(0, 1) === "/")) curl = "/" + curl;
-        document.getElementById('instant_url').value = document.getElementById('instant_url').value.replace(/^https?:\/\//, '');
+        document.getElementById('loc_url').value = document.getElementById('loc_url').value.replace(/^https?:\/\//, '');
         curl = fixedEncodeURIComponent(curl);
-        xhr.send("url=" + document.getElementById('instant_url').value + "&port=" + document.getElementById('instant_port').value + "&path=" + curl + "&");
-    } catch (e) { console.log("error" + e); }
+        PostData("local_play", "url=" + document.getElementById('loc_url').value + "&port=" +
+            document.getElementById('loc_port').value + "&path=" + curl + "&");
+    } catch (e) { console.log("err: " + e); }
 }
 
 function buildAddURL() {
@@ -1348,79 +1277,74 @@ function buildAddURL() {
         document.getElementById('add_port').value + document.getElementById('add_path').value;
 }
 
+
 function buildURL() {
-    if (document.getElementById('instant_port').value == "")
-        document.getElementById('instant_port').value = "80";
-    if (document.getElementById('instant_path').value == "")
-        document.getElementById('instant_path').value = "/";
-    document.getElementById('instant_URL').value = "http://" + document.getElementById('instant_url').value + ':' +
-        document.getElementById('instant_port').value + document.getElementById('instant_path').value;
+    if (document.getElementById('loc_port').value == "")
+        document.getElementById('loc_port').value = "80";
+    if (document.getElementById('loc_path').value == "")
+        document.getElementById('loc_path').value = "/";
+    document.getElementById('loc_URL').value = "http://" + document.getElementById('loc_url').value + ':' +
+        document.getElementById('loc_port').value + document.getElementById('loc_path').value;
 }
+
 
 function parseURL() {
     var a = document.createElement('a');
-    a.href = document.getElementById('instant_URL').value;
+    a.href = document.getElementById('loc_URL').value;
     if (a.hostname != location.hostname)
-        document.getElementById('instant_url').value = a.hostname;
+        document.getElementById('loc_url').value = a.hostname;
     else {
-        document.getElementById('instant_URL').value = "http://" + document.getElementById('instant_URL').value;
-        a.href = document.getElementById('instant_URL').value;
-        document.getElementById('instant_url').value = a.hostname;
+        document.getElementById('loc_URL').value = "http://" + document.getElementById('loc_URL').value;
+        a.href = document.getElementById('loc_URL').value;
+        document.getElementById('loc_url').value = a.hostname;
     }
     if (a.port == "")
-        document.getElementById('instant_port').value = "80";
-    else document.getElementById('instant_port').value = a.port;
-    document.getElementById('instant_path').value = a.pathname + a.search + a.hash;
+        document.getElementById('loc_port').value = "80";
+    else document.getElementById('loc_port').value = a.port;
+    document.getElementById('loc_path').value = a.pathname + a.search + a.hash;
 }
 
-function prevStation() {
-    var select = document.getElementById('stationsSelect').selectedIndex;
+
+function prevStation(PlayList) {
+    var select = document.getElementById('select_' + PlayList).selectedIndex;
     if (select > 0) {
-        document.getElementById('stationsSelect').selectedIndex = select - 1;
+        document.getElementById('select_' + PlayList).selectedIndex = select - 1;
         Select();
     }
 }
 
-function nextStation() {
-    var select = document.getElementById('stationsSelect').selectedIndex;
-    if (select < document.getElementById('stationsSelect').length - 1) {
-        document.getElementById('stationsSelect').selectedIndex = select + 1;
+function nextStation(PlayList) {
+    var select = document.getElementById('select_' + PlayList).selectedIndex;
+    if (select < document.getElementById('select_' + PlayList).length - 1) {
+        document.getElementById('select_' + PlayList).selectedIndex = select + 1;
         Select();
     }
 }
 // autoplay checked or unchecked
-function autoplay() {
-    var xhr;
-    xhr = new XMLHttpRequest();
+function autoplay(pls) {
     try {
-        xhr.open("POST", "auto", false);
-        xhr.setRequestHeader(content, ctype);
-        xhr.send("id=" + document.getElementById('aplay').checked + "&");
-    } catch (e) { console.log("error" + e); }
+        PostData("auto", "id=" + document.getElementById('auto_' + pls).checked + "&");
+    } catch (e) { console.log("err: " + e); }
 }
 
 //ask for the state of autoplay
 function autostart() {
-    var xhr = new XMLHttpRequest();
-    xhr.onreadystatechange = function () {
-        if (xhr.readyState == 4 && xhr.status == 200) {
-            var arr = JSON.parse(xhr.responseText);
-            if (arr["rauto"] == "1")
-                document.getElementById("aplay").setAttribute("checked", "");
-            else
-                document.getElementById("aplay").removeAttribute("checked");
-        }
+    var arr = JSON.parse(PostData("rauto"));
+    if (arr["rauto"] == "1") {
+        // document.getElementById("aplay").setAttribute("checked", "");
+        document.getElementById("auto_common").setAttribute("checked", "");
     }
-    try {
-        xhr.open("POST", "rauto", false); // request auto state
-        xhr.setRequestHeader(content, ctype);
-        xhr.send("&");
-    } catch (e) { console.log("error" + e); }
+    else {
+        // document.getElementById("aplay").removeAttribute("checked");
+        document.getElementById("auto_common").removeAttribute("checked");
+    }
+
+    PostData("rauto");
 }
 
-function Select() {
-    if (document.getElementById('aplay').checked)
-        playStation();
+function Select(PlayList) {
+    if (document.getElementById('auto_' + PlayList).checked)
+        playStation(PlayList);
 }
 
 function setEditBackground(tr) {
@@ -1429,8 +1353,12 @@ function setEditBackground(tr) {
 }
 
 function playEditStation(tr) {
-    if (stchanged) stChanged();
-    var id = tr.cells[0].innerText;
+    if (stchanged) {
+        stChanged();
+        return;
+    }
+    var id = (tr.cells[0].innerText) - 1;
+    setPLS(tr);
     if ((editPlaying) && (editIndex == tr)) {
         stopStation();
         tr.style.background = "initial";
@@ -1446,46 +1374,42 @@ function playEditStation(tr) {
         //		editPlaying = true;
         editIndex = tr;
         setEditBackground(tr);
-        playStation(); //play it 
+        playStation(PlayList); //play it 
     }
 }
 
-function playStation() {
-    var select, id, xhr;
+function playStation(PlayList) {
+    var select, id;
     try {
-        //	checkwebsocket();
         mpause();
-        select = document.getElementById('stationsSelect');
-        id = select.options[select.selectedIndex].value.split(":");
+        select = document.getElementById("select_" + PlayList);
+        id = select.options[select.selectedIndex].value;
         id = id[0];
-        localStorage.setItem('selindexstore', select.selectedIndex.toString());
-        xhr = new XMLHttpRequest();
-        xhr.open("POST", "play", false);
-        xhr.setRequestHeader(content, ctype);
-        xhr.send("id=" + id + "&");
+        RadiolaStorage[PlayList + "_select"] = id;
+        localStorage.setItem("RadiolaStorage", JSON.stringify(RadiolaStorage));
         editPlaying = true;
-    } catch (e) { console.log("error" + e); }
+        if (PlayList == FAVORITES) {
+            PostData("local_play", "url=" + RadiolaStorage[FAVORITES][id].URL + "&port=" +
+                RadiolaStorage[FAVORITES][id].Port + "&path=" + RadiolaStorage[FAVORITES][id].File + "&");
+        } else
+            PostData("play", "id=" + id + "&");
+    } catch (e) { console.log("err: " + e); }
 }
 
-function stopStation() {
-    var select = document.getElementById('stationsSelect'), xhr;
+function stopStation(PlayList) {
+    var select = document.getElementById('select_' + PlayList);
     //	checkwebsocket();
     mstop();
     editPlaying = false;
-    localStorage.setItem('selindexstore', select.options.selectedIndex.toString());
+    RadiolaStorage[PlayList + "_select"] = select.options.selectedIndex;
+    localStorage.setItem("RadiolaStorage", JSON.stringify(RadiolaStorage));
     try {
-        xhr = new XMLHttpRequest();
-        xhr.open("POST", "stop", false);
-        xhr.setRequestHeader(content, ctype);
-        xhr.send();
-    } catch (e) { console.log("error" + e); }
+        PostData("stop");
+    } catch (e) { console.log("err: " + e); }
 }
 
 function saveSoundSettings() {
-    var xhr = new XMLHttpRequest();
-    xhr.open("POST", "sound", false);
-    xhr.setRequestHeader(content, ctype);
-    xhr.send(
+    PostData("sound",
         "&bass=" + document.getElementById('bass_range').value +
         "&treble=" + document.getElementById('treble_range').value +
         "&bassfreq=" + document.getElementById('bassfreq_range').value +
@@ -1500,25 +1424,52 @@ function fixedEncodeURIComponent(str) {
     });
 }
 
+
 function saveStation() {
     var file = document.getElementById('add_path').value,
         url = document.getElementById('add_url').value,
-        jfile, xhr;
+        jfile,
+        name = document.getElementById('add_name').value,
+        port = document.getElementById('add_port').value;
+    var id = document.getElementById('add_slot').value;
     if (!(file.substring(0, 1) === "/")) file = "/" + file;
-    console.log("Path: " + file);
     jfile = fixedEncodeURIComponent(file);
-    console.log("JSON: " + jfile);
     url = url.replace(/^https?:\/\//, '');
     try {
-        xhr = new XMLHttpRequest();
-        xhr.open("POST", "setStation", false);
-        xhr.setRequestHeader(content, ctype);
-        xhr.send("nb=" + 1 + "&id=" + document.getElementById('add_slot').value + "&url=" + url + "&name=" + document.getElementById('add_name').value + "&file=" + jfile + "&port=" + document.getElementById('add_port').value + "&&");
-        localStorage.setItem(document.getElementById('add_slot').value, "{\"Name\":\"" + document.getElementById('add_name').value + "\",\"URL\":\"" + url + "\",\"File\":\"" + file + "\",\"Port\":\"" + document.getElementById('add_port').value + "\"}");
+        if (id < RadiolaStorage[COMMON].length) {
+            id--;
+            RadiolaStorage[COMMON][id].Name = name;
+            RadiolaStorage[COMMON][id].URL = url;
+            RadiolaStorage[COMMON][id].File = jfile;
+            RadiolaStorage[COMMON][id].Port = port;
+        } else {
+            RadiolaStorage[COMMON].push({
+                "Name": name,
+                "URL": url,
+                "File": jfile,
+                "Port": port,
+                "FAV": false
+            });
+        }
+
+        abortStation();
     } catch (e) { console.log("error save " + e); }
-    abortStation(); // to erase the edit field
-    loadStations();
-    loadStationsList(maxStation);
+
+    promptworking(working);
+    var tosend;
+    for (var i = 0; i < RadiolaStorage[COMMON].length; i++) {
+        var fav = 0;
+        if (RadiolaStorage[COMMON][id].FAV) {
+            fav = 1;
+        }
+        tosend = "&ID=" + i + "&url=" + RadiolaStorage[COMMON][i].URL + "&name=" + RadiolaStorage[COMMON][i].Name +
+            "&file=" + fixedEncodeURIComponent(RadiolaStorage[COMMON][i].File) + "&port=" + RadiolaStorage[COMMON][i].Port + "&fav=" + fav;
+        console.log("tosend: " + tosend);
+        // PostData("setStation", tosend);
+    }
+
+    localStorage.setItem("RadiolaStorage", JSON.stringify(RadiolaStorage));
+    refreshList();
 }
 
 function abortStation() {
@@ -1535,31 +1486,23 @@ function eraseStation() {
 }
 
 //
-function editInstantStation() {
-    var arr, id = 0;
-
-    do {
-        var idstr = id.toString();
-        try {
-            arr = JSON.parse(localStorage.getItem(idstr));
-        } catch (e) { console.log("error" + e); }
-        id++;
-    } while (arr["URL"].length > 0);
-
-    id--;
-
-    if (id <= 254) {
+function editLocalStation() {
+    var id = current_total;
+    if (id <= (current_total - 1)) {
         document.getElementById('editStationDiv').style.display = "block";
-        document.getElementById('add_slot').value = id;
+        document.getElementById('add_slot').value = (id + 1);
 
-        document.getElementById('add_URL').value = "http://" + document.getElementById('instant_url').value + ":" + document.getElementById('instant_port').value + document.getElementById('instant_path').value;
+        document.getElementById('add_URL').value = "http://" + document.getElementById('loc_url').value + ":" +
+            document.getElementById('loc_port').value + document.getElementById('loc_path').value;
         parseEditURL();
     } else alert("Нет свободного слота.");
 }
 
+function editStation(num) {
+    var arr;
+    setPLS(num.parentNode);
+    var id = (num.parentNode.cells[0].innerText) - 1;
 
-function editStation(id) {
-    var arr, xhr;
     document.getElementById('editStationDiv').style.display = "block";
 
     function cpedit(arr) {
@@ -1569,32 +1512,16 @@ function editStation(id) {
         document.getElementById('add_path').value = arr["File"];
         if (arr["Port"] == "0") arr["Port"] = "80";
         document.getElementById('add_port').value = arr["Port"];
-        document.getElementById('add_URL').value = "http://" + document.getElementById('add_url').value + ":" + document.getElementById('add_port').value + document.getElementById('add_path').value;
+        document.getElementById('add_URL').value = "http://" + document.getElementById('add_url').value + ":" + document.getElementById('add_port').value +
+            document.getElementById('add_path').value;
     }
-    document.getElementById('add_slot').value = id;
+    document.getElementById('add_slot').value = (id + 1);
     var idstr = id.toString();
-    if (localStorage.getItem(idstr) != null) {
-
-        try {
-            arr = JSON.parse(localStorage.getItem(idstr));
-        } catch (e) { console.log("error" + e); }
-        cpedit(arr);
-    } else {
-        xhr = new XMLHttpRequest();
-        xhr.onreadystatechange = function () {
-            if (xhr.readyState == 4 && xhr.status == 200) {
-                try {
-                    arr = JSON.parse(xhr.responseText);
-                } catch (e) { console.log("error" + e); }
-                cpedit(arr);
-            }
-        }
-        xhr.open("POST", "getStation", false);
-        xhr.setRequestHeader(content, ctype);
-        xhr.send("idgp=" + id + "&");
-    }
+    try {
+        arr = RadiolaStorage[PlayList][idstr];
+    } catch (e) { console.log("err: " + e); }
+    cpedit(arr);
 }
-
 
 function parseEditURL() {
     var a = document.createElement('a');
@@ -1612,76 +1539,100 @@ function parseEditURL() {
     document.getElementById('add_path').value = a.pathname + a.search + a.hash;
 }
 
+function removeStation(el) {
+    if (!confirm("Вы действительно хотите удалить станцию из списка?")) {
+        return;
+    }
+    var num = el.parentNode.children[0].id.split('_')[1];
+    setPLS(el.parentNode);
+
+    var table = document.getElementById("table_" + PlayList).getElementsByTagName('tbody')[0];
+    table.deleteRow(num);
+
+    for (var i = 0; i < table.rows.length; i++) {
+
+        table.rows[i].cells[0].innerText = (i + 1).toString();
+        table.rows[i].cells[0].id = 'num_' + i;
+    }
+    if (PlayList == FAVORITES) {
+        var id = RadiolaStorage[FAVORITES][num]["ID"];
+        RadiolaStorage[COMMON][id]["FAV"] = false;
+        RadiolaStorage[FAVORITES].splice(num, 1);
+        localStorage.setItem("RadiolaStorage", JSON.stringify(RadiolaStorage));
+    } else {
+        RadiolaStorage[COMMON].splice(num, 1);
+        stchanged = true;
+        document.getElementById("stsave").disabled = false;
+    }
+
+}
+
 function refreshList() {
-    promptworking(working);
-    intervalid = window.setTimeout(refreshListtemp, 10);
-}
-
-function refreshListtemp() {
     if (stchanged) stChanged();
-    localStorage.clear();
-    loadStationsList(maxStation);
-    loadStations();
+    for (var i = 0; i < 2; i++) {
+        setPLS(i);
+        loadStations(PlayList);
+        loadStationsList(PlayList);
+        promptworking("");
+    }
 
-    promptworking("");
-    refresh();
 }
 
-function clearList() {
-    promptworking(working);
-    if (confirm("Предупреждение: это сотрет все станции. Обязательно сохраните станции раньше. Стереть сейчас?")) {
-        var xhr = new XMLHttpRequest();
-        xhr.open("POST", "clear", false);
-        xhr.setRequestHeader(content, ctype);
-        xhr.send();
-        refreshList();
-        window.setTimeout(loadStations, 10);
+function clearList(storage) {
+    var text;
+    if (storage === FAVORITES) {
+        text = 'ИЗБРАННОГО';
+    } else {
+        text = 'ОБЩЕГО';
+    }
+    if (confirm("Вы действительно хотите удалить плейлист из " + text + " списка?")) {
+        if (storage === COMMON) {
+            promptworking(working);
+            PostData("clear");
+            clearPlayList(storage);
+            localStorage.setItem("RadiolaStorage", JSON.stringify(RadiolaStorage));
+        } else {
+            clearPlayList(storage);
+            stchanged = true;
+            document.getElementById("stsave").disabled = false;
+        }
     } else promptworking("");
+    refreshList();
+    window.setTimeout(loadStations, 10);
+}
+
+function clearPlayList(PlayList) {
+    RadiolaStorage[PlayList].splice(0, RadiolaStorage[PlayList].length);
+    RadiolaStorage[PlayList + "_select"] = 0;
+    if (PlayList == COMMON)
+        current_total = 0;
 }
 
 function ircode(mode) {
-    var xhr;
     try {
-        xhr = new XMLHttpRequest();
-        xhr.open("POST", "ircode", false);
-        xhr.setRequestHeader(content, ctype);
-        xhr.send("mode=" + mode + "&");
-    } catch (e) { console.log("error" + e); }
-
+        PostData("ircode", "mode=" + mode + "&");
+    } catch (e) { console.log("err: " + e); }
 }
 
 function upgrade() {
-    var xhr;
     try {
-        xhr = new XMLHttpRequest();
-        xhr.open("POST", "upgrade", false);
-        xhr.setRequestHeader(content, ctype);
-        xhr.send();
-    } catch (e) { console.log("error" + e); }
+        PostData("upgrade");
+    } catch (e) { console.log("err: " + e); }
 
     //	alert("Rebooting to the new release\nPlease refresh the page in few seconds.");
 }
 function getversion() {
-    var xhr = new XMLHttpRequest();
-    xhr.onreadystatechange = function () {
-        if (xhr.readyState == 4 && xhr.status == 200) {
-            var arr = JSON.parse(xhr.responseText);
-            document.getElementById('currentrelease').innerHTML = arr["RELEASE"].replace(/\\/g, "") + " Rev: " + arr["REVISION"].replace(/\\/g, "");
-            if (arr["curtemp"] != "000.0") {
-                document.getElementById('curtemp').innerHTML = parseFloat(arr["curtemp"]) + ' ℃';
-                document.getElementById('_temp').style.display = "block";
-            }
-            if (arr["rpmfan"] != "0000") {
-                document.getElementById('rpmfan').innerHTML = arr["rpmfan"] + ' Об/м';
-                document.getElementById('_fan').style.display = "block";
-            }
-        }
+    var arr = JSON.parse(PostData("version"));
+    document.getElementById('currentrelease').innerHTML = arr["RELEASE"] + " Rev: " + arr["REVISION"];
+    if (arr["curtemp"] != "000.0") {
+        document.getElementById('curtemp').innerHTML = parseFloat(arr["curtemp"]) + ' ℃';
+        document.getElementById('_temp').style.display = "block";
     }
-    try {
-        xhr.open("POST", "version", false);
-        xhr.setRequestHeader(content, ctype);
-        xhr.send("&");
-    } catch (e) { console.log("error" + e); }
+    if (arr["rpmfan"] != "0000") {
+        document.getElementById('rpmfan').innerHTML = arr["rpmfan"] + ' Об/м';
+        document.getElementById('_fan').style.display = "block";
+    }
+    PostData("version");
 }
 
 function checkhistory() {
@@ -1697,7 +1648,7 @@ function checkhistory() {
     xhr.open("GET", "https://serverdoma.ru/esp32/history132.php", false);
     try {
         xhr.send(null);
-    } catch (e) { ; }
+    } catch (e) { console.log("err: " + e); }
 }
 
 function checkinfos() {
@@ -1713,7 +1664,7 @@ function checkinfos() {
     xhr.open("GET", "https://serverdoma.ru/esp32/infos.php", false);
     try {
         xhr.send(null);
-    } catch (e) { ; }
+    } catch (e) { console.log("err: " + e); }
 }
 //load the version and history html
 function checkversion() {
@@ -1734,36 +1685,28 @@ function checkversion() {
     xhr.open("GET", "https://serverdoma.ru/esp32/version32.php", false);
     try {
         xhr.send(null);
-    } catch (e) { ; }
+    } catch (e) { console.log("err: " + e); }
     checkinfos();
     //checkhistory();
 }
 
 /// refresh the stations list by reading a file
 function downloadStations() {
-    var tosend, reader, lines, errTxt = '\n', errName = 0, errUrl = 0, errPath = 0, errPort = 0, errAll = false, file, xhr, txt;
+    current_total = RadiolaStorage[COMMON].length;
+    var count = 0;
     if (window.File && window.FileReader && window.FileList && window.Blob) {
-        reader = new FileReader();
-        xhr = new XMLHttpRequest();
-        xhr.onreadystatechange = function () {
-            promptworking(working); // some time to display promptworking
-        }
-        
+        var reader = new FileReader();
+        promptworking(working);
+
         reader.onload = function () {
-            function fillInfo(ind, arri, NmSt, port) {
-                tosend = tosend + "&id=" + ind + "&url=" + arri.hostname + "&name=" + NmSt +
-                    "&file=" + fixedEncodeURIComponent(arri.pathname) + "&port=" + port + "&";
-                localStorage.setItem(ind, "{\"Name\":\"" + NmSt + "\",\"URL\":\"" + arri.hostname +
-                    "\",\"File\":\"" + arri.pathname + "\",\"Port\":\"" + port + "\"}");
-            }
-            // Entire file
-            console.log('File read.');
+
+            var lines, errTxt = '\n', errName = 0, errUrl = 0, errPath = 0,
+                errPort = 0, errAll = false, txt;
+
             lines = this.result.split(/\r?\n/);
             if (lines[0].includes("#EXTM3U")) {
                 var getURL, nameSt, port;
-                var count = 0;
-                localStorage.clear();
-                //
+
                 for (var line = 1; line < lines.length; line++) {
                     //
                     if (lines[line].includes("#EXTINF")) {
@@ -1776,9 +1719,8 @@ function downloadStations() {
                     } else {
 
                         try {
-                            tosend = "nb=1";
                             getURL = new URL(lines[line]);
-                            port=getURL.port;
+                            port = getURL.port;
                             if (getURL.port == "") {
                                 port = "80";
                             } else if (parseInt(getURL.port) > 65535) {
@@ -1797,27 +1739,33 @@ function downloadStations() {
                                 count--;
                                 continue;
                             }
-                            fillInfo(count, getURL, nameSt, port);
+
+                            RadiolaStorage[COMMON].push(
+                                {
+                                    "Name": nameSt,
+                                    "URL": getURL.hostname,
+                                    "File": getURL.pathname,
+                                    "Port": port,
+                                    "FAV": false
+                                });
+                            var tosend = "&ID=" + count + "&name=" + nameSt + "&url=" + getURL.hostname +
+                                "&file=" + getURL.pathname + "&port=" + port + "&fav=0";
+                            PostData("setStation", tosend);
                             count++
                             if (count == maxStation) {
                                 errTxt = "\nДостигнут порог ограничения количества радиостанций: " + count + " !";
                                 errAll = true;
                                 break;
                             }
-                        } catch (err) {
-                            console.log("URL err!! Counter: " + count + "Всего строк: " + lines.length);
-                            continue;
-                        }
-                        try {
-                            xhr.open("POST", "setStation", false);
-                            xhr.setRequestHeader(content, ctype);
-                            console.log("post " + tosend);
-                            xhr.send(tosend);
                         } catch (e) {
-                            console.log("error " + e + " " + tosend);
+                            console.log("err: " + e + "\nCounter: " + count + "\nВсего строк: " + lines.length);
+                            continue;
                         }
                     }
                 }
+                current_total = count;
+                PostData("setStation", "&save=1");
+                localStorage.setItem("RadiolaStorage", JSON.stringify(RadiolaStorage));
                 txt = "Корретных станций загружено: " + count;
                 if (errAll) {
                     alert("Плейлист содержит ошибки!!\n" + errTxt +
@@ -1830,206 +1778,273 @@ function downloadStations() {
                 refreshList();
                 promptworking(txt);
             } else {
-                {
-                    txt = "Пожалуйста, выберите файл с данными M3U.";
-                    alert(txt);
-                    promptworking(txt)
-                }
+                txt = "Пожалуйста, выберите файл с данными M3U.";
+                alert(txt);
+                promptworking(txt)
                 return;
             }
         };
-        file = document.getElementById('fileload').files[0];
-        if (file == null) alert("Пожалуйста, выберите файл.");
-        else {
+        var file = document.getElementById('file_common').files[0];
+        if (file == null) {
+            alert("Пожалуйста, выберите файл.");
+        } else {
+            if ((current_total != 0) && confirm("Текущий плейлист не пуст! Вы хотите добавить новый плейлист в список?\n" +
+                "Если нет, список будет перезаписан.")) {
+                count = current_total;
+            } else {
+                if (current_total != 0) {
+                    clearPlayList(COMMON);
+                    localStorage.setItem("RadiolaStorage", JSON.stringify(RadiolaStorage));
+                    PostData("clear");
+                }
+
+            }
             promptworking(working);
             reader.readAsText(file);
         }
     }
 }
 
-
 function dragStart(ev) {
-    ev.dataTransfer.setData("Text", ev.target.id);
+    tblEvn = ev.target;
 }
 
-function moveNodes(a, b) {
-    var pa1 = a.parentNode,
-        sib = b.nextSibling,
-        txt;
-    if (sib === a) sib = sib.nextSibling;
-    pa1.insertBefore(a, b);
-    txt = 0;
-    for (txt = 0; txt < maxStation; txt++) {
-        pa1.rows[txt].cells[0].innerText = txt.toString();
-        pa1.rows[txt].cells[3].innerHTML = b.parentNode.rows[txt].cells[3].innerHTML;
+function setPLS(el) {
+    try {
+        if (el === COMMON || el === 0) PlayList = COMMON
+        else if (el === FAVORITES || el === 1) PlayList = FAVORITES
+        else {
+            PlayList = el.parentNode.getAttribute('id').replace("tbody_", '');
+        }
+        current_total = RadiolaStorage[PlayList].length;
+    } catch (e) {
+        console.log("setPLS err: " + e, el);
     }
-    stchanged = true;
-    document.getElementById("stsave").disabled = false;
 }
 
-function dragDrop(ev) {
-    ev.preventDefault();
-    var TRStart = document.getElementById(ev.dataTransfer.getData("text"));
-    var TRDrop = document.getElementById(ev.currentTarget.id);
-    moveNodes(TRStart, TRDrop);
-}
-
-function allowDrop(ev) {
-    ev.preventDefault();
-}
-
-function stChanged() {
-    var i, xhr, indmax, tosend, index, tbody = document.getElementById("stationsTable").getElementsByTagName('tbody')[0];
-
-    function fillInfo(ind) {
+function dragEnd() {
+    setPLS(tblEvn);
+    var table;
+    table = tblEvn.parentNode;
+    for (var i = 0; i < table.rows.length; i++) {
         var parser = document.createElement('a');
-
-        var id = tbody.rows[ind].cells[0].innerText;
-        var name = tbody.rows[ind].cells[1].innerText;
-        var furl = tbody.rows[ind].cells[2].innerText;
+        var name = table.rows[i].cells[1].innerText;
+        var furl = table.rows[i].cells[2].innerText;
         parser.href = "http://" + furl;
         var url = parser.hostname;
         var file = parser.pathname + parser.hash + parser.search;
         var port = parser.port;
         if (!port) port = 80;
-        /*				file=tbody.rows[ind].cells[3].innerText;
-                        port= tbody.rows[ind].cells[4].innerText;*/
-        localStorage.setItem(id, "{\"Name\":\"" + name + "\",\"URL\":\"" + url + "\",\"File\":\"" + file + "\",\"Port\":\"" + port + "\"}");
-        tosend = tosend + "&id=" + id + "&url=" + url + "&name=" + name + "&file=" + file + "&port=" + port + "&";
+
+        RadiolaStorage[PlayList][i].Name = name;
+        RadiolaStorage[PlayList][i].URL = url;
+        RadiolaStorage[PlayList][i].File = file;
+        RadiolaStorage[PlayList][i].Port = port;
+
+        table.rows[i].cells[0].innerText = (i + 1).toString();
+        if (PlayList == COMMON) {
+            RadiolaStorage[PlayList][i].ID = table.rows[i].cells[0].id;
+            if (document.getElementById("num_" + i).parentNode.children[3].getElementsByTagName("i")[0].className == 'icon-heart-o')
+                RadiolaStorage[PlayList][i].FAV = false;
+            else
+                RadiolaStorage[PlayList][i].FAV = true;
+        }
+        table.rows[i].cells[0].id = 'num_' + i;
     }
-    promptworking(working); // some time to display promptworking
+    if (PlayList == COMMON) {
+        stchanged = true;
+        document.getElementById("stsave").disabled = false;
+    } else {
+        localStorage.setItem("RadiolaStorage", JSON.stringify(RadiolaStorage));
+    }
+}
+
+function dragOver(e) {
+    let children = Array.from(e.target.parentNode.parentNode.children);
+    if (children.indexOf(e.target.parentNode) > children.indexOf(tblEvn))
+        e.target.parentNode.after(tblEvn);
+    else
+        e.target.parentNode.before(tblEvn);
+}
+
+
+
+function stChanged() {
+
+    var i, tosend;
+
+    function fillInfo(ind) {
+        var name = RadiolaStorage[COMMON][ind].Name;
+        var url = RadiolaStorage[COMMON][ind].URL;
+        var file = RadiolaStorage[COMMON][ind].File;
+        var port = RadiolaStorage[COMMON][ind].Port;
+        var fav = 0;
+        if (RadiolaStorage[COMMON][ind].FAV) {
+            fav = 1;
+            RadiolaStorage[FAVORITES].push({
+                "ID": ind,
+                "Name": name,
+                "URL": url,
+                "File": file,
+                "Port": port
+            });
+        }
+        tosend = "&ID=" + ind + "&name=" + name + "&url=" + url +
+            "&file=" + file + "&port=" + port + "&fav=" + fav;
+        console.log("tosend: " + tosend);
+        PostData("setStation", tosend);
+    }
     if (stchanged && confirm("Список изменен. Вы хотите сохранить измененный список?")) {
-        xhr = new XMLHttpRequest();
-        xhr.onreadystatechange = function () { }
-        promptworking(working); // some time to display promptworking
-        localStorage.clear();
-        indmax = 7;
-        index = 0; {
+        localStorage.setItem("RadiolaStorage", JSON.stringify(RadiolaStorage));
+        promptworking(working);
+        if (RadiolaStorage[FAVORITES].length)
+            clearPlayList(FAVORITES);
+        for (i = 0; i < (RadiolaStorage[COMMON].length); i++) {
             try {
-                tosend = "nb=" + indmax;
-                for (i = 0; i < indmax; i++)
-                    fillInfo(index + i);
-                xhr.open("POST", "setStation", false);
-                xhr.setRequestHeader(content, ctype);
-                xhr.send(tosend);
-            } catch (e) { console.log("error " + e); }
+                fillInfo(i);
+            } catch (e) { console.log("err: " + e); }
         }
-        indmax = 8;
-        for (index = 7; index < maxStation; index += indmax) {
-            try {
-                tosend = "nb=" + indmax;
-                for (i = 0; i < indmax; i++)
-                    fillInfo(index + i);
-                xhr.open("POST", "setStation", false);
-                xhr.setRequestHeader(content, ctype);
-                xhr.send(tosend);
-            } catch (e) { console.log("error " + e); }
-        }
-        loadStationsList(maxStation);
+        PostData("setStation", "&save=1");
     } else
-        if (stchanged)
-            loadStations();
+        RadiolaStorage = JSON.parse(localStorage.getItem("RadiolaStorage"));
     stchanged = false;
     document.getElementById("stsave").disabled = true;
+    refreshList();
     promptworking("");
 }
-//Load the Stations table
-function loadStations() {
-    var new_tbody = document.createElement('tbody'),
-        idlist, idstr, select,
-        id, xhr, arr;
 
-    function cploadStations(id, arr) {
-        var tr = document.createElement('TR'),
-            td = document.createElement('TD');
-        tr.draggable = "true";
-        tr.id = "tr" + id.toString();
-        tr.ondragstart = dragStart;
-        tr.ondrop = dragDrop;
-        tr.ondragover = allowDrop;
-        td.appendChild(document.createTextNode(id));
-        td.style.paddingLeft = "3px;";
-        td.setAttribute('onclick', 'playEditStation(this.parentNode);');
-        tr.appendChild(td);
-        // Name
-        td = document.createElement('TD');
-        td.style.whiteSpace = "nowrap";
-        td.style.overflow = "hidden";
-        td.style.textOverflow = "ellipsis";
-        td.setAttribute('onclick', 'playEditStation(this.parentNode);');
-        if (arr["Name"].length > 116) arr["Name"] = "Error";
-        td.appendChild(document.createTextNode(arr["Name"]));
-        tr.appendChild(td);
-        // URL
-        td = document.createElement('TD');
-        td.style.whiteSpace = "nowrap";
-        td.style.overflow = "hidden";
-        td.style.textOverflow = "ellipsis";
-        td.setAttribute('onclick', 'playEditStation(this.parentNode);');
-        if (arr["Name"].length > 0) {
-            if (arr["URL"].length > 116) arr["URL"] = "Error";
-            if (arr["File"].length > 116) arr["File"] = "Error";
-            if (arr["Port"].length > 116) arr["Port"] = "Error";
-            td.appendChild(document.createTextNode(arr["URL"] + ":" + arr["Port"] + arr["File"]));
-        } else
-            td.appendChild(document.createTextNode(""));
-        tr.appendChild(td);
-
-        // edit button			
-        td = document.createElement('TD');
-        td.style.textAlign = "center";
-        td.style.verticalAlign = "middle";
-        td.innerHTML = "<a class=\"icon-page-edit\" href=\"javascript:void(0)\" onClick=\"editStation(" + id + ")\"></a>";
-        tr.appendChild(td);
-        if (idlist === idstr) {
-            setEditBackground(tr);
-            editIndex = tr;
-            editPlaying = true;
-        }
-        new_tbody.appendChild(tr);
+function checkFavorit(el) {
+    var pos = el.getElementsByTagName("i")[0].className;
+    var ID = el.parentNode.children[0].id.split('_')[1];
+    var fav = false;
+    if (pos == 'icon-heart-o') {
+        el.getElementsByTagName("i")[0].className = 'icon-heart';
+        fav = true;
     }
-    select = document.getElementById('stationsSelect');
-    try {
-        idlist = select.options[select.selectedIndex].value.split(":");
-        idlist = idlist[0];
-    } catch (e) { idlist = 0; }
-    for (id = 0; id < maxStation; id++) {
-        idstr = id.toString();
-        if (localStorage.getItem(idstr) != null) {
-            try {
-                arr = JSON.parse(localStorage.getItem(idstr));
-            } catch (e) { console.log("error" + e); }
-            cploadStations(id, arr);
-        } else
-            try {
-                xhr = new XMLHttpRequest();
-                xhr.onreadystatechange = function () {
-                    if (xhr.readyState == 4 && xhr.status == 200) {
-                        try {
-                            arr = JSON.parse(xhr.responseText);
-                        } catch (e) { console.log("error" + e); }
-                        localStorage.setItem(idstr, xhr.responseText);
-                        cploadStations(id, arr);
-                    }
-                }
-                xhr.open("POST", "getStation", false);
-                xhr.setRequestHeader(content, ctype);
-                xhr.send("idgp=" + id + "&");
-            } catch (e) {
-                console.log("error" + e);
-                id--;
-            }
+    else {
+        el.getElementsByTagName("i")[0].className = 'icon-heart-o';
     }
-
-    var old_tbody = document.getElementById("stationsTable").getElementsByTagName('tbody')[0];
-    old_tbody.parentNode.replaceChild(new_tbody, old_tbody);
+    RadiolaStorage[COMMON][ID].FAV = fav;
+    stchanged = true;
+    document.getElementById("stsave").disabled = false;
 }
 
+
+
+function loadStations(PlayList) {
+    var arr;
+    var new_tbody = document.createElement('tbody'),
+        idlist, idstr, select,
+        idx;
+    current_total = RadiolaStorage[PlayList].length;
+    if (!current_total) {
+        document.getElementById('download_common').value = "Загрузить плейлист";
+        // document.getElementById("table_" + PlayList).caption.innerHTML = "<h1>Список станций пуст</h1><br>";
+        document.getElementById("head_" + PlayList).style.display = 'none';
+        document.getElementById("select_" + PlayList).style.display = 'none';
+
+    } else {
+        document.getElementById('download_common').value = "Добавить плейлист";
+        // document.getElementById("table_" + PlayList).caption.innerHTML = "<h1>Вы можете перетаскивать любую строку, чтобы отсортировать список</h1><br>";
+        document.getElementById("head_" + PlayList).style.display = '';
+        document.getElementById("select_" + PlayList).style.display = '';
+
+        function cploadStations(idx, arr) {
+            var tr = document.createElement('TR'),
+                td = document.createElement('TD');
+            if (PlayList == COMMON) {
+                tr.draggable = "true";
+                tr.ondragstart = dragStart;
+                tr.ondragover = dragOver;
+                tr.ondragend = dragEnd;
+            }
+            // ID
+            td.appendChild(document.createTextNode(idx + 1));
+            td.style.textAlign = "center";
+            td.style.verticalAlign = "middle";
+            if (PlayList == COMMON)
+                td.style.cursor = "move";
+            td.id = 'num_' + idx;
+            tr.appendChild(td);
+            // Name
+            td = document.createElement('TD');
+            td.style.whiteSpace = "nowrap";
+            td.style.overflow = "hidden";
+            td.style.textOverflow = "ellipsis";
+            td.setAttribute('onclick', 'playEditStation(this.parentNode);');
+            td.innerHTML = arr["Name"];
+            tr.appendChild(td);
+            if (PlayList == COMMON) {
+                // URL
+                td = document.createElement('TD');
+                td.style.display = 'none';
+                td.appendChild(document.createTextNode(arr["URL"] + ":" + arr["Port"] + arr["File"]));
+                tr.appendChild(td);
+                // FAV     
+                td = document.createElement('TD');
+                var fav = document.createElement('i');
+                if (!arr["FAV"]) {
+                    fav.className = 'icon-heart-o';
+                }
+                else {
+                    fav.className = 'icon-heart';
+                }
+                fav.setAttribute('onclick', 'checkFavorit(this.parentNode)');
+                td.appendChild(fav);
+                td.className = 'lst';
+                tr.appendChild(td);
+
+                // editStation button
+                td = document.createElement('TD');
+                td.className = 'lst';
+                var btn = document.createElement('i');
+                btn.setAttribute('onclick', 'editStation(this.parentNode)');
+                btn.className = 'icon-page-edit';
+                td.appendChild(btn);
+            } else {
+                td = document.createElement('TD');
+                td.className = 'lst';
+            }
+            // removeStation button
+            btn = document.createElement('i');
+            btn.setAttribute('onclick', 'removeStation(this.parentNode)');
+            btn.className = 'icon-trash-bin';
+            td.appendChild(btn);
+
+            tr.appendChild(td);
+            if (idlist === idstr) {
+                setEditBackground(tr);
+                editIndex = tr;
+                editPlaying = true;
+            }
+            new_tbody.appendChild(tr);
+        }
+        select = document.getElementById('select_' + PlayList);
+        try {
+            idlist = select.options[select.selectedIndex].value;
+            idlist = idlist[0];
+        } catch (e) { idlist = 0; }
+        for (idx = 0; idx < current_total; idx++) {
+            idstr = idx.toString();
+
+            try {
+                arr = RadiolaStorage[PlayList][idx];
+                cploadStations(idx, arr);
+            } catch (e) { console.log("err: " + e); }
+
+        }
+    }
+
+    new_tbody.id = "tbody_" + PlayList;
+    var old_tbody = document.getElementById("table_" + PlayList).getElementsByTagName('tbody')[0];
+    old_tbody.parentNode.replaceChild(new_tbody, old_tbody);
+}
 //Load the selection with all stations
-function loadStationsList(max) {
+function loadStationsList(PlayList) {
     var foundNull = false,
-        id, arr, select, i, xhr;
-    select = document.getElementById("stationsSelect");
+        max = RadiolaStorage[PlayList].length,
+        id, arr, select, i;
+    select = document.getElementById("select_" + PlayList);
     for (i = select.options.length - 1; i >= 0; i--) {
         select.remove(i);
     }
@@ -2038,7 +2053,8 @@ function loadStationsList(max) {
         foundNull = false;
         if (arr["Name"].length > 0) {
             var opt = document.createElement('option');
-            opt.appendChild(document.createTextNode(id + ": \t" + arr["Name"]));
+            opt.appendChild(document.createTextNode((id + 1) + ": " + arr["Name"]));
+            opt.setAttribute("value", id);
             select.add(opt);
         } else foundNull = true;
         return foundNull;
@@ -2047,35 +2063,16 @@ function loadStationsList(max) {
     promptworking(working);
     for (id = 0; id < max; id++) {
         var idstr = id.toString();
-        if (localStorage.getItem(idstr) != null) {
-            try {
-                arr = JSON.parse(localStorage.getItem(idstr));
-            } catch (e) { console.log("error" + e); }
+
+        try {
+            arr = RadiolaStorage[PlayList][idstr];
             foundNull = cploadStationsList(id, arr);
-        } else
-            try {
-                xhr = new XMLHttpRequest();
-                xhr.onreadystatechange = function () {
-                    if (xhr.readyState == 4 && xhr.status == 200) {
-                        try {
-                            arr = JSON.parse(xhr.responseText);
-                        } catch (e) { console.log("error" + e); }
-                        localStorage.setItem(idstr, xhr.responseText);
-                        foundNull = cploadStationsList(id, arr);
-                    }
-                }
-                xhr.open("POST", "getStation", false);
-                xhr.setRequestHeader(content, ctype);
-                xhr.send("idgp=" + id + "&");
-            } catch (e) {
-                console.log("error" + e);
-                id--;
-            }
+        } catch (e) { console.log("err: " + e); }
     }
 
     promptworking("");
     select.disabled = false;
-    select.options.selectedIndex = parseInt(localStorage.getItem('selindexstore'), 10);
+    select.options.selectedIndex = RadiolaStorage[PlayList + "_select"];
 }
 
 function printList() {
@@ -2083,12 +2080,12 @@ function printList() {
     var id, arr;
     html += "</html>";
     html += "<h1>Список станций Радиолы</h1><br/><hr><br/>";
-    for (id = 0; id < maxStation; id++) {
+    for (id = 0; id < current_total; id++) {
         var idstr = id.toString();
         if (localStorage.getItem(idstr) != null) {
             try {
                 arr = JSON.parse(localStorage.getItem(idstr));
-            } catch (e) { console.log("error" + e); }
+            } catch (e) { console.log("err: " + e); }
             if (arr["Name"].length > 0) {
                 html += idstr + "&nbsp;&nbsp;" + arr["Name"] + "<br/>";
             }
@@ -2102,9 +2099,144 @@ function printList() {
     printWin.close();
 }
 
+//ScrollUp
+function ScrollUp() {
+    var t, s;
+    s = document.body.scrollTop || window.pageYOffset;
+    t = setInterval(function () { if (s > 0) window.scroll(0, s -= 5); else clearInterval(t) }, 5);
+}
+//
+function PostData(Address, Data) {
+    if (typeof (Data) == 'undefined') Data = '';
+    let xhr = new XMLHttpRequest();
+
+    // var ctype = "application/x-www-form-urlencoded",
+    // cjson = "application/json";
+
+    xhr.open("POST", Address, false);
+    xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+    try {
+        xhr.send(Data);
+        if (xhr.readyState != 4 && xhr.status != 200) {
+            console.log("PostData error: xhr.status: " + xhr.status + ' xhr.statusText: ' + xhr.statusText);
+            return null;
+        } else {
+            // console.log("xhr.responseText: " + xhr.responseText);
+            return xhr.responseText;
+        }
+    } catch (e) {
+        console.log("PostData err: " + e);
+    }
+}
+
+function gotoTAB(mTab, subTab) {
+    /* Карта вкладок
+        tabbis.onClick(0,0) - PLAYER
+            tabbis.onClick(1,0) - SELECT LIST COMMON
+            tabbis.onClick(1,1) - SELECT LIST FAVORITES
+        
+        tabbis.onClick(0,1) - STATIONS
+            tabbis.onClick(2,0) - PLAYLIST COMMON
+            tabbis.onClick(2,1) - PLAYLIST FAVORITES
+        
+        tabbis.onClick(0,2) - SOUND
+            tabbis.onClick(3,0) - COMPUTER
+            tabbis.onClick(3,1) - VS1053
+            tabbis.onClick(3,2) - BT201
+        
+        tabbis.onClick(0,3) - SETTINGS
+            tabbis.onClick(4,0) - WIFI
+            tabbis.onClick(4,1) - GPIOS
+            tabbis.onClick(4,2) - REMOTE
+            tabbis.onClick(4,3) - OPTIONS
+            tabbis.onClick(4,4) - UPDATE
+    */
+    switch (mTab) {
+        case "WIFI":
+            tabbis.onClick(0, 3);
+            tabbis.onClick(4, 0);
+            break;
+        case "PLAYER":
+            tabbis.onClick(0, 0);
+            break;
+        case "SOUND":
+            if (typeof (subTab) == 'undefined') {
+                break;
+            } else {
+                tabbis.onClick(0, 2);
+                if (subTab === "VS1053") {
+                    tabbis.onClick(3, 1);
+                }
+            }
+            break;
+        case "AUX":
+            tabbis.onClick(3, 0);
+            break;
+        case "VS1053":
+            tabbis.onClick(3, 1);
+            break;
+        case "BT201":
+            tabbis.onClick(3, 2);
+            break;
+    }
+
+}
+function getStations() {
+    var id, fav;
+    var arr = JSON.parse(PostData("getStation", "&ID=0"));
+    current_total = parseInt(arr["Total"], 10);
+    if (current_total == 0) {
+        return;
+    } else {
+        promptworking(working);
+        for (id = 0; id < current_total; id++) {
+            fav = false;
+            arr = JSON.parse(PostData("getStation", "&ID=" + id));
+
+            if (arr["fav"] == "1") {
+                fav = true;
+                RadiolaStorage[FAVORITES].push({
+                    "ID": id,
+                    "Name": arr["Name"],
+                    "URL": arr["URL"],
+                    "File": arr["File"],
+                    "Port": arr["Port"]
+                });
+            }
+            RadiolaStorage[COMMON].push({
+                "Name": arr["Name"],
+                "URL": arr["URL"],
+                "File": arr["File"],
+                "Port": arr["Port"],
+                "FAV": fav
+            });
+        }
+        localStorage.setItem("RadiolaStorage", JSON.stringify(RadiolaStorage));
+        promptworking("");
+    }
+}
 document.addEventListener("DOMContentLoaded", function () {
-    localStorage.removeItem("tabbis");
-    tabbis.init();
+
+    checkwebsocket();
+
+    if (localStorage.getItem('RadiolaStorage') !== null) {
+        localStorage.removeItem("RadiolaStorage");
+
+    }
+
+    try {
+        getStations();
+    } catch (e) { console.log("err: " + e); }
+
+    try {
+        if (localStorage.getItem('tabbis') !== null) {
+            localStorage.removeItem("tabbis");
+        }
+        tabbis.init();
+    } catch (e) {
+        console.log("err: " + e);
+    }
+    refreshList();
     document.getElementById("PLAYER").addEventListener("click", function () {
         if (stchanged) stChanged();
         refresh();
@@ -2112,34 +2244,75 @@ document.addEventListener("DOMContentLoaded", function () {
     });
     document.getElementById("STATIONS").addEventListener("click", function () {
         if (stchanged) stChanged();
-        loadStations();
+        refreshList();
         curtab = "STATIONS";
     });
+
+    document.getElementById("pls_common").addEventListener("click", function () {
+        if (stchanged) stChanged();
+        refreshList();
+        curtab = "pls_common";
+    });
+    document.getElementById("pls_favorites").addEventListener("click", function () {
+        if (stchanged) stChanged();
+        refreshList();
+        curtab = "pls_favorites";
+    });
+    document.getElementById("list_common").addEventListener("click", function () {
+        if (stchanged) stChanged();
+        refreshList();
+        curtab = "list_common";
+    });
+    document.getElementById("list_favorites").addEventListener("click", function () {
+        if (stchanged) stChanged();
+        refreshList();
+        curtab = "list_favorites";
+    });
+
+
     document.getElementById("SOUND").addEventListener("click", function () {
         if (stchanged) stChanged();
         curtab = "SOUND";
         hardware(0);
     });
+
+    document.getElementById("AUX").addEventListener("click", function () {
+        curtab = "AUX";
+        audioinput = AUX;
+        hardware(1);
+    });
+    document.getElementById("VS1053").addEventListener("click", function () {
+        curtab = "VS1053";
+        audioinput = VS1053;
+        hardware(1);
+    });
+    document.getElementById("BT201").addEventListener("click", function () {
+        curtab = "BT201";
+        audioinput = BT201;
+        hardware(1);
+    });
+
     document.getElementById("SETTINGS").addEventListener("click", function () {
         if (stchanged) stChanged();
         curtab = "SETTINGS";
-        document.getElementById("GPIOS").addEventListener("click", function () {
-            gpios(0, 0, 1);
-        });
-        document.getElementById("REMOTE").addEventListener("click", function () {
-            ircodes(0, 0, 1);
-        });
-        document.getElementById("WIFI").addEventListener("click", function () {
-            wifi(0);
-        });
-        document.getElementById("OPTIONS").addEventListener("click", function () {
-            devoptions(0);
-            control(0);
-        });
-        document.getElementById("UPDATE").addEventListener("click", function () {
-            checkversion();
-        });
     });
+    document.getElementById("GPIOS").addEventListener("click", function () {
+        gpios(0, 0, 1);
+    });
+    document.getElementById("REMOTE").addEventListener("click", function () {
+        ircodes(0, 0, 1);
+    });
+    document.getElementById("WIFI").addEventListener("click", function () {
+        wifi(0);
+    });
+    document.getElementById("OPTIONS").addEventListener("click", function () {
+        devoptions(0);
+        control(0);
+    });
+    document.getElementById("UPDATE").addEventListener("click", function () {
+        checkversion();
+    });
+
     window.addEventListener("keydown", function (event) {
         if (event.defaultPrevented) {
             return;
@@ -2148,7 +2321,7 @@ document.addEventListener("DOMContentLoaded", function () {
             switch (event.key) {
                 case ' ':
                     if (editPlaying) stopStation();
-                    else playStation();
+                    else playStation(PlayList);
                     break;
                 case "ArrowDown":
                     nextStation();
@@ -2175,7 +2348,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
         if (curtab == "STATIONS") {
             var ed = editPlaying;
-            loadStations();
+            refreshList();
             editPlaying = ed;
         }
     }, true);
@@ -2184,27 +2357,19 @@ document.addEventListener("DOMContentLoaded", function () {
     intervalid = 0;
     if (timeid != 0) window.clearInterval(timeid);
     timeid = window.setInterval(dtime, 1000);
-    if (window.location.hostname != "192.168.4.1") {
-        loadStationsList(maxStation);
-    }
-    else {
+    if (window.location.hostname == "192.168.4.1") {
         document.getElementById("WIFI").click();
-        tabbis.onClick(0, 3);
-        tabbis.onClick(2, 0);
+        gotoTAB("WIFI");
     }
-    checkwebsocket();
-    promptworking("");
-    refresh();
     wifi(0);
     hardware(0);
     autostart();
     checkversion();
-    consoleON();
+    var day = new Date();
+    let days_f = ['воскресенье', 'понедельник', 'вторник', 'среда', 'четверг', 'пятница', 'суббота'];
+    let days = ['ВС', 'ПН', 'ВТ', 'СР', 'ЧТ', 'ПТ', 'СБ'];
+    let months = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
+    document.getElementById('q1').innerHTML = day.getDate() + ' ' + months[day.getMonth()] + ', ' + days[day.getDay()] + '. ' + day.getFullYear() + ' г.';
+    document.getElementById('q2').innerHTML = day.getDate() + ' ' + months[day.getMonth()] + ', ' + days_f[day.getDay()];
+    refresh();
 });
-//ScrollUp
-function ScrollUp() {
-    var t, s;
-    s = document.body.scrollTop || window.pageYOffset;
-    t = setInterval(function () { if (s > 0) window.scroll(0, s -= 5); else clearInterval(t) }, 5);
-}
-//

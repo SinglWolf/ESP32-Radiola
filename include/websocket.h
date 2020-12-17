@@ -31,26 +31,23 @@ typedef enum
     WSop_ping = 0x09,         ///< %x9 denotes a ping
     WSop_pong = 0x0A          ///< %xA denotes a pong
                               ///< %xB-F are reserved for further control frames
-} wsopcode_t;
+} wsopcode_e;
 
 typedef struct
 {
     bool fin;
-    //        bool rsv1;
-    //        bool rsv2;
-    //        bool rsv3;
-    wsopcode_t opCode;
+    wsopcode_e opCode;
     bool mask;
     size_t payloadLen;
     uint8_t *maskKey;
-} wsMessageHeader_t;
+} wsMessageHeader_s;
 
 typedef struct
 {
     int socket;
-} client_t;
+} client_s;
 
-extern client_t webserverclients[NBCLIENT];
+extern client_s webserverclients[NBCLIENT];
 
 // public:
 // init some data
@@ -76,7 +73,7 @@ void websocketlimitedbroadcast(int socket, char *buf, int len);
 // the websocket server task
 void websocketTask(void *pvParams);
 //private:
-bool sendFrame(int socket, wsopcode_t opcode, uint8_t *payload, size_t length);
+bool sendFrame(int socket, wsopcode_e opcode, uint8_t *payload, size_t length);
 // parse a new client request and prepare the answer
 uint32_t decodeHttpMessage(char *inputMessage, char *outputMessage);
 void wsclientDisconnect(int socket, uint16_t code, char *reason, size_t reasonLen);

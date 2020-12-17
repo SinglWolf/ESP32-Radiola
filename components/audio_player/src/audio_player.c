@@ -23,10 +23,10 @@
 #define TAG "audio_player"
 //#define PRIO_MAD configMAX_PRIORITIES - 4
 
-static player_t *player_instance = NULL;
-static component_status_t player_status = UNINITIALIZED;
+static player_s *player_instance = NULL;
+static component_status_e player_status = UNINITIALIZED;
 
-static int start_decoder_task(player_t *player)
+static int start_decoder_task(player_s *player)
 {
 	TaskFunction_t task_func;
 	char *task_name;
@@ -64,7 +64,7 @@ static int t;
 int audio_stream_consumer(const char *recv_buf, ssize_t bytes_read,
 						  void *user_data)
 {
-	player_t *player = user_data;
+	player_s *player = user_data;
 	// don't bother consuming bytes if stopped
 	if (player->command == CMD_STOP)
 	{
@@ -106,13 +106,13 @@ int audio_stream_consumer(const char *recv_buf, ssize_t bytes_read,
 	t = (t + 1) & 255;
 	if (t == 0)
 	{
-		ESP_LOGI(TAG, "Buffer fill %u%%, %d // %d bytes", fill_level, bytes_in_buf, spiRamFifoLen());
+		ESP_LOGV(TAG, "Buffer fill %u%%, %d // %d bytes", fill_level, bytes_in_buf, spiRamFifoLen());
 	}
 
 	return 0;
 }
 
-void audio_player_init(player_t *player)
+void audio_player_init(player_s *player)
 {
 	player_instance = player;
 	player_status = INITIALIZED;
@@ -140,7 +140,7 @@ void audio_player_stop()
 	player_status = STOPPED;
 }
 
-component_status_t get_player_status()
+component_status_e get_player_status()
 {
 	return player_status;
 }

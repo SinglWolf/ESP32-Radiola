@@ -12,21 +12,21 @@ For details, see http://sourceforge.net/projects/libb64
 typedef enum
 {
 	step_A, step_B, step_C
-} base64_encodestep;
+} base64_encodestep_e;
 
 typedef struct
 {
-	base64_encodestep step;
+	base64_encodestep_e step;
 	char result;
 	int stepcount;
-} base64_encodestate;
+} base64_encodestate_s;
 
-void base64_init_encodestate(base64_encodestate* state_in);
+void base64_init_encodestate(base64_encodestate_s* state_in);
 
 char base64_encode_value(char value_in);
 
-int base64_encode_block(const char* plaintext_in, int length_in, char* code_out, base64_encodestate* state_in);
+int base64_encode_block(const char* plaintext_in, int length_in, char* code_out, base64_encodestate_s* state_in);
 
-int base64_encode_blockend(char* code_out, base64_encodestate* state_in);
+int base64_encode_blockend(char* code_out, base64_encodestate_s* state_in);
 
 #endif /* BASE64_CENCODE_H */

@@ -111,7 +111,8 @@ def check_sha1(name):
 def build_page():
     for name in file_list:
         dir_build = PROJECT_DIR + WEBPAGE
-        f_build = dir_build + name
+        src_file = dir_build + name
+        build_file = dir_build + 'build_' + name
         name_var = name.rsplit(".", 1)[0]
         if check_sha1(name):
             pass
@@ -121,27 +122,27 @@ def build_page():
                 if isfile(file_build):
                     os.remove(file_build)
                     print("File webserver.c.o for " + build_mode + " removed.")
-                print("Prepare ", name, " for build.")
-                shutil.copy(f_build, f_build + '.ori')
+                print("Prepare ", name, " for "+ build_mode + ".")
+                shutil.copy(src_file, build_file)
                 if build_mode == "release":
                     if ".html" in name:
-                        with io.open(f_build, 'r', encoding='utf-8') as f:
+                        with io.open(build_file, 'r', encoding='utf-8') as f:
                             content = f.read()
                         content = REMOVE_WS(" ", content)
-                        with io.open(f_build, 'w+', encoding='utf-8') as d:
+                        with io.open(build_file, 'w+', encoding='utf-8') as d:
                             d.write(content)
                     if ".css" in name:
-                        cmd = YUI_COMPRESSOR + f_build + ' -o ' + WEBPAGE + name + '.min' 
+                        cmd = YUI_COMPRESSOR + build_file + ' -o ' + WEBPAGE + 'build_' + name + '.min'
                         subprocess.call(cmd, shell=True)
                     if ".js" in name:
-                        cmd = CLOSURE_COMPILER + f_build + ' --js_output_file ' + f_build + '.min'
+                        cmd = CLOSURE_COMPILER + build_file + ' --js_output_file ' + build_file + '.min'
                         subprocess.call(cmd, shell=True)
-                    if isfile(f_build + '.min'):
-                        os.remove(f_build)
-                        shutil.move(f_build + '.min', f_build)
-                with open(f_build, 'rb') as f_in, gzip.open(f_build + '.gz', 'wb') as f_out:
+                    if isfile(build_file + '.min'):
+                        os.remove(build_file)
+                        shutil.move(build_file + '.min', build_file)
+                with open(build_file, 'rb') as f_in, gzip.open(build_file + '.gz', 'wb') as f_out:
                     f_out.writelines(f_in)
-                shutil.move(f_build + '.gz', f_build)
+                shutil.move(build_file + '.gz', build_file)
                 define = name_var + '_' + build_mode
                 if ".png" in name:
                     define = name_var
@@ -150,14 +151,15 @@ def build_page():
                 header_f = define + '.h'
                 if isfile(PROJECT_INCLUDE_DIR + header_f):
                     os.remove(PROJECT_INCLUDE_DIR + header_f)
-                subprocess.call(XXD + f_build + ' -v ' + name_var +
+                subprocess.call(XXD + build_file + ' -v ' + name_var +
                                 ' -d ' + define + ' -o ' + PROJECT_INCLUDE_DIR + header_f, shell=True)
                 print("Header file ", header_f, " created.")
-                shutil.move(f_build + '.ori', f_build)
+                if isfile(build_file):
+                    os.remove(build_file)
                 if ".png" in name:
                     break
                 elif "tabbis.js" in name:
                     break
 
-build_page()
 
+build_page()

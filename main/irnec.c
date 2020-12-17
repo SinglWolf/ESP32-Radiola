@@ -230,8 +230,8 @@ static bool nec_rx_init()
  */
 void rmt_nec_rx_task()
 {
-	event_ir_t evt;
-	event_ir_t last_evt;
+	event_ir_s evt;
+	event_ir_s last_evt;
 	//int channel = RMT_RX_CHANNEL;
 	if (nec_rx_init())
 	{

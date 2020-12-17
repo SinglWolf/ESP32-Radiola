@@ -15,26 +15,27 @@
 #include "ucg.h"
 
 // custom ir code init from hardware nvs
-typedef enum {
-	KEY_UP,
-	KEY_LEFT,
-	KEY_OK,
-	KEY_RIGHT,
-	KEY_DOWN,
-	KEY_0,
-	KEY_1,
-	KEY_2,
-	KEY_3,
-	KEY_4,
-	KEY_5,
-	KEY_6,
-	KEY_7,
-	KEY_8,
-	KEY_9,
-	KEY_STAR,
-	KEY_DIESE,
-	KEY_MAX
-} ir_key_t;
+typedef enum
+{
+    KEY_UP,
+    KEY_LEFT,
+    KEY_OK,
+    KEY_RIGHT,
+    KEY_DOWN,
+    KEY_0,
+    KEY_1,
+    KEY_2,
+    KEY_3,
+    KEY_4,
+    KEY_5,
+    KEY_6,
+    KEY_7,
+    KEY_8,
+    KEY_9,
+    KEY_STAR,
+    KEY_DIESE,
+    KEY_MAX
+} ir_key_e;
 
 typedef struct
 {
@@ -42,9 +43,9 @@ typedef struct
     uint16_t addr; /*!< nec addr */
     uint16_t cmd;  /*!< nec cmdr */
     bool repeat_flag;
-} event_ir_t;
+} event_ir_s;
 
-typedef enum typelcmd
+typedef enum
 {
     lstop,
     lplay,
@@ -59,13 +60,13 @@ typedef enum typelcmd
     etoggle,
     escreen,
     erefresh
-} typelcmd;
+} typelcmd_e;
 
 typedef struct
 {
-    typelcmd lcmd; /*!< For what ?*/
+    typelcmd_e lcmd; /*!< For what ?*/
     char *lline;   /*!< string of command */
-} event_lcd_t;
+} event_lcd_s;
 
 #define MTNODISPLAY 0
 #define MTNEW 1
@@ -80,7 +81,7 @@ void task_lcd(void *pvParams);
 void lcd_init();
 void (*serviceAddon)();
 void addonParse(const char *fmt, ...);
-void lcd_welcome(const char *ip, const char *state);
+void lcd_welcome(char *ip, char *state);
 void setFuturNum(int16_t new);
 int16_t getFuturNum();
 void wakeLcd();

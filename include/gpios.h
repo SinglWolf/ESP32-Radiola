@@ -14,6 +14,10 @@
 
 #define GPIO_NONE 255
 
+//
+#define GPIOS_SPACE "gpios"
+#define IRCODE_SPACE "ircode"
+
 //-------------------------------------------------------------//
 // Назначение GPIOs, используемых в ESP32-Radiola по-умолчанию //
 //-------------------------------------------------------------//
@@ -100,9 +104,8 @@
 
 esp_err_t gpio_set_nvs(const char *name_pin, gpio_num_t gpio_num);
 esp_err_t gpio_get_nvs(const char *name_pin, gpio_num_t *gpio_num);
-esp_err_t open_partition(const char *partition_label, const char *namespace, nvs_open_mode open_mode, nvs_handle *handle);
-esp_err_t gpio_get_spi_bus(uint8_t *spi_no, gpio_num_t *miso, gpio_num_t *mosi, gpio_num_t *sclk);
-esp_err_t gpio_set_spi_bus(uint8_t spi_no, gpio_num_t miso, gpio_num_t mosi, gpio_num_t sclk);
+esp_err_t gpio_get_spi_bus(gpio_num_t *miso, gpio_num_t *mosi, gpio_num_t *sclk);
+esp_err_t gpio_set_spi_bus(gpio_num_t miso, gpio_num_t mosi, gpio_num_t sclk);
 esp_err_t gpio_get_vs1053(gpio_num_t *xcs, gpio_num_t *xdcs, gpio_num_t *dreq);
 esp_err_t gpio_set_vs1053(gpio_num_t xcs, gpio_num_t xdcs, gpio_num_t dreq);
 esp_err_t gpio_get_encoders(gpio_num_t *enca, gpio_num_t *encb, gpio_num_t *encbtn);
@@ -119,8 +122,6 @@ esp_err_t gpio_get_backlightl(gpio_num_t *led);
 esp_err_t gpio_set_backlightl(gpio_num_t led);
 esp_err_t gpio_get_tachometer(gpio_num_t *tach);
 esp_err_t gpio_set_tachometer(gpio_num_t tach);
-esp_err_t gpio_get_ir_key(nvs_handle handle, const char *key, uint32_t *out_set1, uint32_t *out_set2);
-esp_err_t gpio_set_ir_key(const char *key, char *ir_keys);
 esp_err_t gpio_get_stb(gpio_num_t *stb);
 esp_err_t gpio_set_stb(gpio_num_t stb);
 esp_err_t gpio_get_touch(gpio_num_t *touch);
@@ -133,10 +134,9 @@ esp_err_t gpio_get_buzzer(gpio_num_t *buzzer);
 esp_err_t gpio_set_buzzer(gpio_num_t buzzer);
 esp_err_t gpio_get_ldr(gpio_num_t *ldr);
 esp_err_t gpio_set_ldr(gpio_num_t ldr);
-void close_partition(nvs_handle handle, const char *partition_label);
-void get_lcd_rotat(uint8_t *rt);
+uint8_t get_lcd_rotat();
 void set_lcd_rotat(uint8_t rt);
-void get_ddmm(uint8_t *ddmm);
+uint8_t getDataFormat();
 void set_ddmm(uint8_t ddmm);
 bool get_gpio_mode();
 void set_gpio_mode(uint8_t gpio_mode);

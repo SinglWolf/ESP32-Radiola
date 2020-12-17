@@ -22,7 +22,7 @@
 #include "spiram_fifo.h"
 #include "main.h"
 
-extern player_t *player_config;
+extern player_s *player_config;
 #define min(a, b) (((a) < (b)) ? (a) : (b))
 
 enum clientStatus cstatus;
@@ -33,7 +33,7 @@ static uint8_t once = 0;
 static uint8_t playing = 0;
 
 static const char *icyHeaders[] = {"icy-name:", "icy-notice1:", "icy-notice2:", "icy-url:", "icy-genre:", "icy-br:", "icy-description:", "ice-audio-info:", "icy-metaint:"};
-contentType_t contentType;
+contentType_e contentType;
 
 static char notfound[] = {"Not Found"};
 static char nodata[] = {"No Data"};
@@ -69,7 +69,7 @@ void incfree(void *p, const char *from)
 	if (p != NULL)
 		free(p);
 	//	else printf ("Client incfree from %s NULL\n",from);
-	ESP_LOGV(TAG, "Client incfree of %x, from %s           Heap size: %d", (int)p, from, xPortGetFreeHeapSize());
+	ESP_LOGV(TAG, "Client incfree of %x, from %s Heap size: %d", (int)p, from, xPortGetFreeHeapSize());
 }
 
 bool getState()
@@ -105,10 +105,8 @@ uint8_t clientIsConnected()
 	return 1;
 }
 
-// for debug only
-
 void dump(uint8_t *from, uint32_t len)
-{
+{ // for debug only
 	uint32_t i;
 	uint8_t *addr;
 	addr = from;
@@ -116,7 +114,39 @@ void dump(uint8_t *from, uint32_t len)
 	{
 		printf("\n%x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x %02x    \t\
 		%c %c %c %c %c %c %c %c %c %c %c %c %c %c %c %c",
-			   (unsigned int)addr, (unsigned int)addr[0], (unsigned int)addr[1], (unsigned int)addr[2], (unsigned int)addr[3], (unsigned int)addr[4], (unsigned int)addr[5], (unsigned int)addr[6], (unsigned int)addr[7], (unsigned int)addr[8], (unsigned int)addr[9], (unsigned int)addr[10], (unsigned int)addr[11], (unsigned int)addr[12], (unsigned int)addr[13], (unsigned int)addr[14], (unsigned int)addr[15], addr[0], addr[1], addr[2], addr[3], addr[4], addr[5], addr[6], addr[7], addr[8], addr[9], addr[10], addr[11], addr[12], addr[13], addr[14], addr[15]);
+			   (unsigned int)addr,
+			   (unsigned int)addr[0],
+			   (unsigned int)addr[1],
+			   (unsigned int)addr[2],
+			   (unsigned int)addr[3],
+			   (unsigned int)addr[4],
+			   (unsigned int)addr[5],
+			   (unsigned int)addr[6],
+			   (unsigned int)addr[7],
+			   (unsigned int)addr[8],
+			   (unsigned int)addr[9],
+			   (unsigned int)addr[10],
+			   (unsigned int)addr[11],
+			   (unsigned int)addr[12],
+			   (unsigned int)addr[13],
+			   (unsigned int)addr[14],
+			   (unsigned int)addr[15],
+			   addr[0],
+			   addr[1],
+			   addr[2],
+			   addr[3],
+			   addr[4],
+			   addr[5],
+			   addr[6],
+			   addr[7],
+			   addr[8],
+			   addr[9],
+			   addr[10],
+			   addr[11],
+			   addr[12],
+			   addr[13],
+			   addr[14],
+			   addr[15]);
 		addr += 16;
 	}
 	printf("\n");
@@ -488,13 +518,13 @@ static void clientSaveMetadata(char *s, int len)
 // websocket: next station
 void wsStationNext()
 {
-	struct shoutcast_info *si = NULL;
+	station_slot_s *si = NULL;
 	do
 	{
 		if (si != NULL)
 			incfree(si, "wsstationN");
 		setCurrentStation(getCurrentStation() + 1);
-		if (getCurrentStation() > NBSTATIONS)
+		if (getCurrentStation() > MAXSTATIONS)
 			setCurrentStation(0);
 		si = getStation(getCurrentStation());
 	} while (si == NULL || ((si != NULL) && (strcmp(si->domain, "") == 0)) || ((si != NULL) && (strcmp(si->file, "") == 0)));
@@ -505,7 +535,7 @@ void wsStationNext()
 // websocket: previous station
 void wsStationPrev()
 {
-	struct shoutcast_info *si = NULL;
+	station_slot_s *si = NULL;
 	do
 	{
 		if (si != NULL)
@@ -893,7 +923,7 @@ void clientReceiveCallback(int sockfd, char *pdata, int len)
 			if (strcmp(t1, "Found") || strcmp(t1, "Temporarily") || strcmp(t1, "Moved"))
 			{
 				ESP_LOGV(TAG, "Header Len=%d,\n %s", len, pdata);
-				ESP_LOGI(TAG, "Header: Moved");
+				ESP_LOGV(TAG, "Header: Moved");
 				clientDisconnect("C_HDER");
 				clientParsePlaylist(pdata);
 				cstatus = C_PLAYLIST;
@@ -1214,13 +1244,13 @@ void clientTask(void *pvParams)
 
 	struct sockaddr_in dest;
 
-	vTaskDelay(300);
+	// vTaskDelay(300);
 
-	strcpy(useragent, g_device->ua);
+	strcpy(useragent, MainConfig->ua);
 	if (strlen(useragent) == 0)
 	{
 		strcpy(useragent, "ESP32Radiola/1.5");
-		strcpy(g_device->ua, useragent);
+		strcpy(MainConfig->ua, useragent);
 	}
 
 	//	portBASE_TYPE uxHighWaterMark;
@@ -1235,7 +1265,7 @@ void clientTask(void *pvParams)
 
 			xSemaphoreTake(sDisconnect, 0);
 			sockfd = socket(AF_INET, SOCK_STREAM, 0);
-			ESP_LOGI(TAG, "Webclient socket: %d, errno: %d", sockfd, errno);
+			ESP_LOGV(TAG, "Webclient socket: %d, errno: %d", sockfd, errno);
 			if (sockfd < 0)
 			{
 				ESP_LOGE(TAG, "Webclient socket create, errno: %d", errno);
@@ -1270,8 +1300,8 @@ void clientTask(void *pvParams)
 				}
 				else
 				{
-					if (strcmp(clientURL, "stream.pcradio.biz") == 0)
-						strcpy(useragent, "pcradio");
+					// if (strcmp(clientURL, "stream.pcradio.biz") == 0)
+					// 	strcpy(useragent, "pcradio");
 					//printf("sprint%d\n",7);
 					sprintf((char *)bufrec, "GET %s HTTP/1.1\r\nHost: %s\r\nicy-metadata: 1\r\nUser-Agent: %s\r\n\r\n", clientPath, clientURL, useragent);
 				}
@@ -1394,7 +1424,7 @@ void clientTask(void *pvParams)
 				clientConnect();
 			}
 			uxHighWaterMark = uxTaskGetStackHighWaterMark(NULL);
-			ESP_LOGI(TAG, "watermark : %x  %d", uxHighWaterMark, uxHighWaterMark);
+			ESP_LOGV(TAG, "watermark : %x  %d", uxHighWaterMark, uxHighWaterMark);
 		}
 	}
 }

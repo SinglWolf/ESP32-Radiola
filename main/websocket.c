@@ -22,7 +22,7 @@ char strwMALLOC[] = {"inwmalloc fails for %d\n"};
 char strwMALLOC1[] = {"Websocket %s malloc fails\n"};
 char strwSOCKET[] = {"Websocket socket fails %s errno: %d\n"};
 
-client_t webserverclients[NBCLIENT];
+client_s webserverclients[NBCLIENT];
 //set of socket descriptors
 fd_set readfds;
 
@@ -168,7 +168,7 @@ bool iswebsocket(int socket)
 }
 ///////////////////////////
 // send a message to client
-bool sendFrame(int socket, wsopcode_t opcode, uint8_t *payload, size_t length)
+bool sendFrame(int socket, wsopcode_e opcode, uint8_t *payload, size_t length)
 {
 	//remove    uint8_t maskKey[4] = { 0x00, 0x00, 0x00, 0x00 };
 	uint8_t buffer[WEBSOCKETS_MAX_HEADER_SIZE] = {0};
@@ -251,7 +251,7 @@ bool sendFrame(int socket, wsopcode_t opcode, uint8_t *payload, size_t length)
 void websocketparsedata(int socket, char *buf, int len)
 {
 	int recbytes = len;
-	wsMessageHeader_t header;
+	wsMessageHeader_s header;
 	header.maskKey = 0;
 	uint8_t *payload = (uint8_t *)buf;
 	uint8_t headerLen = 2;
@@ -260,10 +260,10 @@ void websocketparsedata(int socket, char *buf, int len)
 	while (headerLen > recbytes)
 		recbytes += read(socket, buf + recbytes, MAXDATA - recbytes);
 	header.fin = ((*payload >> 7) & 0x01);
-	header.opCode = (wsopcode_t)(*payload & 0x0F);
+	header.opCode = (wsopcode_e)(*payload & 0x0F);
 	payload++; // second bytes
 	header.mask = ((*payload >> 7) & 0x01);
-	header.payloadLen = (wsopcode_t)(*payload & 0x7F);
+	header.payloadLen = (wsopcode_e)(*payload & 0x7F);
 	payload++;
 
 	if (header.payloadLen == 126)

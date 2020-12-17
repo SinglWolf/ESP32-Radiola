@@ -22,7 +22,6 @@
 #include "addon.h"
 #include "main.h"
 #include "xpt2046.h"
-//#include "rda5807Task.c"
 #include "ClickEncoder.h"
 #include "lwip/sockets.h"
 #include "lwip/dns.h"
@@ -150,7 +149,7 @@ uint8_t getDdmm()
 {
 	return ddmm;
 }
-void setDdmm(uint8_t dm)
+void setDataFormat(uint8_t dm)
 {
 	if (dm == 0)
 		ddmm = 0;
@@ -209,9 +208,8 @@ void readRssi()
 	if (wifidata.primary != 0)
 	{
 		rssi = wifidata.rssi;
-		//       info.channel = wifidata.primary;
+		// info.channel = wifidata.primary;
 	}
-	//	rssi = wifi_station_get_rssi();
 	kprintf("##RSSI: %d\n", rssi);
 }
 
@@ -293,9 +291,9 @@ void wifiConnect(char *cmd)
 {
 	int i;
 	for (i = 0; i < 32; i++)
-		g_device->ssid1[i] = 0;
+		MainConfig->ssid1[i] = 0;
 	for (i = 0; i < 64; i++)
-		g_device->pass1[i] = 0;
+		MainConfig->pass1[i] = 0;
 	char *t = strstr(cmd, parslashquote);
 	if (t == 0)
 	{
@@ -309,7 +307,7 @@ void wifiConnect(char *cmd)
 		return;
 	}
 
-	strncpy(g_device->ssid1, (t + 2), (t_end - t - 2));
+	strncpy(MainConfig->ssid1, (t + 2), (t_end - t - 2));
 
 	t = t_end + 3;
 	t_end = strstr(t, parquoteslash);
@@ -319,23 +317,21 @@ void wifiConnect(char *cmd)
 		return;
 	}
 
-	strncpy(g_device->pass1, t, (t_end - t));
-	g_device->current_ap = 1;
-	g_device->dhcpEn1 = 1;
-	saveDeviceSettings(g_device);
-	// test Save g_device to device1
-	copyDeviceSettings();
+	strncpy(MainConfig->pass1, t, (t_end - t));
+	MainConfig->current_ap = 1;
+	MainConfig->dhcpEn1 = 1;
+	SaveConfig();
 	//
 	kprintf("#WIFI.CON#\n");
-	kprintf("##AP1: %s with dhcp on next reset#\n", g_device->ssid1);
+	kprintf("##AP1: %s with dhcp on next reset#\n", MainConfig->ssid1);
 	kprintf("##WIFI.CON#\n");
 }
 
 void wifiConnectMem()
 {
 	kprintf("#WIFI.CON#\n");
-	kprintf("##AP1: %s#\n", g_device->ssid1);
-	kprintf("##AP2: %s#\n", g_device->ssid2);
+	kprintf("##AP1: %s#\n", MainConfig->ssid1);
+	kprintf("##AP2: %s#\n", MainConfig->ssid2);
 	kprintf("##WIFI.CON#\n");
 }
 
@@ -347,7 +343,7 @@ bool getAutoWifi(void)
 }
 void setAutoWifi()
 {
-	autoWifi = (g_device->options & Y_WIFIAUTO) ? true : false;
+	autoWifi = (MainConfig->options & Y_WIFIAUTO) ? true : false;
 }
 
 void wifiAuto(char *cmd)
@@ -367,11 +363,11 @@ void wifiAuto(char *cmd)
 	uint8_t value = atoi(t + 2);
 
 	if (value == 0)
-		g_device->options &= N_WIFIAUTO;
+		MainConfig->options &= N_WIFIAUTO;
 	else
-		g_device->options |= Y_WIFIAUTO;
+		MainConfig->options |= Y_WIFIAUTO;
 	autoWifi = value;
-	saveDeviceSettings(g_device);
+	SaveConfig();
 
 	wifiAuto((char *)"");
 }
@@ -557,7 +553,7 @@ const char strilDLIST[] = {"\n#CLI.LIST#\n"};
 
 void clientList(char *s)
 {
-	uint16_t i = 0, j = NBSTATIONS;
+	uint8_t i = 0, j = MainConfig->TotalStations;
 	bool onlyOne = false;
 
 	char *t = strstr(s, parslashquote);
@@ -570,43 +566,42 @@ void clientList(char *s)
 			return;
 		}
 		i = atoi(t + 2);
-		if (i > (NBSTATIONS - 1))
+		if (i > MainConfig->TotalStations)
 			i = 0;
 		j = i + 1;
 		onlyOne = true;
 	}
+
+	if (!onlyOne)
+		kprintf(strilDLIST);
+	for (; i < j; i++)
 	{
-		if (!onlyOne)
-			kprintf(strilDLIST);
-		for (; i < j; i++)
+		vTaskDelay(1);
+		station_slot_s *si = getStation(i);
+
+		if ((si == NULL) || (si->port == 0))
 		{
-			vTaskDelay(1);
-			struct shoutcast_info *si = getStation(i);
-
-			if ((si == NULL) || (si->port == 0))
-			{
-				if (si != NULL)
-				{
-					free(si);
-				}
-				continue;
-			}
-
 			if (si != NULL)
 			{
-				if (si->port != 0)
-				{
-					if (onlyOne)
-						kprintf(strilINFO, i, si->name, si->domain, si->port, si->file);
-					else
-						kprintf(strilNUM, i, si->name, si->domain, si->port, si->file);
-				}
 				free(si);
 			}
+			continue;
 		}
-		if (!onlyOne)
-			kprintf(strilLIST);
+
+		if (si != NULL)
+		{
+			if (si->port != 0)
+			{
+				if (onlyOne)
+					kprintf(strilINFO, (i + 1), si->name, si->domain, si->port, si->file);
+				else
+					kprintf(strilNUM, (i + 1), si->name, si->domain, si->port, si->file);
+			}
+			free(si);
+		}
 	}
+	if (!onlyOne)
+		kprintf(strilLIST);
 }
 // parse url
 bool parseUrl(char *src, char *url, char *path, uint16_t *port)
@@ -646,13 +641,13 @@ bool parseUrl(char *src, char *url, char *path, uint16_t *port)
 //edit a station
 void clientEdit(char *s)
 {
-	struct shoutcast_info *si;
-	uint8_t id = 0xff;
+	station_slot_s *si;
+	uint8_t id= 0xFF;
 	char *tmp;
 	char *tmpend;
 	char url[200];
 
-	si = malloc(sizeof(struct shoutcast_info));
+	si = malloc(sizeof(station_slot_s));
 	if (si == NULL)
 	{
 		kprintf("##CLI.EDIT#: ERROR MEM#");
@@ -674,7 +669,7 @@ void clientEdit(char *s)
 	if (tmpend - tmp)
 	{
 		strncpy(si->name, tmp, tmpend - tmp);
-	}				//*tmpend = 0; }
+	}
 	tmp = ++tmpend; //,
 	tmpend = strchr(tmp, '%');
 	if (tmpend == NULL)
@@ -682,7 +677,7 @@ void clientEdit(char *s)
 	if (tmpend - tmp)
 	{
 		strncpy(url, tmp, tmpend - tmp);
-	} //*tmpend = 0; }
+	}
 	else
 		url[0] = 0;
 
@@ -693,7 +688,7 @@ void clientEdit(char *s)
 		parseUrl(url, si->domain, si->file, &(si->port));
 
 	//printf(" id: %d, name: %s, url: %s, port: %d, path: %s\n",id,si->name,si->domain,si->port,si->file);
-	if (id < 0xff)
+	if (id < 0xFF)
 	{
 		if (si->domain[0] == 0)
 		{
@@ -708,7 +703,7 @@ void clientEdit(char *s)
 }
 void clientInfo()
 {
-	struct shoutcast_info *si;
+	station_slot_s *si;
 	kprintf("##CLI.INFO#\n");
 	si = getStation(currentStation);
 	if (si != NULL)
@@ -724,7 +719,7 @@ void clientInfo()
 
 char *webInfo()
 {
-	struct shoutcast_info *si;
+	station_slot_s *si;
 	si = getStation(currentStation);
 	char *resp = malloc(1024);
 	if (si != NULL)
@@ -737,28 +732,13 @@ char *webInfo()
 	}
 	return resp;
 }
-char *webList(int id)
-{
-	struct shoutcast_info *si;
-	si = getStation(id);
-	char *resp = malloc(1024);
-	if (si != NULL)
-	{
-		if (resp != NULL)
-		{
-			sprintf(resp, "%s\n", si->name);
-		}
-		free(si);
-	}
-	return resp;
-}
 
 void sysI2S(char *s)
 {
 	char *t = strstr(s, parslashquote);
 	if (t == NULL)
 	{
-		kprintf("##I2S speed of the vs1053: %d, 0=48kHz, 1=96kHz, 2=192kHz#\n", g_device->i2sspeed);
+		kprintf("##I2S speed of the vs1053: %d, 0=48kHz, 1=96kHz, 2=192kHz#\n", MainConfig->i2sspeed);
 		return;
 	}
 	char *t_end = strstr(t, parquoteslash);
@@ -770,8 +750,8 @@ void sysI2S(char *s)
 	uint8_t speed = atoi(t + 2);
 	VS1053_I2SRate(speed);
 
-	g_device->i2sspeed = speed;
-	saveDeviceSettings(g_device);
+	MainConfig->i2sspeed = speed;
+	SaveConfig();
 	sysI2S((char *)"");
 }
 
@@ -800,11 +780,11 @@ void sysUart(char *s)
 	{
 		uint32_t speed = atoi(t + 2);
 		speed = checkUart(speed);
-		g_device->uartspeed = speed;
-		saveDeviceSettings(g_device);
+		MainConfig->uartspeed = speed;
+		SaveConfig();
 		kprintf("Speed: %u\n", speed);
 	}
-	kprintf("\n%sUART= %u# on next reset\n", msgsys, g_device->uartspeed);
+	kprintf("\n%sUART= %u# on next reset\n", msgsys, MainConfig->uartspeed);
 }
 
 void clientVol(char *s)
@@ -862,11 +842,11 @@ void sysddmm(char *s)
 	}
 	uint8_t value = atoi(t + 2);
 	if (value == 0)
-		g_device->options &= N_DDMM;
+		MainConfig->options &= N_DDMM;
 	else
-		g_device->options |= Y_DDMM;
+		MainConfig->options |= Y_DDMM;
 	ddmm = (value) ? 1 : 0;
-	saveDeviceSettings(g_device);
+	SaveConfig();
 	set_ddmm(ddmm);
 	sysddmm((char *)"");
 }
@@ -875,15 +855,15 @@ void sysddmm(char *s)
 void syshenc(char *s)
 {
 	char *t = strstr(s, parslashquote);
-	Encoder_t *encoder;
+	encoder_s *encoder;
 	bool encvalue;
-	encoder = (Encoder_t *)getEncoder();
+	encoder = (encoder_s *)getEncoder();
 	if (encoder == NULL)
 	{
 		kprintf("Encoder not defined#\n");
 		return;
 	}
-	uint8_t options = g_device->options;
+	uint8_t options = MainConfig->options;
 	encvalue = options & Y_ENC;
 
 	if (t == NULL)
@@ -906,15 +886,15 @@ void syshenc(char *s)
 	uint8_t value = atoi(t + 2);
 	if (value == 0)
 	{
-		g_device->options &= N_ENC;
+		MainConfig->options &= N_ENC;
 	}
 	else
 	{
-		g_device->options |= Y_ENC;
+		MainConfig->options |= Y_ENC;
 	}
 	setHalfStep(encoder, value);
 	syshenc((char *)"");
-	saveDeviceSettings(g_device);
+	SaveConfig();
 }
 
 // display or change the rotation lcd mode
@@ -939,12 +919,12 @@ void sysrotat(char *s)
 	}
 	uint8_t value = atoi(t + 2);
 	if (value == 0)
-		g_device->options &= N_ROTAT;
+		MainConfig->options &= N_ROTAT;
 	else
-		g_device->options |= Y_ROTAT;
+		MainConfig->options |= Y_ROTAT;
 	rotat = value;
 	set_lcd_rotat(rotat);
-	saveDeviceSettings(g_device);
+	SaveConfig();
 	sysrotat((char *)"");
 }
 
@@ -952,7 +932,7 @@ void sysrotat(char *s)
 void syslcdout(char *s)
 {
 	char *t = strstr(s, parslashquote);
-	lcd_out = g_device->lcd_out;
+	lcd_out = MainConfig->lcd_out;
 	if (t == NULL)
 	{
 		kprintf("##LCD out is ");
@@ -966,9 +946,9 @@ void syslcdout(char *s)
 		return;
 	}
 	uint8_t value = atoi(t + 2);
-	g_device->lcd_out = value;
+	MainConfig->lcd_out = value;
 	lcd_out = value;
-	saveDeviceSettings(g_device);
+	SaveConfig();
 	set_lcd_out(lcd_out);
 	syslcdout((char *)"");
 	wakeLcd();
@@ -980,7 +960,7 @@ uint32_t getLcdOut()
 	get_lcd_out(&lcd_out);
 	if (lcd_out == 0xFFFFFFFF)
 	{
-		lcd_out = g_device->lcd_out;
+		lcd_out = MainConfig->lcd_out;
 	}
 	if (lcd_out > 0)
 		increm++; //adjust
@@ -1013,7 +993,7 @@ void hostname(char *s)
 	char *t = strstr(s, parslashquote);
 	if (t == NULL)
 	{
-		kprintf("##SYS.HOST#: %s.local\n  IP:%s #\n", g_device->hostname, getIp());
+		kprintf("##SYS.HOST#: %s.local\n  IP:%s #\n", MainConfig->hostname, getIp());
 		return;
 	}
 
@@ -1026,16 +1006,16 @@ void hostname(char *s)
 	}
 
 	if (t_end - t == 0)
-		strcpy(g_device->hostname, "ESP32Radiola");
+		strcpy(MainConfig->hostname, "ESP32Radiola");
 	else
 	{
 		if (t_end - t >= HOSTLEN)
 			t_end = t + HOSTLEN;
-		strncpy(g_device->hostname, t, (t_end - t) * sizeof(char));
-		g_device->hostname[(t_end - t) * sizeof(char)] = 0;
+		strncpy(MainConfig->hostname, t, (t_end - t) * sizeof(char));
+		MainConfig->hostname[(t_end - t) * sizeof(char)] = 0;
 	}
-	saveDeviceSettings(g_device);
-	setHostname(g_device->hostname);
+	SaveConfig();
+	setHostname(MainConfig->hostname);
 	hostname((char *)"");
 }
 
@@ -1075,10 +1055,10 @@ void setLogLevel(esp_log_level_t level)
 {
 	esp_log_level_set("*", level);
 	s_log_default_level = level;
-	if (g_device->trace_level != level)
+	if (MainConfig->trace_level != level)
 	{
-		g_device->trace_level = level;
-		saveDeviceSettings(g_device);
+		MainConfig->trace_level = level;
+		SaveConfig();
 	}
 	displayLogLevel();
 }
@@ -1177,7 +1157,7 @@ void checkCommand(int size, char *s)
 				printInfo(tmp);
 		}
 		else
-			kprintf("BT201 %s!", g_device->bt_ver);
+			kprintf("BT201 %s!", MainConfig->bt_ver);
 	}
 	else if (startsWith("dbg.", tmp))
 	{
@@ -1263,9 +1243,6 @@ void checkCommand(int size, char *s)
 		else if (strcmp(tmp + 4, "erase") == 0)
 		{
 			eeEraseAll();
-			fflush(stdout);
-			vTaskDelay(100);
-			esp_restart();
 		}
 		else if (strcmp(tmp + 4, "heap") == 0)
 			heapSize();

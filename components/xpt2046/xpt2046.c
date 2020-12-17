@@ -24,7 +24,6 @@
 #define TAG "XPT2046"
 
 static spi_device_handle_t t_handle = NULL; // SPI handle of the spi touch interface.
-static spi_host_device_t spiNo;
 static gpio_num_t csPin;
 static bool haveTouchOn = false;
 static bool inCalibrate = false;
@@ -37,17 +36,17 @@ xTaskHandle handleTaskLcd;
 // ============= Touch panel functions =========================================
 void saveCalibration(uint32_t x, uint32_t y)
 {
-	g_device->tp_calx = x;
-	g_device->tp_caly = y;
-	saveDeviceSettings(g_device);
+	MainConfig->tp_calx = x;
+	MainConfig->tp_caly = y;
+	SaveConfig();
 	ESP_LOGI(TAG, "Calibration saved: X:%x, Y:%x", x, y);
 }
 void getCalibration()
 {
-	if (g_device->tp_calx != 0)
-		tp_calx = g_device->tp_calx;
-	if (g_device->tp_caly != 0)
-		tp_caly = g_device->tp_caly;
+	if (MainConfig->tp_calx != 0)
+		tp_calx = MainConfig->tp_calx;
+	if (MainConfig->tp_caly != 0)
+		tp_caly = MainConfig->tp_caly;
 	ESP_LOGI(TAG, "Calibration read: X:%x, Y:%x", tp_calx, tp_caly);
 }
 void setTouchSize(int w, int h)
@@ -68,7 +67,7 @@ void getTaskLcd(xTaskHandle *hdt) { handleTaskLcd = *hdt; }
 void xpt_init()
 {
 	gpio_get_touch(&csPin);
-	gpio_get_spi_bus((uint8_t *)&spiNo, NULL, NULL, NULL);
+	gpio_get_spi_bus(NULL, NULL, NULL);
 	if ((csPin != GPIO_NONE))
 	{
 		haveTouchOn = true;
@@ -92,7 +91,7 @@ void xpt_init()
 				.flags = SPI_DEVICE_NO_DUMMY,
 				.queue_size = 1,
 			};
-			ESP_ERROR_CHECK(spi_bus_add_device(spiNo, &dev_config, &t_handle));
+			ESP_ERROR_CHECK(spi_bus_add_device(KSPI, &dev_config, &t_handle));
 			ESP_LOGI(TAG, "... Added touch spi bus  cs: %d,  Speed= %d.", csPin, dev_config.clock_speed_hz);
 		}
 		//init tp_calx & tp_caly

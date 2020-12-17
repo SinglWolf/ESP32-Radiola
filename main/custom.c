@@ -45,7 +45,7 @@ gpio_num_t led;
 gpio_num_t fanspeed;
 gpio_num_t buzzer;
 
-led_channel_t channels;
+led_channel_e channels;
 ledc_channel_config_t ledc_channel_display, ledc_channel_fan, ledc_channel_buzzer;
 ledc_timer_config_t ledc_timer_display, ledc_timer_fan, ledc_timer_buzzer;
 
@@ -56,9 +56,9 @@ void LedBacklightInit()
 {
 	if (led != GPIO_NONE)
 	{
-		if (g_device->backlight_mode == NOT_ADJUSTABLE)
+		if (MainConfig->backlight_mode == NOT_ADJUSTABLE)
 		{
-			g_device->backlight_level = 255;
+			MainConfig->backlight_level = 255;
 		}
 		SetLedBacklight();
 	}
@@ -184,7 +184,7 @@ void SetLedBacklight()
 {
 	if (led != GPIO_NONE)
 	{
-		ESP_ERROR_CHECK(ledc_set_duty(LEDC_LOW_SPEED_MODE, DISPLAY, g_device->backlight_level));
+		ESP_ERROR_CHECK(ledc_set_duty(LEDC_LOW_SPEED_MODE, DISPLAY, MainConfig->backlight_level));
 		ESP_ERROR_CHECK(ledc_update_duty(LEDC_LOW_SPEED_MODE, DISPLAY));
 	}
 }
@@ -213,13 +213,7 @@ void ds18b20Task(void *pvParameters)
 	while (1)
 	{
 		ds18b20_convert_all(owb);
-
-		// In this application all devices use the same resolution,
-		// so use the first device to determine the delay
 		ds18b20_wait_for_conversion(ds18b20_info);
-
-		// Read the results immediately after conversion otherwise it may fail
-		// (using printf before reading may take too long)
 
 		error = ds18b20_read_temp(ds18b20_info, &cur_temp);
 
@@ -239,14 +233,8 @@ void ds18b20Task(void *pvParameters)
 		//int uxHighWaterMark = uxTaskGetStackHighWaterMark(NULL);
 		//ESP_LOGD("ds18b20Task", striWATERMARK, uxHighWaterMark, xPortGetFreeHeapSize());
 
-		vTaskDelay(100);
+		vTaskDelay(200);
 	}
-
-	// clean up dynamically allocated data
-
-	// ds18b20_free(&ds18b20_info);
-
-	// owb_uninitialize(owb);
 }
 /* Initialize tachometer */
 void tach_init()

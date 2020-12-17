@@ -30,10 +30,9 @@ struct servFile
 #include "style_debug.h"
 #include "icons_debug.h"
 #endif
-
+#include "tabbis.h"
 #include "favicon.h"
 #include "logo.h"
-#include "tabbis.h"
 
 const struct servFile faviconFile = {
 	"/favicon.png",

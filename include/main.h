@@ -66,8 +66,8 @@
 #include "lwip/apps/sntp.h"
 #include "driver/timer.h"
 
-#define RELEASE "2.1"
-#define REVISION "2"
+#define RELEASE "2.2"
+#define REVISION "0"
 
 #define TIMER_DIVIDER 16                        //5000000Hz 5MHz
 #define TIMER_DIVIDER1MS TIMER_BASE_CLK / 10000 //10000Hz
@@ -146,14 +146,12 @@
 #define CPU_TIMER 0
 #define CPU_DS18B20 1
 
-#define TEMPO_SAVE_VOL 10000
-
 typedef struct
 {
     int type; /*!< event type */
     int i1;   /*!< TIMER_xxx timer group */
     int i2;   /*!< TIMER_xxx timer number */
-} queue_event_t;
+} timer_event_s;
 
 uint8_t getIvol();
 void setIvol(uint8_t vol);

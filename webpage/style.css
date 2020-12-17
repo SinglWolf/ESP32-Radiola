@@ -3,6 +3,7 @@
     height: 100%;
     margin: 0;
     font: 12px "Trebuchet MS";
+    font-family: sans-serif;
     color: #222;
     background-color: #c9ab72
 }
@@ -16,6 +17,8 @@ h2 {
     margin-bottom: 0px;
     font-size: 30px;
     display: flex;
+    align-items: center;
+    justify-content: center;
     background: #b19561;
     padding: 12px;
     border: 2px solid #ccc;
@@ -35,7 +38,6 @@ h2 {
     cursor: pointer;
     font-weight: bold;
     font-size: 1.7em;
-    font-family: cursive;
     letter-spacing: .2em;
     -webkit-text-stroke-width: 1px;
     -webkit-text-stroke-color: rgba(255,255,0,0.41);
@@ -146,7 +148,7 @@ div.sectiontda {
     box-shadow: inset 0 0 10px 0 #FFEB3B,1px 1px 2px 0 #000
 }
 
-#MAIN {
+.MAIN {
     margin-left: auto;
     margin-right: auto;
     width: 690px;
@@ -155,8 +157,9 @@ div.sectiontda {
     background-color: #c9ab72
 }
 
-#MAIN h1 {
+.MAIN h1 {
     font: 18px "Trebuchet MS";
+    font-family: sans-serif;
     color: #f8f8f8;
     background-color: #000;
     text-align: center;
@@ -168,7 +171,7 @@ div.sectiontda {
     border-top-right-radius: 14px;
 }
 
-#MAIN p {
+.MAIN p {
     font-size: 15px;
     font-weight: bold;
     margin-left: 10px;
@@ -177,27 +180,29 @@ div.sectiontda {
     display: table
 }
 
-#MAIN a,a:visited {
-    font-size: 15px;
+.MAIN a,a:visited {
+    font-size: 20px;
     color: currentColor;
-    text-decoration: none
+    text-decoration: none;
+    margin: 5px;
 }
 
-#MAIN a:hover {
+.MAIN a:hover {
     color: #666
 }
 
-#MAIN form {
+.MAIN form {
     font: 15px "Trebuchet MS";
+    font-family: sans-serif;
     width: 98%
 }
 
-#MAIN iframe {
+.MAIN iframe {
     height: 400px;
     width: 100%
 }
 
-#MAIN span.bold {
+.MAIN span.bold {
     font-weight: 900;
     font-size: 15px;
     margin: 0;
@@ -205,13 +210,13 @@ div.sectiontda {
     display: block
 }
 
-#MAIN span.bold1 {
+.MAIN span.bold1 {
     font-weight: 900;
     width: 120px;
     display: inline-block
 }
 
-#MAIN span.bold2 {
+.MAIN span.bold2 {
     font-weight: 900;
     display: inline-block
 }
@@ -227,7 +232,7 @@ div.sectiontda {
     border-radius: 5px
 }
 
-#MAIN div.bold2 {
+.MAIN div.bold2 {
     font-size: 15px;
     margin-left: 10px;
     margin-right: 2px;
@@ -237,7 +242,7 @@ div.sectiontda {
     display: inline-flex
 }
 
-#MAIN span.bold4 {
+.MAIN span.bold4 {
     width: 98%;
     display: inline-block
 }
@@ -262,12 +267,12 @@ div.sectiontda {
     }
 }
 
-#MAIN hr {
+.MAIN hr {
     size: 1px;
     color: #000
 }
 
-#MAIN input[type=button] {
+.MAIN input[type=button] {
     color: #ff0;
     font-size: 14px;
     min-width: 100px;
@@ -287,7 +292,7 @@ div.sectiontda {
     cursor: pointer
 }
 
-#MAIN button {
+.MAIN button {
     color: #ff0;
     font-size: 24px;
     font-weight: bold;
@@ -307,7 +312,7 @@ div.sectiontda {
     cursor: pointer
 }
 
-#MAIN input[type=button]:active,button:active {
+.MAIN input[type=button]:active,button:active {
     outline: none;
     text-decoration: none;
     box-shadow: 0 2px 0 #d35400,0px 3px 6px yellow;
@@ -315,7 +320,12 @@ div.sectiontda {
     top: 4px
 }
 
-#MAIN input[type=text],input[type=password] {
+.MAIN input[type=button]:disabled {
+    color: #000;
+    cursor: not-allowed;
+}
+
+.MAIN input[type=text],input[type=password] {
     color: black;
     font-size: 14px;
     font-weight: bold;
@@ -329,7 +339,7 @@ div.sectiontda {
     box-shadow: inset -1px 1px 3px 0 black,-1px 1px 6px 0 yellow
 }
 
-#MAIN input[type=file] {
+.MAIN input[type=file] {
     color: black;
     font-size: 14px;
     font-weight: bold;
@@ -343,7 +353,7 @@ div.sectiontda {
     box-shadow: inset -1px 1px 3px 0 black,-1px 1px 6px 0 yellow
 }
 
-#MAIN select,option {
+.MAIN select,option {
     color: black;
     font-size: 14px;
     font-weight: bold;
@@ -378,13 +388,13 @@ div.sectiontda {
     border: 2px solid #ccc;
     border-radius: 14px;
     width: 30%;
-    min-width: 480px;
+    min-width: 495px;
     height: auto;
     box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2),0 6px 20px 0 rgba(0,0,0,0.19);
     -webkit-animation-name: animatetop;
     -webkit-animation-duration: .4s;
     animation-name: animatetop;
-    animation-duration: .4s
+    animation-duration: .4s;
 }
 
 @-webkit-keyframes animatetop {
@@ -618,16 +628,23 @@ tr {
     margin: 10px
 }
 
-#stationsTable {
+[id^=table_] {
     background-color: #d6bd59 !important
 }
 
-#stationsTable thead td,#IRcodesTable thead td,#GPIOsTable thead td {
+[id^=table_] thead td,#IRcodesTable thead td,#GPIOsTable thead td {
     background-color: #000;
     cursor: auto;
-    color: white
+    color: white;
+    text-align:center;
 }
 
-#stationsTable tr {
+[id^=table_] tr {
     cursor: pointer
+}
+
+.lst {
+    font-size: 20px;
+    padding-left: 15px;
+    padding-top: 10px;
 }

@@ -9,6 +9,7 @@
 
 #include "esp_system.h"
 #include "tda7313.h"
+#include "gpios.h"
 
 #define APMODE 0
 #define STA1 1
@@ -20,7 +21,10 @@
 #define TZONELEN 30
 #define NTP_LEN 20
 
-#define NBSTATIONS 128 // Максимальное количество станций
+#define MAIN_SPACE "radiola"
+#define STATION_SPACE "stations"
+
+#define MAXSTATIONS 128 // Максимальное количество станций
 
 // константы для маски флагов опций
 #define Y_DDMM 0x01 // bit 0: Формат отображения даты на дисплее 0 = MMDD, 1 = DDMM
@@ -47,23 +51,22 @@
 #define Y_GPIOMODE 0x80 // bit 7: 0 = gpio default 1 = gpio from NVS
 #define N_GPIOMODE 0x7F
 
-typedef enum backlight_mode_t
+typedef enum
 {
 	NOT_ADJUSTABLE, //Нерегулируемая подсветка
 	BY_TIME,		//По времени
 	BY_LIGHTING,	//По уровню освещённости в помещении
 	BY_HAND			//Ручная регулировка
-} backlight_mode_t;
+} backlight_mode_e;
 
-typedef enum ir_mode_t
+typedef enum
 {
 	IR_DEFAULD, // Опрос кодов по-умолчанию
 	IR_CUSTOM,	//Опрос пользовательских кодов
-} ir_mode_t;
+} ir_mode_e;
 
-struct device_settings
+typedef struct
 {
-	uint16_t cleared; // 0xAABB if initialized
 	uint8_t dhcpEn1;
 	uint8_t ipAddr1[4];
 	uint8_t mask1[4];
@@ -83,7 +86,8 @@ struct device_settings
 	int8_t freqtreble;
 	uint8_t freqbass;
 	uint8_t spacial;
-	uint16_t currentstation; //
+	uint16_t CurrentStation; //
+	uint8_t TotalStations;	 // Общее количество станций
 	uint8_t autostart;		 // 0: stopped, 1: playing
 	uint8_t i2sspeed;		 // 0 = 48kHz, 1 = 96kHz, 2 = 128kHz
 	uint32_t uartspeed;		 // serial baud
@@ -92,58 +96,55 @@ struct device_settings
 	uint8_t ntp_mode;		 // ntp_mode
 	uint32_t sleepValue;
 	uint32_t wakeValue;
-	// esp32
-	input_mode_t audio_input_num; //
-	ir_mode_t ir_mode;			  // Режим работы ИК-пульта
+	input_mode_e audio_input_num; //
+	ir_mode_e ir_mode;			  // Режим работы ИК-пульта
 	uint8_t trace_level;
 	uint32_t lcd_out; // timeout in seconds to switch off the lcd. 0 = no timeout
 	uint8_t options;  // Переменная для хранения состояния флагов различных опций
 	char hostname[HOSTLEN];
 	uint32_t tp_calx;
 	uint32_t tp_caly;
-	backlight_mode_t backlight_mode; //режим управления подсветкой
-	uint8_t hand_brightness,		 //ручной уровень подсветки
-		backlight_level,			 //текущий уровень подсветки
-		day_brightness,				 //уровень дневной подсвеки
-		night_brightness,			 //уровень ночной подсветки
-		begin_h,					 //Время ночной подсветки начало, часы
-		begin_m,					 //Время ночной подсветки начало, минуты
-		end_h,						 //Время ночной подсветки конец, часы
-		end_m,						 //Время ночной подсветки конец, минуты
-		FanControl,					 //Режим управления оборотами вентилятора
-		min_temp,					 //Минимальная температура срабатывания автоматики управления оборотами
-		max_temp,					 //Максимальная температура срабатывания биппера и выключения звука
-		min_pwm,					 //Минимальный уровень оборотов вентилятора при включении питания
-		hand_pwm;					 //Уровень оборотов при ручной регулировке
+	backlight_mode_e backlight_mode; // режим управления подсветкой
+	uint8_t hand_brightness,		 // ручной уровень подсветки
+		backlight_level,			 // текущий уровень подсветки
+		day_brightness,				 // уровень дневной подсвеки
+		night_brightness,			 // уровень ночной подсветки
+		begin_h,					 // Время ночной подсветки начало, часы
+		begin_m,					 // Время ночной подсветки начало, минуты
+		end_h,						 // Время ночной подсветки конец, часы
+		end_m,						 // Время ночной подсветки конец, минуты
+		FanControl,					 // Режим управления оборотами вентилятора
+		min_temp,					 // Минимальная температура срабатывания автоматики управления оборотами
+		max_temp,					 // Максимальная температура срабатывания биппера и выключения звука
+		min_pwm,					 // Минимальный уровень оборотов вентилятора при включении питания
+		hand_pwm;					 // Уровень оборотов при ручной регулировке
 	bool ldr;						 // Признак присутствия фоторезистора
 
 	char tzone[TZONELEN];
 	char ntp_server[4][NTP_LEN];
 
-} Device_Settings;
+} radiola_config_s;
 
-struct shoutcast_info
+typedef struct
 {
-	char domain[73]; //url
-	char file[116];	 //path
-	char name[64];
-	uint16_t port; //port
-};
 
-extern struct device_settings *g_device;
+	char name[64];	 // Name station
+	char domain[73]; // url
+	char file[116];	 // path
+	uint16_t port;	 // port
+	uint8_t fav;	 // FAV
+} station_slot_s;
 
-void partitions_init(void);
-void copyDeviceSettings();
-void restoreDeviceSettings();
-bool eeSetData(int address, void *buffer, int size);
-bool eeSetData1(int address, void *buffer, int size);
-void eeErasesettings(void);
+extern radiola_config_s *MainConfig;
+
+esp_err_t open_storage(const char *namespace, nvs_open_mode open_mode, nvs_handle *handle);
+void close_storage(nvs_handle handle);
+void ConfigInit(bool reset);
 void eeEraseAll();
-void saveStation(struct shoutcast_info *station, uint16_t position);
-void saveMultiStation(struct shoutcast_info *station, uint16_t position, uint8_t number);
-void eeEraseStations(void);
-struct shoutcast_info *getStation(uint8_t position);
-void saveDeviceSettings(struct device_settings *settings);
-void saveDeviceSettingsVolume(struct device_settings *settings);
-struct device_settings *getDeviceSettings();
-struct device_settings *getDeviceSettingsSilent();
+void saveStation(station_slot_s *station, uint8_t ID);
+void EraseNameSpace(const char *namespace);
+station_slot_s *getStation(uint8_t ID);
+void SaveConfig();
+uint8_t GetTotalStations();
+esp_err_t nvs_get_ir_key(nvs_handle handle, const char *key, uint32_t *out_set1, uint32_t *out_set2);
+esp_err_t nvs_set_ir_key(const char *key, char *ir_keys);

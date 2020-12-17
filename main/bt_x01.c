@@ -119,16 +119,16 @@ void parse_event()
          if (strlen(event_bt) > 11)
         {
             bt.present = true;
-            if (strcmp(event_bt, g_device->bt_ver) != 0)
+            if (strcmp(event_bt, MainConfig->bt_ver) != 0)
             {
-                strcpy(g_device->bt_ver, event_bt);
-                saveDeviceSettings(g_device);
+                strcpy(MainConfig->bt_ver, event_bt);
+                SaveConfig();
             }
         }
         else
         {
             bt.present = false;
-            strcpy(g_device->bt_ver, "NOT PRESENT");
+            strcpy(MainConfig->bt_ver, "NOT PRESENT");
         }
     }
     txt_index = find_index("QA+"); // Текущая громкость
@@ -557,7 +557,7 @@ static void uartBtTask()
 
 void uartBtInit()
 {
-    uint32_t uspeed = g_device->uartspeed;
+    uint32_t uspeed = MainConfig->uartspeed;
     gpio_num_t bt_rxd, bt_txd;
     esp_err_t err = gpio_get_uart(&bt_rxd, &bt_txd);
     if (bt_rxd != GPIO_NONE && bt_txd != GPIO_NONE)
@@ -592,13 +592,13 @@ void uartBtInit()
             vTaskDelay(150);
             if (bt.present)
             {
-                ESP_LOGI(TAG, "%s", g_device->bt_ver);
+                ESP_LOGI(TAG, "%s", MainConfig->bt_ver);
             }
             else
             {
                 vTaskDelete(xBT_Handdle);
                 uart_driver_delete(UART_NUM_1);
-                ESP_LOGE(TAG, "%s!", g_device->bt_ver);
+                ESP_LOGE(TAG, "%s!", MainConfig->bt_ver);
             }
         }
         else

@@ -17,7 +17,7 @@
 #include "main.h"
 #include "eeprom.h"
 
-#define stack 5400
+#define stack 6144
 #define TAG "servers"
 
 #define strsTELNET "Servers Telnet Socket fails %s errno: %d"
@@ -139,7 +139,7 @@ void serversTask(void *pvParams)
 			//printf("server_sock SD_set %d\n",server_sock);
 
 			//add telnetServer_sock to set (telnet)
-			if (g_device->current_ap != APMODE) //inhibe telnet in AP mode
+			if (MainConfig->current_ap != APMODE) //inhibe telnet in AP mode
 			{
 				FD_SET(telnetServer_sock, &readfds);
 				max_sd = telnetServer_sock > max_sd ? telnetServer_sock : max_sd;

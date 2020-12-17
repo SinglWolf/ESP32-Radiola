@@ -9,12 +9,12 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/timers.h"
 
-typedef enum led_channel_t
+typedef enum
 {
 	DISPLAY, // Дисплей
 	FAN,	 //Вентилятор
 	BUZZER,	 //Пищалка
-} led_channel_t;
+} led_channel_e;
 
 void LedBacklightInit();
 void SetLedBacklight();

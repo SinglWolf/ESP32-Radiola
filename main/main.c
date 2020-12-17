@@ -60,6 +60,13 @@ const int CONNECTED_AP = 0x00000010;
 #define PRIO_CONNECT configMAX_PRIORITIES - 1
 #define striWATERMARK "watermark: %d  heap: %d"
 
+// timeout to save volume in flash
+static uint32_t timerVol = 0;
+#define TEMPO_SAVE_VOL 10000
+static uint32_t timerRSSI = 0;
+int8_t rssi = -30;
+#define TIME_SEND_RSSI 5000
+
 static void obtain_time(void);
 static void initialize_sntp(void);
 void start_network();
@@ -70,14 +77,13 @@ static EventGroupHandle_t wifi_event_group;
 xQueueHandle event_queue;
 
 //xSemaphoreHandle print_mux;
-player_t *player_config;
+player_s *player_config;
 static uint8_t clientIvol = 0;
 //ip
 static char localIp[20];
 // 4MB sram?
 static bool bigRam, time_sync = false;
-// timeout to save volume in flash
-static uint32_t ctimeVol = 0;
+
 static bool divide = false;
 // disable 1MS timer interrupt
 IRAM_ATTR void noInterrupt1Ms() { timer_disable_intr(TIMERGROUP1MS, msTimer); }
@@ -91,13 +97,13 @@ IRAM_ATTR uint8_t getIvol() { return clientIvol; }
 IRAM_ATTR void setIvol(uint8_t vol)
 {
 	clientIvol = vol;
-	ctimeVol = 0;
+	timerVol = 0;
 }
 
 /*
 IRAM_ATTR void   microsCallback(void *pArg) {
 	int timer_idx = (int) pArg;
-	queue_event_t evt;	
+	timer_event_s evt;	
 	TIMERG1.hw_timer[timer_idx].update = 1;
 	TIMERG1.int_clr_timers.t1 = 1; //isr ack
 		evt.type = TIMER_1mS;
@@ -114,12 +120,13 @@ IRAM_ATTR void msCallback(void *pArg)
 {
 	int timer_idx = (int)pArg;
 
-	// queue_event_t evt;
+	// timer_event_s evt;
 	TIMERG1.hw_timer[timer_idx].update = 1;
 	TIMERG1.int_clr_timers.t0 = 1; //isr ack
 	if (divide)
 	{
-		ctimeVol++; // to save volume
+		timerVol++;	 // to save volume
+		timerRSSI++; // to send RSSI
 	}
 	divide = !divide;
 	if (serviceAddon != NULL)
@@ -130,7 +137,7 @@ IRAM_ATTR void msCallback(void *pArg)
 IRAM_ATTR void sleepCallback(void *pArg)
 {
 	int timer_idx = (int)pArg;
-	queue_event_t evt;
+	timer_event_s evt;
 	TIMERG0.int_clr_timers.t0 = 1; //isr ack
 	evt.type = TIMER_SLEEP;
 	evt.i1 = TIMERGROUP;
@@ -142,7 +149,7 @@ IRAM_ATTR void wakeCallback(void *pArg)
 {
 
 	int timer_idx = (int)pArg;
-	queue_event_t evt;
+	timer_event_s evt;
 	TIMERG0.int_clr_timers.t1 = 1;
 	evt.i1 = TIMERGROUP;
 	evt.i2 = timer_idx;
@@ -264,8 +271,8 @@ static void init_hardware()
 	// Настройка TDA7313...
 	if (tda7313_init() == ESP_OK)
 	{
-		ESP_ERROR_CHECK(tda7313_init_nvs(false));
-		ESP_ERROR_CHECK(tda7313_set_input(g_device->audio_input_num));
+		tda7313_init_nvs(false); ////////////////////////////////////////////////////////////////////
+		tda7313_set_input(MainConfig->audio_input_num);
 	}
 	if (VS1053_HW_init()) // init spi
 	{
@@ -392,22 +399,22 @@ static void start_wifi()
 	}
 	ESP_LOGI(TAG, "WiFi init done!");
 
-	if (g_device->current_ap == APMODE)
+	if (MainConfig->current_ap == APMODE)
 	{
-		if (strlen(g_device->ssid1) != 0)
+		if (strlen(MainConfig->ssid1) != 0)
 		{
-			g_device->current_ap = STA1;
+			MainConfig->current_ap = STA1;
 		}
 		else
 		{
-			if (strlen(g_device->ssid2) != 0)
+			if (strlen(MainConfig->ssid2) != 0)
 			{
-				g_device->current_ap = STA2;
+				MainConfig->current_ap = STA2;
 			}
 			else
-				g_device->current_ap = APMODE;
+				MainConfig->current_ap = APMODE;
 		}
-		saveDeviceSettings(g_device);
+		SaveConfig();
 	}
 
 	while (1)
@@ -417,25 +424,25 @@ static void start_wifi()
 			ESP_ERROR_CHECK(esp_wifi_stop());
 			vTaskDelay(5);
 		}
-		switch (g_device->current_ap)
+		switch (MainConfig->current_ap)
 		{
 		case STA1: //ssid1 used
-			strcpy(ssid, g_device->ssid1);
-			strcpy(pass, g_device->pass1);
+			strcpy(ssid, MainConfig->ssid1);
+			strcpy(pass, MainConfig->pass1);
 			esp_wifi_set_mode(WIFI_MODE_STA);
 			break;
 		case STA2: //ssid2 used
-			strcpy(ssid, g_device->ssid2);
-			strcpy(pass, g_device->pass2);
+			strcpy(ssid, MainConfig->ssid2);
+			strcpy(pass, MainConfig->pass2);
 			esp_wifi_set_mode(WIFI_MODE_STA);
 			break;
 
 		default: // other: AP mode
-			g_device->current_ap = APMODE;
+			MainConfig->current_ap = APMODE;
 			ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_AP));
 		}
 
-		if (g_device->current_ap == APMODE)
+		if (MainConfig->current_ap == APMODE)
 		{
 			printf("WIFI GO TO AP MODE\n");
 			wifi_config_t ap_config = {
@@ -451,11 +458,11 @@ static void start_wifi()
 			vTaskDelay(1);
 			ESP_ERROR_CHECK(esp_wifi_start());
 
-			g_device->audio_input_num = COMPUTER;
+			MainConfig->audio_input_num = COMPUTER;
 		}
 		else
 		{
-			printf("WIFI TRYING TO CONNECT TO SSID %d\n", g_device->current_ap);
+			printf("WIFI TRYING TO CONNECT TO SSID %d\n", MainConfig->current_ap);
 			wifi_config_t wifi_config =
 				{
 					.sta =
@@ -480,12 +487,12 @@ static void start_wifi()
 			}
 			else
 			{
-				g_device->current_ap++;
-				g_device->current_ap %= 3;
+				MainConfig->current_ap++;
+				MainConfig->current_ap %= 3;
 
-				if (getAutoWifi() && (g_device->current_ap == APMODE))
+				if (getAutoWifi() && (MainConfig->current_ap == APMODE))
 				{
-					g_device->current_ap = STA1; // if autoWifi then wait for a reconnection to an AP
+					MainConfig->current_ap = STA1; // if autoWifi then wait for a reconnection to an AP
 					printf("Wait for the AP\n");
 				}
 				else
@@ -493,7 +500,7 @@ static void start_wifi()
 					printf("Empty AP. Try next one\n");
 				}
 
-				saveDeviceSettings(g_device);
+				SaveConfig();
 				continue;
 			}
 		}
@@ -502,10 +509,10 @@ static void start_wifi()
 		if ((xEventGroupWaitBits(wifi_event_group, CONNECTED_AP, false, true, 2000) & CONNECTED_AP) == 0)
 		//timeout . Try the next AP
 		{
-			g_device->current_ap++;
-			g_device->current_ap %= 3;
-			saveDeviceSettings(g_device);
-			printf("\ndevice->current_ap: %d\n", g_device->current_ap);
+			MainConfig->current_ap++;
+			MainConfig->current_ap %= 3;
+			SaveConfig();
+			printf("\ndevice->current_ap: %d\n", MainConfig->current_ap);
 		}
 		else
 			break; //
@@ -544,10 +551,10 @@ static void initialize_sntp(void)
 {
 	ESP_LOGI(TAG, "Initializing SNTP");
 	sntp_setoperatingmode(SNTP_OPMODE_POLL);
-	sntp_setservername(0, g_device->ntp_server[0]);
-	sntp_setservername(1, g_device->ntp_server[1]);
-	sntp_setservername(2, g_device->ntp_server[2]);
-	sntp_setservername(3, g_device->ntp_server[3]);
+	sntp_setservername(0, MainConfig->ntp_server[0]);
+	sntp_setservername(1, MainConfig->ntp_server[1]);
+	sntp_setservername(2, MainConfig->ntp_server[2]);
+	sntp_setservername(3, MainConfig->ntp_server[3]);
 	sntp_set_time_sync_notification_cb(time_sync_notification_cb);
 #ifdef CONFIG_SNTP_TIME_SYNC_METHOD_SMOOTH
 	sntp_set_sync_mode(SNTP_SYNC_MODE_SMOOTH);
@@ -557,7 +564,7 @@ static void initialize_sntp(void)
 
 void start_network()
 {
-	//	struct device_settings *g_device;
+	//	radiola_config_s *MainConfig;
 
 	esp_netif_ip_info_t info;
 	wifi_mode_t mode;
@@ -572,19 +579,19 @@ void start_network()
 
 	esp_netif_dhcpc_stop(sta); // Don't run a DHCP client
 
-	switch (g_device->current_ap)
+	switch (MainConfig->current_ap)
 	{
 	case STA1: //ssid1 used
-		IP4_ADDR(&ipAddr, g_device->ipAddr1[0], g_device->ipAddr1[1], g_device->ipAddr1[2], g_device->ipAddr1[3]);
-		IP4_ADDR(&gate, g_device->gate1[0], g_device->gate1[1], g_device->gate1[2], g_device->gate1[3]);
-		IP4_ADDR(&mask, g_device->mask1[0], g_device->mask1[1], g_device->mask1[2], g_device->mask1[3]);
-		dhcpEn = g_device->dhcpEn1;
+		IP4_ADDR(&ipAddr, MainConfig->ipAddr1[0], MainConfig->ipAddr1[1], MainConfig->ipAddr1[2], MainConfig->ipAddr1[3]);
+		IP4_ADDR(&gate, MainConfig->gate1[0], MainConfig->gate1[1], MainConfig->gate1[2], MainConfig->gate1[3]);
+		IP4_ADDR(&mask, MainConfig->mask1[0], MainConfig->mask1[1], MainConfig->mask1[2], MainConfig->mask1[3]);
+		dhcpEn = MainConfig->dhcpEn1;
 		break;
 	case STA2: //ssid2 used
-		IP4_ADDR(&ipAddr, g_device->ipAddr2[0], g_device->ipAddr2[1], g_device->ipAddr2[2], g_device->ipAddr2[3]);
-		IP4_ADDR(&gate, g_device->gate2[0], g_device->gate2[1], g_device->gate2[2], g_device->gate2[3]);
-		IP4_ADDR(&mask, g_device->mask2[0], g_device->mask2[1], g_device->mask2[2], g_device->mask2[3]);
-		dhcpEn = g_device->dhcpEn2;
+		IP4_ADDR(&ipAddr, MainConfig->ipAddr2[0], MainConfig->ipAddr2[1], MainConfig->ipAddr2[2], MainConfig->ipAddr2[3]);
+		IP4_ADDR(&gate, MainConfig->gate2[0], MainConfig->gate2[1], MainConfig->gate2[2], MainConfig->gate2[3]);
+		IP4_ADDR(&mask, MainConfig->mask2[0], MainConfig->mask2[1], MainConfig->mask2[2], MainConfig->mask2[3]);
+		dhcpEn = MainConfig->dhcpEn2;
 		break;
 	}
 
@@ -626,15 +633,15 @@ void start_network()
 		// wait for ip
 		if ((xEventGroupWaitBits(wifi_event_group, CONNECTED_BIT, false, true, 3000) & CONNECTED_BIT) == 0) //timeout
 		{																									// enable dhcp and restart
-			if (g_device->current_ap == 1)
+			if (MainConfig->current_ap == 1)
 			{
-				g_device->dhcpEn1 = 1;
+				MainConfig->dhcpEn1 = 1;
 			}
 			else
 			{
-				g_device->dhcpEn2 = 1;
+				MainConfig->dhcpEn2 = 1;
 			}
-			saveDeviceSettings(g_device);
+			SaveConfig();
 			fflush(stdout);
 			vTaskDelay(100);
 			esp_restart();
@@ -656,50 +663,50 @@ void start_network()
 		if (dhcpEn) // if dhcp enabled update fields
 		{
 			esp_netif_get_ip_info(sta, &info);
-			switch (g_device->current_ap)
+			switch (MainConfig->current_ap)
 			{
 			case STA1: //ssid1 used
 				ip4_addr_copy(ipAddr, info.ip);
-				g_device->ipAddr1[0] = ip4_addr1_val(ipAddr);
-				g_device->ipAddr1[1] = ip4_addr2_val(ipAddr);
-				g_device->ipAddr1[2] = ip4_addr3_val(ipAddr);
-				g_device->ipAddr1[3] = ip4_addr4_val(ipAddr);
+				MainConfig->ipAddr1[0] = ip4_addr1_val(ipAddr);
+				MainConfig->ipAddr1[1] = ip4_addr2_val(ipAddr);
+				MainConfig->ipAddr1[2] = ip4_addr3_val(ipAddr);
+				MainConfig->ipAddr1[3] = ip4_addr4_val(ipAddr);
 
 				ip4_addr_copy(ipAddr, info.gw);
-				g_device->gate1[0] = ip4_addr1_val(ipAddr);
-				g_device->gate1[1] = ip4_addr2_val(ipAddr);
-				g_device->gate1[2] = ip4_addr3_val(ipAddr);
-				g_device->gate1[3] = ip4_addr4_val(ipAddr);
+				MainConfig->gate1[0] = ip4_addr1_val(ipAddr);
+				MainConfig->gate1[1] = ip4_addr2_val(ipAddr);
+				MainConfig->gate1[2] = ip4_addr3_val(ipAddr);
+				MainConfig->gate1[3] = ip4_addr4_val(ipAddr);
 
 				ip4_addr_copy(ipAddr, info.netmask);
-				g_device->mask1[0] = ip4_addr1_val(ipAddr);
-				g_device->mask1[1] = ip4_addr2_val(ipAddr);
-				g_device->mask1[2] = ip4_addr3_val(ipAddr);
-				g_device->mask1[3] = ip4_addr4_val(ipAddr);
+				MainConfig->mask1[0] = ip4_addr1_val(ipAddr);
+				MainConfig->mask1[1] = ip4_addr2_val(ipAddr);
+				MainConfig->mask1[2] = ip4_addr3_val(ipAddr);
+				MainConfig->mask1[3] = ip4_addr4_val(ipAddr);
 				break;
 
 			case STA2: //ssid2 used
 				ip4_addr_copy(ipAddr, info.ip);
-				g_device->ipAddr2[0] = ip4_addr1_val(ipAddr);
-				g_device->ipAddr2[1] = ip4_addr2_val(ipAddr);
-				g_device->ipAddr2[2] = ip4_addr3_val(ipAddr);
-				g_device->ipAddr2[3] = ip4_addr4_val(ipAddr);
+				MainConfig->ipAddr2[0] = ip4_addr1_val(ipAddr);
+				MainConfig->ipAddr2[1] = ip4_addr2_val(ipAddr);
+				MainConfig->ipAddr2[2] = ip4_addr3_val(ipAddr);
+				MainConfig->ipAddr2[3] = ip4_addr4_val(ipAddr);
 
 				ip4_addr_copy(ipAddr, info.gw);
-				g_device->gate2[0] = ip4_addr1_val(ipAddr);
-				g_device->gate2[1] = ip4_addr2_val(ipAddr);
-				g_device->gate2[2] = ip4_addr3_val(ipAddr);
-				g_device->gate2[3] = ip4_addr4_val(ipAddr);
+				MainConfig->gate2[0] = ip4_addr1_val(ipAddr);
+				MainConfig->gate2[1] = ip4_addr2_val(ipAddr);
+				MainConfig->gate2[2] = ip4_addr3_val(ipAddr);
+				MainConfig->gate2[3] = ip4_addr4_val(ipAddr);
 
 				ip4_addr_copy(ipAddr, info.netmask);
-				g_device->mask2[0] = ip4_addr1_val(ipAddr);
-				g_device->mask2[1] = ip4_addr2_val(ipAddr);
-				g_device->mask2[2] = ip4_addr3_val(ipAddr);
-				g_device->mask2[3] = ip4_addr4_val(ipAddr);
+				MainConfig->mask2[0] = ip4_addr1_val(ipAddr);
+				MainConfig->mask2[1] = ip4_addr2_val(ipAddr);
+				MainConfig->mask2[2] = ip4_addr3_val(ipAddr);
+				MainConfig->mask2[3] = ip4_addr4_val(ipAddr);
 				break;
 			}
 		}
-		saveDeviceSettings(g_device);
+		SaveConfig();
 		esp_netif_set_hostname(sta, "ESP32Radiola");
 
 		// wait for time to be set
@@ -749,7 +756,7 @@ void start_network()
 			vTaskDelay(500);
 			// esp_restart();
 		}
-		setenv("TZ", g_device->tzone, 1);
+		setenv("TZ", MainConfig->tzone, 1);
 		tzset();
 		localtime_r(&now, &timeinfo);
 	}
@@ -767,7 +774,7 @@ void timerTask(void *p)
 
 	initTimers();
 
-	queue_event_t evt;
+	timer_event_s evt;
 
 	while (1)
 	{
@@ -785,7 +792,7 @@ void timerTask(void *p)
 				clientConnect(); // start the player
 				break;
 			// case TIMER_1MS: // 1 ms
-			// ctimeVol++; // to save volume
+			// timerVol++; // to save volume
 			// break;
 			// case TIMER_1mS:  //1µs
 			// break;
@@ -794,15 +801,31 @@ void timerTask(void *p)
 			}
 		}
 
-		if (ctimeVol >= TEMPO_SAVE_VOL)
+		if (timerRSSI >= TIME_SEND_RSSI)
 		{
-			if (g_device->vol != getIvol())
+			wifi_ap_record_t wifidata;
+			esp_wifi_sta_get_ap_info(&wifidata);
+			if (wifidata.primary != 0)
 			{
-				g_device->vol = getIvol();
-				saveDeviceSettingsVolume(g_device);
+				rssi = wifidata.rssi;
+				char answer[20];
+
+				sprintf(answer, "{\"wsrssi\":\"%d\"}", rssi);
+				websocketbroadcast(answer, strlen(answer));
+				// ESP_LOGI("timerTask", "Send RSSI message: %s", answer);
+			}
+			timerRSSI = 0;
+		}
+
+		if (timerVol >= TEMPO_SAVE_VOL)
+		{
+			if (MainConfig->vol != getIvol())
+			{
+				MainConfig->vol = getIvol();
+				SaveConfig();
 				// ESP_LOGD("timerTask",striWATERMARK,uxTaskGetStackHighWaterMark( NULL ),xPortGetFreeHeapSize( ));
 			}
-			ctimeVol = 0;
+			timerVol = 0;
 		}
 		vTaskDelay(1);
 	}
@@ -817,10 +840,10 @@ void uartInterfaceTask(void *pvParameters)
 	int d;
 	uint8_t c;
 	int t;
-	// struct device_settings *device;
+	// radiola_config_s *device;
 	uint32_t uspeed;
 
-	uspeed = g_device->uartspeed;
+	uspeed = MainConfig->uartspeed;
 	uart_config_t uart_config0 = {
 		.baud_rate = uspeed,
 		.data_bits = UART_DATA_8_BITS,
@@ -875,7 +898,7 @@ void autoPlay()
 	char buf[strlen(apmode) + strlen(confAP)];
 
 	sprintf(buf, apmode, localIp);
-	if (g_device->current_ap == APMODE)
+	if (MainConfig->current_ap == APMODE)
 	{
 		clientSaveOneHeader(confAP, strlen(confAP), METANAME);
 		clientSaveOneHeader(buf, strlen(buf), METAGENRE);
@@ -884,12 +907,12 @@ void autoPlay()
 	{
 		clientSaveOneHeader(buf, strlen(buf), METANAME);
 
-		setCurrentStation(g_device->currentstation);
-		if ((g_device->autostart == 1) && (g_device->currentstation != 0xFFFF))
+		setCurrentStation(MainConfig->CurrentStation);
+		if ((MainConfig->autostart == 1) && (MainConfig->CurrentStation != 0xFFFF))
 		{
-			kprintf("autostart: playing:%d, currentstation:%d\n", g_device->autostart, g_device->currentstation);
+			kprintf("autostart: playing:%d, CurrentStation:%d\n", MainConfig->autostart, MainConfig->CurrentStation);
 			vTaskDelay(50); // wait a bit
-			playStationInt(g_device->currentstation);
+			playStationInt(MainConfig->CurrentStation);
 		}
 		else
 			clientSaveOneHeader("ОЖИДАНИЕ", 17, METANAME);
@@ -936,108 +959,30 @@ void app_main()
 	if (xPortGetFreeHeapSize() > 0x80000)
 		bigRam = true;
 	//init hardware
-	partitions_init();
-	ESP_LOGI(TAG, "Partition init done...");
-	//
-	if (g_device->cleared != 0xAABB)
-	{
-		ESP_LOGE(TAG, "Device config not ok. Try to restore");
-		free(g_device);
-		restoreDeviceSettings(); // try to restore the config from the saved one
-		g_device = getDeviceSettings();
-		if (g_device->cleared != 0xAABB)
-		{
-			ESP_LOGE(TAG, "Device config not cleared. Clear it.");
-			free(g_device);
-			eeEraseAll();
-			g_device = getDeviceSettings();
-			g_device->cleared = 0xAABB;			  // marker init done
-			g_device->options &= N_GPIOMODE;	  // Режим считывания GPIO 0 - по-умолчанию, 1 - из NVS
-			g_device->uartspeed = 115200;		  // default
-			g_device->ir_mode = IR_DEFAULD;		  // Опрос кодов по-умолчанию
-			g_device->audio_input_num = COMPUTER; // default
-			g_device->trace_level = ESP_LOG_INFO; // default
-			g_device->vol = 100;				  // default
-			g_device->ntp_mode = 0;				  // Режим  использования серверов NTP 0 - по-умолчанию, 1 - пользовательские
-			g_device->options |= Y_ROTAT;
-			g_device->options |= Y_DDMM;
-			g_device->current_ap = STA1;
-#ifdef CONFIG_WIWI1_PRESENT
-			strcpy(g_device->ssid1, CONFIG_WIFI_SSID1);
-			strcpy(g_device->pass1, CONFIG_WIFI_PASSWORD1);
-#ifdef CONFIG_DHCP1_PRESENT
-			g_device->dhcpEn1 = 1;
-#else
-			g_device->dhcpEn1 = 0;
-			ip_addr_t tempIP1;
-			ipaddr_aton(CONFIG_IPADDRESS1, &tempIP1);
-			memcpy(g_device->ipAddr1, &tempIP1, sizeof(uint32_t));
-			ipaddr_aton(CONFIG_GATEWAY1, &tempIP1);
-			memcpy(g_device->gate1, &tempIP1, sizeof(uint32_t));
-			ipaddr_aton(CONFIG_MASK1, &tempIP1);
-			memcpy(g_device->mask1, &tempIP1, sizeof(uint32_t));
-#endif
-#endif
-#ifdef CONFIG_WIWI2_PRESENT
-			strcpy(g_device->ssid2, CONFIG_WIFI_SSID2);
-			strcpy(g_device->pass2, CONFIG_WIFI_PASSWORD2);
-#ifdef CONFIG_DHCP2_PRESENT
-			g_device->dhcpEn2 = 1;
-#else
-			g_device->dhcpEn2 = 0;
-			ip_addr_t tempIP2;
-			ipaddr_aton(CONFIG_IPADDRESS2, &tempIP2);
-			memcpy(g_device->ipAddr2, &tempIP2, sizeof(uint32_t));
-			ipaddr_aton(CONFIG_GATEWAY2, &tempIP2);
-			memcpy(g_device->gate2, &tempIP2, sizeof(uint32_t));
-			ipaddr_aton(CONFIG_MASK2, &tempIP2);
-			memcpy(g_device->mask2, &tempIP2, sizeof(uint32_t));
-#endif
-#endif
+	ConfigInit(false);
 
-			g_device->lcd_out = 0;
-			g_device->backlight_mode = BY_LIGHTING;		  // по-умолчанию подсветка регулируемая
-			g_device->backlight_level = 255;			  // по-умолчанию подсветка максимальная
-			strcpy(g_device->tzone, CONFIG_TZONE);		  // по-умолчанию часовой пояс Екатеринбурга
-			strcpy(g_device->ntp_server[0], CONFIG_NTP0); // 0
-			strcpy(g_device->ntp_server[1], CONFIG_NTP1); // 1
-			strcpy(g_device->ntp_server[2], CONFIG_NTP2); // 2
-			strcpy(g_device->ntp_server[3], CONFIG_NTP3); // 3
-
-			saveDeviceSettings(g_device);
-		}
-		else
-			ESP_LOGE(TAG, "Device config restored");
-	}
-	copyDeviceSettings(); // copy in the safe partion
 	//
 	InitPWM();
 	//SPI init for the vs1053 and lcd if spi.
 	VS1053_spi_init();
 	//
-	g_device->audio_input_num = COMPUTER;
-	//ESP_LOGI(TAG, "CHECK GPIO_MODE: %d", get_gpio_mode());
+	MainConfig->audio_input_num = COMPUTER;
+	// ESP_LOGI(TAG, "CHECK GPIO_MODE: %d", get_gpio_mode());
 	//audio input number COMPUTER, RADIO, BLUETOOTH
-	ESP_LOGI(TAG, "audio input number %d\nOne of COMPUTER = 1, RADIO, BLUETOOTH", g_device->audio_input_num);
+	ESP_LOGI(TAG, "audio input number %d\nOne of COMPUTER = 1, RADIO, BLUETOOTH", MainConfig->audio_input_num);
 
 	// init softwares
 	telnetinit();
 	websocketinit();
 	// log level
-	setLogLevel(g_device->trace_level);
+	setLogLevel(MainConfig->trace_level);
 	//time display
-	uint8_t ddmm;
-	get_ddmm(&ddmm);
-	setDdmm(ddmm ? 1 : 0);
+	uint8_t ddmm = getDataFormat();
+	setDataFormat(ddmm ? 1 : 0);
 
 	init_hardware();
 	ESP_LOGI(TAG, "Hardware init done...");
 	// lcd init
-	uint8_t rt;
-	get_lcd_rotat(&rt);
-	ESP_LOGI(TAG, "LCD Rotat %d", rt);
-	//lcd rotation
-	setRotat(rt);
 	lcd_init();
 
 	//Initialize the SPI RAM chip communications and see if it actually retains some bytes. If it
@@ -1060,26 +1005,20 @@ void app_main()
 	}
 
 	//uart speed
-	uspeed = g_device->uartspeed;
+	uspeed = MainConfig->uartspeed;
 	uspeed = checkUart(uspeed);
 	uart_set_baudrate(UART_NUM_0, uspeed);
 	ESP_LOGI(TAG, "Set baudrate at %d", uspeed);
-	if (g_device->uartspeed != uspeed)
+	if (MainConfig->uartspeed != uspeed)
 	{
-		g_device->uartspeed = uspeed;
-		saveDeviceSettings(g_device);
+		MainConfig->uartspeed = uspeed;
+		SaveConfig();
 	}
 	uartBtInit();
 
 	// volume
-	setIvol(g_device->vol);
-	ESP_LOGI(TAG, "Volume set to %d", g_device->vol);
-
-	// queue for events of the sleep / wake and Ms timers
-	event_queue = xQueueCreate(30, sizeof(queue_event_t));
-	//
-	xTaskCreatePinnedToCore(timerTask, "timerTask", 2100, NULL, PRIO_TIMER, &pxCreatedTask, CPU_TIMER);
-	ESP_LOGI(TAG, "%s task: %x", "t0", (unsigned int)pxCreatedTask);
+	setIvol(MainConfig->vol);
+	ESP_LOGI(TAG, "Volume set to %d", MainConfig->vol);
 
 	lcd_welcome("", "ЗАПУСК СЕТИ");
 	//-----------------------------
@@ -1102,31 +1041,30 @@ void app_main()
 		ESP_LOGE(TAG, "mDNS Init ok");
 
 	//set hostname and instance name
-	if ((strlen(g_device->hostname) == 0) || (strlen(g_device->hostname) > HOSTLEN))
+	if ((strlen(MainConfig->hostname) == 0) || (strlen(MainConfig->hostname) > HOSTLEN))
 	{
-		strcpy(g_device->hostname, "ESP32Radiola");
+		strcpy(MainConfig->hostname, "ESP32Radiola");
 	}
-	ESP_LOGE(TAG, "mDNS Hostname: %s", g_device->hostname);
-	err = mdns_hostname_set(g_device->hostname);
+	ESP_LOGE(TAG, "mDNS Hostname: %s", MainConfig->hostname);
+	err = mdns_hostname_set(MainConfig->hostname);
 	if (err)
 		ESP_LOGE(TAG, "Hostname Init failed: %d", err);
 
-	ESP_ERROR_CHECK(mdns_instance_name_set(g_device->hostname));
+	ESP_ERROR_CHECK(mdns_instance_name_set(MainConfig->hostname));
 	ESP_ERROR_CHECK(mdns_service_add(NULL, "_http", "_tcp", 80, NULL, 0));
 	ESP_ERROR_CHECK(mdns_service_add(NULL, "_telnet", "_tcp", 23, NULL, 0));
 
 	// init player config
-	player_config = (player_t *)calloc(1, sizeof(player_t));
+	player_config = (player_s *)calloc(1, sizeof(player_s));
 	player_config->command = CMD_NONE;
 	player_config->decoder_status = UNINITIALIZED;
 	player_config->decoder_command = CMD_NONE;
 	player_config->buffer_pref = BUF_PREF_SAFE;
-	player_config->media_stream = calloc(1, sizeof(media_stream_t));
+	player_config->media_stream = calloc(1, sizeof(media_stream_s));
 
 	audio_player_init(player_config);
 
 	// LCD Display infos
-	lcd_welcome("", "");
 	lcd_welcome("", "ЗАПУСК ЗАДАЧ");
 	vTaskDelay(100);
 	ESP_LOGI(TAG, "RAM left %d", esp_get_free_heap_size());
@@ -1144,17 +1082,17 @@ void app_main()
 	xTaskCreatePinnedToCore(task_addon, "task_addon", 2200, NULL, PRIO_ADDON, &pxCreatedTask, CPU_ADDON);
 	ESP_LOGI(TAG, "%s task: %x", "task_addon", (unsigned int)pxCreatedTask);
 
-	/*	if (RDA5807M_detection())
-	{
-		xTaskCreatePinnedToCore(rda5807Task, "rda5807Task", 2500, NULL, 3, &pxCreatedTask,1);  //
-		ESP_LOGI(TAG, "%s task: %x","rda5807Task",(unsigned int)pxCreatedTask);
-	}
-*/
+	// queue for events of the sleep / wake and Ms timers
+	event_queue = xQueueCreate(30, sizeof(timer_event_s));
+	//
+	xTaskCreatePinnedToCore(timerTask, "timerTask", 2100, NULL, PRIO_TIMER, &pxCreatedTask, CPU_TIMER);
+	ESP_LOGI(TAG, "%s task: %x", "t0", (unsigned int)pxCreatedTask);
+
 	vTaskDelay(60); // wait tasks init
 	beep(30);		// бип...
 	ESP_LOGI(TAG, " Init Done");
 
-	setIvol(g_device->vol);
+	setIvol(MainConfig->vol);
 	kprintf("READY. Type help for a list of commands\n");
 
 	//autostart

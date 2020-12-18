@@ -7,7 +7,7 @@
 #ifndef ADDONUCG_H_
 #define ADDONUCG_H_
 
-typedef enum
+typedef enum sizefont_e
 {
 	small,
 	text,

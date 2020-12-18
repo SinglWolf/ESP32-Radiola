@@ -9,7 +9,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/timers.h"
 
-typedef enum
+typedef enum LedChannel
 {
 	DISPLAY, // Дисплей
 	FAN,	 //Вентилятор

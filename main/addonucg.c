@@ -83,7 +83,7 @@ static uint16_t HHeader = 40;
 static char TTitleStr[16];
 static char TTimeStr[16];
 
-typedef enum
+typedef enum lang
 {
 	Latin,
 	Cyrillic,
@@ -369,7 +369,7 @@ void ucEraseSlashes(char *str)
 //-Max
 
 // non linear cyrillic conversion
-typedef struct
+typedef struct utf8To1251
 {
 	uint16_t utf8;
 	uint8_t c1251;

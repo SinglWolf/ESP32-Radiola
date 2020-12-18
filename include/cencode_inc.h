@@ -9,12 +9,12 @@ For details, see http://sourceforge.net/projects/libb64
 #ifndef BASE64_CENCODE_H
 #define BASE64_CENCODE_H
 
-typedef enum
+typedef enum base64_encodestep
 {
 	step_A, step_B, step_C
 } base64_encodestep_e;
 
-typedef struct
+typedef struct base64_encodestate
 {
 	base64_encodestep_e step;
 	char result;

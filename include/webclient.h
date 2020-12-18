@@ -20,10 +20,10 @@
 //#define RECEIVE 3000
 
 
-typedef enum
+typedef enum contentType
 {
     KMIME_UNKNOWN = 1, KOCTET_STREAM, KAUDIO_AAC, KAUDIO_MP4, KAUDIO_MPEG
-} contentType_e;
+} content_type_e;
 
 
 struct icyHeader

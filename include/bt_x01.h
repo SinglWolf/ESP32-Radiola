@@ -13,7 +13,7 @@
 #include "soc/uart_struct.h"
 #include "string.h"
 
-struct bt_x01
+typedef struct bt_x01
 {
     bool present;
     uint8_t current_vol;
@@ -48,8 +48,8 @@ struct bt_x01
     uint16_t current_time;
     uint8_t isert_info;
     uint8_t err;
-};
-extern struct bt_x01 bt;
+} bt_x01_s;
+extern bt_x01_s bt;
 
 void uartBtInit();
 void sendData(const char *at_data);

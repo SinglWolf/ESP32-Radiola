@@ -15,7 +15,7 @@
 #include "ucg.h"
 
 // custom ir code init from hardware nvs
-typedef enum
+typedef enum ir_key
 {
     KEY_UP,
     KEY_LEFT,
@@ -37,7 +37,7 @@ typedef enum
     KEY_MAX
 } ir_key_e;
 
-typedef struct
+typedef struct event_ir
 {
     int channel;   /*!< event type */
     uint16_t addr; /*!< nec addr */
@@ -45,7 +45,7 @@ typedef struct
     bool repeat_flag;
 } event_ir_s;
 
-typedef enum
+typedef enum lcd_cmd
 {
     lstop,
     lplay,
@@ -60,11 +60,11 @@ typedef enum
     etoggle,
     escreen,
     erefresh
-} typelcmd_e;
+} lcd_cmd_e;
 
-typedef struct
+typedef struct event_lcd
 {
-    typelcmd_e lcmd; /*!< For what ?*/
+    lcd_cmd_e lcmd; /*!< For what ?*/
     char *lline;   /*!< string of command */
 } event_lcd_s;
 

@@ -12,7 +12,7 @@
 
 int audio_stream_consumer(const char *recv_buf, ssize_t bytes_read, void *user_data);
 
-typedef enum
+typedef enum component_status
 {
     UNINITIALIZED,
     INITIALIZED,
@@ -20,20 +20,20 @@ typedef enum
     STOPPED
 } component_status_e;
 
-typedef enum
+typedef enum player_command
 {
     CMD_NONE,
     CMD_START,
     CMD_STOP
 } player_command_e;
 
-typedef enum
+typedef enum buffer_pref
 {
     BUF_PREF_FAST,
     BUF_PREF_SAFE
 } buffer_pref_e;
 
-typedef enum
+typedef enum content_type
 {
     MIME_UNKNOWN = 1,
     OCTET_STREAM,
@@ -42,13 +42,13 @@ typedef enum
     AUDIO_MPEG
 } content_type_e;
 
-typedef struct
+typedef struct media_stream
 {
     content_type_e content_type;
     bool eof;
 } media_stream_s;
 
-typedef struct
+typedef struct player
 {
     player_command_e command;
     player_command_e decoder_command;

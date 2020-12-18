@@ -50,7 +50,7 @@ xQueueHandle event_lcd = NULL;
 ucg_t ucg;
 static xTaskHandle pxTaskLcd;
 // list of screen
-typedef enum
+typedef enum typeScreen
 {
 	EmptyScreen,
 	MainScreen,
@@ -59,9 +59,9 @@ typedef enum
 	NumberScreen,
 	TimeScreen,
 
-} typeScreen_e;
-static typeScreen_e stateScreen = EmptyScreen;
-static typeScreen_e defaultStateScreen = MainScreen;
+} type_screen_e;
+static type_screen_e stateScreen = EmptyScreen;
+static type_screen_e defaultStateScreen = MainScreen;
 // state of the transient screen
 static uint8_t mTscreen = MTNEW; // 0 dont display, 1 display full, 2 display variable part
 
@@ -88,9 +88,9 @@ static uint32_t IR_Key[KEY_MAX][2];
 
 static bool isEncoder = true;
 
-void Screen(typeScreen_e st);
+void Screen(type_screen_e st);
 void drawScreen();
-static void evtScreen(typelcmd_e value);
+static void evtScreen(lcd_cmd_e value);
 
 encoder_s *encoder = NULL;
 
@@ -243,7 +243,7 @@ void scroll()
 ////////////////////////////
 // Change the current screen
 ////////////////////////////
-void Screen(typeScreen_e st)
+void Screen(type_screen_e st)
 {
 	// printf("Screen: st: %d, stateScreen: %d, mTscreen: %d, default: %d\n", st, stateScreen, mTscreen, defaultStateScreen);
 	if (stateScreen != st)
@@ -452,7 +452,7 @@ static void evtClearScreen()
 	xQueueSend(event_lcd, &evt, 0);
 }
 
-static void evtScreen(typelcmd_e value)
+static void evtScreen(lcd_cmd_e value)
 {
 	event_lcd_s evt;
 	evt.lcmd = escreen;
@@ -489,7 +489,7 @@ void encoderCompute(encoder_s *enc, bool role)
 	if (newValue != 0)
 		ESP_LOGD(TAG, "encoder value: %d, stateScreen: %d", newValue, stateScreen);
 	button_e newButton = getButton(enc);
-	typeScreen_e estate;
+	type_screen_e estate;
 	if (role)
 		estate = StationScreen;
 	else

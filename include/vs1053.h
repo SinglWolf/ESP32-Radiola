@@ -67,27 +67,29 @@
  * a union of the SCI_BASS value and of its nibbles for 
  * Treble/Bass and Freq/Amp.
  */
-union sci_bass_m {
+union sci_bass_m
+{
 
   /**
    * \brief whole word value
    *
    * allows access and handeling of whole uint16_t (aka word) value
    */
-    uint16_t word;
+  uint16_t word;
 
   /**
    * \brief individual Nibbles
    *
    * allows access and handeling of individual nibble values
    */
-    struct {
-      uint8_t  Bass_Freqlimt    : 4; // 0..3
-      uint8_t  Bass_Amplitude   : 4; // 4..7
-      uint8_t  Treble_Freqlimt  : 4; // 8..11
-       int8_t  Treble_Amplitude : 4; // 12..15
-    }nibble;
-  } ;
+  struct
+  {
+    uint8_t Bass_Freqlimt : 4;   // 0..3
+    uint8_t Bass_Amplitude : 4;  // 4..7
+    uint8_t Treble_Freqlimt : 4; // 8..11
+    int8_t Treble_Amplitude : 4; // 12..15
+  } nibble;
+};
 
 //public functions
 //extern int vsVersion;
@@ -145,7 +147,7 @@ void SCI_ChipSelect(uint8_t State);
 void SDI_ChipSelect(uint8_t State);
 void WriteVS10xxRegister(unsigned short addr, unsigned short val);
 void VS1053_WriteRegister(uint8_t addressbyte,
-						  uint8_t highbyte, uint8_t lowbyte);
+                          uint8_t highbyte, uint8_t lowbyte);
 uint16_t VS1053_ReadRegister(uint8_t addressbyte);
 
 uint16_t MaskAndShiftRight(uint16_t Source, uint16_t Mask, uint16_t Shift);

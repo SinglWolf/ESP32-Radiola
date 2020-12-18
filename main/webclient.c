@@ -33,7 +33,7 @@ static uint8_t once = 0;
 static uint8_t playing = 0;
 
 static const char *icyHeaders[] = {"icy-name:", "icy-notice1:", "icy-notice2:", "icy-url:", "icy-genre:", "icy-br:", "icy-description:", "ice-audio-info:", "icy-metaint:"};
-contentType_e contentType;
+content_type_e contentType;
 
 static char notfound[] = {"Not Found"};
 static char nodata[] = {"No Data"};

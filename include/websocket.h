@@ -21,7 +21,7 @@ typedef uint32_t u32;
 #define NBCLIENT 5
 #define MAXDATA 528
 
-typedef enum
+typedef enum wsopcode
 {
     WSop_continuation = 0x00, ///< %x0 denotes a continuation frame
     WSop_text = 0x01,         ///< %x1 denotes a text frame
@@ -33,7 +33,7 @@ typedef enum
                               ///< %xB-F are reserved for further control frames
 } wsopcode_e;
 
-typedef struct
+typedef struct wsMessageHeader
 {
     bool fin;
     wsopcode_e opCode;
@@ -42,7 +42,7 @@ typedef struct
     uint8_t *maskKey;
 } wsMessageHeader_s;
 
-typedef struct
+typedef struct client
 {
     int socket;
 } client_s;

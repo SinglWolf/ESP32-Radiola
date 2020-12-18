@@ -51,7 +51,7 @@
 #define Y_GPIOMODE 0x80 // bit 7: 0 = gpio default 1 = gpio from NVS
 #define N_GPIOMODE 0x7F
 
-typedef enum
+typedef enum backlight_mode
 {
 	NOT_ADJUSTABLE, //Нерегулируемая подсветка
 	BY_TIME,		//По времени
@@ -59,13 +59,13 @@ typedef enum
 	BY_HAND			//Ручная регулировка
 } backlight_mode_e;
 
-typedef enum
+typedef enum ir_mode
 {
 	IR_DEFAULD, // Опрос кодов по-умолчанию
 	IR_CUSTOM,	//Опрос пользовательских кодов
 } ir_mode_e;
 
-typedef struct
+typedef struct radiola_config
 {
 	uint8_t dhcpEn1;
 	uint8_t ipAddr1[4];
@@ -125,7 +125,7 @@ typedef struct
 
 } radiola_config_s;
 
-typedef struct
+typedef struct station_slot
 {
 
 	char name[64];	 // Name station

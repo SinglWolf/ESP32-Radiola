@@ -30,7 +30,7 @@ extern "C"
 #define TDAaddress 0x44	 // I2C address
 #define ACK_CHECK_EN 0x1 // I2C master will check ack from slave
 
-	typedef enum
+	typedef enum input_mode
 	{
 		COMPUTER = 1,
 		RADIO,

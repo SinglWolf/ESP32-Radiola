@@ -23,22 +23,17 @@
 #define BTN_HOLDTIME 1000       // report held button after 1s
 
 // ----------------------------------------------------------------------------
-
-//
-
-// ----------------------------------------------------------------------------
-typedef gpio_mode_t pinMode_t;
-#undef INPUT
-#define INPUT GPIO_MODE_INPUT
-#undef INPUT_PULLUP
-#define INPUT_PULLUP GPIO_MODE_INPUT
-#undef LOW
+// #undef INPUT
+// #define INPUT GPIO_MODE_INPUT
+// #undef INPUT_PULLUP
+// #define INPUT_PULLUP GPIO_MODE_INPUT
+// #undef LOW
 #define LOW 0
-#undef HIGH
+// #undef HIGH
 #define HIGH 1
 #define digitalRead(x) gpio_get_level((gpio_num_t)x)
 #ifndef __have__ClickButton_h__
-typedef enum
+typedef enum button
 {
   Open = 0,
   Closed,
@@ -50,7 +45,7 @@ typedef enum
 } button_e;
 #endif
 
-typedef struct
+typedef struct encoder
 {
   int8_t pinA;
   int8_t pinB;

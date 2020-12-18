@@ -146,7 +146,7 @@
 #define CPU_TIMER 0
 #define CPU_DS18B20 1
 
-typedef struct
+typedef struct timer_event
 {
     int type; /*!< event type */
     int i1;   /*!< TIMER_xxx timer group */

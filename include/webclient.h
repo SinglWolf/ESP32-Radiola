@@ -23,7 +23,7 @@
 typedef enum contentType
 {
     KMIME_UNKNOWN = 1, KOCTET_STREAM, KAUDIO_AAC, KAUDIO_MP4, KAUDIO_MPEG
-} content_type_e;
+} contentType_e;
 
 
 struct icyHeader

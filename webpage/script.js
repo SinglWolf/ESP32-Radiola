@@ -98,10 +98,8 @@ function changeTitle(arr) {
 function wsplayStation(arg) {
     var i;
     var select = document.getElementById('select_' + PlayList);
-    var opt = select.options;
     for (i = 0; i < select.options.length; i++) {
-        var id = opt[i].value;
-        id = id[0];
+        var id = select.options[i].value;
         if (id == arg) break;
     }
 
@@ -485,22 +483,32 @@ function full() {
 function icyResp(arr) {
     var curSt = parseInt(arr["curst"], 10) + 1;
     document.getElementById('curst').innerHTML = curSt;
-    var select = document.getElementById('select_' + PlayList);
-    var opt = select.options, i;
-    current_total = RadiolaStorage[PlayList].length;
-    for (i = 0; i < current_total; i++) {
-        var id = opt[i].value;
-        id = id[0];
-        if (id == arr["curst"]) break;
+    var select = document.getElementById('select_' + COMMON);
+    var i;
+    for (i = 0; i < select.options.length; i++) {
+        var id = select.options[i].value;
+        if (id === arr["curst"]) break;
     }
-    if (i == current_total) i = 0;
+    if (i == select.options.length) i = 0;
     select.selectedIndex = i;
+
+    select = document.getElementById('select_' + FAVORITES);
+    for (i = 0; i < select.options.length; i++) {
+        if (RadiolaStorage[FAVORITES][i]["ID"] === arr["curst"])
+            break;
+    }
+    if (i == select.options.length) i = 0;
+    select.selectedIndex = i;
+
+
     if ((arr["descr"] == "") || (!document.getElementById('Full').checked))
         document.getElementById('ldescr').style.display = "none";
     else document.getElementById('ldescr').style.display = "inline-block";
     document.getElementById('descr').innerHTML = arr["descr"].replace(/\\/g, "");
     document.getElementById('name').innerHTML = arr["name"].replace(/\\/g, "");
-    if ((arr["bitr"] == "") || (!document.getElementById('Full').checked)) { document.getElementById('lbitr').style.display = "none"; } else document.getElementById('lbitr').style.display = "inline-block";
+    if ((arr["bitr"] == "") || (!document.getElementById('Full').checked)) {
+        document.getElementById('lbitr').style.display = "none";
+    } else { document.getElementById('lbitr').style.display = "inline-block"; }
     document.getElementById('bitr').innerHTML = arr["bitr"].replace(/\\/g, "");
     if (arr["bitr"] == "") document.getElementById('bitr').innerHTML = "";
     if (((arr["not1"] == "") && (arr["not2"] == "")) || (!document.getElementById('Full').checked)) document.getElementById('lnot1').style.display = "none";
@@ -1384,15 +1392,13 @@ function playStation(PlayList) {
         mpause();
         select = document.getElementById("select_" + PlayList);
         id = select.options[select.selectedIndex].value;
-        id = id[0];
         RadiolaStorage[PlayList + "_select"] = id;
         localStorage.setItem("RadiolaStorage", JSON.stringify(RadiolaStorage));
         editPlaying = true;
         if (PlayList == FAVORITES) {
-            PostData("local_play", "url=" + RadiolaStorage[FAVORITES][id].URL + "&port=" +
-                RadiolaStorage[FAVORITES][id].Port + "&path=" + RadiolaStorage[FAVORITES][id].File + "&");
-        } else
-            PostData("play", "id=" + id + "&");
+            id = RadiolaStorage[FAVORITES][id]["ID"];
+        }
+        PostData("play", "id=" + id + "&");
     } catch (e) { console.log("err: " + e); }
 }
 
@@ -2022,7 +2028,6 @@ function loadStations(PlayList) {
         select = document.getElementById('select_' + PlayList);
         try {
             idlist = select.options[select.selectedIndex].value;
-            idlist = idlist[0];
         } catch (e) { idlist = 0; }
         for (idx = 0; idx < current_total; idx++) {
             idstr = idx.toString();

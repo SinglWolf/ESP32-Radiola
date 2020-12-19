@@ -908,7 +908,7 @@ void autoPlay()
 		clientSaveOneHeader(buf, strlen(buf), METANAME);
 
 		setCurrentStation(MainConfig->CurrentStation);
-		if ((MainConfig->autostart == 1) && (MainConfig->CurrentStation != 0xFFFF))
+		if (MainConfig->autostart == 1)
 		{
 			kprintf("autostart: playing:%d, CurrentStation:%d\n", MainConfig->autostart, MainConfig->CurrentStation);
 			vTaskDelay(50); // wait a bit

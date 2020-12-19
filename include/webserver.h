@@ -17,7 +17,7 @@ extern xSemaphoreHandle semclient;
 extern xSemaphoreHandle semfile;
 
 void serverclientTask(void *pvParams);
-void playStationInt(int sid);
+void playStationInt(uint8_t id);
 void websockethandle(int socket, wsopcode_e opcode, uint8_t * payload, size_t length);
 uint16_t getVolume(void);
 void setVolume(char* vol);

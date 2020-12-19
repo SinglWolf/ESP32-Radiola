@@ -619,7 +619,7 @@ table tr,td {
 td {
     font-weight: 900;
     font-size: 15px;
-    padding: 5px 10px 5px 3px;
+    padding: 5px 10px 5px 10px;
 }
 
 tr {

@@ -411,16 +411,14 @@ function promptworking(label) {
     }
 }
 
-function saveTextAsFile(storage) {
+function savePlayList(PLS) {
     var output = '#EXTM3U\n',
         id, port, textFileAsBlob, downloadLink, fileName;
-    for (id = 0; id < current_total; id++) {
+    for (id = 0; id < RadiolaStorage[PLS].length; id++) {
         try {
-            var obj = JSON.parse(localStorage[id]);
+            var obj = RadiolaStorage[PLS][id];
             if (obj["Port"] == "80") {
                 port = '';
-            } else if (obj["Port"] == "0") {
-                break;
             } else {
                 port = ':' + obj["Port"];
             }
@@ -432,7 +430,7 @@ function saveTextAsFile(storage) {
 
         }
     }
-    fileName = document.getElementById('filesave').value;
+    fileName = document.getElementById('filename_' + PLS).value;
     if (fileName == "")
         alert("Пожалуйста, укажите имя файла.");
     else {
@@ -494,7 +492,7 @@ function icyResp(arr) {
 
     select = document.getElementById('select_' + FAVORITES);
     for (i = 0; i < select.options.length; i++) {
-        if (RadiolaStorage[FAVORITES][i]["ID"] === arr["curst"])
+        if (RadiolaStorage[FAVORITES][i]["ID"] == arr["curst"])
             break;
     }
     if (i == select.options.length) i = 0;
@@ -1317,7 +1315,7 @@ function prevStation(PlayList) {
     var select = document.getElementById('select_' + PlayList).selectedIndex;
     if (select > 0) {
         document.getElementById('select_' + PlayList).selectedIndex = select - 1;
-        Select();
+        Select(PlayList);
     }
 }
 
@@ -1325,13 +1323,13 @@ function nextStation(PlayList) {
     var select = document.getElementById('select_' + PlayList).selectedIndex;
     if (select < document.getElementById('select_' + PlayList).length - 1) {
         document.getElementById('select_' + PlayList).selectedIndex = select + 1;
-        Select();
+        Select(PlayList);
     }
 }
 // autoplay checked or unchecked
-function autoplay(pls) {
+function autoplay() {
     try {
-        PostData("auto", "id=" + document.getElementById('auto_' + pls).checked + "&");
+        PostData("auto", "id=" + document.getElementById("auto_common").checked + "&");
     } catch (e) { console.log("err: " + e); }
 }
 
@@ -1346,7 +1344,6 @@ function autostart() {
         // document.getElementById("aplay").removeAttribute("checked");
         document.getElementById("auto_common").removeAttribute("checked");
     }
-
     PostData("rauto");
 }
 
@@ -1434,16 +1431,15 @@ function fixedEncodeURIComponent(str) {
 function saveStation() {
     var file = document.getElementById('add_path').value,
         url = document.getElementById('add_url').value,
-        jfile,
+        jfile, save = false,
         name = document.getElementById('add_name').value,
         port = document.getElementById('add_port').value;
-    var id = document.getElementById('add_slot').value;
+    var id = document.getElementById('add_slot').value - 1;
     if (!(file.substring(0, 1) === "/")) file = "/" + file;
     jfile = fixedEncodeURIComponent(file);
     url = url.replace(/^https?:\/\//, '');
     try {
         if (id < RadiolaStorage[COMMON].length) {
-            id--;
             RadiolaStorage[COMMON][id].Name = name;
             RadiolaStorage[COMMON][id].URL = url;
             RadiolaStorage[COMMON][id].File = jfile;
@@ -1456,6 +1452,7 @@ function saveStation() {
                 "Port": port,
                 "FAV": false
             });
+            save = true;
         }
 
         abortStation();
@@ -1463,16 +1460,15 @@ function saveStation() {
 
     promptworking(working);
     var tosend;
-    for (var i = 0; i < RadiolaStorage[COMMON].length; i++) {
-        var fav = 0;
-        if (RadiolaStorage[COMMON][id].FAV) {
-            fav = 1;
-        }
-        tosend = "&ID=" + i + "&url=" + RadiolaStorage[COMMON][i].URL + "&name=" + RadiolaStorage[COMMON][i].Name +
-            "&file=" + fixedEncodeURIComponent(RadiolaStorage[COMMON][i].File) + "&port=" + RadiolaStorage[COMMON][i].Port + "&fav=" + fav;
-        console.log("tosend: " + tosend);
-        // PostData("setStation", tosend);
+    var fav = 0;
+    if (RadiolaStorage[COMMON][id]["FAV"]) {
+        fav = 1;
     }
+    tosend = "&ID=" + id + "&url=" + RadiolaStorage[COMMON][id].URL + "&name=" + RadiolaStorage[COMMON][id].Name +
+        "&file=" + fixedEncodeURIComponent(RadiolaStorage[COMMON][id].File) + "&port=" + RadiolaStorage[COMMON][id].Port + "&fav=" + fav;
+    PostData("setStation", tosend);
+    if (save)
+        PostData("setStation", "&save=1");
 
     localStorage.setItem("RadiolaStorage", JSON.stringify(RadiolaStorage));
     refreshList();
@@ -1493,8 +1489,8 @@ function eraseStation() {
 
 //
 function editLocalStation() {
-    var id = current_total;
-    if (id <= (current_total - 1)) {
+    var id = RadiolaStorage[COMMON].length;
+    if (id <= (maxStation - 1)) {
         document.getElementById('editStationDiv').style.display = "block";
         document.getElementById('add_slot').value = (id + 1);
 
@@ -1849,8 +1845,8 @@ function dragEnd() {
 
         table.rows[i].cells[0].innerText = (i + 1).toString();
         if (PlayList == COMMON) {
-            RadiolaStorage[PlayList][i].ID = table.rows[i].cells[0].id;
-            if (document.getElementById("num_" + i).parentNode.children[3].getElementsByTagName("i")[0].className == 'icon-heart-o')
+            // RadiolaStorage[PlayList][i].ID = table.rows[i].cells[0].id.split('_')[1];
+            if (document.getElementById("fav_" + i).className == 'icon-heart-o')
                 RadiolaStorage[PlayList][i].FAV = false;
             else
                 RadiolaStorage[PlayList][i].FAV = true;
@@ -1897,7 +1893,6 @@ function stChanged() {
         }
         tosend = "&ID=" + ind + "&name=" + name + "&url=" + url +
             "&file=" + file + "&port=" + port + "&fav=" + fav;
-        console.log("tosend: " + tosend);
         PostData("setStation", tosend);
     }
     if (stchanged && confirm("Список изменен. Вы хотите сохранить измененный список?")) {
@@ -1951,7 +1946,7 @@ function loadStations(PlayList) {
 
     } else {
         document.getElementById('download_common').value = "Добавить плейлист";
-        // document.getElementById("table_" + PlayList).caption.innerHTML = "<h1>Вы можете перетаскивать любую строку, чтобы отсортировать список</h1><br>";
+        document.getElementById("drag_common").innerHTML = "Вы можете перетаскивать любую строку, чтобы отсортировать список.";
         document.getElementById("head_" + PlayList).style.display = '';
         document.getElementById("select_" + PlayList).style.display = '';
 
@@ -1996,6 +1991,7 @@ function loadStations(PlayList) {
                     fav.className = 'icon-heart';
                 }
                 fav.setAttribute('onclick', 'checkFavorit(this.parentNode)');
+                fav.id = 'fav_' + idx;
                 td.appendChild(fav);
                 td.className = 'lst';
                 tr.appendChild(td);
@@ -2245,6 +2241,7 @@ document.addEventListener("DOMContentLoaded", function () {
     document.getElementById("PLAYER").addEventListener("click", function () {
         if (stchanged) stChanged();
         refresh();
+        refreshList();
         curtab = "PLAYER";
     });
     document.getElementById("STATIONS").addEventListener("click", function () {

@@ -131,7 +131,7 @@
                     style="display: flex;margin-top: 20px;margin-bottom: 10px;padding-left: 10px;padding-right: 15px;">
                     Автовоспроизведение
                     <div class="OffOn">
-                      <input type="checkbox" id="auto_common" onclick="autoplay('common')" class="OffOn">
+                      <input type="checkbox" id="auto_common" onclick="autoplay()" class="OffOn">
                       <label for="auto_common"></label>
                     </div>
                   </div>
@@ -165,7 +165,7 @@
                     style="display: flex;margin-top: 20px;margin-bottom: 10px;padding-left: 10px;padding-right: 15px;">
                     Автовоспроизведение
                     <div class="OffOn">
-                      <input type="checkbox" id="auto_favorites" onclick="autoplay('favorites')" class="OffOn">
+                      <input type="checkbox" id="auto_favorites" class="OffOn">
                       <label for="auto_favorites"></label>
                     </div>
                   </div>
@@ -255,7 +255,7 @@
         <h1>
           БЫСТРОЕ ВОСПРОИЗВЕДЕНИЕ</h1>
         <div class="section">
-          <p> <span class="bold1">Полный URL: </span>
+          <p><span class="bold1">Полный URL: </span>
             <input type="text" id="loc_URL" name="URL" onkeyup="parseURL()" onmouseup="parseEditURL()">
             <br>
             <span class="bold1">Короткий URL: </span>
@@ -342,15 +342,16 @@
             <div class='active'>
               <br>
               <p>
-                <input type="button" onclick="saveTextAsFile('common')" value="Выгрузить плейлист" accept=".m3u">
+                <input type="button" onclick="savePlayList('common')" value="Выгрузить плейлист" accept=".m3u"
+                  id="filesave_common">
                 <span style="display:inline-block;"> &nbsp;&nbsp;в &nbsp;&nbsp;&nbsp;<input type="text"
-                    style="width:300px;color:black;" value="RadiolaStations.m3u" id="filesave"> </span>
+                    style="width:300px;color:black;" value="Radiola-ОБЩИЙ.m3u" id="filename_common"></span>
                 <br>
                 <br>
                 <input type="button" id='download_common' onclick="downloadStations('common')"
                   value="Загрузить плейлист">
                 <span style="display:inline-block;"> &nbsp;&nbsp;из &nbsp;&nbsp;&nbsp;<input type="file"
-                    style="width:300px;color:black;" id="file_common" accept=".m3u"> </span> <br><br>
+                    style="width:300px;color:black;" id="file_common" accept=".m3u"></span><br><br>
                 <input type="button" id="clear_common" title="Предупреждение: Это удалит все станции из этого списка."
                   onclick="clearList('common')" value="Удалить">
                 <input type="button" id='stsave' disabled='true' onclick="stChanged()" value="СОХРАНИТЬ"
@@ -361,6 +362,7 @@
                   onclick="printList('common')" value="Печатать всё">
               </p>
               <br>
+              <p id="drag_common"></p>
               <table id="table_common" style="table-layout: fixed; width: 100%;">
                 <caption>
                   <h1>ОБЩИЙ</h1><br>
@@ -370,9 +372,9 @@
                     <tr>
                       <td style="width:5%">№</td>
                       <td style="width:45%">НАЗВАНИЕ СТАНЦИИ</td>
-                      <td style="width:45%; display: none;">URL</td>
+                      <td style="display: none;">URL</td>
                       <td class="lst" style="width:5%;"><i class="icon-heart"></i></td>
-                      <td style="width:10%">ДЕЙСТВИЯ</td>
+                      <td style="width:12%">ДЕЙСТВИЯ</td>
                     </tr>
                   </thead>
                   <tbody></tbody>
@@ -380,7 +382,13 @@
             </div>
 
             <div>
+              <br>
               <p>
+                <input type="button" onclick="savePlayList('favorites')" value="Выгрузить плейлист" accept=".m3u"
+                  id="filesave_favorites">
+                <span style="display:inline-block;"> &nbsp;&nbsp;в &nbsp;&nbsp;&nbsp;<input type="text"
+                    style="width:300px;color:black;" value="Radiola-ИЗБРАННОЕ.m3u" id="filename_favorites"></span>
+                <br>
                 <br>
                 <input type="button" id="clear_favorites"
                   title="Предупреждение: Это удалит все станции из этого списка." onclick="clearList('favorites')"
@@ -399,7 +407,7 @@
                     <tr>
                       <td style="width:5%">№</td>
                       <td style="width:45%">НАЗВАНИЕ СТАНЦИИ</td>
-                      <td style="width:10%">ДЕЙСТВИЯ</td>
+                      <td style="width:11%">ДЕЙСТВИЯ</td>
                     </tr>
                   </thead>
                   <tbody></tbody>
@@ -1029,7 +1037,7 @@
                   </tr>
                   <tr>
                     <td>Часовой пояс</td>
-                    <td><select id="TZONE" onclick="TimeZone()">
+                    <td><select id="TZONE">
                         <option value="EET-2EEST,M3.5.0/3,M10.5.0/4">Киев, София</option>
                         <option value="EET-2">Калинингад</option>
                         <option value="MSK-3">Москва</option>

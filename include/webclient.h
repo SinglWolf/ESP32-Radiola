@@ -19,58 +19,68 @@
 #define RECEIVE 1436
 //#define RECEIVE 3000
 
-
 typedef enum contentType
 {
-    KMIME_UNKNOWN = 1, KOCTET_STREAM, KAUDIO_AAC, KAUDIO_MP4, KAUDIO_MPEG
+	KMIME_UNKNOWN = 1,
+	KOCTET_STREAM,
+	KAUDIO_AAC,
+	KAUDIO_MP4,
+	KAUDIO_MPEG
 } contentType_e;
 
-
-struct icyHeader
+typedef struct icyHeader
 {
 	union
 	{
 		struct
 		{
-			char* name;
-			char* notice1;
-			char* notice2;
-			char* url;
-			char* genre;
-			char* bitrate;
-			char* description;
-			char* audioinfo;
+			char *name;
+			char *notice1;
+			char *notice2;
+			char *url;
+			char *genre;
+			char *bitrate;
+			char *description;
+			char *audioinfo;
 			int metaint;
-			char* metadata;
+			char *metadata;
 		} single;
-		char* mArr[ICY_HEADER_COUNT];
+		char *mArr[ICY_HEADER_COUNT];
 	} members;
-};
+} icy_header_s;
 
-
-enum clientStatus {C_HEADER0, C_HEADER, C_HEADER1,C_METADATA, C_DATA, C_PLAYLIST, C_PLAYLIST1 };
+typedef enum clientStatus
+{
+	C_HEADER0,
+	C_HEADER,
+	C_HEADER1,
+	C_METADATA,
+	C_DATA,
+	C_PLAYLIST,
+	C_PLAYLIST1
+} client_status_e;
 
 void clientInit();
 uint8_t clientIsConnected();
-bool clientParsePlaylist(char* s);
-void clientSetURL(char* url);
-void clientSetName(const char* name,uint16_t index);
-void clientSetPath(char* path);
+bool clientParsePlaylist(char *s);
+void clientSetURL(char *url);
+void clientSetName(const char *name, uint8_t id);
+void clientSetPath(char *path);
 void clientSetPort(uint16_t port);
 bool clientPrintHeaders();
 void clientPrintState();
 bool getState();
-char* getMeta();
+char *getMeta();
 
-struct icyHeader* clientGetHeader();
+icy_header_s *clientGetHeader();
 void clientConnect();
-void clientSilentConnect(); 
+void clientSilentConnect();
 void clientConnectOnce();
-void clientDisconnect(const char* from);
+void clientDisconnect(const char *from);
 void clientSilentDisconnect();
-bool clientSaveOneHeader(const char* t, uint16_t len, uint8_t header_num);
+bool clientSaveOneHeader(const char *t, uint16_t len, uint8_t header_num);
 void clientTask(void *pvParams);
-void wsVol(char* vol);
+void wsVol(char *vol);
 void wsMonitor();
 void wsStationNext();
 void wsStationPrev();

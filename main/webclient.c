@@ -25,7 +25,7 @@
 extern player_s *player_config;
 #define min(a, b) (((a) < (b)) ? (a) : (b))
 
-enum clientStatus cstatus;
+client_status_e ClientStatus;
 
 xSemaphoreHandle sConnect, sConnected, sDisconnect, sHeader;
 
@@ -44,7 +44,7 @@ const char CLISTOP[] = {"##CLI.STOPPED# from %s\n"};
 #define strcMALLOC "Client: incmalloc fails for %d"
 #define strcMALLOC1 "%s malloc fails"
 
-static struct icyHeader header = {{{NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL}}};
+static icy_header_s header = {{{NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, NULL}}};
 
 static char metaint[10];
 static char clientURL[256] = {0, 0};
@@ -152,7 +152,7 @@ void dump(uint8_t *from, uint32_t len)
 	printf("\n");
 }
 
-struct icyHeader *clientGetHeader()
+icy_header_s *clientGetHeader()
 {
 	return &header;
 }
@@ -262,7 +262,7 @@ bool clientParsePlaylist(char *s)
 	}
 	else
 	{
-		cstatus = C_DATA;
+		ClientStatus = C_DATA;
 		return false;
 	}
 }
@@ -691,7 +691,7 @@ bool clientParseHeader(char *s)
 	bool ret = false;
 	ESP_LOGV(TAG, "ParseHeader: %s", s);
 	xSemaphoreTake(sHeader, portMAX_DELAY);
-	if ((cstatus != C_HEADER1) && (cstatus != C_PLAYLIST)) // not ended. dont clear
+	if ((ClientStatus != C_HEADER1) && (ClientStatus != C_PLAYLIST)) // not ended. dont clear
 	{
 		clearHeaders();
 	}
@@ -760,9 +760,9 @@ bool clientParseHeader(char *s)
 	return ret;
 }
 
-void clientSetName(const char *name, uint16_t index)
+void clientSetName(const char *name, uint8_t id)
 {
-	kprintf("##CLI.NAMESET#: %d %s\n", index, name);
+	kprintf("##CLI.NAMESET#: %d %s\n", id, name);
 }
 
 void clientSetURL(char *url)
@@ -791,7 +791,7 @@ void clientSetPort(uint16_t port)
 
 void clientConnect()
 {
-	cstatus = C_HEADER;
+	ClientStatus = C_HEADER;
 	once = 0;
 	if ((server = (struct hostent *)gethostbyname(clientURL)))
 	{
@@ -808,7 +808,7 @@ void clientConnect()
 }
 void clientConnectOnce()
 {
-	cstatus = C_HEADER;
+	ClientStatus = C_HEADER;
 	if ((server = (struct hostent *)gethostbyname(clientURL)))
 	{
 		xSemaphoreGive(sConnect);
@@ -822,7 +822,7 @@ void clientConnectOnce()
 }
 void clientSilentConnect()
 {
-	cstatus = C_HEADER;
+	ClientStatus = C_HEADER;
 	once = 0;
 	if (server != NULL)
 	{
@@ -876,8 +876,8 @@ void clientReceiveCallback(int sockfd, char *pdata, int len)
 	int bread;
 	char *t1;
 
-	//	if (cstatus != C_DATA) {printf("cstatus= %d\n",cstatus);  printf("Len=%d, Byte_list = %s\n",len,pdata);}
-	if (cstatus != C_DATA)
+	//	if (ClientStatus != C_DATA) {printf("ClientStatus= %d\n",ClientStatus);  printf("Len=%d, Byte_list = %s\n",len,pdata);}
+	if (ClientStatus != C_DATA)
 	{
 		t1 = strstr(pdata, "404");
 		if (t1 != NULL)
@@ -892,15 +892,15 @@ void clientReceiveCallback(int sockfd, char *pdata, int len)
 			clientSaveOneHeader(notfound, 9, METANAME);
 			wsHeaders();
 			vTaskDelay(1);
-			cstatus = C_HEADER;
+			ClientStatus = C_HEADER;
 			return;
 		}
 	}
-	switch (cstatus)
+	switch (ClientStatus)
 	{
 	case C_PLAYLIST:
 		if (!clientParsePlaylist(pdata)) //need more
-			cstatus = C_PLAYLIST1;
+			ClientStatus = C_PLAYLIST1;
 		else
 		{
 			clientDisconnect("C_PLIST");
@@ -909,7 +909,7 @@ void clientReceiveCallback(int sockfd, char *pdata, int len)
 	case C_PLAYLIST1:
 		clientDisconnect("C_PLIST1");
 		clientParsePlaylist(pdata); //more?
-		cstatus = C_PLAYLIST;
+		ClientStatus = C_PLAYLIST;
 		break;
 	case C_HEADER0:
 	case C_HEADER:
@@ -926,7 +926,7 @@ void clientReceiveCallback(int sockfd, char *pdata, int len)
 				ESP_LOGV(TAG, "Header: Moved");
 				clientDisconnect("C_HDER");
 				clientParsePlaylist(pdata);
-				cstatus = C_PLAYLIST;
+				ClientStatus = C_PLAYLIST;
 			}
 			break;
 		}
@@ -934,7 +934,7 @@ void clientReceiveCallback(int sockfd, char *pdata, int len)
 	case C_HEADER1: // not ended
 	{
 		int i = 0;
-		cstatus = C_HEADER1;
+		ClientStatus = C_HEADER1;
 		do
 		{
 			t1 = strstr(pdata, "\r\n\r\n"); // END OF HEADER
@@ -946,14 +946,14 @@ void clientReceiveCallback(int sockfd, char *pdata, int len)
 				{
 					ESP_LOGV(TAG, "Internal Server Error");
 					clientDisconnect("Internal Server Error");
-					cstatus = C_HEADER;
+					ClientStatus = C_HEADER;
 				}
 				bool icyfound = clientParseHeader(pdata);
 				wsMonitor();
 				if (header.members.single.metaint > 0)
 					metad = header.members.single.metaint;
-				ESP_LOGD(TAG, "t1: 0x%x, cstatus: %d, icyfound: %d  metad:%d Metaint:%d\n", (int)t1, cstatus, icyfound, metad, (header.members.single.metaint));
-				cstatus = C_DATA; // a stream found
+				ESP_LOGD(TAG, "t1: 0x%x, ClientStatus: %d, icyfound: %d  metad:%d Metaint:%d\n", (int)t1, ClientStatus, icyfound, metad, (header.members.single.metaint));
+				ClientStatus = C_DATA; // a stream found
 
 				/////////////////////////////////////////////////////////////////////////////////////////////////
 				player_config->media_stream->eof = false;
@@ -1294,7 +1294,7 @@ void clientTask(void *pvParams)
 					t0 = strstr(clientPath, ".asx");
 				if (t0 != NULL) // a playlist asked
 				{
-					cstatus = C_PLAYLIST;
+					ClientStatus = C_PLAYLIST;
 					//printf("sprint%d\n",6);
 					sprintf((char *)bufrec, "GET %s HTTP/1.1\r\nHOST: %s\r\nUser-Agent: %s\r\n\r\n", clientPath, clientURL, useragent); //ask for the playlist
 				}
@@ -1305,7 +1305,7 @@ void clientTask(void *pvParams)
 					//printf("sprint%d\n",7);
 					sprintf((char *)bufrec, "GET %s HTTP/1.1\r\nHost: %s\r\nicy-metadata: 1\r\nUser-Agent: %s\r\n\r\n", clientPath, clientURL, useragent);
 				}
-				//printf("st:%d, Client Sent:\n%s\n",cstatus,bufrec);
+				//printf("st:%d, Client Sent:\n%s\n",ClientStatus,bufrec);
 				xSemaphoreTake(sConnected, 0);
 				send(sockfd, (char *)bufrec, strlen((char *)bufrec), 0);
 
@@ -1419,7 +1419,7 @@ void clientTask(void *pvParams)
 			vTaskDelay(1);
 			close(sockfd);
 			//printf("WebClient Socket closed\n");
-			if (cstatus == C_PLAYLIST)
+			if (ClientStatus == C_PLAYLIST)
 			{
 				clientConnect();
 			}

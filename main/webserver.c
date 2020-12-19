@@ -596,28 +596,37 @@ void websockethandle(int socket, wsopcode_e opcode, uint8_t *payload, size_t len
 	}
 }
 
-void playStationInt(int sid)
+void playStationInt(uint8_t id)
 {
 	beep(20);
-	station_slot_s *si;
+	station_slot_s *si = getStation(id);
 	char answer[24];
-	si = getStation(sid);
+
+	sprintf(answer, "{\"wsstation\":\"%d\"}", id);
+
+	if (MainConfig->CurrentStation != id)
+	{
+		MainConfig->CurrentStation = id;
+		setCurrentStation(id);
+		SaveConfig();
+	}
+
+	id++;
 
 	if (si != NULL && si->domain && si->file)
 	{
-		int i;
 		vTaskDelay(4);
 		clientSilentDisconnect();
-		ESP_LOGV(TAG, "playstationInt: %d, new station: %s", sid, si->name);
-		clientSetName(si->name, sid);
+		ESP_LOGV(TAG, "playstationInt: %d, new station: %s", id, si->name);
+		clientSetName(si->name, id);
 		clientSetURL(si->domain);
 		clientSetPath(si->file);
 		clientSetPort(si->port);
 
-		//ESP_LOGI(TAG, "Name: %s, url: %s, path: %s\n",	si->name,	si->domain, si->file);
+		//ESP_LOGI(TAG, "Name: %s, url: %s, path: %s\n", si->name, si->domain, si->file);
 
 		clientConnect();
-		for (i = 0; i < 100; i++)
+		for (uint8_t i = 0; i < 100; i++)
 		{
 			if (clientIsConnected())
 				break;
@@ -625,15 +634,8 @@ void playStationInt(int sid)
 		}
 	}
 	infree(si);
-	sprintf(answer, "{\"wsstation\":\"%d\"}", sid);
+
 	websocketbroadcast(answer, strlen(answer));
-	ESP_LOGV(TAG, "playstationInt: %d, MainConfig: %u", sid, MainConfig->CurrentStation);
-	if (MainConfig->CurrentStation != sid)
-	{
-		MainConfig->CurrentStation = sid;
-		setCurrentStation(sid);
-		SaveConfig();
-	}
 }
 
 void playStation(char *id)
@@ -701,6 +703,8 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 					break;
 				vTaskDelay(4);
 			}
+			const char *NoName = "БЕЗ ИМЕНИ";
+			clientSetName(NoName, 0);
 			clientSetURL(url);
 			clientSetPath(path);
 			clientSetPort(atoi(port));
@@ -1006,7 +1010,7 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 		char spac[5];
 		sprintf(spac, "%u", VS1053_GetSpatial());
 
-		struct icyHeader *header = clientGetHeader();
+		icy_header_s *header = clientGetHeader();
 		ESP_LOGV(TAG, "icy start header %x", (int)header);
 		char *not2;
 		not2 = header->members.single.notice2;
@@ -2022,7 +2026,7 @@ static bool httpServerHandleConnection(int conn, char *buf, uint16_t buflen)
 					pathParse(param);
 					clientParsePlaylist(param);
 					infree(param);
-					clientSetName("Instant Play", 255);
+					clientSetName("Instant Play", 0);
 					clientConnectOnce();
 					vTaskDelay(1);
 				}

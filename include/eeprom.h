@@ -86,7 +86,7 @@ typedef struct radiola_config
 	int8_t freqtreble;
 	uint8_t freqbass;
 	uint8_t spacial;
-	uint16_t CurrentStation; //
+	uint8_t CurrentStation; //
 	uint8_t TotalStations;	 // Общее количество станций
 	uint8_t autostart;		 // 0: stopped, 1: playing
 	uint8_t i2sspeed;		 // 0 = 48kHz, 1 = 96kHz, 2 = 128kHz

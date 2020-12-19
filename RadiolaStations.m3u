@@ -1,0 +1,11 @@
+#EXTM3U
+#EXTINF:-1,Новое Радио (Минск) - Беларусь
+http://212.98.181.84:8000/novoeradio_128
+#EXTINF:-1,Релакс ФМ
+http://pub0201.101.ru/stream/air/aac/64/200
+#EXTINF:-1,Lemma radio - Vladivostok
+http://212.107.192.130:8000/;stream.nsv
+#EXTINF:-1,Радио Спутник - Волгоград
+http://online.sputnikfm.ru:8000/sputnik_mp3
+#EXTINF:-1,Атмосфера
+http://185.53.169.128:8000/64.m3u

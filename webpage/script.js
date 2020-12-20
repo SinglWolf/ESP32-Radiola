@@ -1492,6 +1492,7 @@ function editLocalStation() {
     var id = RadiolaStorage[COMMON].length;
     if (id <= (maxStation - 1)) {
         document.getElementById('editStationDiv').style.display = "block";
+        document.getElementById('editST').innerHTML = "Добавление станции";
         document.getElementById('add_slot').value = (id + 1);
 
         document.getElementById('add_URL').value = "http://" + document.getElementById('loc_url').value + ":" +
@@ -1506,7 +1507,7 @@ function editStation(num) {
     var id = (num.parentNode.cells[0].innerText) - 1;
 
     document.getElementById('editStationDiv').style.display = "block";
-
+    document.getElementById('editST').innerHTML = "Редактирование станции";
     function cpedit(arr) {
 
         document.getElementById('add_url').value = arr["URL"];
@@ -1550,7 +1551,6 @@ function removeStation(el) {
 
     var table = document.getElementById("table_" + PlayList).getElementsByTagName('tbody')[0];
     table.deleteRow(num);
-
     for (var i = 0; i < table.rows.length; i++) {
 
         table.rows[i].cells[0].innerText = (i + 1).toString();
@@ -1559,14 +1559,11 @@ function removeStation(el) {
     if (PlayList == FAVORITES) {
         var id = RadiolaStorage[FAVORITES][num]["ID"];
         RadiolaStorage[COMMON][id]["FAV"] = false;
-        RadiolaStorage[FAVORITES].splice(num, 1);
-        localStorage.setItem("RadiolaStorage", JSON.stringify(RadiolaStorage));
     } else {
         RadiolaStorage[COMMON].splice(num, 1);
-        stchanged = true;
-        document.getElementById("stsave").disabled = false;
     }
-
+    stchanged = true;
+    document.getElementById("stsave").disabled = false;
 }
 
 function refreshList() {
@@ -1582,25 +1579,30 @@ function refreshList() {
 
 function clearList(storage) {
     var text;
-    if (storage === FAVORITES) {
+    if (storage == FAVORITES) {
         text = 'ИЗБРАННОГО';
     } else {
         text = 'ОБЩЕГО';
     }
     if (confirm("Вы действительно хотите удалить плейлист из " + text + " списка?")) {
-        if (storage === COMMON) {
-            promptworking(working);
+        promptworking(working);
+        if (storage == COMMON) {
             PostData("clear");
-            clearPlayList(storage);
-            localStorage.setItem("RadiolaStorage", JSON.stringify(RadiolaStorage));
+            clearPlayList(FAVORITES);
         } else {
-            clearPlayList(storage);
-            stchanged = true;
-            document.getElementById("stsave").disabled = false;
+            for (var id = 0; id < RadiolaStorage[COMMON].length; id++) {
+                if (RadiolaStorage[COMMON][id]["FAV"] == true) {
+                    RadiolaStorage[COMMON][id]["FAV"] = false;
+                    var tosend = "&ID=" + id + "&url=" + RadiolaStorage[COMMON][id].URL + "&name=" + RadiolaStorage[COMMON][id].Name +
+                        "&file=" + fixedEncodeURIComponent(RadiolaStorage[COMMON][id].File) + "&port=" + RadiolaStorage[COMMON][id].Port + "&fav=0";
+                    PostData("setStation", tosend);
+                }
+            }
         }
+        clearPlayList(storage);
+        localStorage.setItem("RadiolaStorage", JSON.stringify(RadiolaStorage));
     } else promptworking("");
     refreshList();
-    window.setTimeout(loadStations, 10);
 }
 
 function clearPlayList(PlayList) {
@@ -1826,12 +1828,21 @@ function setPLS(el) {
 
 function dragEnd() {
     setPLS(tblEvn);
-    var table;
-    table = tblEvn.parentNode;
-    for (var i = 0; i < table.rows.length; i++) {
+    var table = tblEvn.parentNode;
+    saveTableToStorage(table);
+    if (PlayList == COMMON) {
+        stchanged = true;
+        document.getElementById("stsave").disabled = false;
+    } else {
+        localStorage.setItem("RadiolaStorage", JSON.stringify(RadiolaStorage));
+    }
+}
+
+function saveTableToStorage(tbl) {
+    for (var i = 0; i < tbl.rows.length; i++) {
         var parser = document.createElement('a');
-        var name = table.rows[i].cells[1].innerText;
-        var furl = table.rows[i].cells[2].innerText;
+        var name = tbl.rows[i].cells[1].innerText;
+        var furl = tbl.rows[i].cells[2].innerText;
         parser.href = "http://" + furl;
         var url = parser.hostname;
         var file = parser.pathname + parser.hash + parser.search;
@@ -1843,21 +1854,15 @@ function dragEnd() {
         RadiolaStorage[PlayList][i].File = file;
         RadiolaStorage[PlayList][i].Port = port;
 
-        table.rows[i].cells[0].innerText = (i + 1).toString();
+        tbl.rows[i].cells[0].innerText = (i + 1).toString();
         if (PlayList == COMMON) {
-            // RadiolaStorage[PlayList][i].ID = table.rows[i].cells[0].id.split('_')[1];
+            // RadiolaStorage[PlayList][i].ID = tbl.rows[i].cells[0].id.split('_')[1];
             if (document.getElementById("fav_" + i).className == 'icon-heart-o')
                 RadiolaStorage[PlayList][i].FAV = false;
             else
                 RadiolaStorage[PlayList][i].FAV = true;
         }
-        table.rows[i].cells[0].id = 'num_' + i;
-    }
-    if (PlayList == COMMON) {
-        stchanged = true;
-        document.getElementById("stsave").disabled = false;
-    } else {
-        localStorage.setItem("RadiolaStorage", JSON.stringify(RadiolaStorage));
+        tbl.rows[i].cells[0].id = 'num_' + i;
     }
 }
 
@@ -1872,7 +1877,6 @@ function dragOver(e) {
 
 
 function stChanged() {
-
     var i, tosend;
 
     function fillInfo(ind) {
@@ -1898,6 +1902,10 @@ function stChanged() {
     if (stchanged && confirm("Список изменен. Вы хотите сохранить измененный список?")) {
         localStorage.setItem("RadiolaStorage", JSON.stringify(RadiolaStorage));
         promptworking(working);
+        var arr = JSON.parse(PostData("getStation", "&ID=0"));
+        if (parseInt(arr["Total"], 10) > RadiolaStorage[COMMON].length) {
+            PostData("clear");
+        }
         if (RadiolaStorage[FAVORITES].length)
             clearPlayList(FAVORITES);
         for (i = 0; i < (RadiolaStorage[COMMON].length); i++) {
@@ -1984,13 +1992,16 @@ function loadStations(PlayList) {
                 // FAV     
                 td = document.createElement('TD');
                 var fav = document.createElement('i');
+                var title = "Добавить в ИЗБРАННОЕ";
                 if (!arr["FAV"]) {
                     fav.className = 'icon-heart-o';
                 }
                 else {
                     fav.className = 'icon-heart';
+                    title = "Удалить из ИЗБРАННОГО";
                 }
                 fav.setAttribute('onclick', 'checkFavorit(this.parentNode)');
+                fav.setAttribute('title', title);
                 fav.id = 'fav_' + idx;
                 td.appendChild(fav);
                 td.className = 'lst';
@@ -2001,6 +2012,7 @@ function loadStations(PlayList) {
                 td.className = 'lst';
                 var btn = document.createElement('i');
                 btn.setAttribute('onclick', 'editStation(this.parentNode)');
+                btn.setAttribute('title', 'Редактировать станцию');
                 btn.className = 'icon-page-edit';
                 td.appendChild(btn);
             } else {
@@ -2010,6 +2022,7 @@ function loadStations(PlayList) {
             // removeStation button
             btn = document.createElement('i');
             btn.setAttribute('onclick', 'removeStation(this.parentNode)');
+            btn.setAttribute('title', 'Удалить станцию из списка');
             btn.className = 'icon-trash-bin';
             td.appendChild(btn);
 

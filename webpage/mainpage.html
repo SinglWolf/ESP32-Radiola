@@ -40,7 +40,7 @@
     <!--The Modal Edit window-->
     <div id="editStationDiv" class="modal">
       <div class="modal-content">
-        <h1>Редактирование станции</h1>
+        <h1 id="editST"></h1>
         <div class="section modal-body">
           <p>
             <span class="bold">Номер слота: </span>
@@ -266,9 +266,8 @@
             <br>
             <span class="bold1">Путь: </span>
             <input type="text" id="loc_path" name="path" value="/" onkeyup="buildURL()">
-            <button class="icon-page-edit" onclick="editLocalStation()" title="Добавить и править"></button>
+            <input type="button" value="Добавить" onclick="editLocalStation()" title="Добавить станцию в плейлист">
           </p>
-
           <br>
           <div class="icons">
             <div class="icons8" title="Быстрое воспроизведение станции" onclick="LocalPlay()">
@@ -303,7 +302,6 @@
           <audio id="audio" src="/" class="audio_sound" onerror="monerror()">
             Мне жаль; ваш браузер не поддерживает HTML5 <code>audio</code>.
           </audio>
-
         </div>
         <h1>
           РЕЖИМ СНА / ПРОБУЖДЕНИЕ&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span id="time">time</span>
@@ -325,15 +323,12 @@
           </p>
           <br>
         </div>
-
       </div>
       <!-- END PLAY РАДИО -->
       <div>
         <!-- ПЛЕЙЛИСТЫ -->
         <h1>МЕНЕДЖЕР ПЛЕЙЛИСТОВ</h1>
         <div class="section">
-
-
           <div data-tabs>
             <div id="pls_common" class="icon-list active"></div>
             <div id="pls_favorites" class="icon-heart"></div>
@@ -351,15 +346,16 @@
                 <input type="button" id='download_common' onclick="downloadStations('common')"
                   value="Загрузить плейлист">
                 <span style="display:inline-block;"> &nbsp;&nbsp;из &nbsp;&nbsp;&nbsp;<input type="file"
-                    style="width:300px;color:black;" id="file_common" accept=".m3u"></span><br><br>
+                    style="width:300px;color:black;" id="file_common" accept=".m3u"></span>
+                <br>
+                <br>
                 <input type="button" id="clear_common" title="Предупреждение: Это удалит все станции из этого списка."
                   onclick="clearList('common')" value="Удалить">
                 <input type="button" id='stsave' disabled='true' onclick="stChanged()" value="СОХРАНИТЬ"
                   title="Предупреждение: Список будет сохранён в РАДИОЛУ."> &nbsp;
-
-
                 <input type="button" id="print_common" title="Печать всего списка станций на принтере"
-                  onclick="printList('common')" value="Печатать всё">
+                  onclick="printList('common')" value="Печатать всё"> &nbsp;
+                <input type="button" value="Добавить" onclick="editLocalStation()" title="Добавить станцию в плейлист">
               </p>
               <br>
               <p id="drag_common"></p>

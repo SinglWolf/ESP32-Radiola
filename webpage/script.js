@@ -1828,17 +1828,7 @@ function setPLS(el) {
 
 function dragEnd() {
     setPLS(tblEvn);
-    var table = tblEvn.parentNode;
-    saveTableToStorage(table);
-    if (PlayList == COMMON) {
-        stchanged = true;
-        document.getElementById("stsave").disabled = false;
-    } else {
-        localStorage.setItem("RadiolaStorage", JSON.stringify(RadiolaStorage));
-    }
-}
-
-function saveTableToStorage(tbl) {
+    var tbl = tblEvn.parentNode;
     for (var i = 0; i < tbl.rows.length; i++) {
         var parser = document.createElement('a');
         var name = tbl.rows[i].cells[1].innerText;
@@ -1864,6 +1854,12 @@ function saveTableToStorage(tbl) {
         }
         tbl.rows[i].cells[0].id = 'num_' + i;
     }
+    if (PlayList == COMMON) {
+        stchanged = true;
+        document.getElementById("stsave").disabled = false;
+    } else {
+        localStorage.setItem("RadiolaStorage", JSON.stringify(RadiolaStorage));
+    }
 }
 
 function dragOver(e) {
@@ -1873,8 +1869,6 @@ function dragOver(e) {
     else
         e.target.parentNode.before(tblEvn);
 }
-
-
 
 function stChanged() {
     var i, tosend;

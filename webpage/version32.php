@@ -4,13 +4,13 @@
 
 <body>
 
-	<p><span class="label label-success">Версия: <span id="firmware_last">2.2 Rev: 4</span> - Дата релиза 20.12.2020.
+	<p><span class="label label-success">Версия: <span id="firmware_last">2.2 Rev: 5</span> - Дата релиза 23.12.2020.
 		</span>
 	</p>
 	<p>
 		Анонс:
 		<ul id="ordered">
-			<li> 2.2.3:
+			<li> 2.2.5:
 				<ul id="ordered">
 				<li>+ <strong style="color: red">Полностью реструктурирована разметка FLASH-памяти!</strong></li>					
 				<li style="color: red"><strong>Заливать на чистую FLASH!!! Прошивки по OTA пока нет!</strong></li>					

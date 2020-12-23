@@ -64,6 +64,7 @@ const char strsICY[] = {"\
 
 const char strsWIFI[] = {"\
 {\
+\"auto\":\"%u\",\
 \"ssid\":\"%s\",\
 \"pasw\":\"%s\",\
 \"ssid2\":\"%s\",\
@@ -603,13 +604,7 @@ void playStationInt(uint8_t id)
 	char answer[24];
 
 	sprintf(answer, "{\"wsstation\":\"%d\"}", id);
-
-	if (MainConfig->CurrentStation != id)
-	{
-		MainConfig->CurrentStation = id;
-		setCurrentStation(id);
-		SaveConfig();
-	}
+	setCurrentStation(id);
 
 	id++;
 
@@ -641,8 +636,7 @@ void playStationInt(uint8_t id)
 void playStation(char *id)
 {
 	if (atoi(id) < MainConfig->TotalStations)
-		setCurrentStation(atoi(id));
-	playStationInt(getCurrentStation());
+		playStationInt(atoi(id));
 }
 
 // replace special  json char
@@ -787,7 +781,7 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 		char id[3];
 		if (getSParameterFromResponse(id, 3, "ID=", data, data_size))
 		{
-			if ((atoi(id) >= 0) && (atoi(id) < (MAXSTATIONS)))
+			if ((atoi(id) >= 0) && (atoi(id) < MainConfig->TotalStations))
 			{
 				station_slot_s *si = getStation(atoi(id));
 				if (si == NULL)
@@ -1147,19 +1141,25 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 	else if (strcmp(name, "/wifi") == 0)
 	{
 		changed = false;
-		bool val = false;
 		char valid[5];
 		if (getSParameterFromResponse(valid, 5, "valid=", data, data_size))
 			if (strcmp(valid, "1") == 0)
-				val = true;
+				changed = true;
 		char *aua = getParameterFromResponse("ua=", data, data_size);
 		pathParse(aua);
 		char *host = getParameterFromResponse("host=", data, data_size);
 		pathParse(host);
 
-		//			ESP_LOGV(TAG,"wifi received  valid:%s,val:%d, ssid:%s, pasw:%s, aip:%s, amsk:%s, agw:%s, adhcp:%s, aua:%s",valid,val,ssid,pasw,aip,amsk,agw,adhcp,aua);
-		if (val)
+		if (changed)
 		{
+			if (getSParameterFromResponse(valid, 5, "auto=", data, data_size))
+			{
+				if (strcmp(valid, "false") == 0)
+					MainConfig->options &= N_WIFIAUTO;
+				else
+					MainConfig->options |= Y_WIFIAUTO;
+				setAutoWifi();
+			}
 			char adhcp[4], adhcp2[4];
 			char *ssid = getParameterFromResponse("ssid=", data, data_size);
 			pathParse(ssid);
@@ -1176,7 +1176,6 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 			char *amsk2 = getParameterFromResponse("msk2=", data, data_size);
 			char *agw2 = getParameterFromResponse("gw2=", data, data_size);
 
-			changed = true;
 			ip_addr_t valu;
 			if (aip != NULL)
 			{
@@ -1262,10 +1261,6 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 			infree(host);
 		}
 
-		if (changed)
-		{
-			SaveConfig();
-		}
 		uint8_t macaddr[10];
 		char macstr[20];
 		char adhcp[4], adhcp2[4];
@@ -1290,6 +1285,7 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 		else
 		{
 			sprintf(buf, strsWIFI,
+					getAutoWifi(),
 					MainConfig->ssid1,
 					MainConfig->pass1,
 					MainConfig->ssid2,
@@ -1314,7 +1310,7 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 			write(conn, buf, strlen(buf));
 		}
 		infree(buf);
-		if (val)
+		if (changed)
 		{
 			// set current_ap to the first filled ssid
 			ESP_LOGD(TAG, "currentAP: %u", MainConfig->current_ap);

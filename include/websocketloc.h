@@ -8,8 +8,8 @@ Inspirated by:
  * Modified for ESP32-Radiola 2019 SinglWolf (https://serverdoma.ru)
 */
 
-#ifndef __WEBSOCKET_H__
-#define __WEBSOCKET_H__
+#ifndef __WEBSOCKETLOC_H__
+#define __WEBSOCKETLOC_H__
 // max size of the WS Message Header
 #define WEBSOCKETS_MAX_HEADER_SIZE (14)
 

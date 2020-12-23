@@ -922,6 +922,10 @@ function wifi(valid) {
         chkip(document.getElementById('gw2'));
         document.getElementById('ua').value = arr["ua"];
         document.getElementById('host').value = arr["host"];
+        if (arr["auto"] == "1")
+            document.getElementById("WiFi").setAttribute("checked", "");
+        else
+            document.getElementById("WiFi").removeAttribute("checked");
         if (arr["dhcp"] == "1")
             document.getElementById("dhcp").setAttribute("checked", "");
         else
@@ -934,6 +938,7 @@ function wifi(valid) {
         clickdhcp();
     } else {
         PostData("wifi", "valid=" + valid +
+            "&auto=" + document.getElementById('WiFi').checked +
             "&ssid=" + encodeURIComponent(document.getElementById('ssid').value) +
             "&pasw=" + encodeURIComponent(document.getElementById('passwd').value) +
             "&ssid2=" + encodeURIComponent(document.getElementById('ssid2').value) +

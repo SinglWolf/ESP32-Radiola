@@ -11,7 +11,7 @@
 #include <stdlib.h>
 #include "lwip/sockets.h"
 #include "telnet.h"
-#include "websocket.h"
+#include "websocketloc.h"
 #include "webserver.h"
 #include "interface.h"
 #include "main.h"

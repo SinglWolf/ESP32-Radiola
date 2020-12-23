@@ -11,7 +11,7 @@
 #include "freertos/task.h"
 #include "freertos/semphr.h"
 
-#include "websocket.h"
+#include "websocketloc.h"
 
 extern xSemaphoreHandle semclient;
 extern xSemaphoreHandle semfile;

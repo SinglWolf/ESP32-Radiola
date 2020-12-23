@@ -11,7 +11,7 @@
 #include "lwip/api.h"
 #include "lwip/sockets.h"
 #include "cencode_inc.h"
-#include "websocket.h"
+#include "websocketloc.h"
 #include "interface.h"
 #include "webserver.h"
 //#include <stddef.h> /* for size_t */

@@ -907,7 +907,6 @@ void autoPlay()
 	{
 		clientSaveOneHeader(buf, strlen(buf), METANAME);
 
-		setCurrentStation(MainConfig->CurrentStation);
 		if (MainConfig->autostart == 1)
 		{
 			kprintf("autostart: playing:%d, CurrentStation:%d\n", MainConfig->autostart, MainConfig->CurrentStation);

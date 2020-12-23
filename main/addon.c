@@ -44,7 +44,7 @@ static uint8_t old_backlight_level = 0; // Предыдущее состояни
 const char *stopped = "ОСТАНОВЛЕН";
 const char *starting = "ЗАПУСК";
 
-char irStr[4];
+char StNumStr[4];
 xQueueHandle event_ir = NULL;
 xQueueHandle event_lcd = NULL;
 ucg_t ucg;
@@ -68,7 +68,7 @@ static uint8_t mTscreen = MTNEW; // 0 dont display, 1 display full, 2 display va
 static bool playable = true;
 bool ir_training = false;
 static uint8_t volume;
-static int16_t futurNum = 0; // the number of the wanted station
+static uint8_t StNum = 0; // Номер станции, отображаемый на дисплее
 
 static unsigned timerScreen = 0;
 static unsigned timerLcdOut = 0;
@@ -223,14 +223,15 @@ IRAM_ATTR void ServiceAddon(void)
 }
 
 ////////////////////////////////////////
-// futurNum
-void setFuturNum(int16_t new)
+// StNum
+void setStationNum(uint8_t num)
 {
-	futurNum = new;
+	StNum = num;
 }
-int16_t getFuturNum()
+
+uint8_t getStationNum()
 {
-	return futurNum;
+	return StNum;
 }
 
 ////////////////////////////////////////
@@ -284,8 +285,8 @@ void drawTTitle(char *ttitle)
 // draw the number entered from IR
 void drawNumber()
 {
-	if (strlen(irStr) > 0)
-		drawNumberUcg(mTscreen, irStr);
+	if (strlen(StNumStr) > 0)
+		drawNumberUcg(mTscreen, StNumStr);
 }
 
 ////////////////////
@@ -296,12 +297,10 @@ void drawStation()
 	char *ddot;
 	station_slot_s *si;
 
-	//ClearBuffer();
-
 	do
 	{
-		si = getStation(futurNum);
-		sprintf(sNum, "%d", futurNum);
+		si = getStation(StNum - 1);
+		sprintf(sNum, "%u", StNum);
 		ddot = si->name;
 		char *ptl = ddot;
 		while (*ptl == 0x20)
@@ -315,15 +314,15 @@ void drawStation()
 			free(si);
 			if (currentValue < 0)
 			{
-				futurNum--;
-				if (futurNum < 0)
-					futurNum = MAXSTATIONS - 1;
+				StNum--;
+				if (StNum < 1)
+					StNum = MainConfig->TotalStations;
 			}
 			else
 			{
-				futurNum++;
-				if (futurNum > (MAXSTATIONS - 1))
-					futurNum = 0;
+				StNum++;
+				if (StNum > (MainConfig->TotalStations))
+					StNum = 1;
 			}
 		}
 		else
@@ -384,14 +383,11 @@ void drawScreen()
 
 void stopStation()
 {
-	//    irStr[0] = 0;
 	clientDisconnect("addon stop");
 }
 void startStation()
 {
-	//   irStr[0] = 0;
-	playStationInt(futurNum);
-	;
+	playStationInt(StNum - 1);
 }
 void startStop()
 {
@@ -402,30 +398,34 @@ void stationOk()
 {
 	beep(10);
 	ESP_LOGD(TAG, "STATION OK");
-	if (strlen(irStr) > 0)
+	if ((strlen(StNumStr) > 0) && (atoi(StNumStr) > 0))
 	{
-		futurNum = atoi(irStr);
-		playStationInt(futurNum);
+		StNum = atoi(StNumStr);
+		playStationInt(StNum - 1);
 	}
 	else
 	{
 		startStop();
 	}
-	irStr[0] = 0;
+	StNumStr[0] = 0;
 }
 void changeStation(int16_t value)
 {
 	currentValue = value;
-	ESP_LOGD(TAG, "changeStation val: %d, futurnum: %d", value, futurNum);
+	// ESP_LOGD(TAG, "changeStation val: %d, StNum: %d", value, StNum);
 	if (value > 0)
-		futurNum++;
-	if (futurNum > 254)
-		futurNum = 0;
+	{
+		StNum++;
+		if (StNum > MainConfig->TotalStations)
+			StNum = 1;
+	}
 	else if (value < 0)
-		futurNum--;
-	if (futurNum < 0)
-		futurNum = 254;
-	ESP_LOGD(TAG, "futurnum: %d", futurNum);
+	{
+		StNum--;
+		if (StNum < 1)
+			StNum = MainConfig->TotalStations;
+	}
+	// ESP_LOGD(TAG, "StNum: %d", StNum);
 	//else if (value != 0) mTscreen = MTREFRESH;
 }
 // IR
@@ -433,11 +433,11 @@ void changeStation(int16_t value)
 void nbStation(char nb)
 {
 	beep(10);
-	if (strlen(irStr) >= 3)
-		irStr[0] = 0;
-	uint8_t id = strlen(irStr);
-	irStr[id] = nb;
-	irStr[id + 1] = 0;
+	if (strlen(StNumStr) >= 3)
+		StNumStr[0] = 0;
+	uint8_t id = strlen(StNumStr);
+	StNumStr[id] = nb;
+	StNumStr[id + 1] = 0;
 	evtScreen(NumberScreen);
 }
 
@@ -632,7 +632,7 @@ void irLoop()
 					break;
 				case KEY_STAR:
 					if (!evt.repeat_flag)
-						playStationInt(futurNum);
+						playStationInt(StNum - 1);
 					break;
 				case KEY_DIESE:
 					if (!evt.repeat_flag)
@@ -1098,8 +1098,9 @@ void task_addon(void *pvParams)
 
 	serviceAddon = &multiService;
 	; // connect the 1ms interruption
-	futurNum = getCurrentStation();
-
+	StNum = getCurrentStation();
+	StNum++;
+	sprintf(StNumStr, "%u", StNum);
 	//ir
 	// queue for events of the IR nec rx
 	event_ir = xQueueCreate(5, sizeof(event_ir_s));
@@ -1132,18 +1133,30 @@ void task_addon(void *pvParams)
 			{
 				// Play the changed station on return to main screen
 				// if a number is entered, play it.
-				if (strlen(irStr) > 0)
+				if (strlen(StNumStr) > 0)
 				{
-					futurNum = atoi(irStr);
-					if (futurNum > 254)
-						futurNum = 0;
-					playable = true;
+					uint8_t old_num = StNum;
+					StNum = atoi(StNumStr);
+					if (StNum < 1)
+					{
+						StNum = old_num;
+						playable = false;
+					}
+					else if (StNum > MainConfig->TotalStations)
+					{
+						StNum = old_num;
+						playable = false;
+					}
+					else
+					{
+						playable = true;
+					}
 					// clear the number
-					irStr[0] = 0;
+					StNumStr[0] = 0;
 				}
-				if ((strlen(getNameNumUcg()) != 0) && playable && (futurNum != atoi(getNameNumUcg())))
+				if ((strlen(getNameNumUcg()) != 0) && playable && (StNum != atoi(getNameNumUcg())))
 				{
-					playStationInt(futurNum);
+					playStationInt(StNum - 1);
 					vTaskDelay(10);
 				}
 				if (!itAskStime)

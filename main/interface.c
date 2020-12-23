@@ -134,7 +134,6 @@ help: this command\n\
 A command error display:\n\
 ##CMD_ERROR#\n\r"};
 
-uint16_t currentStation = 0;
 static IRAM_ATTR uint32_t lcd_out = 0xFFFFFFFF;
 static esp_log_level_t s_log_default_level = CONFIG_LOG_BOOTLOADER_LEVEL_INFO;
 extern void wsVol(char *vol);
@@ -182,13 +181,17 @@ void setVolumew(char *vol)
 	wsVol(vol);
 }
 
-uint16_t getCurrentStation()
+uint8_t getCurrentStation()
 {
-	return currentStation;
+	return MainConfig->CurrentStation;
 }
-void setCurrentStation(uint16_t cst)
+void setCurrentStation(uint8_t num)
 {
-	currentStation = cst;
+	if (num != MainConfig->CurrentStation)
+	{
+		MainConfig->CurrentStation = num;
+		SaveConfig();
+	}
 }
 
 unsigned short adcdiv;
@@ -336,14 +339,14 @@ void wifiConnectMem()
 }
 
 static bool autoConWifi = true; // control for wifiReConnect & wifiDisconnect
-static bool autoWifi = false;	// auto reconnect wifi if disconnected
-bool getAutoWifi(void)
+static uint8_t autoWifi = 0;	// auto reconnect wifi if disconnected
+uint8_t getAutoWifi(void)
 {
 	return autoWifi;
 }
 void setAutoWifi()
 {
-	autoWifi = (MainConfig->options & Y_WIFIAUTO) ? true : false;
+	autoWifi = (MainConfig->options & Y_WIFIAUTO) ? 1 : 0;
 }
 
 void wifiAuto(char *cmd)
@@ -539,7 +542,7 @@ void clientPlay(char *s)
 		for (tmp = 0; tmp < (t_end - t + 1); tmp++)
 			id[tmp] = 0;
 		strncpy(id, t + 2, (t_end - t));
-		playStation(id);
+		playStationInt((atoi(id) - 1));
 		free(id);
 	}
 	else
@@ -642,7 +645,7 @@ bool parseUrl(char *src, char *url, char *path, uint16_t *port)
 void clientEdit(char *s)
 {
 	station_slot_s *si;
-	uint8_t id= 0xFF;
+	uint8_t id = 0xFF;
 	char *tmp;
 	char *tmpend;
 	char url[200];
@@ -705,11 +708,11 @@ void clientInfo()
 {
 	station_slot_s *si;
 	kprintf("##CLI.INFO#\n");
-	si = getStation(currentStation);
+	si = getStation(MainConfig->CurrentStation);
 	if (si != NULL)
 	{
 		ntp_print_time();
-		clientSetName(si->name, currentStation);
+		clientSetName(si->name, MainConfig->CurrentStation);
 		clientPrintHeaders();
 		clientVol((char *)"");
 		clientPrintState();
@@ -720,13 +723,13 @@ void clientInfo()
 char *webInfo()
 {
 	station_slot_s *si;
-	si = getStation(currentStation);
+	si = getStation(MainConfig->CurrentStation);
 	char *resp = malloc(1024);
 	if (si != NULL)
 	{
 		if (resp != NULL)
 		{
-			sprintf(resp, "vol: %d\nnum: %d\nstn: %s\ntit: %s\nsts: %d\n", getVolume(), currentStation, si->name, getMeta(), getState());
+			sprintf(resp, "vol: %d\nnum: %d\nstn: %s\ntit: %s\nsts: %d\n", getVolume(), MainConfig->CurrentStation, si->name, getMeta(), getState());
 		}
 		free(si);
 	}

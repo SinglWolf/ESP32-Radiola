@@ -97,7 +97,7 @@ void ConfigInit(bool reset)
 		{
 			ESP_LOGW(TAG, "Forced resetting config the Radiola.");
 		}
-
+		MainConfig->options |= Y_WIFIAUTO;		// Автоподключение к Wi-Wi при обрыве соединения
 		MainConfig->options &= N_GPIOMODE;		// Режим считывания GPIO 0 - по-умолчанию, 1 - из NVS
 		MainConfig->uartspeed = 115200;			// default
 		MainConfig->ir_mode = IR_DEFAULD;		// Опрос кодов по-умолчанию
@@ -238,7 +238,7 @@ void saveStation(station_slot_s *station, uint8_t ID)
 
 station_slot_s *getStation(uint8_t ID)
 {
-	if (ID > MAXSTATIONS - 1)
+	if (ID > MainConfig->TotalStations)
 	{
 		ESP_LOGE(TAG, "getStation fails pos=%d\n", ID);
 		return NULL;
@@ -250,7 +250,7 @@ station_slot_s *getStation(uint8_t ID)
 	station_slot_s *slot = calloc(1, sizeof(station_slot_s));
 	if (err == ESP_OK)
 	{
-		char id[6];
+		char id[13];
 		sprintf(id, "ID%u", ID);
 		size_t required_size = sizeof(station_slot_s);
 		err = (nvs_get_blob(station_handle, id, slot, &required_size));

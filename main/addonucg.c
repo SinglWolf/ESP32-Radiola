@@ -742,7 +742,7 @@ void drawTTitleUcg(char *ttitle)
 	}
 }
 //////////////////////////
-void drawNumberUcg(uint8_t mTscreen, char *irStr)
+void drawNumberUcg(uint8_t mTscreen, char *StNumStr)
 {
 	uint16_t xxx;
 	char number[] = {"Номер"};
@@ -754,12 +754,12 @@ void drawNumberUcg(uint8_t mTscreen, char *irStr)
 		drawTTitleUcg(number);
 	/* fall through */
 	case 2:
-		xxx = (x / 2) - (ucg_GetStrWidth(&ucg, irStr) / 2);
+		xxx = (x / 2) - (ucg_GetStrWidth(&ucg, StNumStr) / 2);
 		ucg_SetColor(&ucg, 0, CBLACK);
 		ucg_DrawBox(&ucg, 0, HHeader, x, yy);
 		setfont(large);
 		ucg_SetColor(&ucg, 0, CBODY);
-		ucg_DrawString(&ucg, xxx, yy / 3, 0, irStr);
+		ucg_DrawString(&ucg, xxx, yy / 3, 0, StNumStr);
 		break;
 	default:;
 	}
@@ -1144,7 +1144,7 @@ void namesetUcg(char *ici)
 		clearAllUcg();
 		strncpy(nameNum, nameset, ici - nameset + 1);
 		nameNum[ici - nameset + 1] = 0;
-		setFuturNum(atoi(nameNum));
+		setStationNum(atoi(nameNum));
 	}
 	strcpy(nameset, nameset + strlen(nameNum));
 	charset = Latin;

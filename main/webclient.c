@@ -524,7 +524,7 @@ void wsStationNext()
 		if (si != NULL)
 			incfree(si, "wsstationN");
 		setCurrentStation(getCurrentStation() + 1);
-		if (getCurrentStation() > MAXSTATIONS)
+		if (getCurrentStation() > MainConfig->TotalStations)
 			setCurrentStation(0);
 		si = getStation(getCurrentStation());
 	} while (si == NULL || ((si != NULL) && (strcmp(si->domain, "") == 0)) || ((si != NULL) && (strcmp(si->file, "") == 0)));

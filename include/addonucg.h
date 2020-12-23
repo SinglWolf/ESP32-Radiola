@@ -26,7 +26,7 @@ char *getNameNumUcg();
 void scrollUcg();
 void drawFrameUcg(uint8_t mTscreen);
 void drawTTitleUcg(char *ttitle);
-void drawNumberUcg(uint8_t mTscreen, char *irStr);
+void drawNumberUcg(uint8_t mTscreen, char *StNumStr);
 void drawStationUcg(uint8_t mTscreen, char *snum, char *ddot);
 //void drawVolumeUcg(uint8_t mTscreen,char* aVolume);
 void drawVolumeUcg(uint8_t mTscreen);

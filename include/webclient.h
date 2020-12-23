@@ -6,7 +6,6 @@
 #define __WEBCLIENT_H__
 #include "esp_system.h"
 #include "esp_log.h"
-//#include "websocket.h"
 
 #define METADATA 9
 #define METAINT 8

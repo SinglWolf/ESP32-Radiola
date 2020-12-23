@@ -41,7 +41,7 @@
 #include "interface.h"
 #include "webclient.h"
 #include "main.h"
-#include "websocket.h"
+#include "websocketloc.h"
 
 #define BUFFSIZE 1024
 

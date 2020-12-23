@@ -97,7 +97,7 @@ void ConfigInit(bool reset)
 		{
 			ESP_LOGW(TAG, "Forced resetting config the Radiola.");
 		}
-		MainConfig->options |= Y_WIFIAUTO;		// Автоподключение к Wi-Wi при обрыве соединения
+		MainConfig->options &= N_WIFIAUTO;		// Автоподключение к Wi-Wi при обрыве соединения ВЫКЛ
 		MainConfig->options &= N_GPIOMODE;		// Режим считывания GPIO 0 - по-умолчанию, 1 - из NVS
 		MainConfig->uartspeed = 115200;			// default
 		MainConfig->ir_mode = IR_DEFAULD;		// Опрос кодов по-умолчанию

@@ -501,7 +501,7 @@ static char *getParameterFromResponse(const char *param, char *data, uint16_t da
 {
 	return getParameter("&", param, data, data_length);
 }
-static bool getSParameterFromResponse(char *result, uint32_t size, const char *param, char *data, uint16_t data_length)
+static bool findParamFromResp(char *result, uint32_t size, const char *param, char *data, uint16_t data_length)
 {
 	return getSParameter(result, size, "&", param, data, data_length);
 }
@@ -682,12 +682,12 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 	{
 		bool tst;
 		char url[100];
-		tst = getSParameterFromResponse(url, 100, "url=", data, data_size);
+		tst = findParamFromResp(url, 100, "url=", data, data_size);
 		char path[200];
-		tst &= getSParameterFromResponse(path, 200, "path=", data, data_size);
+		tst &= findParamFromResp(path, 200, "path=", data, data_size);
 		pathParse(path);
 		char port[10];
-		tst &= getSParameterFromResponse(port, 10, "port=", data, data_size);
+		tst &= findParamFromResp(port, 10, "port=", data, data_size);
 		if (tst)
 		{
 			clientDisconnect("Post local_play");
@@ -728,7 +728,7 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 		char treblefreq[6];
 		char spacial[6];
 		changed = false;
-		if (getSParameterFromResponse(bass, 6, "bass=", data, data_size))
+		if (findParamFromResp(bass, 6, "bass=", data, data_size))
 		{
 			if (MainConfig->bass != atoi(bass))
 			{
@@ -737,7 +737,7 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 				MainConfig->bass = atoi(bass);
 			}
 		}
-		if (getSParameterFromResponse(treble, 6, "treble=", data, data_size))
+		if (findParamFromResp(treble, 6, "treble=", data, data_size))
 		{
 			if (MainConfig->treble != atoi(treble))
 			{
@@ -746,7 +746,7 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 				MainConfig->treble = atoi(treble);
 			}
 		}
-		if (getSParameterFromResponse(bassfreq, 6, "bassfreq=", data, data_size))
+		if (findParamFromResp(bassfreq, 6, "bassfreq=", data, data_size))
 		{
 			if (MainConfig->freqbass != atoi(bassfreq))
 			{
@@ -755,7 +755,7 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 				MainConfig->freqbass = atoi(bassfreq);
 			}
 		}
-		if (getSParameterFromResponse(treblefreq, 6, "treblefreq=", data, data_size))
+		if (findParamFromResp(treblefreq, 6, "treblefreq=", data, data_size))
 		{
 			if (MainConfig->freqtreble != atoi(treblefreq))
 			{
@@ -764,7 +764,7 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 				MainConfig->freqtreble = atoi(treblefreq);
 			}
 		}
-		if (getSParameterFromResponse(spacial, 6, "spacial=", data, data_size))
+		if (findParamFromResp(spacial, 6, "spacial=", data, data_size))
 		{
 			if (MainConfig->spacial != atoi(spacial))
 			{
@@ -779,7 +779,7 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 	else if (strcmp(name, "/getStation") == 0)
 	{
 		char id[3];
-		if (getSParameterFromResponse(id, 3, "ID=", data, data_size))
+		if (findParamFromResp(id, 3, "ID=", data, data_size))
 		{
 			if ((atoi(id) >= 0) && (atoi(id) < MainConfig->TotalStations))
 			{
@@ -824,7 +824,7 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 	else if (strcmp(name, "/setStation") == 0)
 	{
 		char save[1];
-		if (getSParameterFromResponse(save, 1, "save=", data, data_size))
+		if (findParamFromResp(save, 1, "save=", data, data_size))
 		{
 			if (strcmp(save, "1") == 0)
 			{
@@ -858,9 +858,9 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 		char *file = getParameterFromResponse("file=", data, data_size);
 		pathParse(file);
 		char *Name = getParameterFromResponse("name=", data, data_size);
-		getSParameterFromResponse(FAV, 1, "fav=", data, data_size);
-		getSParameterFromResponse(ID, 3, "ID=", data, data_size);
-		getSParameterFromResponse(port, 5, "port=", data, data_size);
+		findParamFromResp(FAV, 1, "fav=", data, data_size);
+		findParamFromResp(ID, 3, "ID=", data, data_size);
+		findParamFromResp(port, 5, "port=", data, data_size);
 
 		// if (strlen(url) > sizeof(slot->domain))
 		// 	url[sizeof(slot->domain) - 1] = 0; //truncate if any
@@ -978,7 +978,7 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 	else if (strcmp(name, "/ircode") == 0) // start the IR TRAINING
 	{
 		char mode[1];
-		if (getSParameterFromResponse(mode, 1, "mode=", data, data_size))
+		if (findParamFromResp(mode, 1, "mode=", data, data_size))
 		{
 			if (strcmp(mode, "1") == 0)
 				set_ir_training(true);
@@ -1052,49 +1052,49 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 	{
 		changed = false;
 		char save[1];
-		if (getSParameterFromResponse(save, 1, "save=", data, data_size))
+		if (findParamFromResp(save, 1, "save=", data, data_size))
 			if (strcmp(save, "1") == 0)
 				changed = true;
 		if (changed && tda7313_get_present())
 		{
 			char arg[2];
-			getSParameterFromResponse(arg, 2, "audioinput=", data, data_size);
+			findParamFromResp(arg, 2, "audioinput=", data, data_size);
 			if (tda7313_get_input() != atoi(arg))
 			{
 				(tda7313_set_input(atoi(arg)));
 				MainConfig->audio_input_num = atoi(arg);
 			}
-			getSParameterFromResponse(arg, 2, "Volume=", data, data_size);
+			findParamFromResp(arg, 2, "Volume=", data, data_size);
 			if (tda7313_get_volume() != atoi(arg))
 				(tda7313_set_volume(atoi(arg)));
-			getSParameterFromResponse(arg, 2, "Treble=", data, data_size);
+			findParamFromResp(arg, 2, "Treble=", data, data_size);
 			if (tda7313_get_treble() != atoi(arg))
 				(tda7313_set_treble(atoi(arg)));
-			getSParameterFromResponse(arg, 2, "Bass=", data, data_size);
+			findParamFromResp(arg, 2, "Bass=", data, data_size);
 			if (tda7313_get_bass() != atoi(arg))
 				(tda7313_set_bass(atoi(arg)));
-			getSParameterFromResponse(arg, 2, "rear_on=", data, data_size);
+			findParamFromResp(arg, 2, "rear_on=", data, data_size);
 			if (tda7313_get_rear() != atoi(arg))
 				(tda7313_set_rear(atoi(arg)));
-			getSParameterFromResponse(arg, 2, "attlf=", data, data_size);
+			findParamFromResp(arg, 2, "attlf=", data, data_size);
 			if (tda7313_get_attlf() != atoi(arg))
 				(tda7313_set_attlf(atoi(arg)));
-			getSParameterFromResponse(arg, 2, "attrf=", data, data_size);
+			findParamFromResp(arg, 2, "attrf=", data, data_size);
 			if (tda7313_get_attrf() != atoi(arg))
 				(tda7313_set_attrf(atoi(arg)));
-			getSParameterFromResponse(arg, 2, "attlr=", data, data_size);
+			findParamFromResp(arg, 2, "attlr=", data, data_size);
 			if (tda7313_get_attlr() != atoi(arg))
 				(tda7313_set_attlr(atoi(arg)));
-			getSParameterFromResponse(arg, 2, "attrr=", data, data_size);
+			findParamFromResp(arg, 2, "attrr=", data, data_size);
 			if (tda7313_get_attrr() != atoi(arg))
 				(tda7313_set_attrr(atoi(arg)));
-			getSParameterFromResponse(arg, 2, "loud=", data, data_size);
+			findParamFromResp(arg, 2, "loud=", data, data_size);
 			if (tda7313_get_loud(MainConfig->audio_input_num) != atoi(arg))
 				(tda7313_set_loud(atoi(arg)));
-			getSParameterFromResponse(arg, 2, "sla=", data, data_size);
+			findParamFromResp(arg, 2, "sla=", data, data_size);
 			if (tda7313_get_sla(MainConfig->audio_input_num) != atoi(arg))
 				(tda7313_set_sla(atoi(arg)));
-			getSParameterFromResponse(arg, 2, "mute=", data, data_size);
+			findParamFromResp(arg, 2, "mute=", data, data_size);
 			if (tda7313_get_mute() != atoi(arg))
 				(tda7313_set_mute(atoi(arg)));
 			SaveConfig();
@@ -1142,7 +1142,7 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 	{
 		changed = false;
 		char valid[5];
-		if (getSParameterFromResponse(valid, 5, "valid=", data, data_size))
+		if (findParamFromResp(valid, 5, "valid=", data, data_size))
 			if (strcmp(valid, "1") == 0)
 				changed = true;
 		char *aua = getParameterFromResponse("ua=", data, data_size);
@@ -1152,7 +1152,7 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 
 		if (changed)
 		{
-			if (getSParameterFromResponse(valid, 5, "auto=", data, data_size))
+			if (findParamFromResp(valid, 5, "auto=", data, data_size))
 			{
 				if (strcmp(valid, "false") == 0)
 					MainConfig->options &= N_WIFIAUTO;
@@ -1195,7 +1195,7 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 				ipaddr_aton(agw2, &valu);
 				memcpy(MainConfig->gate2, &valu, sizeof(uint32_t));
 			}
-			if (getSParameterFromResponse(adhcp, 4, "dhcp=", data, data_size))
+			if (findParamFromResp(adhcp, 4, "dhcp=", data, data_size))
 				if (strlen(adhcp) != 0)
 				{
 					if (strcmp(adhcp, "true") == 0)
@@ -1203,7 +1203,7 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 					else
 						MainConfig->dhcpEn1 = 0;
 				}
-			if (getSParameterFromResponse(adhcp2, 4, "dhcp2=", data, data_size))
+			if (findParamFromResp(adhcp2, 4, "dhcp2=", data, data_size))
 				if (strlen(adhcp2) != 0)
 				{
 					if (strcmp(adhcp2, "true") == 0)
@@ -1368,72 +1368,72 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 		get_bright(&BRG_ON);
 		get_fan(&FAN_ON);
 		char val_1[1];
-		if (getSParameterFromResponse(val_1, 1, "save=", data, data_size))
+		if (findParamFromResp(val_1, 1, "save=", data, data_size))
 			if (strcmp(val_1, "1") == 0)
 				changed = true;
 		if (changed)
 		{
-			if (getSParameterFromResponse(val_1, 1, "lcd_brg=", data, data_size))
+			if (findParamFromResp(val_1, 1, "lcd_brg=", data, data_size))
 			{
 				lcd_brg = atoi(val_1);
 				if (MainConfig->backlight_mode != lcd_brg)
 					MainConfig->backlight_mode = lcd_brg;
 			}
-			if (getSParameterFromResponse(val_1, 1, "begin_h=", data, data_size))
+			if (findParamFromResp(val_1, 1, "begin_h=", data, data_size))
 			{
 				begin_h = atoi(val_1);
 			}
-			if (getSParameterFromResponse(val_1, 1, "begin_m=", data, data_size))
+			if (findParamFromResp(val_1, 1, "begin_m=", data, data_size))
 			{
 				begin_m = atoi(val_1);
 			}
 
-			if (getSParameterFromResponse(val_1, 1, "end_h=", data, data_size))
+			if (findParamFromResp(val_1, 1, "end_h=", data, data_size))
 			{
 				end_h = atoi(val_1);
 			}
 
-			if (getSParameterFromResponse(val_1, 1, "end_m=", data, data_size))
+			if (findParamFromResp(val_1, 1, "end_m=", data, data_size))
 			{
 				end_m = atoi(val_1);
 			}
 
-			if (getSParameterFromResponse(val_1, 1, "day_brg=", data, data_size))
+			if (findParamFromResp(val_1, 1, "day_brg=", data, data_size))
 			{
 				day_brg = atoi(val_1);
 			}
 
-			if (getSParameterFromResponse(val_1, 1, "night_brg=", data, data_size))
+			if (findParamFromResp(val_1, 1, "night_brg=", data, data_size))
 			{
 				night_brg = atoi(val_1);
 			}
 
-			if (getSParameterFromResponse(val_1, 1, "hand_brg=", data, data_size))
+			if (findParamFromResp(val_1, 1, "hand_brg=", data, data_size))
 			{
 				hand_brg = atoi(val_1);
 			}
 
-			if (getSParameterFromResponse(val_1, 1, "fan_control=", data, data_size))
+			if (findParamFromResp(val_1, 1, "fan_control=", data, data_size))
 			{
 				fan_control = atoi(val_1);
 			}
 
-			if (getSParameterFromResponse(val_1, 1, "min_temp=", data, data_size))
+			if (findParamFromResp(val_1, 1, "min_temp=", data, data_size))
 			{
 				min_temp = atoi(val_1);
 			}
 
-			if (getSParameterFromResponse(val_1, 1, "max_temp=", data, data_size))
+			if (findParamFromResp(val_1, 1, "max_temp=", data, data_size))
 			{
 				max_temp = atoi(val_1);
 			}
 
-			if (getSParameterFromResponse(val_1, 1, "min_pwm=", data, data_size))
+			if (findParamFromResp(val_1, 1, "min_pwm=", data, data_size))
 			{
 				min_pwm = atoi(val_1);
 			}
 
-			if (getSParameterFromResponse(val_1, 1, "hand_pwm=", data, data_size))
+			if (findParamFromResp(val_1, 1, "hand_pwm=", data, data_size))
 			{
 				hand_pwm = atoi(val_1);
 			}
@@ -1497,7 +1497,7 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 			NTP2 = MainConfig->ntp_server[2];
 			NTP3 = MainConfig->ntp_server[3];
 		}
-		if (getSParameterFromResponse(val_1, 1, "save=", data, data_size))
+		if (findParamFromResp(val_1, 1, "save=", data, data_size))
 			if (strcmp(val_1, "1") == 0)
 			{
 				changed = true;
@@ -1509,13 +1509,13 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 		}
 		if (changed)
 		{
-			if (getSParameterFromResponse(val_1, 1, "ESPLOG=", data, data_size))
+			if (findParamFromResp(val_1, 1, "ESPLOG=", data, data_size))
 			{
 				log_level = atoi(val_1);
 				if (MainConfig->trace_level != log_level)
 					setLogLevel(log_level);
 			}
-			if (getSParameterFromResponse(val_1, 1, "NTP=", data, data_size))
+			if (findParamFromResp(val_1, 1, "NTP=", data, data_size))
 			{
 				NTP = atoi(val_1);
 				if (MainConfig->ntp_mode != NTP)
@@ -1545,7 +1545,7 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 				reboot = true;
 			}
 
-			if (getSParameterFromResponse(val_1, 1, "TIME_FORMAT=", data, data_size))
+			if (findParamFromResp(val_1, 1, "TIME_FORMAT=", data, data_size))
 			{
 				if (TIME_FORMAT != atoi(val_1))
 				{
@@ -1556,7 +1556,7 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 					reboot = true;
 				}
 			}
-			if (getSParameterFromResponse(val_1, 1, "LCD_ROTA=", data, data_size))
+			if (findParamFromResp(val_1, 1, "LCD_ROTA=", data, data_size))
 			{
 				if (LCD_ROTA != atoi(val_1))
 				{
@@ -1624,17 +1624,17 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 
 		gpio_num_t miso, mosi, sclk, xcs, xdcs, dreq, enca, encb, encbtn, sda, scl, cs, a0, ir, led, tach, fanspeed, ds18b20, touch, buzzer, rxd, txd, ldr;
 
-		if (getSParameterFromResponse(arg, 4, "gpio_mode=", data, data_size))
+		if (findParamFromResp(arg, 4, "gpio_mode=", data, data_size))
 			if ((strcmp(arg, "1") == 0))
 			{
 				set_gpio_mode(true);
 			}
 
-		if (getSParameterFromResponse(arg, 4, "save=", data, data_size))
+		if (findParamFromResp(arg, 4, "save=", data, data_size))
 			if (strcmp(arg, "1") == 0)
 				changed = true;
 
-		if (getSParameterFromResponse(arg, 4, "load=", data, data_size))
+		if (findParamFromResp(arg, 4, "load=", data, data_size))
 			if (strcmp(arg, "1") == 0)
 				set_gpio_mode(gpio_mode);
 
@@ -1687,64 +1687,64 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 		}
 		else
 		{
-			getSParameterFromResponse(arg, 4, "P_MISO=", data, data_size);
+			findParamFromResp(arg, 4, "P_MISO=", data, data_size);
 			miso = atoi(arg);
-			getSParameterFromResponse(arg, 4, "P_MOSI=", data, data_size);
+			findParamFromResp(arg, 4, "P_MOSI=", data, data_size);
 			mosi = atoi(arg);
-			getSParameterFromResponse(arg, 4, "P_CLK=", data, data_size);
+			findParamFromResp(arg, 4, "P_CLK=", data, data_size);
 			sclk = atoi(arg);
 			err |= gpio_set_spi_bus(miso, mosi, sclk);
-			getSParameterFromResponse(arg, 4, "P_XCS=", data, data_size);
+			findParamFromResp(arg, 4, "P_XCS=", data, data_size);
 			xcs = atoi(arg);
-			getSParameterFromResponse(arg, 4, "P_XDCS=", data, data_size);
+			findParamFromResp(arg, 4, "P_XDCS=", data, data_size);
 			xdcs = atoi(arg);
-			getSParameterFromResponse(arg, 4, "P_DREQ=", data, data_size);
+			findParamFromResp(arg, 4, "P_DREQ=", data, data_size);
 			dreq = atoi(arg);
 			err |= gpio_set_vs1053(xcs, xdcs, dreq);
-			getSParameterFromResponse(arg, 4, "P_ENC0_A=", data, data_size);
+			findParamFromResp(arg, 4, "P_ENC0_A=", data, data_size);
 			enca = atoi(arg);
-			getSParameterFromResponse(arg, 4, "P_ENC0_B=", data, data_size);
+			findParamFromResp(arg, 4, "P_ENC0_B=", data, data_size);
 			encb = atoi(arg);
-			getSParameterFromResponse(arg, 4, "P_ENC0_BTN=", data, data_size);
+			findParamFromResp(arg, 4, "P_ENC0_BTN=", data, data_size);
 			encbtn = atoi(arg);
 			err |= gpio_set_encoders(enca, encb, encbtn);
-			getSParameterFromResponse(arg, 4, "P_I2C_SCL=", data, data_size);
+			findParamFromResp(arg, 4, "P_I2C_SCL=", data, data_size);
 			sda = atoi(arg);
-			getSParameterFromResponse(arg, 4, "P_I2C_SDA=", data, data_size);
+			findParamFromResp(arg, 4, "P_I2C_SDA=", data, data_size);
 			scl = atoi(arg);
 			err |= gpio_set_i2c(sda, scl);
-			getSParameterFromResponse(arg, 4, "P_LCD_CS=", data, data_size);
+			findParamFromResp(arg, 4, "P_LCD_CS=", data, data_size);
 			cs = atoi(arg);
-			getSParameterFromResponse(arg, 4, "P_LCD_A0=", data, data_size);
+			findParamFromResp(arg, 4, "P_LCD_A0=", data, data_size);
 			a0 = atoi(arg);
 			err |= gpio_set_spi_lcd(cs, a0);
-			getSParameterFromResponse(arg, 4, "P_IR_SIGNAL=", data, data_size);
+			findParamFromResp(arg, 4, "P_IR_SIGNAL=", data, data_size);
 			ir = atoi(arg);
 			err |= gpio_set_ir_signal(ir);
-			getSParameterFromResponse(arg, 4, "P_BACKLIGHT=", data, data_size);
+			findParamFromResp(arg, 4, "P_BACKLIGHT=", data, data_size);
 			led = atoi(arg);
 			err |= gpio_set_backlightl(led);
-			getSParameterFromResponse(arg, 4, "P_TACHOMETER=", data, data_size);
+			findParamFromResp(arg, 4, "P_TACHOMETER=", data, data_size);
 			tach = atoi(arg);
 			err |= gpio_set_tachometer(tach);
-			getSParameterFromResponse(arg, 4, "P_FAN_SPEED=", data, data_size);
+			findParamFromResp(arg, 4, "P_FAN_SPEED=", data, data_size);
 			fanspeed = atoi(arg);
 			err |= gpio_set_fanspeed(fanspeed);
-			getSParameterFromResponse(arg, 4, "P_DS18B20=", data, data_size);
+			findParamFromResp(arg, 4, "P_DS18B20=", data, data_size);
 			ds18b20 = atoi(arg);
 			err |= gpio_set_ds18b20(ds18b20);
-			getSParameterFromResponse(arg, 4, "P_TOUCH_CS=", data, data_size);
+			findParamFromResp(arg, 4, "P_TOUCH_CS=", data, data_size);
 			touch = atoi(arg);
 			err |= gpio_set_touch(touch);
-			getSParameterFromResponse(arg, 4, "P_BUZZER=", data, data_size);
+			findParamFromResp(arg, 4, "P_BUZZER=", data, data_size);
 			buzzer = atoi(arg);
 			err |= gpio_set_buzzer(buzzer);
-			getSParameterFromResponse(arg, 4, "P_RXD=", data, data_size);
+			findParamFromResp(arg, 4, "P_RXD=", data, data_size);
 			rxd = atoi(arg);
-			getSParameterFromResponse(arg, 4, "P_TXD=", data, data_size);
+			findParamFromResp(arg, 4, "P_TXD=", data, data_size);
 			txd = atoi(arg);
 			err |= gpio_set_uart(rxd, txd);
-			getSParameterFromResponse(arg, 4, "P_LDR=", data, data_size);
+			findParamFromResp(arg, 4, "P_LDR=", data, data_size);
 			ldr = atoi(arg);
 			err |= gpio_set_ldr(ldr);
 			if (err != ESP_OK)
@@ -1806,15 +1806,15 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 		bool ir_mode = false;
 		nvs_handle gpio_handle;
 		esp_err_t err = ESP_OK;
-		if (getSParameterFromResponse(buf_code, 14, "save=", data, data_size))
+		if (findParamFromResp(buf_code, 14, "save=", data, data_size))
 			if (strcmp(buf_code, "1") == 0)
 				changed = true;
-		if (getSParameterFromResponse(buf_code, 14, "ir_mode=", data, data_size))
+		if (findParamFromResp(buf_code, 14, "ir_mode=", data, data_size))
 			if ((strcmp(buf_code, "1") == 0))
 			{
 				ir_mode = true;
 			}
-		if (getSParameterFromResponse(buf_code, 14, "load=", data, data_size))
+		if (findParamFromResp(buf_code, 14, "load=", data, data_size))
 			if (strcmp(buf_code, "1") == 0)
 				ir_mode = MainConfig->ir_mode;
 		if (ir_mode)
@@ -1839,39 +1839,39 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 		}
 		if (changed)
 		{
-			getSParameterFromResponse(buf_code, 14, "K_0=", data, data_size);
+			findParamFromResp(buf_code, 14, "K_0=", data, data_size);
 			nvs_set_ir_key("K_UP", buf_code);
-			getSParameterFromResponse(buf_code, 14, "K_1=", data, data_size);
+			findParamFromResp(buf_code, 14, "K_1=", data, data_size);
 			nvs_set_ir_key("K_LEFT", buf_code);
-			getSParameterFromResponse(buf_code, 14, "K_2=", data, data_size);
+			findParamFromResp(buf_code, 14, "K_2=", data, data_size);
 			nvs_set_ir_key("K_OK", buf_code);
-			getSParameterFromResponse(buf_code, 14, "K_3=", data, data_size);
+			findParamFromResp(buf_code, 14, "K_3=", data, data_size);
 			nvs_set_ir_key("K_RIGHT", buf_code);
-			getSParameterFromResponse(buf_code, 14, "K_4=", data, data_size);
+			findParamFromResp(buf_code, 14, "K_4=", data, data_size);
 			nvs_set_ir_key("K_DOWN", buf_code);
-			getSParameterFromResponse(buf_code, 14, "K_5=", data, data_size);
+			findParamFromResp(buf_code, 14, "K_5=", data, data_size);
 			nvs_set_ir_key("K_0", buf_code);
-			getSParameterFromResponse(buf_code, 14, "K_6=", data, data_size);
+			findParamFromResp(buf_code, 14, "K_6=", data, data_size);
 			nvs_set_ir_key("K_1", buf_code);
-			getSParameterFromResponse(buf_code, 14, "K_7=", data, data_size);
+			findParamFromResp(buf_code, 14, "K_7=", data, data_size);
 			nvs_set_ir_key("K_2", buf_code);
-			getSParameterFromResponse(buf_code, 14, "K_8=", data, data_size);
+			findParamFromResp(buf_code, 14, "K_8=", data, data_size);
 			nvs_set_ir_key("K_3", buf_code);
-			getSParameterFromResponse(buf_code, 14, "K_9=", data, data_size);
+			findParamFromResp(buf_code, 14, "K_9=", data, data_size);
 			nvs_set_ir_key("K_4", buf_code);
-			getSParameterFromResponse(buf_code, 14, "K_10=", data, data_size);
+			findParamFromResp(buf_code, 14, "K_10=", data, data_size);
 			nvs_set_ir_key("K_5", buf_code);
-			getSParameterFromResponse(buf_code, 14, "K_11=", data, data_size);
+			findParamFromResp(buf_code, 14, "K_11=", data, data_size);
 			nvs_set_ir_key("K_6", buf_code);
-			getSParameterFromResponse(buf_code, 14, "K_12=", data, data_size);
+			findParamFromResp(buf_code, 14, "K_12=", data, data_size);
 			nvs_set_ir_key("K_7", buf_code);
-			getSParameterFromResponse(buf_code, 14, "K_13=", data, data_size);
+			findParamFromResp(buf_code, 14, "K_13=", data, data_size);
 			nvs_set_ir_key("K_8", buf_code);
-			getSParameterFromResponse(buf_code, 14, "K_14=", data, data_size);
+			findParamFromResp(buf_code, 14, "K_14=", data, data_size);
 			nvs_set_ir_key("K_9", buf_code);
-			getSParameterFromResponse(buf_code, 14, "K_15=", data, data_size);
+			findParamFromResp(buf_code, 14, "K_15=", data, data_size);
 			nvs_set_ir_key("K_STAR", buf_code);
-			getSParameterFromResponse(buf_code, 14, "K_16=", data, data_size);
+			findParamFromResp(buf_code, 14, "K_16=", data, data_size);
 			nvs_set_ir_key("K_DIESE", buf_code);
 			err |= get_ir_key(ir_mode);
 			if (err != ESP_OK)

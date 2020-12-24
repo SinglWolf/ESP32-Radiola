@@ -429,38 +429,6 @@ static void serveFile(char *name, int conn)
 	//	ESP_LOGV(TAG,"serveFile socket:%d, end",conn);
 }
 
-static bool getSParameter(char *result, uint32_t len, const char *sep, const char *param, char *data, uint16_t data_length)
-{
-	if ((data == NULL) || (param == NULL))
-		return false;
-	char *p = strstr(data, param);
-	if (p != NULL)
-	{
-		p += strlen(param);
-		char *p_end = strstr(p, sep);
-		if (p_end == NULL)
-			p_end = data_length + data;
-		if (p_end != NULL)
-		{
-			if (p_end == p)
-				return false;
-			int i;
-			if (len > (p_end - p))
-				len = p_end - p;
-			for (i = 0; i < len; i++)
-				result[i] = 0;
-			strncpy(result, p, len);
-			result[len] = 0;
-			ESP_LOGV(TAG, "getSParam: in: \"%s\"   \"%s\"", data, result);
-			return true;
-		}
-		else
-			return false;
-	}
-	else
-		return false;
-}
-
 static char *getParameter(const char *sep, const char *param, char *data, uint16_t data_length)
 {
 	if ((data == NULL) || (param == NULL))
@@ -503,8 +471,36 @@ static char *getParameterFromResponse(const char *param, char *data, uint16_t da
 }
 static bool findParamFromResp(char *result, uint32_t size, const char *param, char *data, uint16_t data_length)
 {
-	return getSParameter(result, size, "&", param, data, data_length);
+	if ((data == NULL) || (param == NULL))
+		return false;
+	char *p = strstr(data, param);
+	if (p != NULL)
+	{
+		p += strlen(param);
+		char *p_end = strstr(p, "&");
+		if (p_end == NULL)
+			p_end = data_length + data;
+		if (p_end != NULL)
+		{
+			if (p_end == p)
+				return false;
+			int i;
+			if (size > (p_end - p))
+				size = p_end - p;
+			for (i = 0; i < size; i++)
+				result[i] = 0;
+			strncpy(result, p, size);
+			result[size] = 0;
+			// ESP_LOGD(TAG, "findSParam: in: \"%s\"   \"%s\"", data, result);
+			return true;
+		}
+		else
+			return false;
+	}
+	else
+		return false;
 }
+
 static char *getParameterFromComment(const char *param, char *data, uint16_t data_length)
 {
 	return getParameter("\"", param, data, data_length);

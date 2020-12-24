@@ -776,10 +776,10 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 							MainConfig->TotalStations);
 					// ESP_LOGI(TAG, "TEST getStation\njson_length len:%u\n%s", strlen(buf), buf);
 					int json_length = strlen(buf);
-					char *s = concat(JSON_header, buf);
+					char *jsonData = concat(JSON_header, buf);
 
-					sprintf(buf, s, json_length);
-					free(s);
+					sprintf(buf, jsonData, json_length);
+					free(jsonData);
 
 					write(conn, buf, strlen(buf));
 				}
@@ -889,10 +889,10 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 
 			// ESP_LOGI(TAG, "TEST RAUTO\njson_length len:%u\n%s", strlen(buf), buf);
 			int json_length = strlen(buf);
-			char *s = concat(JSON_header, buf);
+			char *jsonData = concat(JSON_header, buf);
 
-			sprintf(buf, s, json_length);
-			free(s);
+			sprintf(buf, jsonData, json_length);
+			free(jsonData);
 
 			write(conn, buf, strlen(buf));
 		}
@@ -932,10 +932,10 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 					(uint16_t)getRpmFan() * 20);
 			// ESP_LOGI(TAG, "TEST VERSION\njson_length len:%u\n%s", strlen(buf), buf);
 			int json_length = strlen(buf);
-			char *s = concat(JSON_header, buf);
+			char *jsonData = concat(JSON_header, buf);
 
-			sprintf(buf, s, json_length);
-			free(s);
+			sprintf(buf, jsonData, json_length);
+			free(jsonData);
 
 			write(conn, buf, strlen(buf));
 		}
@@ -1003,10 +1003,10 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 
 			// ESP_LOGI(TAG, "TEST strsICY\njson_length len:%u\n%s", strlen(buf), buf);
 			int json_length = strlen(buf);
-			char *s = concat(JSON_header, buf);
+			char *jsonData = concat(JSON_header, buf);
 
-			sprintf(buf, s, json_length);
-			free(s);
+			sprintf(buf, jsonData, json_length);
+			free(jsonData);
 
 			write(conn, buf, strlen(buf));
 			wsMonitor();
@@ -1093,10 +1093,10 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 					tda7313_get_mute());
 			// ESP_LOGI(TAG, "TEST HARDWARE\njson_length len:%u\n%s", strlen(buf), buf);
 			int json_length = strlen(buf);
-			char *s = concat(JSON_header, buf);
+			char *jsonData = concat(JSON_header, buf);
 
-			sprintf(buf, s, json_length);
-			free(s);
+			sprintf(buf, jsonData, json_length);
+			free(jsonData);
 
 			write(conn, buf, strlen(buf));
 		}
@@ -1267,10 +1267,10 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 					MainConfig->hostname);
 			// ESP_LOGI(TAG, "TEST WIFI\njson_length len:%u\n%s", strlen(buf), buf);
 			int json_length = strlen(buf);
-			char *s = concat(JSON_header, buf);
+			char *jsonData = concat(JSON_header, buf);
 
-			sprintf(buf, s, json_length);
-			free(s);
+			sprintf(buf, jsonData, json_length);
+			free(jsonData);
 			write(conn, buf, strlen(buf));
 		}
 		free(buf);
@@ -1431,10 +1431,10 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 					LDR);
 			// ESP_LOGI(TAG, "TEST CONTROL\njson_length len:%u\n%s", strlen(buf), buf);
 			int json_length = strlen(buf);
-			char *s = concat(JSON_header, buf);
+			char *jsonData = concat(JSON_header, buf);
 
-			sprintf(buf, s, json_length);
-			free(s);
+			sprintf(buf, jsonData, json_length);
+			free(jsonData);
 
 			write(conn, buf, strlen(buf));
 		}
@@ -1551,10 +1551,10 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 					LCD_ROTA);
 			// ESP_LOGI(TAG, "TEST devoptions\njson_length len:%u\n%s", strlen(buf), buf);
 			int json_length = strlen(buf);
-			char *s = concat(JSON_header, buf);
+			char *jsonData = concat(JSON_header, buf);
 
-			sprintf(buf, s, json_length);
-			free(s);
+			sprintf(buf, jsonData, json_length);
+			free(jsonData);
 			write(conn, buf, strlen(buf));
 		}
 		free(buf);
@@ -1742,10 +1742,10 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 					(uint8_t)ldr);
 			// ESP_LOGI(TAG, "TEST GPIOS\njson_length len:%u\n%s", strlen(buf), buf);
 			int json_length = strlen(buf);
-			char *s = concat(JSON_header, buf);
+			char *jsonData = concat(JSON_header, buf);
 
-			sprintf(buf, s, json_length);
-			free(s);
+			sprintf(buf, jsonData, json_length);
+			free(jsonData);
 
 			write(conn, buf, strlen(buf));
 		}
@@ -1878,10 +1878,10 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 
 			// ESP_LOGI(TAG, "TEST IRCODES\njson_length len:%u\n%s", strlen(buf), buf);
 			int json_length = strlen(buf);
-			char *s = concat(JSON_header, buf);
+			char *jsonData = concat(JSON_header, buf);
 
-			sprintf(buf, s, json_length);
-			free(s);
+			sprintf(buf, jsonData, json_length);
+			free(jsonData);
 			write(conn, buf, strlen(buf));
 		}
 		free(buf);

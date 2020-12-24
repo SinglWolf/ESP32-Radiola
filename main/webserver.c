@@ -313,20 +313,6 @@ uint8_t get_code(char *buf, uint32_t arg1, uint32_t arg2)
 	return strlen(buf);
 }
 //
-void *incalloc(size_t n)
-{
-	void *ret = calloc(1, n);
-	ESP_LOGV(TAG, "server Calloc of %x : %u bytes Heap size: %u", (int)ret, n, xPortGetFreeHeapSize());
-	return ret;
-}
-
-void infree(void *p)
-{
-	ESP_LOGV(TAG, "server free of %x, Heap size: %u", (int)p, xPortGetFreeHeapSize());
-	if (p != NULL)
-		free(p);
-}
-
 static struct servFile *findFile(char *name)
 {
 	struct servFile *f = (struct servFile *)&indexFile;
@@ -352,8 +338,9 @@ static void respOk(int conn, const char *message)
 	write(conn, fresp, strlen(fresp));
 }
 
-static void resp_low_memory(int conn)
+static void respNOT_OK(char *name, int conn)
 {
+	ESP_LOGE(TAG, "%s fails errno:%d", name, errno);
 	write(conn, lowmemory, strlen(lowmemory));
 }
 
@@ -386,8 +373,7 @@ static void serveFile(char *name, int conn)
 			vTaskDelay(1); // why i need it? Don't know.
 			if (write(conn, buf, strlen(buf)) == -1)
 			{
-				resp_low_memory(conn);
-				ESP_LOGE(TAG, "semfile fails 0 errno:%d", errno);
+				respNOT_OK("semfile fails 0", conn);
 				xSemaphoreGive(semfile);
 				return;
 			}
@@ -399,8 +385,7 @@ static void serveFile(char *name, int conn)
 			{
 				if (write(conn, content, part) == -1)
 				{
-					resp_low_memory(conn);
-					ESP_LOGE(TAG, "semfile fails 1 errno:%d", errno);
+					respNOT_OK("semfile fails 1", conn);
 					xSemaphoreGive(semfile);
 					return;
 				}
@@ -416,20 +401,19 @@ static void serveFile(char *name, int conn)
 		}
 		else
 		{
-			resp_low_memory(conn);
-			ESP_LOGE(TAG, "semfile fails 2 errno:%d", errno);
+			respNOT_OK("semfile fails 2", conn);
 			xSemaphoreGive(semfile);
 			return;
 		}
 	}
 	else
 	{
-		resp_low_memory(conn);
+		respNOT_OK("serveFile", conn);
 	}
 	//	ESP_LOGV(TAG,"serveFile socket:%d, end",conn);
 }
 
-static char *getParameter(const char *sep, const char *param, char *data, uint16_t data_length)
+static char *getParameterFromResponse(const char *separator, const char *param, char *data, uint16_t data_length)
 {
 	if ((data == NULL) || (param == NULL))
 		return NULL;
@@ -437,25 +421,25 @@ static char *getParameter(const char *sep, const char *param, char *data, uint16
 	if (p != NULL)
 	{
 		p += strlen(param);
-		char *p_end = strstr(p, sep);
+		char *p_end = strstr(p, separator);
 		if (p_end == NULL)
 			p_end = data_length + data;
 		if (p_end != NULL)
 		{
 			if (p_end == p)
 				return NULL;
-			char *t = incalloc(p_end - p + 1);
+			char *t = calloc(1, p_end - p + 1);
 			if (t == NULL)
 			{
 				ESP_LOGE(TAG, "getParameterF fails\n");
 				return NULL;
 			}
-			ESP_LOGV(TAG, "getParameter malloc of %d  for %s", p_end - p + 1, param);
+			// ESP_LOGD(TAG, "getParameter malloc of %d  for %s", p_end - p + 1, param);
 			int i;
 			for (i = 0; i < (p_end - p + 1); i++)
 				t[i] = 0;
 			strncpy(t, p, p_end - p);
-			ESP_LOGV(TAG, "getParam: in: \"%s\"   \"%s\"", data, t);
+			// ESP_LOGD(TAG, "getParam: in: \"%s\"   \"%s\"", data, t);
 			return t;
 		}
 		else
@@ -465,10 +449,6 @@ static char *getParameter(const char *sep, const char *param, char *data, uint16
 		return NULL;
 }
 
-static char *getParameterFromResponse(const char *param, char *data, uint16_t data_length)
-{
-	return getParameter("&", param, data, data_length);
-}
 static bool findParamFromResp(char *result, uint32_t size, const char *param, char *data, uint16_t data_length)
 {
 	if ((data == NULL) || (param == NULL))
@@ -499,11 +479,6 @@ static bool findParamFromResp(char *result, uint32_t size, const char *param, ch
 	}
 	else
 		return false;
-}
-
-static char *getParameterFromComment(const char *param, char *data, uint16_t data_length)
-{
-	return getParameter("\"", param, data, data_length);
 }
 
 // set the volume with vol
@@ -624,7 +599,7 @@ void playStationInt(uint8_t id)
 			vTaskDelay(5);
 		}
 	}
-	infree(si);
+	free(si);
 
 	websocketbroadcast(answer, strlen(answer));
 }
@@ -782,14 +757,13 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 				station_slot_s *si = getStation(atoi(id));
 				if (si == NULL)
 				{
-					si = incalloc(sizeof(station_slot_s));
+					si = calloc(1, sizeof(station_slot_s));
 				}
-				char *buf = incalloc(1024);
+				char *buf = calloc(1, 1024);
 
 				if (buf == NULL)
 				{
-					ESP_LOGE(TAG, " %s malloc fails", "getStation");
-					resp_low_memory(conn);
+					respNOT_OK(name, conn);
 				}
 				else
 				{
@@ -809,8 +783,8 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 
 					write(conn, buf, strlen(buf));
 				}
-				infree(buf);
-				infree(si);
+				free(buf);
+				free(si);
 				return;
 			}
 			else
@@ -833,12 +807,11 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 		//ESP_LOGI(TAG, "data:%s\n",data);
 		bool pState = getState(); // remember if we are playing
 
-		station_slot_s *slot = incalloc(sizeof(station_slot_s));
+		station_slot_s *slot = calloc(1, sizeof(station_slot_s));
 
 		if (slot == NULL)
 		{
-			ESP_LOGE(TAG, " %s malloc fails", "setStation");
-			resp_low_memory(conn);
+			respNOT_OK(name, conn);
 			return;
 		}
 		// char *fillslot = (char *)slot;
@@ -850,10 +823,10 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 		char ID[3];
 		char port[5];
 
-		char *url = getParameterFromResponse("url=", data, data_size);
-		char *file = getParameterFromResponse("file=", data, data_size);
+		char *url = getParameterFromResponse("&", "url=", data, data_size);
+		char *file = getParameterFromResponse("&", "file=", data, data_size);
 		pathParse(file);
-		char *Name = getParameterFromResponse("name=", data, data_size);
+		char *Name = getParameterFromResponse("&", "name=", data, data_size);
 		findParamFromResp(FAV, 1, "fav=", data, data_size);
 		findParamFromResp(ID, 3, "ID=", data, data_size);
 		findParamFromResp(port, 5, "port=", data, data_size);
@@ -871,7 +844,7 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 		slot->fav = atoi(FAV);
 
 		saveStation(slot, atoi(ID));
-		infree(slot);
+		free(slot);
 		if (pState != getState())
 			if (pState)
 			{
@@ -904,11 +877,10 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 	}
 	else if (strcmp(name, "/rauto") == 0)
 	{
-		char *buf = incalloc(1024);
+		char *buf = calloc(1, 1024);
 		if (buf == NULL)
 		{
-			ESP_LOGE(TAG, " %s malloc fails", "post RAUTO");
-			resp_low_memory(conn);
+			respNOT_OK(name, conn);
 		}
 		else
 		{
@@ -924,7 +896,7 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 
 			write(conn, buf, strlen(buf));
 		}
-		infree(buf);
+		free(buf);
 		return;
 	}
 	else if (strcmp(name, "/stop") == 0)
@@ -946,11 +918,10 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 	}
 	else if (strcmp(name, "/version") == 0)
 	{
-		char *buf = incalloc(1024);
+		char *buf = calloc(1, 1024);
 		if (buf == NULL)
 		{
-			ESP_LOGE(TAG, " %s malloc fails", "post VERSION");
-			resp_low_memory(conn);
+			respNOT_OK(name, conn);
 		}
 		else
 		{
@@ -968,7 +939,7 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 
 			write(conn, buf, strlen(buf));
 		}
-		infree(buf);
+		free(buf);
 		return;
 	}
 	else if (strcmp(name, "/ircode") == 0) // start the IR TRAINING
@@ -1008,11 +979,10 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 			not2 = header->members.single.audioinfo;
 		//if ((header->members.single.notice2 != NULL)&&(strlen(header->members.single.notice2)==0)) not2=header->members.single.audioinfo;
 
-		char *buf = incalloc(1024);
+		char *buf = calloc(1, 1024);
 		if (buf == NULL)
 		{
-			ESP_LOGE(TAG, " %s malloc fails", "post ICY");
-			resp_low_memory(conn);
+			respNOT_OK(name, conn);
 		}
 		else
 		{
@@ -1041,7 +1011,7 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 			write(conn, buf, strlen(buf));
 			wsMonitor();
 		}
-		infree(buf);
+		free(buf);
 		return;
 	}
 	else if (strcmp(name, "/hardware") == 0)
@@ -1095,11 +1065,10 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 				(tda7313_set_mute(atoi(arg)));
 			SaveConfig();
 		}
-		char *buf = incalloc(1024);
+		char *buf = calloc(1, 1024);
 		if (buf == NULL)
 		{
-			ESP_LOGE(TAG, " %s malloc fails", "post HARDWARE");
-			resp_low_memory(conn);
+			respNOT_OK(name, conn);
 		}
 		else
 		{
@@ -1131,7 +1100,7 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 
 			write(conn, buf, strlen(buf));
 		}
-		infree(buf);
+		free(buf);
 		return;
 	}
 	else if (strcmp(name, "/wifi") == 0)
@@ -1141,9 +1110,9 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 		if (findParamFromResp(valid, 5, "valid=", data, data_size))
 			if (strcmp(valid, "1") == 0)
 				changed = true;
-		char *aua = getParameterFromResponse("ua=", data, data_size);
+		char *aua = getParameterFromResponse("&", "ua=", data, data_size);
 		pathParse(aua);
-		char *host = getParameterFromResponse("host=", data, data_size);
+		char *host = getParameterFromResponse("&", "host=", data, data_size);
 		pathParse(host);
 
 		if (changed)
@@ -1157,20 +1126,20 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 				setAutoWifi();
 			}
 			char adhcp[4], adhcp2[4];
-			char *ssid = getParameterFromResponse("ssid=", data, data_size);
+			char *ssid = getParameterFromResponse("&", "ssid=", data, data_size);
 			pathParse(ssid);
-			char *pasw = getParameterFromResponse("pasw=", data, data_size);
+			char *pasw = getParameterFromResponse("&", "pasw=", data, data_size);
 			pathParse(pasw);
-			char *ssid2 = getParameterFromResponse("ssid2=", data, data_size);
+			char *ssid2 = getParameterFromResponse("&", "ssid2=", data, data_size);
 			pathParse(ssid2);
-			char *pasw2 = getParameterFromResponse("pasw2=", data, data_size);
+			char *pasw2 = getParameterFromResponse("&", "pasw2=", data, data_size);
 			pathParse(pasw2);
-			char *aip = getParameterFromResponse("ip=", data, data_size);
-			char *amsk = getParameterFromResponse("msk=", data, data_size);
-			char *agw = getParameterFromResponse("gw=", data, data_size);
-			char *aip2 = getParameterFromResponse("ip2=", data, data_size);
-			char *amsk2 = getParameterFromResponse("msk2=", data, data_size);
-			char *agw2 = getParameterFromResponse("gw2=", data, data_size);
+			char *aip = getParameterFromResponse("&", "ip=", data, data_size);
+			char *amsk = getParameterFromResponse("&", "msk=", data, data_size);
+			char *agw = getParameterFromResponse("&", "gw=", data, data_size);
+			char *aip2 = getParameterFromResponse("&", "ip2=", data, data_size);
+			char *amsk2 = getParameterFromResponse("&", "msk2=", data, data_size);
+			char *agw2 = getParameterFromResponse("&", "gw2=", data, data_size);
 
 			ip_addr_t valu;
 			if (aip != NULL)
@@ -1213,23 +1182,23 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 			strcpy(MainConfig->ssid2, (ssid2 == NULL) ? "" : ssid2);
 			strcpy(MainConfig->pass2, (pasw2 == NULL) ? "" : pasw2);
 
-			infree(ssid);
-			infree(pasw);
-			infree(ssid2);
-			infree(pasw2);
-			infree(aip);
-			infree(amsk);
-			infree(agw);
-			infree(aip2);
-			infree(amsk2);
-			infree(agw2);
+			free(ssid);
+			free(pasw);
+			free(ssid2);
+			free(pasw2);
+			free(aip);
+			free(amsk);
+			free(agw);
+			free(aip2);
+			free(amsk2);
+			free(agw2);
 		}
 
 		if ((MainConfig->ua != NULL) && (strlen(MainConfig->ua) == 0))
 		{
 			if (aua == NULL)
 			{
-				aua = incalloc(17);
+				aua = calloc(1, 17);
 				strcpy(aua, "ESP32Radiola/1.5");
 			}
 		}
@@ -1240,7 +1209,7 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 				strcpy(MainConfig->ua, aua);
 				changed = true;
 			}
-			infree(aua);
+			free(aua);
 		}
 
 		if (host != NULL)
@@ -1254,7 +1223,7 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 					changed = true;
 				}
 			}
-			infree(host);
+			free(host);
 		}
 
 		uint8_t macaddr[10];
@@ -1272,11 +1241,10 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 		sprintf(tmpgw2, "%u.%u.%u.%u", MainConfig->gate2[0], MainConfig->gate2[1], MainConfig->gate2[2], MainConfig->gate2[3]);
 		sprintf(adhcp2, "%u", MainConfig->dhcpEn2);
 		sprintf(macstr, MACSTR, MAC2STR(macaddr));
-		char *buf = incalloc(1024);
+		char *buf = calloc(1, 1024);
 		if (buf == NULL)
 		{
-			ESP_LOGE(TAG, " %s malloc fails", "post WIFI");
-			resp_low_memory(conn);
+			respNOT_OK(name, conn);
 		}
 		else
 		{
@@ -1305,7 +1273,7 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 			free(s);
 			write(conn, buf, strlen(buf));
 		}
-		infree(buf);
+		free(buf);
 		if (changed)
 		{
 			// set current_ap to the first filled ssid
@@ -1437,11 +1405,10 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 			SaveConfig();
 		}
 
-		char *buf = incalloc(1024);
+		char *buf = calloc(1, 1024);
 		if (buf == NULL)
 		{
-			ESP_LOGE(TAG, " %s malloc fails", "post CONTROL");
-			resp_low_memory(conn);
+			respNOT_OK(name, conn);
 		}
 		else
 		{
@@ -1471,7 +1438,7 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 
 			write(conn, buf, strlen(buf));
 		}
-		infree(buf);
+		free(buf);
 		return;
 	}
 	else if (strcmp(name, "/devoptions") == 0)
@@ -1519,21 +1486,21 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 			}
 			if (NTP == 1)
 			{
-				NTP0 = getParameterFromResponse("NTP0=", data, data_size);
+				NTP0 = getParameterFromResponse("&", "NTP0=", data, data_size);
 				pathParse(NTP0);
 				strcpy(MainConfig->ntp_server[0], NTP0);
-				NTP1 = getParameterFromResponse("NTP1=", data, data_size);
+				NTP1 = getParameterFromResponse("&", "NTP1=", data, data_size);
 				pathParse(NTP1);
 				strcpy(MainConfig->ntp_server[1], NTP1);
-				NTP2 = getParameterFromResponse("NTP2=", data, data_size);
+				NTP2 = getParameterFromResponse("&", "NTP2=", data, data_size);
 				pathParse(NTP2);
 				strcpy(MainConfig->ntp_server[2], NTP2);
-				NTP3 = getParameterFromResponse("NTP3=", data, data_size);
+				NTP3 = getParameterFromResponse("&", "NTP3=", data, data_size);
 				pathParse(NTP3);
 				strcpy(MainConfig->ntp_server[3], NTP3);
 				reboot = true;
 			}
-			TZONE = getParameterFromResponse("TZONE=", data, data_size);
+			TZONE = getParameterFromResponse("&", "TZONE=", data, data_size);
 			pathParse(TZONE);
 			if (TZONE != MainConfig->tzone)
 			{
@@ -1565,11 +1532,10 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 			}
 			SaveConfig();
 		}
-		char *buf = incalloc(1024);
+		char *buf = calloc(1, 1024);
 		if (buf == NULL)
 		{
-			ESP_LOGE(TAG, " %s malloc fails", "post DEVOPTIONS");
-			resp_low_memory(conn);
+			respNOT_OK(name, conn);
 		}
 		else
 		{
@@ -1591,7 +1557,7 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 			free(s);
 			write(conn, buf, strlen(buf));
 		}
-		infree(buf);
+		free(buf);
 		if (reboot)
 		{
 			if (erase)
@@ -1748,12 +1714,11 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 				changed = false;
 			}
 		}
-		char *buf = incalloc(1024);
+		char *buf = calloc(1, 1024);
 		if (buf == NULL)
 		{
-			ESP_LOGE(TAG, " %s malloc fails", "post GPIOS");
 			changed = false;
-			resp_low_memory(conn);
+			respNOT_OK(name, conn);
 		}
 		else
 		{
@@ -1784,7 +1749,7 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 
 			write(conn, buf, strlen(buf));
 		}
-		infree(buf);
+		free(buf);
 		if (changed)
 		{
 			set_gpio_mode(true);
@@ -1875,11 +1840,10 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 				changed = false;
 			}
 		}
-		char *buf = incalloc(1024);
+		char *buf = calloc(1, 1024);
 		if (buf == NULL)
 		{
-			ESP_LOGE(TAG, " %s malloc fails", "post IRCODES");
-			resp_low_memory(conn);
+			respNOT_OK(name, conn);
 		}
 		else
 		{
@@ -1920,7 +1884,7 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 			free(s);
 			write(conn, buf, strlen(buf));
 		}
-		infree(buf);
+		free(buf);
 		if (changed)
 		{
 			MainConfig->ir_mode = IR_CUSTOM;
@@ -1972,19 +1936,19 @@ static bool httpServerHandleConnection(int conn, char *buf, uint16_t buflen)
 					uart_set_baudrate(0, 115200);
 				} //UART_SetBaudrate(0, 115200);}
 				  // volume command
-				param = getParameterFromResponse("volume=", c, strlen(c));
+				param = getParameterFromResponse("&", "volume=", c, strlen(c));
 				if ((param != NULL) && (atoi(param) >= 0) && (atoi(param) <= 254))
 				{
 					setVolume(param);
 					wsVol(param);
 				}
-				infree(param);
+				free(param);
 				// play command
-				param = getParameterFromResponse("play=", c, strlen(c));
+				param = getParameterFromResponse("&", "play=", c, strlen(c));
 				if (param != NULL)
 				{
 					playStation(param);
-					infree(param);
+					free(param);
 				}
 				// start command
 				param = strstr(c, "start");
@@ -2011,13 +1975,13 @@ static bool httpServerHandleConnection(int conn, char *buf, uint16_t buflen)
 					wsStationPrev();
 				}
 				// instantplay command
-				param = getParameterFromComment("instant=", c, strlen(c));
+				param = getParameterFromResponse("\"", "instant=", c, strlen(c));
 				if (param != NULL)
 				{
 					clientDisconnect("Web Instant");
 					pathParse(param);
 					clientParsePlaylist(param);
-					infree(param);
+					free(param);
 					clientSetName("Instant Play", 0);
 					clientConnectOnce();
 					vTaskDelay(1);
@@ -2037,17 +2001,17 @@ static bool httpServerHandleConnection(int conn, char *buf, uint16_t buflen)
 				{
 					char *vr = webInfo();
 					respOk(conn, vr);
-					infree(vr);
+					free(vr);
 					return true;
 				}
 				// list command	 ?list=1 to list the name of the station 1
-				param = getParameterFromResponse("list=", c, strlen(c));
+				param = getParameterFromResponse("&", "list=", c, strlen(c));
 
 				if ((param != NULL) && (atoi(param) >= 0) && (atoi(param) <= MainConfig->TotalStations))
 				{
-					station_slot_s *si = incalloc(sizeof(station_slot_s));
+					station_slot_s *si = calloc(1, sizeof(station_slot_s));
 					si = getStation(atoi(param));
-					char *name = incalloc(64);
+					char *name = calloc(1, 64);
 					if (si != NULL)
 					{
 						name = si->name;
@@ -2055,11 +2019,11 @@ static bool httpServerHandleConnection(int conn, char *buf, uint16_t buflen)
 					}
 					else
 					{
-						resp_low_memory(conn);
+						respNOT_OK(name, conn);
 					}
 
-					infree(si);
-					infree(name);
+					free(si);
+					free(name);
 					return true;
 				}
 				respOk(conn, NULL); // response OK to the origin
@@ -2069,12 +2033,12 @@ static bool httpServerHandleConnection(int conn, char *buf, uint16_t buflen)
 			{
 				if (strlen(c) > 32)
 				{
-					resp_low_memory(conn);
+					respNOT_OK("strlen(c) > 32", conn);
 					return true;
 				}
-				ESP_LOGV(TAG, "GET file  socket:%d file:%s", conn, c);
+				// ESP_LOGD(TAG, "GET file  socket:%d file:%s", conn, c);
 				serveFile(c, conn);
-				ESP_LOGV(TAG, "GET end socket:%d file:%s", conn, c);
+				// ESP_LOGD(TAG, "GET end socket:%d file:%s", conn, c);
 			}
 		}
 	}
@@ -2167,8 +2131,7 @@ void serverclientTask(void *pvParams)
 								vTaskDelay(1);
 								if ((recb < 0) && (errno != EAGAIN))
 								{
-									ESP_LOGE(TAG, "read fails 0  errno:%d", errno);
-									resp_low_memory(client_sock);
+									respNOT_OK("read fails 0", client_sock);
 									break;
 								}
 								else
@@ -2190,8 +2153,7 @@ void serverclientTask(void *pvParams)
 						// ESP_LOGI(TAG, "Server: received more for end now: %d bytes\n", recbytes+recb);
 						if ((recb < 0) && (errno != EAGAIN))
 						{
-							ESP_LOGE(TAG, "read fails 1  errno:%d", errno);
-							resp_low_memory(client_sock);
+							respNOT_OK("read fails 1", client_sock);
 							break;
 						}
 						else
@@ -2209,7 +2171,7 @@ void serverclientTask(void *pvParams)
 			}
 			vTaskDelay(1);
 		}
-		//		infree(buf);
+		//		free(buf);
 	}
 	else
 		ESP_LOGE(TAG, "WebServer buf malloc fails\n");

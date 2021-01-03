@@ -206,13 +206,13 @@ const char IRCODES[] = {"\
 \"K_16\":\"%s\"\
 }"};
 
-char *concat(const char *s1, const char *s2)
+char *concat(const char *header, const char *data)
 {
 
-	size_t len1 = strlen(s1);
-	size_t len2 = strlen(s2);
+	size_t header_len = strlen(header);
+	size_t data_len = strlen(data);
 
-	char *result = malloc(len1 + len2 + 1);
+	char *result = malloc(header_len + data_len + 1);
 
 	if (!result)
 	{
@@ -220,8 +220,8 @@ char *concat(const char *s1, const char *s2)
 		return NULL;
 	}
 
-	memcpy(result, s1, len1);
-	memcpy(result + len1, s2, len2 + 1);
+	memcpy(result, header, header_len);
+	memcpy(result + header_len, data, data_len + 1);
 
 	return result;
 }
@@ -1852,7 +1852,7 @@ static void handlePOST(char *name, char *data, int data_size, int conn)
 			{
 				get_code(buf_code, IR_Key[indexKey][0], IR_Key[indexKey][1]);
 				strcpy(str_sodes[indexKey], buf_code);
-				ESP_LOGD(TAG, " IrKey for set0: %X, for set1: %X str_sodes: %s", IR_Key[indexKey][0], IR_Key[indexKey][1], str_sodes[indexKey]);
+				// ESP_LOGI(TAG, " IrKey for set0: %X, for set1: %X str_sodes: %s", IR_Key[indexKey][0], IR_Key[indexKey][1], str_sodes[indexKey]);
 			}
 			ir_mode = MainConfig->ir_mode;
 			sprintf(buf, IRCODES,

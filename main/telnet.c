@@ -15,7 +15,6 @@
 #include "lwip/opt.h"
 #include "esp_system.h"
 #include "lwip/sockets.h"
-#include "cencode_inc.h"
 #include "telnet.h"
 #include "interface.h"
 

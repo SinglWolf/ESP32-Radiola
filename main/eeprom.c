@@ -291,19 +291,32 @@ void SaveConfig()
 esp_err_t nvs_get_ir_key(nvs_handle handle, const char *key, uint32_t *out_set1, uint32_t *out_set2)
 {
 	// init default
-	esp_err_t err = ESP_OK;
 	*out_set1 = 0;
 	*out_set2 = 0;
 	size_t required_size;
-	err |= nvs_get_str(handle, key, NULL, &required_size);
-	if (required_size > 1)
+	esp_err_t err = nvs_get_str(handle, key, NULL, &required_size);
+	if ((required_size > 1) && (err == ESP_OK))
 	{
+
 		char *string = malloc(required_size);
-		err |= nvs_get_str(handle, key, string, &required_size);
-		sscanf(string, "%x %x", out_set1, out_set2);
+		if (string == NULL)
+		{
+			ESP_LOGE(TAG, "No memory for string...");
+			return ESP_ERR_NO_MEM;
+		}
+		err = nvs_get_str(handle, key, string, &required_size);
+		if (err != ESP_OK)
+		{
+			ESP_LOGE(TAG, "in nvs_get_str, err: %s", esp_err_to_name(err));
+		}
+		else
+		{
+			sscanf(string, "%x %x", out_set1, out_set2);
+		}
+
 		free(string);
 	}
-	ESP_LOGD(TAG, "Load from NVS Key: %s, set1: %x, set2: %x, err: %d", key, *out_set1, *out_set2, err);
+	// ESP_LOGI(TAG, "Load from NVS Key: %s, set1: %x, set2: %x, err: %s", key, *out_set1, *out_set2, esp_err_to_name(err));
 
 	return err;
 }
@@ -311,16 +324,16 @@ esp_err_t nvs_get_ir_key(nvs_handle handle, const char *key, uint32_t *out_set1,
 esp_err_t nvs_set_ir_key(const char *key, char *ir_keys)
 {
 	nvs_handle gpio_handle;
-	esp_err_t err = open_storage(GPIOS_SPACE, NVS_READWRITE, &gpio_handle);
+	esp_err_t err = open_storage(IRCODE_SPACE, NVS_READWRITE, &gpio_handle);
 
 	if (err != ESP_OK)
 	{
-		ESP_LOGD(TAG, "in gpio_set_buzzer");
+		ESP_LOGE(TAG, "in nvs_set_ir_key");
 		return err;
 	}
 
 	err = nvs_set_str(gpio_handle, key, ir_keys);
-	ESP_LOGD(TAG, "Save Key: %s, ir_keys: %s, err: %d", key, ir_keys, err);
+	// ESP_LOGI(TAG, "Save Key: %s, ir_keys: %s, err: %d", key, ir_keys, err);
 	close_storage(gpio_handle);
 	return err;
 }

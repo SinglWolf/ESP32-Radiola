@@ -97,7 +97,7 @@ encoder_s *encoder = NULL;
 static adc1_channel_t ldr_channel, kbd_channel = GPIO_NONE;
 static bool inside = false;
 
-void *getEncoder(int num)
+void *getEncoder()
 {
 	return (void *)encoder;
 }
@@ -786,17 +786,12 @@ void touchLoop()
 	}
 }
 
-static uint8_t divide = 0;
 // indirect call to service
 IRAM_ATTR void multiService() // every 1ms
 {
 	if (isEncoder)
 		service(encoder);
 	ServiceAddon();
-	if (divide++ == 10) // only every 10ms
-	{
-		divide = 0;
-	}
 }
 void adcLoop()
 {

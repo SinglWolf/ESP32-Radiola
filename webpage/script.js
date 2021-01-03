@@ -1071,7 +1071,7 @@ function displaybright() {
         if (document.getElementById('LCD_BRG').value == 1) {
             document.getElementById("by_hand").style.visibility = "collapse";
             document.getElementById("by_time").style.visibility = "visible";
-            document.getElementById("_night").style.visibility = "visible";
+            document.getElementById("brg_night").style.visibility = "visible";
             document.getElementById("brg").style.visibility = "visible";
             document.getElementById("brg_sun").style.visibility = "visible";
             document.getElementById("by_lighting").style.visibility = "collapse";
@@ -1079,14 +1079,14 @@ function displaybright() {
         if (document.getElementById('LCD_BRG').value == 2) {
             document.getElementById("by_hand").style.visibility = "collapse";
             document.getElementById("by_time").style.visibility = "collapse";
-            document.getElementById("_night").style.visibility = "collapse";
+            document.getElementById("brg_night").style.visibility = "collapse";
             document.getElementById("brg").style.visibility = "visible";
             document.getElementById("brg_sun").style.visibility = "visible";
             document.getElementById("by_lighting").style.visibility = "visible";
         }
         if (document.getElementById('LCD_BRG').value == 3) {
             document.getElementById("by_hand").style.visibility = "visible";
-            document.getElementById("_night").style.visibility = "collapse";
+            document.getElementById("brg_night").style.visibility = "collapse";
             document.getElementById("by_time").style.visibility = "collapse";
             document.getElementById("brg").style.visibility = "collapse";
             document.getElementById("brg_sun").style.visibility = "collapse";
@@ -1267,15 +1267,16 @@ function hardware(save) {
 
 
 function LocalPlay() {
-    var curl;
+    var patch;
     try {
 
-        curl = document.getElementById('loc_path').value;
-        if (!(curl.substring(0, 1) === "/")) curl = "/" + curl;
+        patch = document.getElementById('loc_path').value;
+        if (!(patch.substring(0, 1) === "/")) patch = "/" + patch;
+        // document.getElementById('loc_url').value = document.getElementById('loc_url').value.replace(/^https?:\/\//, '');
         document.getElementById('loc_url').value = document.getElementById('loc_url').value.replace(/^https?:\/\//, '');
-        curl = fixedEncodeURIComponent(curl);
+        patch = fixedEncodeURIComponent(patch);
         PostData("local_play", "url=" + document.getElementById('loc_url').value + "&port=" +
-            document.getElementById('loc_port').value + "&path=" + curl + "&");
+            document.getElementById('loc_port').value + "&path=" + patch);
     } catch (e) { console.log("err: " + e); }
 }
 
@@ -1641,7 +1642,10 @@ function getversion() {
         document.getElementById('rpmfan').innerHTML = arr["rpmfan"] + ' Об/м';
         document.getElementById('_fan').style.display = "block";
     }
-    PostData("version");
+    if (arr["wsrssi"] != "-128") {
+        document.getElementById('rssi').innerHTML = arr["wsrssi"] + ' дБм';
+        document.getElementById('_rssi').style.display = "block";
+    }
 }
 
 function checkhistory() {
@@ -1732,7 +1736,11 @@ function downloadStations() {
                             port = getURL.port;
                             if (getURL.port == "") {
                                 port = "80";
-                            } else if (parseInt(getURL.port) > 65535) {
+                            }
+                            else if (getURL.protocol == "https") {
+                                port = "443";
+                            }
+                            else if (parseInt(getURL.port) > 65535) {
                                 errPort++;
                                 errAll = true;
                                 count--;

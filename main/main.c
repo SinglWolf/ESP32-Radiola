@@ -83,8 +83,6 @@ static uint8_t clientIvol = 0;
 static char localIp[20];
 // 4MB sram?
 static bool bigRam, time_sync = false;
-
-static bool divide = false;
 // disable 1MS timer interrupt
 IRAM_ATTR void noInterrupt1Ms() { timer_disable_intr(TIMERGROUP1MS, msTimer); }
 // enable 1MS timer interrupt
@@ -123,12 +121,8 @@ IRAM_ATTR void msCallback(void *pArg)
 	// timer_event_s evt;
 	TIMERG1.hw_timer[timer_idx].update = 1;
 	TIMERG1.int_clr_timers.t0 = 1; //isr ack
-	if (divide)
-	{
-		timerVol++;	 // to save volume
-		timerRSSI++; // to send RSSI
-	}
-	divide = !divide;
+	timerVol++;					   // to save volume
+	timerRSSI++;				   // to send RSSI
 	if (serviceAddon != NULL)
 		serviceAddon(); // for the encoders and buttons
 	TIMERG1.hw_timer[timer_idx].config.alarm_en = 1;
@@ -976,8 +970,8 @@ void app_main()
 	// log level
 	setLogLevel(MainConfig->trace_level);
 	//time display
-	uint8_t ddmm = getDataFormat();
-	setDataFormat(ddmm ? 1 : 0);
+	uint8_t dataFormat = getDataFormat();
+	setDataFormat(dataFormat ? 1 : 0);
 
 	init_hardware();
 	ESP_LOGI(TAG, "Hardware init done...");
